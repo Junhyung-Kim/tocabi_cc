@@ -38,9 +38,6 @@ CustomController::CustomController(RobotData &rd) : rd_(rd) //, wbc_(dc.wbc_)
     pinocchio::rnea(model, data, q_, qdot_, qddot_);
 
     mpcVariableInit();
-    mpcSolverSetup();
-    FlywheelModel(Ts, nx_, nu_, Ax, Bx);
-
     std::cout << "Custom Controller Init" << std::endl;
 }
 
@@ -173,9 +170,73 @@ void CustomController::computePlanner()
                 else
                     mu0 = 2.0;
 
+                //solver Setup
+                int iter_max = 30;
+                double alpha_min = 1e-8;
+                double tol_stat = 1e-6;
+                double tol_eq = 1e-8;
+                double tol_ineq = 1e-8;
+                double tol_comp = 1e-8;
+                double reg_prim = 1e-12;
+                int warm_start = 0;
+                int pred_corr = 1;
+                int ric_alg = 0;
+                int comp_res_exit = 1;
+                enum hpipm_mode mode = SPEED_ABS;
+
+                dim_sizex = d_ocp_qp_dim_memsize(N);
+                dim_memx = malloc(dim_sizex);
+                d_ocp_qp_dim_create(N, &dimx, dim_memx);
+                ipm_arg_sizex = d_ocp_qp_ipm_arg_memsize(&dimx);
+                ipm_arg_memx = malloc(ipm_arg_sizex);
+                d_ocp_qp_ipm_arg_create(&dimx, &argx, ipm_arg_memx);
+                d_ocp_qp_ipm_arg_set_default(mode, &argx);
+                d_ocp_qp_ipm_arg_set_mu0(&mu0, &argx);
+                d_ocp_qp_ipm_arg_set_iter_max(&iter_max, &argx);
+                d_ocp_qp_ipm_arg_set_tol_stat(&tol_stat, &argx);
+                d_ocp_qp_ipm_arg_set_tol_eq(&tol_eq, &argx);
+                d_ocp_qp_ipm_arg_set_tol_ineq(&tol_ineq, &argx);
+                d_ocp_qp_ipm_arg_set_tol_comp(&tol_comp, &argx);
+                d_ocp_qp_ipm_arg_set_reg_prim(&reg_prim, &argx);
+
+                d_ocp_qp_dim_set_all(nx, nu, nbx, nbu, ng, nsbx, nsbu, nsg, &dimx);
+                qp_sizex = d_ocp_qp_memsize(&dimx);
+                qp_memx = malloc(qp_sizex);
+                d_ocp_qp_create(&dimx, &qpx, qp_memx);
+                qp_sol_sizex = d_ocp_qp_sol_memsize(&dimx);
+                qp_sol_memx = malloc(qp_sol_sizex);
+                ipm_sizex = d_ocp_qp_ipm_ws_memsize(&dimx, &argx);
+                ipm_memx = malloc(ipm_sizex);
+                d_ocp_qp_ipm_ws_create(&dimx, &argx, &workspacex, ipm_memx);
+
+                dim_sizey = d_ocp_qp_dim_memsize(N);
+                dim_memy = malloc(dim_sizey);
+                d_ocp_qp_dim_create(N, &dimy, dim_memy);
+                ipm_arg_sizey = d_ocp_qp_ipm_arg_memsize(&dimy);
+                ipm_arg_memy = malloc(ipm_arg_sizey);
+                d_ocp_qp_ipm_arg_create(&dimy, &argy, ipm_arg_memy);
+                d_ocp_qp_ipm_arg_set_default(mode, &argy);
+                d_ocp_qp_ipm_arg_set_mu0(&mu0, &argy);
+                d_ocp_qp_ipm_arg_set_iter_max(&iter_max, &argy);
+                d_ocp_qp_ipm_arg_set_tol_stat(&tol_stat, &argy);
+                d_ocp_qp_ipm_arg_set_tol_eq(&tol_eq, &argy);
+                d_ocp_qp_ipm_arg_set_tol_ineq(&tol_ineq, &argy);
+                d_ocp_qp_ipm_arg_set_tol_comp(&tol_comp, &argy);
+                d_ocp_qp_ipm_arg_set_reg_prim(&reg_prim, &argy);
+                
+                d_ocp_qp_dim_set_all(nx, nu, nbx, nbu, ng, nsbx, nsbu, nsg, &dimy);
+                qp_sizey = d_ocp_qp_memsize(&dimy);
+                qp_memy = malloc(qp_sizey);
+                d_ocp_qp_create(&dimy, &qpy, qp_memy);
+                qp_sol_sizey = d_ocp_qp_sol_memsize(&dimy);
+                qp_sol_memy = malloc(qp_sol_sizey);
+                ipm_sizey = d_ocp_qp_ipm_ws_memsize(&dimy, &argy);
+                ipm_memy = malloc(ipm_sizey);
+                d_ocp_qp_ipm_ws_create(&dimy, &argy, &workspacey, ipm_memy);
+
                 mpcModelSetup();
-                std::cout << "MPC INIT" << std::endl;
                 mpc_init = false;
+                std::cout << "MPC INIT" << std::endl;
             }
 
             start = clock();
@@ -183,81 +244,134 @@ void CustomController::computePlanner()
             /************************************************
             * box & general constraints
             ************************************************/
-            d_lbu0[0] = -100;
-            d_lbu0[1] = -100;
-            d_ubu0[0] = 100;
-            d_ubu0[1] = 100;
+            d_lbu0x[0] = -100;
+            d_lbu0x[1] = -100;
+            d_ubu0x[0] = 100;
+            d_ubu0x[1] = 100;
 
-            d_lbx0[0] = 0.0;
-            d_lbx0[1] = 0.0;
-            d_lbx0[2] = 0.0;
-            d_lbx0[3] = 0.0;
-            d_lbx0[4] = 0.0;
-            d_ubx0[0] = 0.0;
-            d_ubx0[1] = 0.0;
-            d_ubx0[2] = 0.0;
-            d_ubx0[3] = 0.0;
-            d_ubx0[4] = 0.0;
+            d_lbx0x[0] = 0.0;
+            d_lbx0x[1] = 0.0;
+            d_lbx0x[2] = 0.0;
+            d_lbx0x[3] = 0.0;
+            d_lbx0x[4] = 0.0;
+            d_ubx0x[0] = 0.0;
+            d_ubx0x[1] = 0.0;
+            d_ubx0x[2] = 0.0;
+            d_ubx0x[3] = 0.0;
+            d_ubx0x[4] = 0.0;
+
+            d_lbu0y[0] = -100;
+            d_lbu0y[1] = -100;
+            d_ubu0y[0] = 100;
+            d_ubu0y[1] = 100;
+
+            d_lbx0y[0] = 0.0;
+            d_lbx0y[1] = 0.0;
+            d_lbx0y[2] = 0.0;
+            d_lbx0y[3] = 0.0;
+            d_lbx0y[4] = 0.0;
+            d_ubx0y[0] = 0.0;
+            d_ubx0y[1] = 0.0;
+            d_ubx0y[2] = 0.0;
+            d_ubx0y[3] = 0.0;
+            d_ubx0y[4] = 0.0;            
 
             for (ii = 0; ii < ng[0]; ii++)
             {
                 if (ii < nu[0] - nb[0]) // input
                 {
-                    d_lg0[ii] = -0.5; // umin
-                    d_ug0[ii] = 0.5;  // umax
+                    d_lg0x[ii] = -0.5; // umin
+                    d_ug0x[ii] = 0.5;  // umax
+                    d_lg0y[ii] = -0.5; // umin
+                    d_ug0y[ii] = 0.5;  // umax
                 }
                 else // state
                 {
-                    d_lg0[ii] = -4.0; // xmin
-                    d_ug0[ii] = 4.0;  // xmax
+                    d_lg0x[ii] = -4.0; // xmin
+                    d_ug0x[ii] = 4.0;  // xmax
+                    d_lg0y[ii] = -4.0; // xmin
+                    d_ug0y[ii] = 4.0;  // xmax
                 }
             }
 
-            d_lbu1[0] = -100;
-            d_lbu1[1] = -100;
-            d_ubu1[0] = 100;
-            d_ubu1[1] = 100;
+            d_lbu1x[0] = -100;
+            d_lbu1x[1] = -100;
+            d_ubu1x[0] = 100;
+            d_ubu1x[1] = 100;
 
-            d_lbx1[0] = -10;
-            d_lbx1[1] = -10;
-            d_lbx1[2] = -0.1;
-            d_lbx1[3] = -10;
-            d_lbx1[4] = -3;
-            d_ubx1[0] = 10;
-            d_ubx1[1] = 10;
-            d_ubx1[2] = 0.25;
-            d_ubx1[3] = 10;
-            d_ubx1[4] = 3;
+            d_lbx1x[0] = -10;
+            d_lbx1x[1] = -10;
+            d_lbx1x[2] = -0.1;
+            d_lbx1x[3] = -10;
+            d_lbx1x[4] = -3;
+            d_ubx1x[0] = 10;
+            d_ubx1x[1] = 10;
+            d_ubx1x[2] = 0.25;
+            d_ubx1x[3] = 10;
+            d_ubx1x[4] = 3;
+
+            d_lbu1y[0] = -100;
+            d_lbu1y[1] = -100;
+            d_ubu1y[0] = 100;
+            d_ubu1y[1] = 100;
+
+            d_lbx1y[0] = -10;
+            d_lbx1y[1] = -10;
+            d_lbx1y[2] = -0.1;
+            d_lbx1y[3] = -10;
+            d_lbx1y[4] = -3;
+            d_ubx1y[0] = 10;
+            d_ubx1y[1] = 10;
+            d_ubx1y[2] = 0.25;
+            d_ubx1y[3] = 10;
+            d_ubx1y[4] = 3;
 
             for (ii = 0; ii < ng[1]; ii++)
             {
                 if (ii < nu[1] - nb[1]) // input
                 {
-                    d_lg1[ii] = 0.0; // umin
-                    d_ug1[ii] = 0.0; // umax
+                    d_lg1x[ii] = 0.0; // umin
+                    d_ug1x[ii] = 0.0; // umax
+                    d_lg1y[ii] = 0.0; // umin
+                    d_ug1y[ii] = 0.0; // umax
                 }
                 else // state
                 {
-                    d_lg1[ii] = 0.4; // xmin
-                    d_ug1[ii] = 0.4; // xmax
+                    d_lg1x[ii] = 0.4; // xmin
+                    d_ug1x[ii] = 0.4; // xmax
+                    d_lg1y[ii] = 0.4; // xmin
+                    d_ug1y[ii] = 0.4; // xmax
                 }
             }
 
-            d_lbxN[0] = 0.1;
-            d_lbxN[1] = 0.1;
-            d_lbxN[2] = 0.1;
-            d_lbxN[3] = 0.1;
-            d_lbxN[4] = 0.1;
-            d_ubxN[0] = 0.1;
-            d_ubxN[1] = 0.1;
-            d_ubxN[2] = 0.1;
-            d_ubxN[3] = 0.1;
-            d_ubxN[4] = 0.1;
+            d_lbxNx[0] = 0.1;
+            d_lbxNx[1] = 0.1;
+            d_lbxNx[2] = 0.1;
+            d_lbxNx[3] = 0.1;
+            d_lbxNx[4] = 0.1;
+            d_ubxNx[0] = 0.1;
+            d_ubxNx[1] = 0.1;
+            d_ubxNx[2] = 0.1;
+            d_ubxNx[3] = 0.1;
+            d_ubxNx[4] = 0.1;
+
+            d_lbxNy[0] = 0.1;
+            d_lbxNy[1] = 0.1;
+            d_lbxNy[2] = 0.1;
+            d_lbxNy[3] = 0.1;
+            d_lbxNy[4] = 0.1;
+            d_ubxNy[0] = 0.1;
+            d_ubxNy[1] = 0.1;
+            d_ubxNy[2] = 0.1;
+            d_ubxNy[3] = 0.1;
+            d_ubxNy[4] = 0.1;
 
             for (ii = 0; ii < ng[N]; ii++)
             {
-                d_lgN[ii] = 0.2; // dmin
-                d_ugN[ii] = 0.2; // dmax
+                d_lgNx[ii] = 0.2; // dmin
+                d_ugNx[ii] = 0.2; // dmax
+                d_lgNy[ii] = 0.2; // dmin
+                d_ugNy[ii] = 0.2; // dmax            
             }
 
             D1x[1] = 0.0;
@@ -267,30 +381,56 @@ void CustomController::computePlanner()
             CNx[3] = 1.0;
             CNx[4] = 1.0;
 
+            D1y[1] = 0.0;
+            C1y[3] = 1.0;
+            C1y[4] = 1.0;
+            DNy[1] = 0.0;
+            CNy[3] = 1.0;
+            CNy[4] = 1.0;
+
             hCx[0] = C0x;
             hDx[0] = D0x;
-            hd_lgx[0] = d_lg0;
-            hd_ugx[0] = d_ug0;
+            hd_lgx[0] = d_lg0x;
+            hd_ugx[0] = d_ug0x;
+
+            hCy[0] = C0y;
+            hDy[0] = D0y;
+            hd_lgy[0] = d_lg0y;
+            hd_ugy[0] = d_ug0y;
 
             for (ii = 1; ii < N; ii++)
             {
-                hd_lgx[ii] = d_lg1;
-                hd_ugx[ii] = d_ug1;
+                hd_lgx[ii] = d_lg1x;
+                hd_ugx[ii] = d_ug1x;
                 hCx[ii] = C1x;
                 hDx[ii] = D1x;
+                hd_lgy[ii] = d_lg1y;
+                hd_ugy[ii] = d_ug1y;
+                hCy[ii] = C1y;
+                hDy[ii] = D1y;
             }
 
             hCx[N] = CNx;
             hDx[N] = DNx;
-            hd_lgx[N] = d_lgN;
-            hd_ugx[N] = d_ugN;
+            hd_lgx[N] = d_lgNx;
+            hd_ugx[N] = d_ugNx;
 
-            d_ocp_qp_set_all(hAx, hBx, hbx, hQx, hSx, hRx, hqx, hrx, hidxbx, hd_lbxx, hd_ubxx, hidxbu, hd_lbux, hd_ubux, hCx, hDx, hd_lgx, hd_ugx, hZlx, hZu, hzl, hzu, hidxs, hd_ls, hd_us, &qpx);
+            hCy[N] = CNy;
+            hDy[N] = DNy;
+            hd_lgy[N] = d_lgNy;
+            hd_ugy[N] = d_ugNy;
+
+            d_ocp_qp_set_all(hAx, hBx, hbx, hQx, hSx, hRx, hqx, hrx, hidxbx, hd_lbxx, hd_ubxx, hidxbu, hd_lbux, hd_ubux, hCx, hDx, hd_lgx, hd_ugx, hZlx, hZux, hzlx, hzux, hidxs, hd_lsx, hd_usx, &qpx);
+            d_ocp_qp_set_all(hAy, hBy, hby, hQy, hSy, hRy, hqy, hry, hidxbx, hd_lbxy, hd_ubxy, hidxbu, hd_lbuy, hd_ubuy, hCy, hDy, hd_lgy, hd_ugy, hZly, hZuy, hzly, hzuy, hidxs, hd_lsy, hd_usy, &qpy);
 
             start1 = clock();
+
             d_ocp_qp_sol_create(&dimx, &qp_solx, qp_sol_memx);
             d_ocp_qp_ipm_solve(&qpx, &qp_solx, &argx, &workspacex);
             d_ocp_qp_ipm_get_status(&workspacex, &hpipm_statusx);
+            d_ocp_qp_sol_create(&dimy, &qp_soly, qp_sol_memy);
+            d_ocp_qp_ipm_solve(&qpy, &qp_soly, &argy, &workspacey);
+            d_ocp_qp_ipm_get_status(&workspacey, &hpipm_statusy);
             endt = clock();
 
             double result, result1;
@@ -327,7 +467,7 @@ void CustomController::computePlanner()
             {
                 printf("\n -> Solver failed! Unknown return flag\n");
             }
-
+/*
             for (ii = 1; ii <= N; ii++)
             {
                 std::cout << " ii " << ii << std::endl;
@@ -336,7 +476,7 @@ void CustomController::computePlanner()
                 d_print_mat(1, nx[ii], x11x, 1);
                 std::cout << "sl " << std::endl;
                 d_print_mat(1, ns[ii], slx, 1);
-            }
+            }*/
         }
     }
 }
@@ -913,31 +1053,52 @@ void CustomController::setCpPosition()
     }
 }
 
-void CustomController::FlywheelModel(double Ts, int nx, int nu, double *A, double *B)
+void CustomController::flyWheelModel(double Ts, int nx, int nu, double *Ax, double *Bx, double *Ay, double *By)
 {
     int ii;
     int nx2 = nx * nx;
 
     for (ii = 0; ii < nx * nx; ii++)
-        A[ii] = 0.0;
+    {
+        Ax[ii] = 0.0;
+        Ay[ii] = 0.0;
+    }
 
-    A[0] = 1.0;
-    A[6] = 1.0;
-    A[12] = 1.0;
-    A[18] = 1.0;
-    A[24] = 1.0;
+    Ax[0] = 1.0;
+    Ax[6] = 1.0;
+    Ax[12] = 1.0;
+    Ax[18] = 1.0;
+    Ax[24] = 1.0;
 
-    A[1] = 2.77 * Ts;
-    A[23] = 1.0 * Ts;
-    A[11] = -2.77 * Ts;
-    A[5] = 1.0 * Ts;
+    Ax[1] = 2.77 * Ts;
+    Ax[23] = 1.0 * Ts;
+    Ax[11] = -2.77 * Ts;
+    Ax[5] = 1.0 * Ts;
+
+    Ay[0] = 1.0;
+    Ay[6] = 1.0;
+    Ay[12] = 1.0;
+    Ay[18] = 1.0;
+    Ay[24] = 1.0;
+
+    Ay[1] = 2.77 * Ts;
+    Ay[23] = 1.0 * Ts;
+    Ay[11] = -2.77 * Ts;
+    Ay[5] = 1.0 * Ts;
 
     for (ii = 0; ii < nx * nu; ii++)
-        B[ii] = 0.0;
+    {
+        Bx[ii] = 0.0;
+        By[ii] = 0.0;
+    }
 
-    B[6] = 1 / (94.23 * 9.81) * Ts;
-    B[2] = 1.00 * Ts;
-    B[9] = 1.00 * Ts;
+    Bx[6] = 1 / (94.23 * 9.81) * Ts;
+    Bx[2] = 1.00 * Ts;
+    Bx[9] = 1.00 * Ts;
+
+    By[6] = 1 / (94.23 * 9.81) * Ts;
+    By[2] = 1.00 * Ts;
+    By[9] = 1.00 * Ts;
 }
 
 void CustomController::mpcVariableInit()
@@ -958,6 +1119,18 @@ void CustomController::mpcVariableInit()
     lam_ugx = (double **)malloc((N + 1) * sizeof(double *));
     lam_lsx = (double **)malloc((N + 1) * sizeof(double *));
     lam_usx = (double **)malloc((N + 1) * sizeof(double *));
+    
+    uy = (double **)malloc((N + 1) * sizeof(double *));
+    xy = (double **)malloc((N + 1) * sizeof(double *));
+    lsy = (double **)malloc((N + 1) * sizeof(double *));
+    usy = (double **)malloc((N + 1) * sizeof(double *));
+    piy = (double **)malloc((N + 1) * sizeof(double *));
+    lam_lby = (double **)malloc((N + 1) * sizeof(double *));
+    lam_lgy = (double **)malloc((N + 1) * sizeof(double *));
+    lam_uby = (double **)malloc((N + 1) * sizeof(double *));
+    lam_ugy = (double **)malloc((N + 1) * sizeof(double *));
+    lam_lsy = (double **)malloc((N + 1) * sizeof(double *));
+    lam_usy = (double **)malloc((N + 1) * sizeof(double *));
 
     nx = (int *)malloc((N + 1) * sizeof(int));
     nu = (int *)malloc((N + 1) * sizeof(int));
@@ -980,23 +1153,47 @@ void CustomController::mpcVariableInit()
     hqx = (double **)malloc((N + 1) * sizeof(double *));
     hrx = (double **)malloc((N + 1) * sizeof(double *));
 
+    hAy = (double **)malloc((N) * sizeof(double *));
+    hBy = (double **)malloc((N) * sizeof(double *));
+    hby = (double **)malloc((N) * sizeof(double *));
+    hQy = (double **)malloc((N + 1) * sizeof(double *));
+    hSy = (double **)malloc((N + 1) * sizeof(double *));
+    hRy = (double **)malloc((N + 1) * sizeof(double *));
+    hqy = (double **)malloc((N + 1) * sizeof(double *));
+    hry = (double **)malloc((N + 1) * sizeof(double *));
+
     hidxbx = (int **)malloc((N + 1) * sizeof(int *));
     hd_lbxx = (double **)malloc((N + 1) * sizeof(double *));
     hd_ubxx = (double **)malloc((N + 1) * sizeof(double *));
+    hd_lbxy = (double **)malloc((N + 1) * sizeof(double *));
+    hd_ubxy = (double **)malloc((N + 1) * sizeof(double *));
     hidxbu = (int **)malloc((N + 1) * sizeof(int *));
     hd_lbux = (double **)malloc((N + 1) * sizeof(double *));
     hd_ubux = (double **)malloc((N + 1) * sizeof(double *));
+    hd_lbuy = (double **)malloc((N + 1) * sizeof(double *));
+    hd_ubuy = (double **)malloc((N + 1) * sizeof(double *));
     hCx = (double **)malloc((N + 1) * sizeof(double *));
     hDx = (double **)malloc((N + 1) * sizeof(double *));
     hd_lgx = (double **)malloc((N + 1) * sizeof(double *));
     hd_ugx = (double **)malloc((N + 1) * sizeof(double *));
+    hCy = (double **)malloc((N + 1) * sizeof(double *));
+    hDy = (double **)malloc((N + 1) * sizeof(double *));
+    hd_lgy = (double **)malloc((N + 1) * sizeof(double *));
+    hd_ugy = (double **)malloc((N + 1) * sizeof(double *));
     hZlx = (double **)malloc((N + 1) * sizeof(double *));
-    hZu = (double **)malloc((N + 1) * sizeof(double *));
-    hzl = (double **)malloc((N + 1) * sizeof(double *));
-    hzu = (double **)malloc((N + 1) * sizeof(double *));
+    hZux = (double **)malloc((N + 1) * sizeof(double *));
+    hzlx = (double **)malloc((N + 1) * sizeof(double *));
+    hzux = (double **)malloc((N + 1) * sizeof(double *));
+    hZly = (double **)malloc((N + 1) * sizeof(double *));
+    hZuy = (double **)malloc((N + 1) * sizeof(double *));
+    hzly = (double **)malloc((N + 1) * sizeof(double *));
+    hzuy = (double **)malloc((N + 1) * sizeof(double *));
     hidxs = (int **)malloc((N + 1) * sizeof(int *));
-    hd_ls = (double **)malloc((N + 1) * sizeof(double *));
-    hd_us = (double **)malloc((N + 1) * sizeof(double *));
+    hd_lsx = (double **)malloc((N + 1) * sizeof(double *));
+    hd_usx = (double **)malloc((N + 1) * sizeof(double *));
+    hd_lsy = (double **)malloc((N + 1) * sizeof(double *));
+    hd_usy = (double **)malloc((N + 1) * sizeof(double *));
+ 
     // stage-wise variant size
     for (ii = 1; ii <= N; ii++)
     {
@@ -1009,6 +1206,7 @@ void CustomController::mpcVariableInit()
         nsbx[ii] = 0;
         nbxe[ii] = 0;
     }
+    
     nu[N] = 0;
     ng[N] = 1;
     nbu[N] = 0;
@@ -1042,27 +1240,51 @@ void CustomController::mpcVariableInit()
     d_zeros(&Sx, nu_, nx_);
     d_zeros(&qx, nx_, 1);
     d_zeros(&rx, nu_, 1);
-    d_zeros(&d_lbx1, nbx[1], 1);
-    d_zeros(&d_ubx1, nbx[1], 1);
-    d_zeros(&d_lbu1, nbu[1], 1);
-    d_zeros(&d_ubu1, nbu[1], 1);
-    d_zeros(&d_lg1, ng[1], 1);
-    d_zeros(&d_ug1, ng[1], 1);
-    d_zeros(&d_lbx0, nbx[0], 1);
-    d_zeros(&d_ubx0, nbx[0], 1);
-    d_zeros(&d_lbu0, nbu[0], 1);
-    d_zeros(&d_ubu0, nbu[0], 1);
-    d_zeros(&d_lg0, ng[0], 1);
-    d_zeros(&d_ug0, ng[0], 1);
+    d_zeros(&Ay, nx_, nx_); // states update matrix
+    d_zeros(&By, nx_, nu_); // inputs matrix
+    d_zeros(&by, nx_, 1);   // states offset
+    d_zeros(&x0y, nx_, 1);  // initial state
+    d_zeros(&Qy, nx_, nx_);
+    d_zeros(&Ry, nu_, nu_);
+    d_zeros(&Sy, nu_, nx_);
+    d_zeros(&qy, nx_, 1);
+    d_zeros(&ry, nu_, 1);
+   
+    d_zeros(&d_lbx1x, nbx[1], 1);
+    d_zeros(&d_ubx1x, nbx[1], 1);
+    d_zeros(&d_lbu1x, nbu[1], 1);
+    d_zeros(&d_ubu1x, nbu[1], 1);
+    d_zeros(&d_lg1x, ng[1], 1);
+    d_zeros(&d_ug1x, ng[1], 1);
+    d_zeros(&d_lbx0x, nbx[0], 1);
+    d_zeros(&d_ubx0x, nbx[0], 1);
+    d_zeros(&d_lbu0x, nbu[0], 1);
+    d_zeros(&d_ubu0x, nbu[0], 1);
+    d_zeros(&d_lg0x, ng[0], 1);
+    d_zeros(&d_ug0x, ng[0], 1);
+    d_zeros(&d_lbx1y, nbx[1], 1);
+    d_zeros(&d_ubx1y, nbx[1], 1);
+    d_zeros(&d_lbu1y, nbu[1], 1);
+    d_zeros(&d_ubu1y, nbu[1], 1);
+    d_zeros(&d_lg1y, ng[1], 1);
+    d_zeros(&d_ug1y, ng[1], 1);
+    d_zeros(&d_lbx0y, nbx[0], 1);
+    d_zeros(&d_ubx0y, nbx[0], 1);
+    d_zeros(&d_lbu0y, nbu[0], 1);
+    d_zeros(&d_ubu0y, nbu[0], 1);
+    d_zeros(&d_lg0y, ng[0], 1);
+    d_zeros(&d_ug0y, ng[0], 1);
+
     int_zeros(&idxbx0, nbx[0], 1);
     int_zeros(&idxbx1, nbx[1], 1);
     int_zeros(&idxbu1, nbu[1], 1);
     int_zeros(&idxbu0, nbu[0], 1);
     int_zeros(&idxbxN, nbx[N], 1);
-    d_zeros(&d_lbxN, nbx[N], 1);
-    d_zeros(&d_ubxN, nbx[N], 1);
-    d_zeros(&d_lgN, ng[N], 1);
-    d_zeros(&d_ugN, ng[N], 1);
+
+    d_zeros(&d_lbxNx, nbx[N], 1);
+    d_zeros(&d_ubxNx, nbx[N], 1);
+    d_zeros(&d_lgNx, ng[N], 1);
+    d_zeros(&d_ugNx, ng[N], 1);
     d_zeros(&C0x, ng[0], nx[0]);
     d_zeros(&D0x, ng[0], nu[0]);
     d_zeros(&C1x, ng[1], nx[1]);
@@ -1073,6 +1295,21 @@ void CustomController::mpcVariableInit()
     d_zeros(&Zu0x, ns[0], 1);
     d_zeros(&zl0x, ns[0], 1);
     d_zeros(&zu0x, ns[0], 1);
+    d_zeros(&d_lbxNy, nbx[N], 1);
+    d_zeros(&d_ubxNy, nbx[N], 1);
+    d_zeros(&d_lgNy, ng[N], 1);
+    d_zeros(&d_ugNy, ng[N], 1);
+    d_zeros(&C0y, ng[0], nx[0]);
+    d_zeros(&D0y, ng[0], nu[0]);
+    d_zeros(&C1y, ng[1], nx[1]);
+    d_zeros(&D1y, ng[1], nu[1]);
+    d_zeros(&CNy, ng[N], nx[N]);
+    d_zeros(&DNy, ng[N], nu[N]);
+    d_zeros(&Zl0y, ns[0], 1);
+    d_zeros(&Zu0y, ns[0], 1);
+    d_zeros(&zl0y, ns[0], 1);
+    d_zeros(&zu0y, ns[0], 1);
+   
     int_zeros(&idxs0, ns[0], 1);
     d_zeros(&d_ls0x, ns[0], 1);
     d_zeros(&d_us0x, ns[0], 1);
@@ -1080,6 +1317,12 @@ void CustomController::mpcVariableInit()
     d_zeros(&Zu1x, ns[1], 1);
     d_zeros(&zl1x, ns[1], 1);
     d_zeros(&zu1x, ns[1], 1);
+    d_zeros(&d_ls0y, ns[0], 1);
+    d_zeros(&d_us0y, ns[0], 1);
+    d_zeros(&Zl1y, ns[1], 1);
+    d_zeros(&Zu1y, ns[1], 1);
+    d_zeros(&zl1y, ns[1], 1);
+    d_zeros(&zu1y, ns[1], 1);
     int_zeros(&idxs1, ns[1], 1);
     d_zeros(&d_ls1x, ns[1], 1);
     d_zeros(&d_us1x, ns[1], 1);
@@ -1087,9 +1330,17 @@ void CustomController::mpcVariableInit()
     d_zeros(&ZuNx, ns[N], 1);
     d_zeros(&zlNx, ns[N], 1);
     d_zeros(&zuNx, ns[N], 1);
+    d_zeros(&d_ls1y, ns[1], 1);
+    d_zeros(&d_us1y, ns[1], 1);
+    d_zeros(&ZlNy, ns[N], 1);
+    d_zeros(&ZuNy, ns[N], 1);
+    d_zeros(&zlNy, ns[N], 1);
+    d_zeros(&zuNy, ns[N], 1);
     int_zeros(&idxsN, ns[N], 1);
     d_zeros(&d_lsNx, ns[N], 1);
     d_zeros(&d_usNx, ns[N], 1);
+    d_zeros(&d_lsNy, ns[N], 1);
+    d_zeros(&d_usNy, ns[N], 1);
 
     for (jj = 0; jj < nx_; jj++)
     {
@@ -1097,12 +1348,18 @@ void CustomController::mpcVariableInit()
         bx[jj] = 0.0;
         Qx[ii * (nx_ + 1)] = 3.0;
         qx[ii] = 0.0;
+        x0y[jj] = 0;
+        by[jj] = 0.0;
+        Qy[ii * (nx_ + 1)] = 3.0;
+        qy[ii] = 0.0;
     }
 
     for (ii = 0; ii < nu_; ii++)
     {
         rx[ii] = 0.0;
         Rx[ii * (nu_ + 1)] = 50.0;
+        ry[ii] = 0.0;
+        Ry[ii * (nu_ + 1)] = 50.0;
     }
 
     for (ii = 0; ii <= N; ii++)
@@ -1118,6 +1375,17 @@ void CustomController::mpcVariableInit()
         d_zeros(lam_ugx + ii, ng[ii], 1);
         d_zeros(lam_lsx + ii, ns[ii], 1);
         d_zeros(lam_usx + ii, ns[ii], 1);
+        d_zeros(uy + ii, nu[ii], 1);
+        d_zeros(xy + ii, nx[ii], 1);
+        d_zeros(lsy + ii, ns[ii], 1);
+        d_zeros(usy + ii, ns[ii], 1);
+        d_zeros(piy + ii, nx[ii + 1], 1);
+        d_zeros(lam_lby + ii, nb[ii], 1);
+        d_zeros(lam_uby + ii, nb[ii], 1);
+        d_zeros(lam_lgy + ii, ng[ii], 1);
+        d_zeros(lam_ugy + ii, ng[ii], 1);
+        d_zeros(lam_lsy + ii, ns[ii], 1);
+        d_zeros(lam_usy + ii, ns[ii], 1);
     }
 
     for (ii = 0; ii < nbu[0]; ii++)
@@ -1152,9 +1420,15 @@ void CustomController::mpcVariableInit()
         Zu0x[ii] = 0e3;
         zl0x[ii] = 1e2;
         zu0x[ii] = 1e2;
+        Zl0y[ii] = 0e3;
+        Zu0y[ii] = 0e3;
+        zl0y[ii] = 1e2;
+        zu0y[ii] = 1e2;
         idxs0[ii] = nu[0] + nx[0] + ii;
         d_ls0x[ii] = -0.05; //-1.0;
         d_us0x[ii] = 0.05;
+        d_ls0y[ii] = -0.05; //-1.0;
+        d_us0y[ii] = 0.05;
     }
 
     for (ii = 0; ii < ns[1]; ii++)
@@ -1163,62 +1437,35 @@ void CustomController::mpcVariableInit()
         Zu1x[ii] = 0e3;
         zl1x[ii] = 1e2;
         zu1x[ii] = 1e2;
+        Zl1y[ii] = 0e3;
+        Zu1y[ii] = 0e3;
+        zl1y[ii] = 1e2;
+        zu1y[ii] = 1e2;
         idxs1[ii] = nu[1] + nx[1] + ii;
         d_ls1x[ii] = 0.0; //-1.0;
         d_us1x[ii] = 0.0;
+        d_ls1y[ii] = 0.0; //-1.0;
+        d_us1y[ii] = 0.0;
         ZlNx[ii] = 0e3;
         ZuNx[ii] = 0e3;
         zlNx[ii] = 1e2;
         zuNx[ii] = 1e2;
+        ZlNy[ii] = 0e3;
+        ZuNy[ii] = 0e3;
+        zlNy[ii] = 1e2;
+        zuNy[ii] = 1e2;
         idxsN[ii] = nu[N] + nx[N] + ii;
         d_lsNx[ii] = 0.0; //-1.0;
         d_usNx[ii] = 0.0;
+        d_lsNy[ii] = 0.0; //-1.0;
+        d_usNy[ii] = 0.0;
     }
-}
-
-void CustomController::mpcSolverSetup()
-{
-    int iter_max = 30;
-    double alpha_min = 1e-8;
-    double tol_stat = 1e-6;
-    double tol_eq = 1e-8;
-    double tol_ineq = 1e-8;
-    double tol_comp = 1e-8;
-    double reg_prim = 1e-12;
-    int warm_start = 0;
-    int pred_corr = 1;
-    int ric_alg = 0;
-    int comp_res_exit = 1;
-    enum hpipm_mode mode = SPEED_ABS;
-
-    dim_sizex = d_ocp_qp_dim_memsize(N);
-    dim_memx = malloc(dim_sizex);
-    d_ocp_qp_dim_create(N, &dimx, dim_memx);
-    ipm_arg_sizex = d_ocp_qp_ipm_arg_memsize(&dimx);
-    ipm_arg_memx = malloc(ipm_arg_sizex);
-    d_ocp_qp_ipm_arg_create(&dimx, &argx, ipm_arg_memx);
-    d_ocp_qp_ipm_arg_set_default(mode, &argx);
-    d_ocp_qp_ipm_arg_set_mu0(&mu0, &argx);
-    d_ocp_qp_ipm_arg_set_iter_max(&iter_max, &argx);
-    d_ocp_qp_ipm_arg_set_tol_stat(&tol_stat, &argx);
-    d_ocp_qp_ipm_arg_set_tol_eq(&tol_eq, &argx);
-    d_ocp_qp_ipm_arg_set_tol_ineq(&tol_ineq, &argx);
-    d_ocp_qp_ipm_arg_set_tol_comp(&tol_comp, &argx);
-    d_ocp_qp_ipm_arg_set_reg_prim(&reg_prim, &argx);
-
-    d_ocp_qp_dim_set_all(nx, nu, nbx, nbu, ng, nsbx, nsbu, nsg, &dimx);
-    qp_sizex = d_ocp_qp_memsize(&dimx);
-    qp_memx = malloc(qp_sizex);
-    d_ocp_qp_create(&dimx, &qpx, qp_memx);
-    qp_sol_sizex = d_ocp_qp_sol_memsize(&dimx);
-    qp_sol_memx = malloc(qp_sol_sizex);
-    ipm_sizex = d_ocp_qp_ipm_ws_memsize(&dimx, &argx);
-    ipm_memx = malloc(ipm_sizex);
-    d_ocp_qp_ipm_ws_create(&dimx, &argx, &workspacex, ipm_memx);
 }
 
 void CustomController::mpcModelSetup()
 {
+    flyWheelModel(Ts, nx_, nu_, Ax, Bx, Ay, By);
+
     //MODEL
     hAx[0] = Ax;
     hBx[0] = Bx;
@@ -1228,19 +1475,37 @@ void CustomController::mpcModelSetup()
     hRx[0] = Rx;
     hqx[0] = qx;
     hrx[0] = rx;
+    hAy[0] = Ay;
+    hBy[0] = By;
+    hby[0] = by;
+    hQy[0] = Qy;
+    hSy[0] = Sy;
+    hRy[0] = Ry;
+    hqy[0] = qy;
+    hry[0] = ry;
     hidxbx[0] = idxbx0;
-    hd_lbxx[0] = d_lbx0;
-    hd_ubxx[0] = d_ubx0;
+    hd_lbxx[0] = d_lbx0x;
+    hd_ubxx[0] = d_ubx0x;
+    hd_lbxy[0] = d_lbx0y;
+    hd_ubxy[0] = d_ubx0y;
     hidxbu[0] = idxbu0;
-    hd_lbux[0] = d_lbu0;
-    hd_ubux[0] = d_ubu0;
+    hd_lbux[0] = d_lbu0x;
+    hd_ubux[0] = d_ubu0x;
+    hd_lbuy[0] = d_lbu0y;
+    hd_ubuy[0] = d_ubu0y;
     hZlx[0] = Zl0x;
-    hZu[0] = Zu0x;
-    hzl[0] = zl0x;
-    hzu[0] = zu0x;
+    hZux[0] = Zu0x;
+    hzlx[0] = zl0x;
+    hzux[0] = zu0x;
+    hZly[0] = Zl0y;
+    hZuy[0] = Zu0y;
+    hzly[0] = zl0y;
+    hzuy[0] = zu0y;
     hidxs[0] = idxs0;
-    hd_ls[0] = d_ls0x;
-    hd_us[0] = d_us0x;
+    hd_lsx[0] = d_ls0x;
+    hd_usx[0] = d_us0x;
+    hd_lsy[0] = d_ls0y;
+    hd_usy[0] = d_us0y;
 
     for (ii = 1; ii < N; ii++)
     {
@@ -1252,19 +1517,37 @@ void CustomController::mpcModelSetup()
         hRx[ii] = Rx;
         hqx[ii] = qx;
         hrx[ii] = rx;
+        hAy[ii] = Ay;
+        hBy[ii] = By;
+        hby[ii] = by;
+        hQy[ii] = Qy;
+        hSy[ii] = Sy;
+        hRy[ii] = Ry;
+        hqy[ii] = qy;
+        hry[ii] = ry;
         hidxbx[ii] = idxbx1;
-        hd_lbxx[ii] = d_lbx1;
-        hd_ubxx[ii] = d_ubx1;
+        hd_lbxx[ii] = d_lbx1x;
+        hd_ubxx[ii] = d_ubx1x;
+        hd_lbxy[ii] = d_lbx1y;
+        hd_ubxy[ii] = d_ubx1y;
         hidxbu[ii] = idxbu1;
-        hd_lbux[ii] = d_lbu1;
-        hd_ubux[ii] = d_ubu1;
+        hd_lbux[ii] = d_lbu1x;
+        hd_ubux[ii] = d_ubu1x;
         hZlx[ii] = Zl1x;
-        hZu[ii] = Zu1x;
-        hzl[ii] = zl1x;
-        hzu[ii] = zu1x;
+        hZux[ii] = Zu1x;
+        hzlx[ii] = zl1x;
+        hzux[ii] = zu1x;
+        hd_lbuy[ii] = d_lbu1y;
+        hd_ubuy[ii] = d_ubu1y;
+        hZly[ii] = Zl1y;
+        hZuy[ii] = Zu1y;
+        hzly[ii] = zl1y;
+        hzuy[ii] = zu1y; 
         hidxs[ii] = idxs1;
-        hd_ls[ii] = d_ls1x;
-        hd_us[ii] = d_us1x;
+        hd_lsx[ii] = d_ls1x;
+        hd_usx[ii] = d_us1x;
+        hd_lsy[ii] = d_ls1y;
+        hd_usy[ii] = d_us1y;
     }
 
     hQx[N] = Qx;
@@ -1272,16 +1555,29 @@ void CustomController::mpcModelSetup()
     hRx[N] = Rx;
     hqx[N] = qx;
     hrx[N] = rx;
+    hQx[N] = Qy;
+    hSx[N] = Sy;
+    hRx[N] = Ry;
+    hqx[N] = qy;
+    hrx[N] = ry;
 
     hidxbx[N] = idxbxN;
 
-    hd_lbxx[N] = d_lbxN;
-    hd_ubxx[N] = d_ubxN;
+    hd_lbxx[N] = d_lbxNx;
+    hd_ubxx[N] = d_ubxNx;
+    hd_lbxy[N] = d_lbxNy;
+    hd_ubxy[N] = d_ubxNy;
     hZlx[N] = ZlNx;
-    hZu[N] = ZuNx;
-    hzl[N] = zlNx;
-    hzu[N] = zuNx;
+    hZux[N] = ZuNx;
+    hzlx[N] = zlNx;
+    hzux[N] = zuNx;
+    hZly[N] = ZlNy;
+    hZuy[N] = ZuNy;
+    hzly[N] = zlNy;
+    hzuy[N] = zuNy;
     hidxs[N] = idxsN;
-    hd_ls[N] = d_lsNx;
-    hd_us[N] = d_usNx;
+    hd_lsx[N] = d_lsNx;
+    hd_usx[N] = d_usNx;
+    hd_lsy[N] = d_lsNy;
+    hd_usy[N] = d_usNy;
 }
