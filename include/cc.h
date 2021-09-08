@@ -72,6 +72,12 @@ public:
     void getRobotState();
     void calcRobotState();
     void setCpPosition();
+    void cpReferencePatternGeneration();
+    void cptoComTrajectory();
+    void setFootTrajectory();
+    void setPelvTrajectory();
+    void inverseKinematics(RobotData &Robot, Eigen::Isometry3d PELV_float_transform, Eigen::Isometry3d LF_float_transform, Eigen::Isometry3d RF_float_transform, Eigen::Vector12d& leg_q);
+    void inverseKinematicsdob(RobotData &Robot);
 
     int walking_tick = 0;
     double contactMode;
@@ -101,10 +107,19 @@ public:
     Eigen::Vector6d SWF_float_currentV;
     Eigen::Isometry3d COM_float_current;
     Eigen::Isometry3d COM_support_current;
+    Eigen::Isometry3d PELV_trajectory_float;
+    Eigen::Isometry3d PELVD_trajectory_float;
     Eigen::Vector3d foot_distance;
     Eigen::Vector3d COMV_support_currentV;
     Eigen::Vector3d yx_vibm;
     Eigen::Vector3d yy_vibm;
+    Eigen::Vector6d SUF_float_initV;
+    Eigen::Vector6d SWF_float_initV;
+    Eigen::Isometry3d RF_support_init;
+    Eigen::Isometry3d LF_support_init;
+    Eigen::Vector3d LF_support_euler_init;
+    Eigen::Vector3d RF_support_euler_init;
+    Eigen::Vector3d PELV_support_euler_init;
 
     Eigen::Matrix3x12d Ag_leg;
     Eigen::Matrix3x8d Ag_armR;
@@ -114,6 +129,11 @@ public:
     Eigen::Matrix3x8d Agl_armR;
     Eigen::Matrix3x8d Agl_armL;
     Eigen::Matrix3x3d Agl_waist;
+
+    Eigen::Isometry3d LF_trajectory_float;
+    Eigen::Isometry3d RF_trajectory_float;
+    Eigen::Isometry3d LFD_trajectory_float;
+    Eigen::Isometry3d RFD_trajectory_float;
 
     Eigen::MatrixXd foot_step;
     int desired_foot_step_num;
@@ -137,6 +157,11 @@ public:
     Eigen::VectorXd zmp_refy;
     Eigen::VectorXd b_offset;
 
+    Eigen::Vector12d dob_hat;
+    Eigen::Vector12d dob_hat_prev;
+    Eigen::Vector12d desired_leg_q;
+    double dobGain;
+    
     //pinocchiio
     Eigen::VectorQd q_; 
     Eigen::VectorQd qdot, qddot, qdot_, qddot_;
@@ -166,10 +191,8 @@ public:
     time_t start, start1, endt;
     int ii, jj;
     int *nx, *nu, *nbu, *nbx, *nb, *ng, *nsbx, *nsbu, *nsg, *ns, *nbxe, *idxbx1, *idxbu1, *idxbx0, *idxbu0, *idxs0, *idxs1, *idxsN, **hidxbx, **hidxbu, **hidxs, *idxbxN;
-    
     double *Ax, *Bx, *bx, *x0x, *Qx, *Rx, *Sx, *qx, *rx, *d_ubu1x, *d_lbu1x, *d_lg1x, *d_ug1x, *d_ubx1x, *d_lbx1x, *d_ubx0x, *d_lbu0x, *d_ubu0x, *d_lg0x, *d_ug0x, *d_lbx0x;
     double *Ay, *By, *by, *x0y, *Qy, *Ry, *Sy, *qy, *ry, *d_ubu1y, *d_lbu1y, *d_lg1y, *d_ug1y, *d_ubx1y, *d_lbx1y, *d_ubx0y, *d_lbu0y, *d_ubu0y, *d_lg0y, *d_ug0y, *d_lbx0y;
-    
     double **hAx, **hBx, **hbx, **hQx, **hSx, **hRx, **hqx, **hrx, **hd_lbxx, **hd_ubxx, **hd_lbux, **hd_ubux, **hCx, **hDx, **hd_lgx, **hd_ugx, **hZlx, **hZux, **hzlx, **hzux, **hd_lsx, **hd_usx;
     double **hAy, **hBy, **hby, **hQy, **hSy, **hRy, **hqy, **hry, **hd_lbxy, **hd_ubxy, **hd_lbuy, **hd_ubuy, **hCy, **hDy, **hd_lgy, **hd_ugy, **hZly, **hZuy, **hzly, **hzuy, **hd_lsy, **hd_usy;
     double *d_lbxNx, *d_ubxNx, *d_lgNx, *d_ugNx, *C0x, *D0x, *C1x, *D1x, *CNx, *DNx, *Zl0x, *Zu0x, *zl0x, *zu0x, *d_ls0x, *d_us0x, *Zl1x, *Zu1x, *zl1x, *zu1x, *d_ls1x, *d_us1x, *ZlNx, *ZuNx, *zlNx, *zuNx, *d_lsNx, *d_usNx;
