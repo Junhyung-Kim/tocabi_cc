@@ -422,9 +422,8 @@ void CustomController::computePlanner()
 
             d_ocp_qp_set_all(hAx, hBx, hbx, hQx, hSx, hRx, hqx, hrx, hidxbx, hd_lbxx, hd_ubxx, hidxbu, hd_lbux, hd_ubux, hCx, hDx, hd_lgx, hd_ugx, hZlx, hZux, hzlx, hzux, hidxs, hd_lsx, hd_usx, &qpx);
             d_ocp_qp_set_all(hAy, hBy, hby, hQy, hSy, hRy, hqy, hry, hidxbx, hd_lbxy, hd_ubxy, hidxbu, hd_lbuy, hd_ubuy, hCy, hDy, hd_lgy, hd_ugy, hZly, hZuy, hzly, hzuy, hidxs, hd_lsy, hd_usy, &qpy);
-
+           
             start1 = clock();
-
             d_ocp_qp_sol_create(&dimx, &qp_solx, qp_sol_memx);
             d_ocp_qp_ipm_solve(&qpx, &qp_solx, &argx, &workspacex);
             d_ocp_qp_ipm_get_status(&workspacex, &hpipm_statusx);
@@ -1555,11 +1554,11 @@ void CustomController::mpcModelSetup()
     hRx[N] = Rx;
     hqx[N] = qx;
     hrx[N] = rx;
-    hQx[N] = Qy;
-    hSx[N] = Sy;
-    hRx[N] = Ry;
-    hqx[N] = qy;
-    hrx[N] = ry;
+    hQy[N] = Qy;
+    hSy[N] = Sy;
+    hRy[N] = Ry;
+    hqy[N] = qy;
+    hry[N] = ry;
 
     hidxbx[N] = idxbxN;
 
