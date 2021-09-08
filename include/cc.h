@@ -5,6 +5,10 @@
 #include <string>
 #include <time.h>
 #include "math_type_define.h"
+#include "hpipm_d_ocp_qp_dim.h"
+#include "hpipm_d_ocp_qp_sol.h"
+#include "hpipm_d_ocp_qp_utils.h"
+#include "d_tools.c"
 
 
 class CustomController
@@ -131,10 +135,10 @@ public:
     Eigen::VectorXd com_refdy;
     Eigen::VectorXd zmp_refx;
     Eigen::VectorXd zmp_refy;
-    Eigen::VectorXd b;
+    Eigen::VectorXd b_offset;
 
     //pinocchiio
-    Eigen::VectorQd q; 
+    Eigen::VectorQd q_; 
     Eigen::VectorQd qdot, qddot, qdot_, qddot_;
     Eigen::MatrixXd CMM;
 
@@ -145,6 +149,48 @@ public:
 
     //WholebodyController &wbc_;
     //TaskCommand tc;
+    
+    //MPC
+    void FlywheelModel(double Ts, int nx, int nu, double *A, double *B);
+    void mpcVariableInit();
+    void mpcSolverSetup();
+    void mpcModelSetup();
+
+    int cycle = 0;
+    double Ts = 0.01;
+    int mpc_init = true;
+    int nx_;
+    int nu_;
+    int N;
+    double timeHorizon = 1.1;
+    size_t K;
+    time_t start, start1, endt;
+    int ii, jj;
+    int *nx, *nu, *nbu, *nbx, *nb, *ng, *nsbx, *nsbu, *nsg, *ns, *nbxe, *idxbx1, *idxbu1, *idxbx0, *idxbu0, *idxs0, *idxs1, *idxsN;
+    double *Ax, *Bx, *bx, *x0x, *Qx, *Rx, *Sx, *qx, *rx, *d_ubu1, *d_lbu1, *d_lg1, *d_ug1, *d_ubx1, *d_lbx1, *d_ubx0, *d_lbu0, *d_ubu0, *d_lg0, *d_ug0, *d_lbx0;
+    int rep;
+    double **hAx, **hBx, **hbx, **hQx, **hSx, **hRx, **hqx, **hrx, **hd_lbxx, **hd_ubxx, **hd_lbux, **hd_ubux, **hCx, **hDx, **hd_lgx, **hd_ugx, **hZlx, **hZu, **hzl, **hzu, **hd_ls, **hd_us;
+    double *d_lbxN, *d_ubxN, *d_lgN, *d_ugN, *C0x, *D0x, *C1x, *D1x, *CNx, *DNx, *Zl0x, *Zu0x, *zl0x, *zu0x, *d_ls0x, *d_us0x, *Zl1x, *Zu1x, *zl1x, *zu1x, *d_ls1x, *d_us1x, *ZlNx, *ZuNx, *zlNx, *zuNx, *d_lsNx, *d_usNx;
+    int **hidxbx, **hidxbu, **hidxs, *idxbxN;;
+    double mu0;
+    double **ux, **xx, **lsx, **usx, **pix, **lam_lbx, **lam_lgx, **lam_ubx, **lam_ugx, **lam_lsx, **lam_usx, *x11x, *slx, *sux;
+    struct d_ocp_qp_dim dimx;
+    hpipm_size_t ipm_arg_sizex;
+    hpipm_size_t dim_sizex;    
+    hpipm_size_t qp_sol_sizex;
+    hpipm_size_t ipm_sizex;
+    void *qp_sol_memx;
+    void *ipm_arg_memx;
+    void *dim_memx;  
+    void *ipm_memx;
+    struct d_ocp_qp_ipm_arg argx;
+    struct d_ocp_qp_sol qp_solx;
+    struct d_ocp_qp_ipm_ws workspacex;
+    hpipm_size_t qp_sizex;
+    void *qp_memx;
+    struct d_ocp_qp qpx;
+    int hpipm_statusx; // 0 normal; 1 max iter
+
 private:
     Eigen::VectorQd ControlVal_;
 };

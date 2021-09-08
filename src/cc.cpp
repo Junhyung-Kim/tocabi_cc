@@ -10,75 +10,38 @@
 #include "pinocchio/algorithm/centroidal.hpp"
 #include "pinocchio/algorithm/rnea.hpp"
 #include "pinocchio/algorithm/frames.hpp"
-#include <ct/core/core.h>
-#include <ct/optcon/optcon.h>
-#include <ct/optcon/constraint/constraint-impl.h>
-#include <ct/optcon/solver/lqp/HPIPMInterface-impl.hpp>
-#include <ct/optcon/solver/lqp/HPIPMInterface.hpp>
-#include <ct/optcon/nlp/Nlp>
+
 #include "cc.h"
 
 using namespace TOCABI;
 using namespace pinocchio;
-using namespace ct;
-using namespace ct::core;
-using namespace ct::optcon;
 using std::shared_ptr;
 
 pinocchio::Model model;
 pinocchio::Data model_data;
 
-
-//MPC
-const size_t state_dim = 5;
-const size_t control_dim = 3;
-
-std::shared_ptr<CostFunctionQuadratic<state_dim, control_dim>> createflywheelCostFunction(const core::StateVector<state_dim>& x_final);
-
-class flywheelLinear : public core::LinearSystem<state_dim, control_dim>
-{
-        public:
-
-            state_matrix_t A_;
-            state_control_matrix_t B_;
-
-            const state_matrix_t& getDerivativeState(const core::StateVector<state_dim>& x,
-                const core::ControlVector<control_dim>& u,
-                const double t = 0.0) override
-            {
-          //      A_<< 0, 1, 0, 0, 0,   w_, 0, -w_, 0, 0,    0, 0, 0, 0, 0,    0, 0, 0, 0, 1,   0, 0, 0, 0, 0;
-                return A_;
-            }
-
-            const state_control_matrix_t& getDerivativeControl(const core::StateVector<state_dim>& x,
-                const core::ControlVector<control_dim>& u,
-                const double t = 0.0) override
-            {
-            //    B_ << 0, 0, 0,   0, 1/(m*G), 0,   1, 0, 0,    0,0,0,    0,1,0;
-            
-                return B_;
-            }
-
-            flywheelLinear* clone() const override { return new flywheelLinear(); };
-};
-
-
 CustomController::CustomController(RobotData &rd) : rd_(rd) //, wbc_(dc.wbc_)
 {
-    ControlVal_.setZero();    
-    pinocchio::urdf::buildModel("/home/jhk/catkin_ws/src/dyros_tocabi/tocabi_description/robots/dyros_tocabi.urdf", model);
+    ControlVal_.setZero();
+    pinocchio::urdf::buildModel("/home/jhk/catkin_ws/src/dyros_tocabi_v2/tocabi_description/robots/dyros_tocabi.urdf", model);
     pinocchio::Data data(model);
     model_data = data;
-    q = randomConfiguration(model);
+    q_ = randomConfiguration(model);
     qdot = Eigen::VectorXd::Zero(model.nv);
     qddot = Eigen::VectorXd::Zero(model.nv);
     qdot_ = Eigen::VectorXd::Zero(model.nv);
     qddot_ = Eigen::VectorXd::Zero(model.nv);
 
-    CMM = pinocchio::computeCentroidalMap(model, data, q);
-    pinocchio::crba(model, data, q);
-    pinocchio::computeCoriolisMatrix(model, data, q, qdot);
-    pinocchio::rnea(model, data, q, qdot_, qddot_);
+    CMM = pinocchio::computeCentroidalMap(model, data, q_);
+    pinocchio::crba(model, data, q_);
+    pinocchio::computeCoriolisMatrix(model, data, q_, qdot);
+    pinocchio::rnea(model, data, q_, qdot_, qddot_);
+
+    mpcVariableInit();
+    mpcSolverSetup();
+    FlywheelModel(Ts, nx_, nu_, Ax, Bx);
+
+    std::cout << "Custom Controller Init" << std::endl;
 }
 
 Eigen::VectorQd CustomController::getControl()
@@ -97,10 +60,10 @@ void CustomController::computeSlow()
     {
         if (rd_.tc_init)
         {
-            //Initialize settings for Task Control! 
+            //Initialize settings for Task Control!
 
             rd_.tc_init = false;
-            std::cout<<"cc mode 11"<<std::endl;
+            std::cout << "cc mode 11" << std::endl;
 
             //rd_.link_[COM_id].x_desired = rd_.link_[COM_id].x_init;
         }
@@ -127,11 +90,11 @@ void CustomController::computeSlow()
 
         rd_.torque_desired = WBC::ContactForceRedistributionTorque(rd_, WBC::GravityCompensationTorque(rd_) + WBC::TaskControlTorque(rd_, fstar));
     }
-    else if(rd_.tc_.mode == 11)
+    else if (rd_.tc_.mode == 11)
     {
         if (rd_.tc_.walking_enable == 1.0)
         {
-            q = rd_.q_;
+            /*   q = rd_.q_;
             qdot = rd_.q_dot_;
             
             //Pinocchio model 
@@ -141,7 +104,8 @@ void CustomController::computeSlow()
             pinocchio::rnea(model, model_data, q, qdot_, qddot_);
 
             TorqueGrav = WBC::GravityCompensationTorque(rd_);
-        //ContactForceRedistributionTorqueWalking(rd_, )
+  */
+            //ContactForceRedistributionTorqueWalking(rd_, )
             /*if (walking_tickc > 0)
             {
                 if (contactModec == 1.0)
@@ -179,7 +143,6 @@ void CustomController::computeSlow()
                 }
             }*/
         }
-
     }
 }
 
@@ -197,18 +160,186 @@ void CustomController::computePlanner()
 {
     if (rd_.tc_.mode == 10)
     {
-    
-
     }
-    else if(rd_.tc_.mode == 11)
+    else if (rd_.tc_.mode == 11)
     {
         if (rd_.tc_.walking_enable == 1.0)
         {
+            if (mpc_init == true)
+            {
+                // maximum element in cost functions
+                if (ns[1] > 0 | ns[N] > 0)
+                    mu0 = 1000.0;
+                else
+                    mu0 = 2.0;
 
+                mpcModelSetup();
+                std::cout << "MPC INIT" << std::endl;
+                mpc_init = false;
+            }
+
+            start = clock();
+
+            /************************************************
+            * box & general constraints
+            ************************************************/
+            d_lbu0[0] = -100;
+            d_lbu0[1] = -100;
+            d_ubu0[0] = 100;
+            d_ubu0[1] = 100;
+
+            d_lbx0[0] = 0.0;
+            d_lbx0[1] = 0.0;
+            d_lbx0[2] = 0.0;
+            d_lbx0[3] = 0.0;
+            d_lbx0[4] = 0.0;
+            d_ubx0[0] = 0.0;
+            d_ubx0[1] = 0.0;
+            d_ubx0[2] = 0.0;
+            d_ubx0[3] = 0.0;
+            d_ubx0[4] = 0.0;
+
+            for (ii = 0; ii < ng[0]; ii++)
+            {
+                if (ii < nu[0] - nb[0]) // input
+                {
+                    d_lg0[ii] = -0.5; // umin
+                    d_ug0[ii] = 0.5;  // umax
+                }
+                else // state
+                {
+                    d_lg0[ii] = -4.0; // xmin
+                    d_ug0[ii] = 4.0;  // xmax
+                }
+            }
+
+            d_lbu1[0] = -100;
+            d_lbu1[1] = -100;
+            d_ubu1[0] = 100;
+            d_ubu1[1] = 100;
+
+            d_lbx1[0] = -10;
+            d_lbx1[1] = -10;
+            d_lbx1[2] = -0.1;
+            d_lbx1[3] = -10;
+            d_lbx1[4] = -3;
+            d_ubx1[0] = 10;
+            d_ubx1[1] = 10;
+            d_ubx1[2] = 0.25;
+            d_ubx1[3] = 10;
+            d_ubx1[4] = 3;
+
+            for (ii = 0; ii < ng[1]; ii++)
+            {
+                if (ii < nu[1] - nb[1]) // input
+                {
+                    d_lg1[ii] = 0.0; // umin
+                    d_ug1[ii] = 0.0; // umax
+                }
+                else // state
+                {
+                    d_lg1[ii] = 0.4; // xmin
+                    d_ug1[ii] = 0.4; // xmax
+                }
+            }
+
+            d_lbxN[0] = 0.1;
+            d_lbxN[1] = 0.1;
+            d_lbxN[2] = 0.1;
+            d_lbxN[3] = 0.1;
+            d_lbxN[4] = 0.1;
+            d_ubxN[0] = 0.1;
+            d_ubxN[1] = 0.1;
+            d_ubxN[2] = 0.1;
+            d_ubxN[3] = 0.1;
+            d_ubxN[4] = 0.1;
+
+            for (ii = 0; ii < ng[N]; ii++)
+            {
+                d_lgN[ii] = 0.2; // dmin
+                d_ugN[ii] = 0.2; // dmax
+            }
+
+            D1x[1] = 0.0;
+            C1x[3] = 1.0;
+            C1x[4] = 1.0;
+            DNx[1] = 0.0;
+            CNx[3] = 1.0;
+            CNx[4] = 1.0;
+
+            hCx[0] = C0x;
+            hDx[0] = D0x;
+            hd_lgx[0] = d_lg0;
+            hd_ugx[0] = d_ug0;
+
+            for (ii = 1; ii < N; ii++)
+            {
+                hd_lgx[ii] = d_lg1;
+                hd_ugx[ii] = d_ug1;
+                hCx[ii] = C1x;
+                hDx[ii] = D1x;
+            }
+
+            hCx[N] = CNx;
+            hDx[N] = DNx;
+            hd_lgx[N] = d_lgN;
+            hd_ugx[N] = d_ugN;
+
+            d_ocp_qp_set_all(hAx, hBx, hbx, hQx, hSx, hRx, hqx, hrx, hidxbx, hd_lbxx, hd_ubxx, hidxbu, hd_lbux, hd_ubux, hCx, hDx, hd_lgx, hd_ugx, hZlx, hZu, hzl, hzu, hidxs, hd_ls, hd_us, &qpx);
+
+            start1 = clock();
+            d_ocp_qp_sol_create(&dimx, &qp_solx, qp_sol_memx);
+            d_ocp_qp_ipm_solve(&qpx, &qp_solx, &argx, &workspacex);
+            d_ocp_qp_ipm_get_status(&workspacex, &hpipm_statusx);
+            endt = clock();
+
+            double result, result1;
+            result = (double)(endt - start) / CLOCKS_PER_SEC;
+            result1 = (double)(endt - start1) / CLOCKS_PER_SEC;
+
+            int nx_max = nx[0];
+            for (ii = 1; ii <= N; ii++)
+                if (nx[ii] > nx_max)
+                    nx_max = nx[ii];
+            double *x11x = (double *)malloc(nx_max * sizeof(double));
+            double *slx = (double *)malloc(1 * sizeof(double));
+            double *sux = (double *)malloc(1 * sizeof(double));
+
+            std::cout << "time" << result << "time1 " << result1 << std::endl;
+
+            if (hpipm_statusx == 0)
+            {
+                printf("\n -> QP solved!\n");
+            }
+            else if (hpipm_statusx == 1)
+            {
+                printf("\n -> Solver failed! Maximum number of iterations reached\n");
+            }
+            else if (hpipm_statusx == 2)
+            {
+                printf("\n -> Solver failed! Minimum step lenght reached\n");
+            }
+            else if (hpipm_statusx == 2)
+            {
+                printf("\n -> Solver failed! NaN in computations\n");
+            }
+            else
+            {
+                printf("\n -> Solver failed! Unknown return flag\n");
+            }
+
+            for (ii = 1; ii <= N; ii++)
+            {
+                std::cout << " ii " << ii << std::endl;
+                d_ocp_qp_sol_get_x(ii, &qp_solx, x11x);
+                d_ocp_qp_sol_get_sl(ii, &qp_solx, slx);
+                d_print_mat(1, nx[ii], x11x, 1);
+                std::cout << "sl " << std::endl;
+                d_print_mat(1, ns[ii], slx, 1);
+            }
         }
     }
 }
-
 void CustomController::copyRobotData(RobotData &rd_l)
 {
     std::memcpy(&rd_cc_, &rd_l, sizeof(RobotData));
@@ -221,16 +352,16 @@ void CustomController::walkingCompute()
 
     if (walking_tick == 0)
     {
-       // setCpPosition();
-       // cpReferencePatternGeneration();
-       // cptoComTrajectory();
+        // setCpPosition();
+        // cpReferencePatternGeneration();
+        // cptoComTrajectory();
     }
 }
 
 void CustomController::getRobotInitState()
 {
     if (walking_tick == 0)
-    {  
+    {
         contactMode = 1.0;
         RF_float_init.translation() = rd_.link_[Right_Foot].xpos;
         RFx_float_init.translation() = rd_.link_[Right_Foot].xipos;
@@ -298,7 +429,7 @@ void CustomController::footStepGenerator()
     {
         footStepTotal();
     }
-    
+
     total_step_num = foot_step.col(1).size();
 }
 
@@ -638,7 +769,7 @@ void CustomController::getRobotState()
     LF_support_current = DyrosMath::multiplyIsometry3d(PELV_support_current, LF_float_current);
     COM_support_current = DyrosMath::multiplyIsometry3d(PELV_support_current, COM_float_current);
 
-/*    Ag_leg = rd_.Ag_.block(3, 0, 3, 12);
+    /*    Ag_leg = rd_.Ag_.block(3, 0, 3, 12);
     Ag_armR = rd_.Ag_.block(3, 25, 3, 8);
     Ag_armL = rd_.Ag_.block(3, 15, 3, 8);
     Ag_waist = rd_.Ag_.block(3, 12, 3, 3);
@@ -661,7 +792,6 @@ void CustomController::getRobotState()
 
 void CustomController::calcRobotState()
 {
-    
 }
 
 void CustomController::setCpPosition()
@@ -672,7 +802,7 @@ void CustomController::setCpPosition()
     zmp_dx.resize(total_step_num + 2);
     zmp_dy.resize(total_step_num + 2);
 
-    b.resize(total_step_num + 2);
+    b_offset.resize(total_step_num + 2);
 
     capturePoint_offsetx.resize(total_step_num + 3);
     capturePoint_offsety.resize(total_step_num + 3);
@@ -684,7 +814,7 @@ void CustomController::setCpPosition()
 
     for (int i = 0; i < total_step_num + 2; i++)
     {
-        b(i) = exp(lipm_w * t_total / Hz_);
+        b_offset(i) = exp(lipm_w * t_total / Hz_);
     }
 
     for (int i = 0; i < total_step_num + 3; i++)
@@ -778,7 +908,380 @@ void CustomController::setCpPosition()
 
     for (int i = 0; i < total_step_num + 2; i++)
     {
-        zmp_dx(i) = capturePoint_ox(i + 1) / (1 - b(i)) - (b(i) * capturePoint_ox(i)) / (1 - b(i));
-        zmp_dy(i) = capturePoint_oy(i + 1) / (1 - b(i)) - (b(i) * capturePoint_oy(i)) / (1 - b(i));
-    }    
+        zmp_dx(i) = capturePoint_ox(i + 1) / (1 - b_offset(i)) - (b_offset(i) * capturePoint_ox(i)) / (1 - b_offset(i));
+        zmp_dy(i) = capturePoint_oy(i + 1) / (1 - b_offset(i)) - (b_offset(i) * capturePoint_oy(i)) / (1 - b_offset(i));
+    }
+}
+
+void CustomController::FlywheelModel(double Ts, int nx, int nu, double *A, double *B)
+{
+    int ii;
+    int nx2 = nx * nx;
+
+    for (ii = 0; ii < nx * nx; ii++)
+        A[ii] = 0.0;
+
+    A[0] = 1.0;
+    A[6] = 1.0;
+    A[12] = 1.0;
+    A[18] = 1.0;
+    A[24] = 1.0;
+
+    A[1] = 2.77 * Ts;
+    A[23] = 1.0 * Ts;
+    A[11] = -2.77 * Ts;
+    A[5] = 1.0 * Ts;
+
+    for (ii = 0; ii < nx * nu; ii++)
+        B[ii] = 0.0;
+
+    B[6] = 1 / (94.23 * 9.81) * Ts;
+    B[2] = 1.00 * Ts;
+    B[9] = 1.00 * Ts;
+}
+
+void CustomController::mpcVariableInit()
+{
+    N = timeHorizon / Ts;
+    nx_ = 5;
+    nu_ = 2;
+
+    //resize
+    ux = (double **)malloc((N + 1) * sizeof(double *));
+    xx = (double **)malloc((N + 1) * sizeof(double *));
+    lsx = (double **)malloc((N + 1) * sizeof(double *));
+    usx = (double **)malloc((N + 1) * sizeof(double *));
+    pix = (double **)malloc((N + 1) * sizeof(double *));
+    lam_lbx = (double **)malloc((N + 1) * sizeof(double *));
+    lam_lgx = (double **)malloc((N + 1) * sizeof(double *));
+    lam_ubx = (double **)malloc((N + 1) * sizeof(double *));
+    lam_ugx = (double **)malloc((N + 1) * sizeof(double *));
+    lam_lsx = (double **)malloc((N + 1) * sizeof(double *));
+    lam_usx = (double **)malloc((N + 1) * sizeof(double *));
+
+    nx = (int *)malloc((N + 1) * sizeof(int));
+    nu = (int *)malloc((N + 1) * sizeof(int));
+    nbu = (int *)malloc((N + 1) * sizeof(int));
+    nbx = (int *)malloc((N + 1) * sizeof(int));
+    nb = (int *)malloc((N + 1) * sizeof(int));
+    ng = (int *)malloc((N + 1) * sizeof(int));
+    nsbx = (int *)malloc((N + 1) * sizeof(int));
+    nsbu = (int *)malloc((N + 1) * sizeof(int));
+    nsg = (int *)malloc((N + 1) * sizeof(int));
+    ns = (int *)malloc((N + 1) * sizeof(int));
+    nbxe = (int *)malloc((N + 1) * sizeof(int));
+
+    hAx = (double **)malloc((N) * sizeof(double *));
+    hBx = (double **)malloc((N) * sizeof(double *));
+    hbx = (double **)malloc((N) * sizeof(double *));
+    hQx = (double **)malloc((N + 1) * sizeof(double *));
+    hSx = (double **)malloc((N + 1) * sizeof(double *));
+    hRx = (double **)malloc((N + 1) * sizeof(double *));
+    hqx = (double **)malloc((N + 1) * sizeof(double *));
+    hrx = (double **)malloc((N + 1) * sizeof(double *));
+
+    hidxbx = (int **)malloc((N + 1) * sizeof(int *));
+    hd_lbxx = (double **)malloc((N + 1) * sizeof(double *));
+    hd_ubxx = (double **)malloc((N + 1) * sizeof(double *));
+    hidxbu = (int **)malloc((N + 1) * sizeof(int *));
+    hd_lbux = (double **)malloc((N + 1) * sizeof(double *));
+    hd_ubux = (double **)malloc((N + 1) * sizeof(double *));
+    hCx = (double **)malloc((N + 1) * sizeof(double *));
+    hDx = (double **)malloc((N + 1) * sizeof(double *));
+    hd_lgx = (double **)malloc((N + 1) * sizeof(double *));
+    hd_ugx = (double **)malloc((N + 1) * sizeof(double *));
+    hZlx = (double **)malloc((N + 1) * sizeof(double *));
+    hZu = (double **)malloc((N + 1) * sizeof(double *));
+    hzl = (double **)malloc((N + 1) * sizeof(double *));
+    hzu = (double **)malloc((N + 1) * sizeof(double *));
+    hidxs = (int **)malloc((N + 1) * sizeof(int *));
+    hd_ls = (double **)malloc((N + 1) * sizeof(double *));
+    hd_us = (double **)malloc((N + 1) * sizeof(double *));
+    // stage-wise variant size
+    for (ii = 1; ii <= N; ii++)
+    {
+        nx[ii] = nx_;
+        nu[ii] = nu_;
+        nbu[ii] = nu[ii];
+        nbx[ii] = nx[ii];
+        nb[ii] = nbu[ii] + nbx[ii];
+        ng[ii] = 1;
+        nsbx[ii] = 0;
+        nbxe[ii] = 0;
+    }
+    nu[N] = 0;
+    ng[N] = 1;
+    nbu[N] = 0;
+    nsbx[N] = 0;
+    nu[0] = nu_;
+    nbu[0] = nu_;
+    nx[0] = nx_;
+    nb[0] = nbu[0] + nbx[0];
+    nbx[0] = nx[0];
+    nbxe[0] = nx_;
+    ng[0] = 0;
+    nsbx[0] = 0;
+
+    nsg[0] = 0;
+    nsbu[0] = 0;
+    ns[0] = nsbx[0] + nsbu[0] + nsg[0];
+
+    for (ii = 1; ii <= N; ii++)
+    {
+        nsg[ii] = 1;
+        nsbu[ii] = 0;
+        ns[ii] = nsbx[ii] + nsbu[ii] + nsg[ii];
+    }
+
+    d_zeros(&Ax, nx_, nx_); // states update matrix
+    d_zeros(&Bx, nx_, nu_); // inputs matrix
+    d_zeros(&bx, nx_, 1);   // states offset
+    d_zeros(&x0x, nx_, 1);  // initial state
+    d_zeros(&Qx, nx_, nx_);
+    d_zeros(&Rx, nu_, nu_);
+    d_zeros(&Sx, nu_, nx_);
+    d_zeros(&qx, nx_, 1);
+    d_zeros(&rx, nu_, 1);
+    d_zeros(&d_lbx1, nbx[1], 1);
+    d_zeros(&d_ubx1, nbx[1], 1);
+    d_zeros(&d_lbu1, nbu[1], 1);
+    d_zeros(&d_ubu1, nbu[1], 1);
+    d_zeros(&d_lg1, ng[1], 1);
+    d_zeros(&d_ug1, ng[1], 1);
+    d_zeros(&d_lbx0, nbx[0], 1);
+    d_zeros(&d_ubx0, nbx[0], 1);
+    d_zeros(&d_lbu0, nbu[0], 1);
+    d_zeros(&d_ubu0, nbu[0], 1);
+    d_zeros(&d_lg0, ng[0], 1);
+    d_zeros(&d_ug0, ng[0], 1);
+    int_zeros(&idxbx0, nbx[0], 1);
+    int_zeros(&idxbx1, nbx[1], 1);
+    int_zeros(&idxbu1, nbu[1], 1);
+    int_zeros(&idxbu0, nbu[0], 1);
+    int_zeros(&idxbxN, nbx[N], 1);
+    d_zeros(&d_lbxN, nbx[N], 1);
+    d_zeros(&d_ubxN, nbx[N], 1);
+    d_zeros(&d_lgN, ng[N], 1);
+    d_zeros(&d_ugN, ng[N], 1);
+    d_zeros(&C0x, ng[0], nx[0]);
+    d_zeros(&D0x, ng[0], nu[0]);
+    d_zeros(&C1x, ng[1], nx[1]);
+    d_zeros(&D1x, ng[1], nu[1]);
+    d_zeros(&CNx, ng[N], nx[N]);
+    d_zeros(&DNx, ng[N], nu[N]);
+    d_zeros(&Zl0x, ns[0], 1);
+    d_zeros(&Zu0x, ns[0], 1);
+    d_zeros(&zl0x, ns[0], 1);
+    d_zeros(&zu0x, ns[0], 1);
+    int_zeros(&idxs0, ns[0], 1);
+    d_zeros(&d_ls0x, ns[0], 1);
+    d_zeros(&d_us0x, ns[0], 1);
+    d_zeros(&Zl1x, ns[1], 1);
+    d_zeros(&Zu1x, ns[1], 1);
+    d_zeros(&zl1x, ns[1], 1);
+    d_zeros(&zu1x, ns[1], 1);
+    int_zeros(&idxs1, ns[1], 1);
+    d_zeros(&d_ls1x, ns[1], 1);
+    d_zeros(&d_us1x, ns[1], 1);
+    d_zeros(&ZlNx, ns[N], 1);
+    d_zeros(&ZuNx, ns[N], 1);
+    d_zeros(&zlNx, ns[N], 1);
+    d_zeros(&zuNx, ns[N], 1);
+    int_zeros(&idxsN, ns[N], 1);
+    d_zeros(&d_lsNx, ns[N], 1);
+    d_zeros(&d_usNx, ns[N], 1);
+
+    for (jj = 0; jj < nx_; jj++)
+    {
+        x0x[jj] = 0;
+        bx[jj] = 0.0;
+        Qx[ii * (nx_ + 1)] = 3.0;
+        qx[ii] = 0.0;
+    }
+
+    for (ii = 0; ii < nu_; ii++)
+    {
+        rx[ii] = 0.0;
+        Rx[ii * (nu_ + 1)] = 50.0;
+    }
+
+    for (ii = 0; ii <= N; ii++)
+    {
+        d_zeros(ux + ii, nu[ii], 1);
+        d_zeros(xx + ii, nx[ii], 1);
+        d_zeros(lsx + ii, ns[ii], 1);
+        d_zeros(usx + ii, ns[ii], 1);
+        d_zeros(pix + ii, nx[ii + 1], 1);
+        d_zeros(lam_lbx + ii, nb[ii], 1);
+        d_zeros(lam_ubx + ii, nb[ii], 1);
+        d_zeros(lam_lgx + ii, ng[ii], 1);
+        d_zeros(lam_ugx + ii, ng[ii], 1);
+        d_zeros(lam_lsx + ii, ns[ii], 1);
+        d_zeros(lam_usx + ii, ns[ii], 1);
+    }
+
+    for (ii = 0; ii < nbu[0]; ii++)
+    {
+        idxbu0[ii] = ii;
+    }
+
+    for (ii = 0; ii < nbx[0]; ii++)
+    {
+        idxbx0[ii] = ii;
+    }
+
+    for (ii = 0; ii < nbu[1]; ii++)
+    {
+        idxbu1[ii] = ii;
+    }
+
+    for (ii = 0; ii < nbx[1]; ii++)
+    {
+        idxbx1[ii] = ii;
+    }
+
+    for (ii = 0; ii < nbx[N]; ii++)
+    {
+        idxbxN[ii] = ii;
+    }
+
+    //SOFT CONSTARINT
+    for (ii = 0; ii < ns[0]; ii++)
+    {
+        Zl0x[ii] = 0e3;
+        Zu0x[ii] = 0e3;
+        zl0x[ii] = 1e2;
+        zu0x[ii] = 1e2;
+        idxs0[ii] = nu[0] + nx[0] + ii;
+        d_ls0x[ii] = -0.05; //-1.0;
+        d_us0x[ii] = 0.05;
+    }
+
+    for (ii = 0; ii < ns[1]; ii++)
+    {
+        Zl1x[ii] = 0e3;
+        Zu1x[ii] = 0e3;
+        zl1x[ii] = 1e2;
+        zu1x[ii] = 1e2;
+        idxs1[ii] = nu[1] + nx[1] + ii;
+        d_ls1x[ii] = 0.0; //-1.0;
+        d_us1x[ii] = 0.0;
+        ZlNx[ii] = 0e3;
+        ZuNx[ii] = 0e3;
+        zlNx[ii] = 1e2;
+        zuNx[ii] = 1e2;
+        idxsN[ii] = nu[N] + nx[N] + ii;
+        d_lsNx[ii] = 0.0; //-1.0;
+        d_usNx[ii] = 0.0;
+    }
+}
+
+void CustomController::mpcSolverSetup()
+{
+    int iter_max = 30;
+    double alpha_min = 1e-8;
+    double tol_stat = 1e-6;
+    double tol_eq = 1e-8;
+    double tol_ineq = 1e-8;
+    double tol_comp = 1e-8;
+    double reg_prim = 1e-12;
+    int warm_start = 0;
+    int pred_corr = 1;
+    int ric_alg = 0;
+    int comp_res_exit = 1;
+    enum hpipm_mode mode = SPEED_ABS;
+
+    dim_sizex = d_ocp_qp_dim_memsize(N);
+    dim_memx = malloc(dim_sizex);
+    d_ocp_qp_dim_create(N, &dimx, dim_memx);
+    ipm_arg_sizex = d_ocp_qp_ipm_arg_memsize(&dimx);
+    ipm_arg_memx = malloc(ipm_arg_sizex);
+    d_ocp_qp_ipm_arg_create(&dimx, &argx, ipm_arg_memx);
+    d_ocp_qp_ipm_arg_set_default(mode, &argx);
+    d_ocp_qp_ipm_arg_set_mu0(&mu0, &argx);
+    d_ocp_qp_ipm_arg_set_iter_max(&iter_max, &argx);
+    d_ocp_qp_ipm_arg_set_tol_stat(&tol_stat, &argx);
+    d_ocp_qp_ipm_arg_set_tol_eq(&tol_eq, &argx);
+    d_ocp_qp_ipm_arg_set_tol_ineq(&tol_ineq, &argx);
+    d_ocp_qp_ipm_arg_set_tol_comp(&tol_comp, &argx);
+    d_ocp_qp_ipm_arg_set_reg_prim(&reg_prim, &argx);
+
+    d_ocp_qp_dim_set_all(nx, nu, nbx, nbu, ng, nsbx, nsbu, nsg, &dimx);
+    qp_sizex = d_ocp_qp_memsize(&dimx);
+    qp_memx = malloc(qp_sizex);
+    d_ocp_qp_create(&dimx, &qpx, qp_memx);
+    qp_sol_sizex = d_ocp_qp_sol_memsize(&dimx);
+    qp_sol_memx = malloc(qp_sol_sizex);
+    ipm_sizex = d_ocp_qp_ipm_ws_memsize(&dimx, &argx);
+    ipm_memx = malloc(ipm_sizex);
+    d_ocp_qp_ipm_ws_create(&dimx, &argx, &workspacex, ipm_memx);
+}
+
+void CustomController::mpcModelSetup()
+{
+    //MODEL
+    hAx[0] = Ax;
+    hBx[0] = Bx;
+    hbx[0] = bx;
+    hQx[0] = Qx;
+    hSx[0] = Sx;
+    hRx[0] = Rx;
+    hqx[0] = qx;
+    hrx[0] = rx;
+    hidxbx[0] = idxbx0;
+    hd_lbxx[0] = d_lbx0;
+    hd_ubxx[0] = d_ubx0;
+    hidxbu[0] = idxbu0;
+    hd_lbux[0] = d_lbu0;
+    hd_ubux[0] = d_ubu0;
+    hZlx[0] = Zl0x;
+    hZu[0] = Zu0x;
+    hzl[0] = zl0x;
+    hzu[0] = zu0x;
+    hidxs[0] = idxs0;
+    hd_ls[0] = d_ls0x;
+    hd_us[0] = d_us0x;
+
+    for (ii = 1; ii < N; ii++)
+    {
+        hAx[ii] = Ax;
+        hBx[ii] = Bx;
+        hbx[ii] = bx;
+        hQx[ii] = Qx;
+        hSx[ii] = Sx;
+        hRx[ii] = Rx;
+        hqx[ii] = qx;
+        hrx[ii] = rx;
+        hidxbx[ii] = idxbx1;
+        hd_lbxx[ii] = d_lbx1;
+        hd_ubxx[ii] = d_ubx1;
+        hidxbu[ii] = idxbu1;
+        hd_lbux[ii] = d_lbu1;
+        hd_ubux[ii] = d_ubu1;
+        hZlx[ii] = Zl1x;
+        hZu[ii] = Zu1x;
+        hzl[ii] = zl1x;
+        hzu[ii] = zu1x;
+        hidxs[ii] = idxs1;
+        hd_ls[ii] = d_ls1x;
+        hd_us[ii] = d_us1x;
+    }
+
+    hQx[N] = Qx;
+    hSx[N] = Sx;
+    hRx[N] = Rx;
+    hqx[N] = qx;
+    hrx[N] = rx;
+
+    hidxbx[N] = idxbxN;
+
+    hd_lbxx[N] = d_lbxN;
+    hd_ubxx[N] = d_ubxN;
+    hZlx[N] = ZlNx;
+    hZu[N] = ZuNx;
+    hzl[N] = zlNx;
+    hzu[N] = zuNx;
+    hidxs[N] = idxsN;
+    hd_ls[N] = d_lsNx;
+    hd_us[N] = d_usNx;
 }
