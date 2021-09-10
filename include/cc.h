@@ -1,194 +1,66 @@
-#include "tocabi_lib/robot_data.h"
-#include "wholebody_functions.h"
 #include <vector>
 #include <array>
 #include <string>
-#include <time.h>
-#include "math_type_define.h"
+#include <chrono> 
 #include "hpipm_d_ocp_qp_dim.h"
 #include "hpipm_d_ocp_qp_sol.h"
 #include "hpipm_d_ocp_qp_utils.h"
+#include "math_type_define.h"
 #include "d_tools.c"
+#include "walking.h"
 
-
-class CustomController
+class CustomController : virtual public WalkingController
 {
 public:
     CustomController(RobotData &rd);
+
+    const std::string FILE_NAMES[2] =
+        {
+            ///change this directory when you use this code on the other computer///
+            "/home/jhk/data/walking/0_tocabi_.txt",
+            "/home/jhk/data/walking/1_tocabi_.txt",
+    };
+
+    std::fstream file[2];
+
     Eigen::VectorQd getControl();
 
     //void taskCommandToCC(TaskCommand tc_);
-    
+
     void computeSlow();
     void computeFast();
     void computePlanner();
     void copyRobotData(RobotData &rd_l);
-
-    RobotData &rd_;
-    RobotData rd_cc_;
-
-    //Ui WalkingParameter
-    double Hz_;
-    double dt;
-    int ik_mode;
-    int walking_pattern;
-    int foot_step_dir;
-    int walking_enable;
-    double height;
-    double step_length_x;
-    double step_length_y;
-    bool dob;
-    bool imu;
-    bool mom;
-    Eigen::Vector4d target;
-    int vibration_control;
-    bool com_control_mode;
-    bool gyro_frame_flag;
-    double com_gain;
-    double pelvis_pgain;
-    double pelvis_dgain;
-    double pelvis_offsetx;
-    int t_rest_init;
-    int t_rest_last;
-    int t_double1;
-    int t_double2;
-    int t_total;
-    int t_temp;
-    int t_last;
-    int t_start;
-    int t_start_real;
-    int t_rest_temp;
-    int com_control;
-    double t_imp;
-    double foot_height;
-    double zc;
-    double lipm_w;
-
-    //walking
-    void walkingCompute();
-    void getRobotInitState();
-    void footStepGenerator();
-    void footStepTotal();
-    void getRobotState();
-    void calcRobotState();
-    void setCpPosition();
-    void cpReferencePatternGeneration();
-    void cptoComTrajectory();
-    void setFootTrajectory();
-    void setPelvTrajectory();
-    void inverseKinematics(RobotData &Robot, Eigen::Isometry3d PELV_float_transform, Eigen::Isometry3d LF_float_transform, Eigen::Isometry3d RF_float_transform, Eigen::Vector12d& leg_q);
-    void inverseKinematicsdob(RobotData &Robot);
-
-    int walking_tick = 0;
-    double contactMode;
-
-    Eigen::Isometry3d RF_float_init;
-    Eigen::Isometry3d RFx_float_init;
-    Eigen::Isometry3d LF_float_init;
-    Eigen::Isometry3d LFx_float_init;
-    Eigen::Isometry3d COM_float_init;
-    Eigen::Isometry3d PELV_float_init;
-    Eigen::Isometry3d PELV_float_init1;
-    Eigen::Isometry3d SUF_float_init;
-    Eigen::Isometry3d SWF_float_init;
-    Eigen::Isometry3d PELV_support_init;
-    Eigen::Isometry3d COM_support_init;
-    Eigen::Isometry3d HLR_float_init;
-    Eigen::Isometry3d HRR_float_init;
-    Eigen::Isometry3d RF_float_current;
-    Eigen::Isometry3d LF_float_current;
-    Eigen::Isometry3d RF_support_current;
-    Eigen::Isometry3d LF_support_current;
-    Eigen::Isometry3d PELV_float_current;
-    Eigen::Isometry3d SUF_float_current;
-    Eigen::Isometry3d SWF_float_current;
-    Eigen::Isometry3d PELV_support_current;
-    Eigen::Vector6d SUF_float_currentV;
-    Eigen::Vector6d SWF_float_currentV;
-    Eigen::Isometry3d COM_float_current;
-    Eigen::Isometry3d COM_support_current;
-    Eigen::Isometry3d PELV_trajectory_float;
-    Eigen::Isometry3d PELVD_trajectory_float;
-    Eigen::Vector3d foot_distance;
-    Eigen::Vector3d COMV_support_currentV;
-    Eigen::Vector3d yx_vibm;
-    Eigen::Vector3d yy_vibm;
-    Eigen::Vector6d SUF_float_initV;
-    Eigen::Vector6d SWF_float_initV;
-    Eigen::Isometry3d RF_support_init;
-    Eigen::Isometry3d LF_support_init;
-    Eigen::Vector3d LF_support_euler_init;
-    Eigen::Vector3d RF_support_euler_init;
-    Eigen::Vector3d PELV_support_euler_init;
-
-    Eigen::Matrix3x12d Ag_leg;
-    Eigen::Matrix3x8d Ag_armR;
-    Eigen::Matrix3x8d Ag_armL;
-    Eigen::Matrix3x3d Ag_waist;
-    Eigen::Matrix3x12d Agl_leg;
-    Eigen::Matrix3x8d Agl_armR;
-    Eigen::Matrix3x8d Agl_armL;
-    Eigen::Matrix3x3d Agl_waist;
-
-    Eigen::Isometry3d LF_trajectory_float;
-    Eigen::Isometry3d RF_trajectory_float;
-    Eigen::Isometry3d LFD_trajectory_float;
-    Eigen::Isometry3d RFD_trajectory_float;
-
-    Eigen::MatrixXd foot_step;
-    int desired_foot_step_num;
-    int current_step_num;
-    int total_step_num;
-
-    //////Capture Point//////
-    Eigen::VectorXd capturePoint_ox;
-    Eigen::VectorXd capturePoint_oy;
-    Eigen::VectorXd capturePoint_offsetx;
-    Eigen::VectorXd capturePoint_offsety;
-    Eigen::VectorXd capturePoint_refx;
-    Eigen::VectorXd capturePoint_refy;
-    Eigen::VectorXd zmp_dx;
-    Eigen::VectorXd zmp_dy;
-    Eigen::VectorXd com_refx;
-    Eigen::VectorXd com_refy;
-    Eigen::VectorXd com_refdx;
-    Eigen::VectorXd com_refdy;
-    Eigen::VectorXd zmp_refx;
-    Eigen::VectorXd zmp_refy;
-    Eigen::VectorXd b_offset;
-
-    Eigen::Vector12d dob_hat;
-    Eigen::Vector12d dob_hat_prev;
-    Eigen::Vector12d desired_leg_q;
-    double dobGain;
-    
-    //pinocchiio
-    Eigen::VectorQd q_; 
-    Eigen::VectorQd qdot, qddot, qdot_, qddot_;
-    Eigen::MatrixXd CMM;
-
-    //Joint velocity Estimator
-
-    //GravityCompensation & redistribution
-    Eigen::VectorQd TorqueGrav;
-
-    //WholebodyController &wbc_;
-    //TaskCommand tc;
-    
-    //MPC
+    void jointVelocityEstimate();
     void flyWheelModel(double Ts, int nx, int nu, double *Ax, double *Bx, double *Ay, double *By);
     void mpcVariableInit();
     void mpcModelSetup();
 
+    //Joint velocity Estimator
+    bool velEst = false;
+    Eigen::VectorQd q_est, q_dot_est;
+
+    RobotData &rd_;
+    RobotData rd_cc_;
+
+    //pinocchiio
+    Eigen::VectorQd q_;
+    Eigen::VectorQd qdot, qddot, qdot_, qddot_;
+    Eigen::MatrixXd CMM;
+    Eigen::MatrixQQd Cor_;
+    Eigen::VectorQd G_;
+    
+    //MPC
+    std::atomic<bool> wlk_on;
+    std::atomic<bool> mpc_on;
+
     int cycle = 0;
     double Ts = 0.01;
-    int mpc_init = true;
     int nx_;
     int nu_;
     int N;
     double timeHorizon = 1.1;
     size_t K;
-    time_t start, start1, endt;
     int ii, jj;
     int *nx, *nu, *nbu, *nbx, *nb, *ng, *nsbx, *nsbu, *nsg, *ns, *nbxe, *idxbx1, *idxbu1, *idxbx0, *idxbu0, *idxs0, *idxs1, *idxsN, **hidxbx, **hidxbu, **hidxs, *idxbxN;
     double *Ax, *Bx, *bx, *x0x, *Qx, *Rx, *Sx, *qx, *rx, *d_ubu1x, *d_lbu1x, *d_lg1x, *d_ug1x, *d_ubx1x, *d_lbx1x, *d_ubx0x, *d_lbu0x, *d_ubu0x, *d_lg0x, *d_ug0x, *d_lbx0x;
@@ -199,24 +71,24 @@ public:
     double *d_lbxNy, *d_ubxNy, *d_lgNy, *d_ugNy, *C0y, *D0y, *C1y, *D1y, *CNy, *DNy, *Zl0y, *Zu0y, *zl0y, *zu0y, *d_ls0y, *d_us0y, *Zl1y, *Zu1y, *zl1y, *zu1y, *d_ls1y, *d_us1y, *ZlNy, *ZuNy, *zlNy, *zuNy, *d_lsNy, *d_usNy;
     double mu0;
     double **ux, **xx, **lsx, **usx, **pix, **lam_lbx, **lam_lgx, **lam_ubx, **lam_ugx, **lam_lsx, **lam_usx, *x11x, *slx, *sux;
-    double **uy, **xy, **lsy, **usy, **piy, **lam_lby, **lam_lgy, **lam_uby, **lam_ugy, **lam_lsy, **lam_usy, *x11y, *sly, *suy;
+    double **uy, **xy, **lsy, **usy, **piy, **lam_lby, **lam_lgy, **lam_uby, **lam_ugy, **lam_lsy, **lam_usy, *x11y, *sly, *suy, *s1x, *s1u, *u11x, *u11y;
     struct d_ocp_qp_dim dimx;
     struct d_ocp_qp_dim dimy;
     hpipm_size_t ipm_arg_sizex;
-    hpipm_size_t dim_sizex;    
+    hpipm_size_t dim_sizex;
     hpipm_size_t qp_sol_sizex;
     hpipm_size_t ipm_sizex;
     hpipm_size_t ipm_arg_sizey;
-    hpipm_size_t dim_sizey;    
+    hpipm_size_t dim_sizey;
     hpipm_size_t qp_sol_sizey;
     hpipm_size_t ipm_sizey;
     void *qp_sol_memx;
     void *ipm_arg_memx;
-    void *dim_memx;  
+    void *dim_memx;
     void *ipm_memx;
     void *qp_sol_memy;
     void *ipm_arg_memy;
-    void *dim_memy;  
+    void *dim_memy;
     void *ipm_memy;
     struct d_ocp_qp_ipm_arg argx;
     struct d_ocp_qp_sol qp_solx;
@@ -232,10 +104,14 @@ public:
     struct d_ocp_qp qpy;
     int hpipm_statusx; // 0 normal; 1 max iter
     int hpipm_statusy; // 0 normal; 1 max iter
+    int nx_max;
+
+    //GravityCompensation & redistribution
+    Eigen::VectorQd TorqueGrav;
+
+    //WholebodyController &wbc_;
+    //TaskCommand tc;
 
 private:
     Eigen::VectorQd ControlVal_;
 };
-
-
-
