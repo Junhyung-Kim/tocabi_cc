@@ -2,14 +2,8 @@
 
 void WalkingController::walkingCompute(RobotData &rd)
 {
-    //////InitModel//////
-    getRobotInitState(rd_);
-
-    /////FootStep//////
-    footStepGenerator(rd_);
-
     /////ModelUpdate//////
-    getRobotState(rd_);
+    getRobotState(rd);
 
     if (walking_tick == 0)
     {
@@ -17,7 +11,82 @@ void WalkingController::walkingCompute(RobotData &rd)
         cpReferencePatternGeneration();
         cptoComTrajectory();
     }
-    
+
+    setPelvTrajectory();
+    setFootTrajectory();
+    updateNextStepTime();
+}
+
+void WalkingController::getRobotState(RobotData &rd)
+{
+    //////Real Robot Float Frame//////
+    COM_float_current.linear() = rd.link_[COM_id].rotm;
+    COM_float_current.translation() = rd.link_[COM_id].xpos;
+    COMV_support_currentV = rd.link_[COM_id].v;
+
+    RF_float_current.translation() = rd.link_[Right_Foot].xpos;
+    RF_float_current.linear() = rd.link_[Right_Foot].rotm;
+    LF_float_current.translation() = rd.link_[Left_Foot].xpos;
+    LF_float_current.linear() = rd.link_[Left_Foot].rotm;
+
+    PELV_float_current.translation() = rd.link_[Pelvis].xipos;
+    PELV_float_current.linear() = rd.link_[Pelvis].rotm;
+
+    if (foot_step(current_step_num, 6) == 0)
+    {
+        SUF_float_current = RF_float_current;
+        SWF_float_current = LF_float_current;
+        for (int i = 0; i < 3; i++)
+        {
+            SUF_float_currentV(i) = SUF_float_current.translation()(i);
+            SWF_float_currentV(i) = SWF_float_current.translation()(i);
+        }
+        for (int i = 0; i < 3; i++)
+        {
+            SUF_float_currentV(i + 3) = DyrosMath::rot2Euler(SUF_float_current.linear())(i);
+            SWF_float_currentV(i + 3) = DyrosMath::rot2Euler(SWF_float_current.linear())(i);
+        }
+    }
+    else
+    {
+        SUF_float_current = LF_float_current;
+        SWF_float_current = RF_float_current;
+        for (int i = 0; i < 3; i++)
+        {
+            SUF_float_currentV(i) = SUF_float_current.translation()(i);
+            SWF_float_currentV(i) = SWF_float_current.translation()(i);
+        }
+        for (int i = 0; i < 3; i++)
+        {
+            SUF_float_currentV(i + 3) = DyrosMath::rot2Euler(SUF_float_current.linear())(i);
+            SWF_float_currentV(i + 3) = DyrosMath::rot2Euler(SWF_float_current.linear())(i);
+        }
+    }
+
+    //////Real Robot Support Foot Frame//////
+    PELV_support_current = DyrosMath::inverseIsometry3d(SUF_float_current) * PELV_float_current;
+    RF_support_current = DyrosMath::multiplyIsometry3d(PELV_support_current, RF_float_current);
+    LF_support_current = DyrosMath::multiplyIsometry3d(PELV_support_current, LF_float_current);
+    COM_support_current = DyrosMath::multiplyIsometry3d(PELV_support_current, COM_float_current);
+
+    Agl_leg = Ag_.block(0, 0, 3, 12);
+    Agl_armR = Ag_.block(0, 25, 3, 8);
+    Agl_armL = Ag_.block(0, 15, 3, 8);
+    Agl_waist = Ag_.block(0, 12, 3, 3);
+    Ag_leg = Ag_.block(3, 0, 3, 12);
+    Ag_armR = Ag_.block(3, 25, 3, 8);
+    Ag_armL = Ag_.block(3, 15, 3, 8);
+    Ag_waist = Ag_.block(3, 12, 3, 3);
+    /*
+    yx_vibm(0) = rd.ZMP(0);
+    yx_vibm(1) = rd.link_[Pelvis].xipos(0);
+    yx_vibm(2) = rd.link_[Pelvis].v(0);
+
+    yy_vibm(0) = rd.ZMP(1);
+    yy_vibm(1) = rd.link_[COM_id].xipos(1);
+    yy_vibm(2) = rd.link_[COM_id].v(1);
+*/
+    calcRobotState(rd);
 }
 
 void WalkingController::getRobotInitState(RobotData &rd)
@@ -28,8 +97,11 @@ void WalkingController::getRobotInitState(RobotData &rd)
         RF_float_init.translation() = rd.link_[Right_Foot].xpos;
         RFx_float_init.translation() = rd.link_[Right_Foot].xipos;
         RF_float_init.linear() = rd.link_[Right_Foot].rotm;
+        RFx_float_init.linear() = rd.link_[Right_Foot].rotm;
         LF_float_init.translation() = rd.link_[Left_Foot].xpos;
+        LFx_float_init.translation() = rd.link_[Left_Foot].xipos;
         LF_float_init.linear() = rd.link_[Left_Foot].rotm;
+        LFx_float_init.linear() = rd.link_[Left_Foot].rotm;
 
         COM_float_init.translation() = rd.link_[COM_id].xpos;
         COM_float_init.linear() = rd.link_[COM_id].rotm;
@@ -432,69 +504,6 @@ void WalkingController::footStepTotal()
     }
 }
 
-void WalkingController::getRobotState(RobotData &rd)
-{
-    //////Real Robot Float Frame//////
-    COM_float_current.linear() = rd.link_[COM_id].rotm;
-    COMV_support_currentV = rd.link_[COM_id].v;
-
-    if (foot_step(current_step_num, 6) == 0)
-    {
-        SUF_float_current = RF_float_current;
-        SWF_float_current = LF_float_current;
-        for (int i = 0; i < 3; i++)
-        {
-            SUF_float_currentV(i) = SUF_float_current.translation()(i);
-            SWF_float_currentV(i) = SWF_float_current.translation()(i);
-        }
-        for (int i = 0; i < 3; i++)
-        {
-            SUF_float_currentV(i + 3) = DyrosMath::rot2Euler(SUF_float_current.linear())(i);
-            SWF_float_currentV(i + 3) = DyrosMath::rot2Euler(SWF_float_current.linear())(i);
-        }
-    }
-    else
-    {
-        SUF_float_current = LF_float_current;
-        SWF_float_current = RF_float_current;
-        for (int i = 0; i < 3; i++)
-        {
-            SUF_float_currentV(i) = SUF_float_current.translation()(i);
-            SWF_float_currentV(i) = SWF_float_current.translation()(i);
-        }
-        for (int i = 0; i < 3; i++)
-        {
-            SUF_float_currentV(i + 3) = DyrosMath::rot2Euler(SUF_float_current.linear())(i);
-            SWF_float_currentV(i + 3) = DyrosMath::rot2Euler(SWF_float_current.linear())(i);
-        }
-    }
-
-    //////Real Robot Support Foot Frame//////
-    PELV_support_current = DyrosMath::inverseIsometry3d(SUF_float_current) * PELV_float_current;
-    RF_support_current = DyrosMath::multiplyIsometry3d(PELV_support_current, RF_float_current);
-    LF_support_current = DyrosMath::multiplyIsometry3d(PELV_support_current, LF_float_current);
-    COM_support_current = DyrosMath::multiplyIsometry3d(PELV_support_current, COM_float_current);
-
-    Agl_leg = Ag_.block(0, 0, 3, 12);
-    Agl_armR = Ag_.block(0, 25, 3, 8);
-    Agl_armL = Ag_.block(0, 15, 3, 8);
-    Agl_waist = Ag_.block(0, 12, 3, 3);
-    Ag_leg = Ag_.block(3, 0, 3, 12);
-    Ag_armR = Ag_.block(3, 25, 3, 8);
-    Ag_armL = Ag_.block(3, 15, 3, 8);
-    Ag_waist = Ag_.block(3, 12, 3, 3);
-    /*
-    yx_vibm(0) = rd.ZMP(0);
-    yx_vibm(1) = rd.link_[Pelvis].xipos(0);
-    yx_vibm(2) = rd.link_[Pelvis].v(0);
-
-    yy_vibm(0) = rd.ZMP(1);
-    yy_vibm(1) = rd.link_[COM_id].xipos(1);
-    yy_vibm(2) = rd.link_[COM_id].v(1);
-*/
-    // calcRobotState();
-}
-
 void WalkingController::calcRobotState(RobotData &rd)
 {
 }
@@ -853,6 +862,243 @@ void WalkingController::setFootTrajectory()
     }
 }
 
+void WalkingController::saveFootTrajectory()
+{
+    LFx_trajectory_float.resize((t_total * (total_step_num + 1) + t_temp - 1));
+    RFx_trajectory_float.resize((t_total * (total_step_num + 1) + t_temp - 1));
+
+    LFy_trajectory_float.resize((t_total * (total_step_num + 1) + t_temp - 1));
+    RFy_trajectory_float.resize((t_total * (total_step_num + 1) + t_temp - 1));
+
+    LFz_trajectory_float.resize((t_total * (total_step_num + 1) + t_temp - 1));
+    RFz_trajectory_float.resize((t_total * (total_step_num + 1) + t_temp - 1));
+
+    LFvx_trajectory_float.resize((t_total * (total_step_num + 1) + t_temp - 1));
+    RFvx_trajectory_float.resize((t_total * (total_step_num + 1) + t_temp - 1));
+
+    LFvy_trajectory_float.resize((t_total * (total_step_num + 1) + t_temp - 1));
+    RFvy_trajectory_float.resize((t_total * (total_step_num + 1) + t_temp - 1));
+
+    LFvz_trajectory_float.resize((t_total * (total_step_num + 1) + t_temp - 1));
+    RFvz_trajectory_float.resize((t_total * (total_step_num + 1) + t_temp - 1));
+    debug.resize((t_total * (total_step_num + 1) + t_temp - 1));
+
+    for(int i = 0; i < (t_total * (total_step_num + 1) + t_temp - 1); i++)
+    {
+        if (i < t_start_real + t_double1)
+        {
+            LFy_trajectory_float(i) = (LF_float_init).translation()(1);
+            RFy_trajectory_float(i) = (RF_float_init).translation()(1);
+            LFx_trajectory_float(i) = (LF_float_init).translation()(0);
+            RFx_trajectory_float(i) = (RF_float_init).translation()(0);
+            LFz_trajectory_float(i) = (LF_float_init).translation()(2);
+            RFz_trajectory_float(i) = (RF_float_init).translation()(2);
+
+            LFvx_trajectory_float(i) = 0;
+            LFvy_trajectory_float(i) = 0;
+            LFvz_trajectory_float(i) = 0;
+            RFvx_trajectory_float(i) = 0;
+            RFvy_trajectory_float(i) = 0;
+            RFvz_trajectory_float(i) = 0;
+        }
+        else if(i < t_start_real + t_double1 + t_total)
+        {
+            if(foot_step(1,6) == 1)
+            {
+                LFy_trajectory_float(i) = foot_step(0, 1);
+                RFy_trajectory_float(i) = (RF_float_init).translation()(1);
+                LFx_trajectory_float(i) = foot_step(0, 0);
+                RFx_trajectory_float(i) = (RF_float_init).translation()(0);
+                LFz_trajectory_float(i) = (LF_float_init).translation()(2);
+                RFz_trajectory_float(i) = (RF_float_init).translation()(2);
+            }
+            else
+            {
+                LFy_trajectory_float(i) = (LF_float_init).translation()(1);
+                RFy_trajectory_float(i) = foot_step(0,1);
+                LFx_trajectory_float(i) = (LF_float_init).translation()(0);
+                RFx_trajectory_float(i) = foot_step(0,0);
+                LFz_trajectory_float(i) = (LF_float_init).translation()(2);
+                RFz_trajectory_float(i) = (RF_float_init).translation()(2);
+            }
+            LFvx_trajectory_float(i) = 0;
+            LFvy_trajectory_float(i) = 0;
+            LFvz_trajectory_float(i) = 0;
+            RFvx_trajectory_float(i) = 0;
+            RFvy_trajectory_float(i) = 0;
+            RFvz_trajectory_float(i) = 0;
+        }
+        else
+        {
+            int j = (i - t_temp)/t_total;
+            if(j == 1)
+            {
+                if(i <= t_start_real + t_double1 + t_total * 2)
+                {
+                    if (foot_step(j, 6) == 1)
+                    {
+                        LFx_trajectory_float(i) = foot_step(j-1, 0);
+                        LFy_trajectory_float(i) = foot_step(j-1, 1);
+                        LFz_trajectory_float(i) = (LF_float_init).translation()(2);
+                        RFy_trajectory_float(i) = (RF_float_init).translation()(1);
+                        RFx_trajectory_float(i) = DyrosMath::QuinticSpline(i, t_start_real + t_total + t_double1 + 2 * t_rest_temp, t_start  + t_total * 2 - t_rest_last - t_double2 - t_imp - 2 * t_rest_temp, (RF_float_init).translation()(0), 0.0, 0.0, foot_step(j, 0), 0.0, 0.0)(0);
+                        RFvx_trajectory_float(i) = DyrosMath::QuinticSpline(i, t_start_real + t_total + t_double1 + 2 * t_rest_temp, t_start  + t_total * 2 - t_rest_last - t_double2 - t_imp - 2 * t_rest_temp, (RF_float_init).translation()(0), 0.0, 0.0, foot_step(j, 0), 0.0, 0.0)(1) * wk_Hz;
+                        if (i < t_start_real + t_total + t_double1 + (t_total - t_rest_init - t_rest_last - t_double1 - t_double2 - t_imp) / 2.0) // the period for lifting the right foot
+                        {
+                            RFz_trajectory_float(i) = DyrosMath::QuinticSpline(i, t_start_real + t_total + t_double1 + t_rest_temp, t_start_real + t_total + t_double1 + (t_total - t_rest_init - t_rest_last - t_double1 - t_double2 - t_imp) / 2, (RF_float_init).translation()(2), 0.0, 0.0, (RF_float_init).translation()(2) + foot_height, 0.0, 0.0)(0);
+                            RFvz_trajectory_float(i) = DyrosMath::QuinticSpline(i, t_start_real + t_total + t_double1 + t_rest_temp, t_start_real + t_total + t_double1 + (t_total - t_rest_init - t_rest_last - t_double1 - t_double2 - t_imp) / 2, (RF_float_init).translation()(2), 0.0, 0.0, (RF_float_init).translation()(2) + foot_height, 0.0, 0.0)(1) * wk_Hz;
+                        }
+                        else
+                        {
+                            RFz_trajectory_float(i) = DyrosMath::QuinticSpline(i, t_start_real + t_total + t_double1 + (t_total - t_rest_init - t_rest_last - t_double1 - t_double2 - t_imp) / 2.0, t_start + t_total + t_total - t_rest_last - t_double2 - t_imp - t_rest_temp, (RF_float_init).translation()(2) + foot_height, 0.0, 0.0, (RF_float_init).translation()(2), 0.0, 0.0)(0);
+                            RFvz_trajectory_float(i) = DyrosMath::QuinticSpline(i, t_start_real + t_total + t_double1 + (t_total - t_rest_init - t_rest_last - t_double1 - t_double2 - t_imp) / 2.0, t_start + t_total + t_total - t_rest_last - t_double2 - t_imp - t_rest_temp, (RF_float_init).translation()(2) + foot_height, 0.0, 0.0, (RF_float_init).translation()(2), 0.0, 0.0)(1) * wk_Hz;
+                        }
+ 
+                        LFvx_trajectory_float(i) = 0;
+                        LFvy_trajectory_float(i) = 0;
+                        LFvz_trajectory_float(i) = 0;
+                        RFvy_trajectory_float(i) = 0; 
+                    }
+                    else
+                    {
+                        RFx_trajectory_float(i) = foot_step(j-1, 0);
+                        RFy_trajectory_float(i) = foot_step(j-1, 1);
+                        RFz_trajectory_float(i) = (RF_float_init).translation()(2);
+
+                        LFy_trajectory_float(i) = (LF_float_init).translation()(1);
+                        LFx_trajectory_float(i) = DyrosMath::QuinticSpline(i, t_start_real + t_total + t_double1 + 2 * t_rest_temp, t_start  + t_total * 2 - t_rest_last - t_double2 - t_imp - 2 * t_rest_temp, (LF_float_init).translation()(0), 0.0, 0.0, foot_step(j, 0), 0.0, 0.0)(0);
+                        LFvx_trajectory_float(i) = DyrosMath::QuinticSpline(i, t_start_real + t_total + t_double1 + 2 * t_rest_temp, t_start  + t_total * 2 - t_rest_last - t_double2 - t_imp - 2 * t_rest_temp, (LF_float_init).translation()(0), 0.0, 0.0, foot_step(j, 0), 0.0, 0.0)(1) * wk_Hz;
+
+                        if (i < t_start_real + t_total + t_double1 + (t_total - t_rest_init - t_rest_last - t_double1 - t_double2 - t_imp) / 2.0) // the period for lifting the right foot
+                        {
+                            LFz_trajectory_float(i) = DyrosMath::QuinticSpline(i, t_start_real + t_total  + t_double1 + t_rest_temp, t_start_real + t_total + t_double1 + (t_total - t_rest_init - t_rest_last - t_double1 - t_double2 - t_imp) / 2, (LF_float_init).translation()(2), 0.0, 0.0, (LF_float_init).translation()(2) + foot_height, 0.0, 0.0)(0);
+                            LFvz_trajectory_float(i) = DyrosMath::QuinticSpline(i, t_start_real + t_total  + t_double1 + t_rest_temp, t_start_real + t_total + t_double1 + (t_total - t_rest_init - t_rest_last - t_double1 - t_double2 - t_imp) / 2, (LF_float_init).translation()(2), 0.0, 0.0, (LF_float_init).translation()(2) + foot_height, 0.0, 0.0)(1) * wk_Hz;
+                        }
+                        else
+                        {
+                            LFz_trajectory_float(i) = DyrosMath::QuinticSpline(i, t_start_real + t_total + t_double1 + (t_total - t_rest_init - t_rest_last - t_double1 - t_double2 - t_imp) / 2.0, t_start + t_total + t_total - t_rest_last - t_double2 - t_imp - t_rest_temp, (LF_float_init).translation()(2) + foot_height, 0.0, 0.0, (LF_float_init).translation()(2), 0.0, 0.0)(0);
+                            LFvz_trajectory_float(i) = DyrosMath::QuinticSpline(i, t_start_real + t_total + t_double1 + (t_total - t_rest_init - t_rest_last - t_double1 - t_double2 - t_imp) / 2.0, t_start + t_total + t_total - t_rest_last - t_double2 - t_imp - t_rest_temp, (LF_float_init).translation()(2) + foot_height, 0.0, 0.0, (LF_float_init).translation()(2), 0.0, 0.0)(1) * wk_Hz;
+                        }
+
+                        RFvx_trajectory_float(i) = 0;
+                        RFvy_trajectory_float(i) = 0;
+                        RFvz_trajectory_float(i) = 0;
+                        LFvy_trajectory_float(i) = 0;
+                    }
+                }
+            }
+            else if(j > 1 && j < total_step_num)
+            {   
+                if(i <= t_start + t_double1 + t_total * (j) && i >= t_start + t_total * (j) - 1 )
+                {
+                    if (foot_step(j, 6) == 1)
+                    {
+                        RFx_trajectory_float(i) = foot_step(j - 2, 0);
+                        LFx_trajectory_float(i) = foot_step(j - 1, 0);
+                        RFy_trajectory_float(i) = foot_step(j - 2, 1);
+                        LFy_trajectory_float(i) = foot_step(j - 1, 1);
+                        LFz_trajectory_float(i) = (LF_float_init).translation()(2);
+                        RFz_trajectory_float(i) = (RF_float_init).translation()(2);
+                    }
+                    else
+                    {
+                        LFx_trajectory_float(i) = foot_step(j - 2, 0);
+                        RFx_trajectory_float(i) = foot_step(j - 1, 0);
+                        LFy_trajectory_float(i) = foot_step(j - 2, 1);
+                        RFy_trajectory_float(i) = foot_step(j - 1, 1);
+                        RFz_trajectory_float(i) = (RF_float_init).translation()(2);
+                        LFz_trajectory_float(i) = (LF_float_init).translation()(2);
+                    }
+
+                    LFvx_trajectory_float(i) = 0;
+                    LFvy_trajectory_float(i) = 0;
+                    LFvz_trajectory_float(i) = 0;
+                    RFvx_trajectory_float(i) = 0;
+                    RFvy_trajectory_float(i) = 0;
+                    RFvz_trajectory_float(i) = 0;
+                }
+                else if(walking_tick <= t_start_real + t_double1 + t_total * j)
+                {
+                    if (foot_step(j, 6) == 1)
+                    {
+                        RFy_trajectory_float(i) = foot_step(j - 2, 1);
+                        LFy_trajectory_float(i) = foot_step(j - 1, 1);
+                        LFx_trajectory_float(i) = foot_step(j - 1, 0);
+                        LFz_trajectory_float(i) = (LF_float_init).translation()(2);
+                        RFx_trajectory_float(i) = DyrosMath::QuinticSpline(i, t_start_real + t_total * j+ t_double1 + 2 * t_rest_temp, t_start  + t_total * (j+1) - t_rest_last - t_double2 - t_imp - 2 * t_rest_temp, foot_step(j - 2, 0), 0.0, 0.0, foot_step(j, 0), 0.0, 0.0)(0);
+                        RFvx_trajectory_float(i) = DyrosMath::QuinticSpline(i, t_start_real + t_total * j+ t_double1 + 2 * t_rest_temp, t_start  + t_total * (j+1) - t_rest_last - t_double2 - t_imp - 2 * t_rest_temp, foot_step(j - 2, 0), 0.0, 0.0, foot_step(j, 0), 0.0, 0.0)(1) * wk_Hz;                        
+                        RFvy_trajectory_float(i) = 0;
+                        if (i < t_start_real + t_total*j + t_double1 + (t_total - t_rest_init - t_rest_last - t_double1 - t_double2 - t_imp) / 2.0) // the period for lifting the right foot
+                        {
+                            RFz_trajectory_float(i) = DyrosMath::QuinticSpline(i, t_start_real + t_total*j  + t_double1 + t_rest_temp, t_start_real + t_total*j + t_double1 + (t_total - t_rest_init - t_rest_last - t_double1 - t_double2 - t_imp) / 2, (LF_float_init).translation()(2), 0.0, 0.0, (RF_float_init).translation()(2) + foot_height, 0.0, 0.0)(0);
+                            RFvz_trajectory_float(i) = DyrosMath::QuinticSpline(i, t_start_real + t_total*j  + t_double1 + t_rest_temp, t_start_real + t_total*j + t_double1 + (t_total - t_rest_init - t_rest_last - t_double1 - t_double2 - t_imp) / 2, (LF_float_init).translation()(2), 0.0, 0.0, (RF_float_init).translation()(2) + foot_height, 0.0, 0.0)(1) * wk_Hz;
+                        }
+                        else
+                        {
+                            RFz_trajectory_float(i) = DyrosMath::QuinticSpline(i, t_start_real + t_total*j + t_double1 + (t_total - t_rest_init - t_rest_last - t_double1 - t_double2 - t_imp) / 2.0, t_start + t_total*j + t_total - t_rest_last - t_double2 - t_imp - t_rest_temp, (RF_float_init).translation()(2) + foot_height, 0.0, 0.0, (RF_float_init).translation()(2), 0.0, 0.0)(0);
+                            RFvz_trajectory_float(i) = DyrosMath::QuinticSpline(i, t_start_real + t_total*j + t_double1 + (t_total - t_rest_init - t_rest_last - t_double1 - t_double2 - t_imp) / 2.0, t_start + t_total*j + t_total - t_rest_last - t_double2 - t_imp - t_rest_temp, (RF_float_init).translation()(2) + foot_height, 0.0, 0.0, (RF_float_init).translation()(2), 0.0, 0.0)(1) * wk_Hz;
+                        }
+                        LFvx_trajectory_float(i) = 0;
+                        LFvy_trajectory_float(i) = 0;
+                        LFvz_trajectory_float(i) = 0;   
+                    }
+                    else
+                    {
+                        LFy_trajectory_float(i) = foot_step(j - 2, 1);
+                        RFy_trajectory_float(i) = foot_step(j - 1, 1);
+                        RFx_trajectory_float(i) = foot_step(j - 1, 0);
+                        RFz_trajectory_float(i) = (RF_float_init).translation()(2);
+                        LFx_trajectory_float(i) = DyrosMath::QuinticSpline(i, t_start_real + t_total * j+ t_double1 + 2 * t_rest_temp, t_start  + t_total * (j+1) - t_rest_last - t_double2 - t_imp - 2 * t_rest_temp, foot_step(j - 2, 0), 0.0, 0.0, foot_step(j, 0), 0.0, 0.0)(0);
+                        LFvx_trajectory_float(i) = DyrosMath::QuinticSpline(i, t_start_real + t_total * j+ t_double1 + 2 * t_rest_temp, t_start  + t_total * (j+1) - t_rest_last - t_double2 - t_imp - 2 * t_rest_temp, foot_step(j - 2, 0), 0.0, 0.0, foot_step(j, 0), 0.0, 0.0)(1) * wk_Hz;
+                        LFvy_trajectory_float(i) = 0;
+                        if (i < t_start_real + t_total*j + t_double1 + (t_total - t_rest_init - t_rest_last - t_double1 - t_double2 - t_imp) / 2.0) // the period for lifting the right foot
+                        {
+                            LFz_trajectory_float(i) = DyrosMath::QuinticSpline(i, t_start_real + t_total*j  + t_double1 + t_rest_temp, t_start_real + t_total*j + t_double1 + (t_total - t_rest_init - t_rest_last - t_double1 - t_double2 - t_imp) / 2, (LF_float_init).translation()(2), 0.0, 0.0, (LF_float_init).translation()(2) + foot_height, 0.0, 0.0)(0);
+                            LFvz_trajectory_float(i) = DyrosMath::QuinticSpline(i, t_start_real + t_total*j  + t_double1 + t_rest_temp, t_start_real + t_total*j + t_double1 + (t_total - t_rest_init - t_rest_last - t_double1 - t_double2 - t_imp) / 2, (LF_float_init).translation()(2), 0.0, 0.0, (LF_float_init).translation()(2) + foot_height, 0.0, 0.0)(1) * wk_Hz;
+                        }
+                        else
+                        {
+                            LFz_trajectory_float(i) = DyrosMath::QuinticSpline(i, t_start_real + t_total*j + t_double1 + (t_total - t_rest_init - t_rest_last - t_double1 - t_double2 - t_imp) / 2.0, t_start + t_total*j + t_total - t_rest_last - t_double2 - t_imp - t_rest_temp, (LF_float_init).translation()(2) + foot_height, 0.0, 0.0, (LF_float_init).translation()(2), 0.0, 0.0)(0);
+                            LFvz_trajectory_float(i) = DyrosMath::QuinticSpline(i, t_start_real + t_total*j + t_double1 + (t_total - t_rest_init - t_rest_last - t_double1 - t_double2 - t_imp) / 2.0, t_start + t_total*j + t_total - t_rest_last - t_double2 - t_imp - t_rest_temp, (LF_float_init).translation()(2) + foot_height, 0.0, 0.0, (LF_float_init).translation()(2), 0.0, 0.0)(1) * wk_Hz;
+                        }
+                        RFvx_trajectory_float(i) = 0;
+                        RFvy_trajectory_float(i) = 0;
+                        RFvz_trajectory_float(i) = 0;
+                    }
+                }
+            }
+            else if(j == total_step_num)
+            {
+                if(i >= t_start + t_total * (j) - 1 )
+                {
+                    if (foot_step(total_step_num - 1, 6) == 1)
+                    {
+                        RFx_trajectory_float(i) = foot_step(total_step_num - 1, 0);
+                        LFx_trajectory_float(i) = foot_step(total_step_num - 2, 0);
+                        RFy_trajectory_float(i) = foot_step(total_step_num - 1, 1);
+                        LFy_trajectory_float(i) = foot_step(total_step_num - 2, 1);
+                    }
+                    else
+                    {
+                        LFx_trajectory_float(i) = foot_step(total_step_num - 1, 0);
+                        RFx_trajectory_float(i) = foot_step(total_step_num - 2, 0);
+                        LFy_trajectory_float(i) = foot_step(total_step_num - 1, 1);
+                        RFy_trajectory_float(i) = foot_step(total_step_num - 2, 1);
+                    }
+                    LFz_trajectory_float(i) = (LF_float_init).translation()(2);
+                    RFz_trajectory_float(i) = (RF_float_init).translation()(2);
+                    LFvx_trajectory_float(i) = 0;
+                    LFvy_trajectory_float(i) = 0;
+                    LFvz_trajectory_float(i) = 0;
+                    RFvx_trajectory_float(i) = 0;
+                    RFvy_trajectory_float(i) = 0;
+                    RFvz_trajectory_float(i) = 0;
+                }
+            }
+        }
+    }
+}
+
 void WalkingController::cpReferencePatternGeneration()
 {
     capturePoint_refx.resize((t_total * (total_step_num + 1) + t_temp - 1));
@@ -1193,9 +1439,13 @@ void WalkingController::updateNextStepTime()
             t_last = t_start + t_total - 1;
 
             current_step_num++;
+            if(current_step_num == total_step_num)
+            {
+                current_step_num = total_step_num - 1;
+            }
         }
     }
-    if (current_step_num == total_step_num - 1 && walking_tick >= t_total + t_last - 3)
+    if (walking_tick == (t_total * (total_step_num + 1) + t_temp - 1))
     {
         walking_enable = 2.0;
     }
@@ -1225,7 +1475,6 @@ void WalkingController::updateNextStepTime()
         if (walking_tick < t_start_real + t_double1 + t_rest_temp - 0.075 * wk_Hz && walking_tick > t_start_real + t_double1 + t_rest_temp + 0.015 * wk_Hz + 1)
             phaseChange = false;
     }
-    walking_tick++;
 }
 
 void WalkingController::setWalkingParameter()
@@ -1240,12 +1489,11 @@ void WalkingController::setWalkingParameter()
     t_temp = 4.0 * wk_Hz;*/
     t_rest_init = 0.1 * wk_Hz;
     t_rest_last = 0.1 * wk_Hz;
-    t_double1 = 0.1 * wk_Hz;
+    t_double1 = 0.1 * wk_Hz;  
     t_double2 = 0.1 * wk_Hz;
     t_total = 1.1 * wk_Hz;
     t_temp = 4.0 * wk_Hz;
-    /*
-    t_double1 = 0.35*wk_Hz;
+    /*t_double1 = 0.35*wk_Hz;
     t_double2 = 0.35*wk_Hz;
     t_rest_init = .15*wk_Hz;
     t_rest_last = .15*wk_Hz;

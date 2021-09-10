@@ -27,7 +27,7 @@ CustomController::CustomController(RobotData &rd) : rd_(rd) //, wbc_(dc.wbc_)
     {
         file[i].open(FILE_NAMES[i].c_str(), std::ios_base::out);
     }
- 
+
     ControlVal_.setZero();
     pinocchio::urdf::buildModel("/home/jhk/catkin_ws/src/dyros_tocabi_v2/tocabi_description/robots/dyros_tocabi_with_redhands.urdf", model);
     pinocchio::Data data(model);
@@ -101,14 +101,11 @@ void CustomController::computeSlow()
     {
         if (rd_.tc_.walking_enable == 1.0)
         {
-            q_ = rd_.q_;
-            qdot = rd_.q_dot_;
-
             //Pinocchio model
-            CMM = pinocchio::computeCentroidalMap(model, model_data, q_);
-            pinocchio::crba(model, model_data, q_);
-            pinocchio::computeCoriolisMatrix(model, model_data, q_, qdot);
-            pinocchio::rnea(model, model_data, q_, qdot_, qddot_);
+            CMM = pinocchio::computeCentroidalMap(model, model_data, rd_.q_);
+            pinocchio::crba(model, model_data, rd_.q_);
+            pinocchio::computeCoriolisMatrix(model, model_data, rd_.q_, qdot);
+            pinocchio::rnea(model, model_data, rd_.q_, qdot_, qddot_);
 
             Cor_ = model_data.C;
             G_ = model_data.tau;
@@ -170,7 +167,7 @@ void CustomController::computeFast()
             if (wlk_on == false)
             {
                 wk_Hz = 1000;
-                wk_dt = 1/wk_Hz;
+                wk_dt = 1 / wk_Hz;
                 walking_tick = 0;
 
                 ik_mode = rd_.tc_.ik_mode;
@@ -191,7 +188,7 @@ void CustomController::computeFast()
                 com_control_mode = true;
                 gyro_frame_flag = false;
 
-                if(rd_.tc_.first_foot_step == 0)
+                if (rd_.tc_.first_foot_step == 0)
                 {
                     foot_step_dir = 1.0;
                 }
@@ -201,37 +198,26 @@ void CustomController::computeFast()
                 }
                 wlk_on = true;
                 setWalkingParameter();
-            }
-            
-            walkingCompute(rd_);
-            //////InitModel//////
-            getRobotInitState(rd_);
 
-            /////FootStep//////
-            footStepGenerator(rd_);
+                //////InitModel//////
+                getRobotInitState(rd_);
 
-            /////ModelUpdate//////
-            getRobotState(rd_);
-        
-           if (walking_tick == 0)
-            {
-                setCpPosition();
-                cpReferencePatternGeneration();
-                cptoComTrajectory();
-            }
+                /////FootStep//////
+                footStepGenerator(rd_);
+                saveFootTrajectory();
 
-/*            if(walking_tick == 0)
-            {
-                for(int i = 0; i<(t_total * (total_step_num + 1) + t_temp - 1); i++)
+                for (int i = 0; i < RFx_trajectory_float.size(); i++)
                 {
-                    file[0] << capturePoint_refx(i) <<"\t  " << capturePoint_refy(i) <<"\t" <<com_refx(i) <<"\t" <<com_refy(i) <<"\t" <<com_refdx(i) <<"\t" <<com_refdy(i)<<"\t" <<zmp_refx(i)  <<"\t" <<zmp_refy(i)  << std::endl;
+                    file[0] << RFx_trajectory_float(i) << "\t" << RFy_trajectory_float(i) << "\t" << RFz_trajectory_float(i) << "\t" << LFx_trajectory_float(i) << "\t" << LFy_trajectory_float(i) << "\t" << LFz_trajectory_float(i) << "\t" << debug(i) << std::endl;
                 }
-                walking_tick++;
-            }*/
+            }
+
+            walkingCompute(rd_);
+            file[1] << walking_tick << "\t" <<  com_refx(walking_tick) << "\t"  <<RF_trajectory_float.translation()(0) << "\t " << RF_trajectory_float.translation()(1) << "\t" << RF_trajectory_float.translation()(2) << "\t" << LF_trajectory_float.translation()(0) << "\t" << LF_trajectory_float.translation()(1) << "\t" << LF_trajectory_float.translation()(2) << std::endl;
         }
         else if (rd_.tc_.walking_enable == 3.0)
         {
-        }   
+        }
     }
 }
 
@@ -1188,7 +1174,7 @@ void CustomController::mpcModelSetup()
 
 void WalkingController::momentumControl(RobotData &Robot)
 {
-   /* int variable_size, constraint_size;
+    /* int variable_size, constraint_size;
 
     variable_size = 5;
     constraint_size = 5;

@@ -21,7 +21,7 @@ public:
 
     const int LEFT = 0;
     const int RIGHT = 1;
-
+    Eigen::VectorXd debug;
     //mutex
     std::mutex cc_mutex;
 
@@ -82,6 +82,7 @@ public:
     void cpReferencePatternGeneration();
     void cptoComTrajectory();
     void setFootTrajectory();
+    void saveFootTrajectory();
     void setPelvTrajectory();
     void inverseKinematics(RobotData &Robot, Eigen::Isometry3d PELV_float_transform, Eigen::Isometry3d LF_float_transform, Eigen::Isometry3d RF_float_transform, Eigen::Vector12d &leg_q);
     void inverseKinematicsdob(RobotData &Robot);
@@ -127,6 +128,20 @@ public:
     Eigen::Vector3d LF_support_euler_init;
     Eigen::Vector3d RF_support_euler_init;
     Eigen::Vector3d PELV_support_euler_init;
+
+    Eigen::VectorXd LFx_trajectory_float;
+    Eigen::VectorXd RFx_trajectory_float;
+    Eigen::VectorXd LFy_trajectory_float;
+    Eigen::VectorXd RFy_trajectory_float;
+    Eigen::VectorXd LFz_trajectory_float;
+    Eigen::VectorXd RFz_trajectory_float;
+
+    Eigen::VectorXd LFvx_trajectory_float;
+    Eigen::VectorXd RFvx_trajectory_float;
+    Eigen::VectorXd LFvy_trajectory_float;
+    Eigen::VectorXd RFvy_trajectory_float;
+    Eigen::VectorXd LFvz_trajectory_float;
+    Eigen::VectorXd RFvz_trajectory_float;
 
     Eigen::Matrix3x12d Ag_leg;
     Eigen::Matrix3x8d Ag_armR;
