@@ -22,8 +22,6 @@ public:
     const int LEFT = 0;
     const int RIGHT = 1;
     Eigen::VectorXd debug;
-    //mutex
-    std::mutex cc_mutex;
 
     //Ui WalkingParameter
     std::atomic<double> wk_Hz;
@@ -66,9 +64,16 @@ public:
     std::atomic<double> zc;
     std::atomic<double> lipm_w;
     std::atomic<int> walking_tick;
+    std::atomic<int> walking_init_tick;
     std::atomic<double> contactMode;
     std::atomic<double> phaseChange;
     std::atomic<double> phaseChange1;
+
+    //mutex
+    std::mutex cc_mutex;
+
+    //walkingInit
+    Eigen::VectorQd q_target, q_init;
 
     //walking
     void walkingCompute(RobotData &rd);
@@ -82,6 +87,7 @@ public:
     void cpReferencePatternGeneration();
     void cptoComTrajectory();
     void setFootTrajectory();
+    void setContactMode();
     void saveFootTrajectory();
     void setPelvTrajectory();
     void inverseKinematics(RobotData &Robot, Eigen::Isometry3d PELV_float_transform, Eigen::Isometry3d LF_float_transform, Eigen::Isometry3d RF_float_transform, Eigen::Vector12d &leg_q);
@@ -89,6 +95,9 @@ public:
     void momentumControl(RobotData &Robot);
     void updateNextStepTime();
     void setWalkingParameter();
+    void setInitPose(RobotData &Robot, Eigen::VectorQd &leg_q);
+    void walkingInitialize(RobotData &Robot);
+    void updateInitTime();
     
     Eigen::Isometry3d RF_float_init;
     Eigen::Isometry3d RFx_float_init;
@@ -158,9 +167,9 @@ public:
     Eigen::Isometry3d RFD_trajectory_float;
 
     Eigen::MatrixXd foot_step;
-    int desired_foot_step_num;
-    int current_step_num;
-    int total_step_num;
+    std::atomic<int> desired_foot_step_num;
+    std::atomic<int> current_step_num;
+    std::atomic<int> total_step_num;
 
     //////Capture Point//////
     Eigen::VectorXd capturePoint_ox;
@@ -182,6 +191,7 @@ public:
     Eigen::Vector12d dob_hat;
     Eigen::Vector12d dob_hat_prev;
     Eigen::Vector12d desired_leg_q;
+    Eigen::VectorQd desired_init_q;
     double dobGain;
 
     //momentum Control

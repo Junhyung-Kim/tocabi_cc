@@ -49,7 +49,12 @@ public:
     Eigen::MatrixXd CMM;
     Eigen::MatrixQQd Cor_;
     Eigen::VectorQd G_;
-    
+
+    //Contact Redistribution
+    Eigen::VectorQd TorqueContact;
+    Eigen::VectorQd TorqueGrav;
+    double rate;
+
     //MPC
     std::atomic<bool> wlk_on;
     std::atomic<bool> mpc_on;
@@ -106,8 +111,8 @@ public:
     int hpipm_statusy; // 0 normal; 1 max iter
     int nx_max;
 
-    //GravityCompensation & redistribution
-    Eigen::VectorQd TorqueGrav;
+    //momentumControl
+    CQuadraticProgram QP_m;
 
     //WholebodyController &wbc_;
     //TaskCommand tc;
