@@ -93,7 +93,7 @@ public:
     void inverseKinematics(RobotData &Robot, Eigen::Isometry3d PELV_float_transform, Eigen::Isometry3d LF_float_transform, Eigen::Isometry3d RF_float_transform, Eigen::Vector12d &leg_q);
     void inverseKinematicsdob(RobotData &Robot);
     void momentumControl(RobotData &Robot);
-    void updateNextStepTime();
+    void updateNextStepTime(RobotData &rd);
     void setWalkingParameter();
     void setInitPose(RobotData &Robot, Eigen::VectorQd &leg_q);
     void walkingInitialize(RobotData &Robot);
@@ -167,6 +167,7 @@ public:
     Eigen::Isometry3d RFD_trajectory_float;
 
     Eigen::MatrixXd foot_step;
+    Eigen::MatrixXd foot_step_mu;
     std::atomic<int> desired_foot_step_num;
     std::atomic<int> current_step_num;
     std::atomic<int> total_step_num;
@@ -191,6 +192,7 @@ public:
     Eigen::Vector12d dob_hat;
     Eigen::Vector12d dob_hat_prev;
     Eigen::Vector12d desired_leg_q;
+    Eigen::Vector12d desired_leg_q_temp;
     Eigen::VectorQd desired_init_q;
     double dobGain;
 

@@ -44,7 +44,7 @@ void WalkingController::walkingCompute(RobotData &rd)
         rd.q_desired(i) = desired_init_q(i);
     }
     cc_mutex.unlock();
-    updateNextStepTime();
+    updateNextStepTime(rd);
 }
 
 void WalkingController::getRobotState(RobotData &rd)
@@ -1453,6 +1453,7 @@ void WalkingController::inverseKinematics(RobotData &Robot, Eigen::Isometry3d PE
 
 void WalkingController::inverseKinematicsdob(RobotData &Robot)
 {
+    desired_leg_q_temp = desired_leg_q;
     double Kp, Kv;
 
     for (int i = 0; i < 12; i++)
@@ -1466,8 +1467,8 @@ void WalkingController::inverseKinematicsdob(RobotData &Robot)
     dob_hat = 0.3 * dob_hat + 0.7 * dob_hat_prev;
 
     double defaultGain = 0.0;
-    double compliantGain = 3.0;
-    double rejectionGain = -20.0;//-3.5;
+    double compliantGain = 5.0;
+    double rejectionGain = -25.0;//-3.5;
     double rejectionGainSim[12] = {-19.0, -19.0, -19.0, -19.0, -19.0, -19.0, -19.0, -19.0, -19.0, -19.0, -19.0, -19.0};
     double rejectionGainReal[12] = {-3.0, -3.0, -3.0, -3.0, -3.0, -3.0, -3.0, -3.0, -3.0, -3.0, -3.0, -3.0};;
     double rejectionGain_[12];
@@ -1556,7 +1557,7 @@ void WalkingController::inverseKinematicsdob(RobotData &Robot)
     }
 }
 
-void WalkingController::updateNextStepTime()
+void WalkingController::updateNextStepTime(RobotData &rd)
 {
     if (walking_tick == t_last)
     {
@@ -1575,13 +1576,10 @@ void WalkingController::updateNextStepTime()
         }
     }
 
-    if (walking_tick >= (t_total * (total_step_num + 1) + t_temp - 1))
+    if (walking_tick == (t_total * (total_step_num + 1) + t_temp - 2))
     {
-        walking_enable = 2.0;
-    }
-    else
-    {
-        walking_tick++;
+        rd.tc_.walking_enable = 2.0;
+        current_step_num++;
     }
 
     if (walking_tick >= t_start_real + t_double1 + t_rest_temp - 0.075 * wk_Hz && walking_tick <= t_start_real + t_double1 + t_rest_temp + 0.015 * wk_Hz + 1 && current_step_num != 0)
@@ -1589,7 +1587,7 @@ void WalkingController::updateNextStepTime()
         phaseChange = true;
         phaseChange1 = false;
         double2Single_pre = t_start_real + t_double1 + t_rest_temp - 0.075 * wk_Hz;
-        double2Single = t_start_real + t_double1 + t_rest_temp + 0.015 * wk_Hz;
+        double2Single = t_start_real + t_double1 + t_rest_temp + 0.015 * wk_Hz + 1;
     }
     else
     {
@@ -1609,6 +1607,8 @@ void WalkingController::updateNextStepTime()
         if (walking_tick < t_start_real + t_double1 + t_rest_temp - 0.075 * wk_Hz && walking_tick > t_start_real + t_double1 + t_rest_temp + 0.015 * wk_Hz + 1)
             phaseChange = false;
     }
+
+    walking_tick++;
 }
 
 void WalkingController::setWalkingParameter()

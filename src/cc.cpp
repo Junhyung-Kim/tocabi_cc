@@ -72,6 +72,7 @@ void CustomController::computeSlow()
             rd_.tc_init = false;
             std::cout << "cc mode 11" << std::endl;
 
+
             //rd_.link_[COM_id].x_desired = rd_.link_[COM_id].x_init;
         }
 
@@ -102,7 +103,7 @@ void CustomController::computeSlow()
         if (rd_.tc_.walking_enable == 1.0)
         {
             //Pinocchio model
-            CMM = pinocchio::computeCentroidalMap(model, model_data, rd_.q_);
+        /*        CMM = pinocchio::computeCentroidalMap(model, model_data, rd_.q_);
             pinocchio::crba(model, model_data, rd_.q_);
             pinocchio::computeCoriolisMatrix(model, model_data, rd_.q_, qdot);
             pinocchio::rnea(model, model_data, rd_.q_, qdot_, qddot_);
@@ -111,74 +112,102 @@ void CustomController::computeSlow()
             G_ = model_data.tau;
 
             jointVelocityEstimate();
-
-            if (contactMode == 1.0)
-            {
-                rd_.ee_[0].contact = 1.0;
-                rd_.ee_[1].contact = 1.0;
-            }
-            else if (contactMode == 2.0)
-            {
-                rd_.ee_[0].contact = 1.0;
-                rd_.ee_[1].contact = 0.0;
-            }
-            else
-            {
-                rd_.ee_[0].contact = 0.0;
-                rd_.ee_[1].contact = 1.0;
-            }
-
+*/
             Vector12d fc_redis;
             double fc_ratio = 0.000;
             fc_redis.setZero();
-            WBC::SetContact(rd_, rd_.ee_[0].contact, rd_.ee_[1].contact);
-            TorqueGrav = WBC::GravityCompensationTorque(rd_);
             TorqueContact.setZero();
+            rd_.torque_desired_walk.setZero();
 
-            if (rd_.sim_mode == false)
+            if (walking_tick >= 1 && wlk_on == true && current_step_num != total_step_num)
             {
-                TorqueGrav(1) = 1.2 * TorqueGrav(1);
-                TorqueGrav(7) = 1.2 * TorqueGrav(7);
-            }
-
-            if (walking_tick > 0)
-            {
-                if (phaseChange == true && phaseChange1 == false)
+                if (contactMode == 1.0)
                 {
-                    rate = DyrosMath::cubic(walking_tick, double2Single_pre, double2Single, 1, 0, 0, 0);
-                    TorqueContact = WBC::ContactForceRedistributionTorqueWalking(rd_, TorqueGrav, fc_ratio, rate, foot_step(current_step_num, 6));
+                    rd_.ee_[0].contact = 1.0;
+                    rd_.ee_[1].contact = 1.0;
                 }
-                else if (phaseChange == false && phaseChange1 == true)
+                else if (contactMode == 2.0)
                 {
-                    rate = DyrosMath::cubic(walking_tick, single2Double_pre, single2Double, 0, 1, 0, 0);
-                    if (current_step_num < total_step_num - 1)
-                        TorqueContact = WBC::ContactForceRedistributionTorqueWalking(rd_, TorqueGrav, fc_ratio, rate, foot_step(current_step_num, 6));
-                    else
-                        TorqueContact = WBC::ContactForceRedistributionTorqueWalking(rd_, TorqueGrav, fc_ratio, rate, foot_step(total_step_num - 1, 6));
+                    rd_.ee_[0].contact = 1.0;
+                    rd_.ee_[1].contact = 0.0;
                 }
                 else
                 {
+                    rd_.ee_[0].contact = 0.0;
+                    rd_.ee_[1].contact = 1.0;
+                }
+
+                if (phaseChange == true && phaseChange1 == false)
+                {
+                    WBC::SetContact(rd_, rd_.ee_[0].contact, rd_.ee_[1].contact);
+                    TorqueGrav = WBC::GravityCompensationTorque(rd_);
+
+                    if (rd_.sim_mode == false)
+                    {
+                        TorqueGrav(1) = 1.2 * TorqueGrav(1);
+                        TorqueGrav(7) = 1.2 * TorqueGrav(7);
+                    }
+
+                    rate = DyrosMath::cubic(walking_tick, double2Single_pre, double2Single, 1, 0, 0, 0);
+                    TorqueContact = WBC::ContactForceRedistributionTorqueWalking(rd_, TorqueGrav, fc_ratio, rate, foot_step_mu(current_step_num, 6));
+                    rd_.torque_desired_walk = TorqueGrav + TorqueContact;
+                }
+                else if (phaseChange == false && phaseChange1 == true)
+                {
+                    WBC::SetContact(rd_, rd_.ee_[0].contact, rd_.ee_[1].contact);
+                    TorqueGrav = WBC::GravityCompensationTorque(rd_);
+
+                    if (rd_.sim_mode == false)
+                    {
+                        TorqueGrav(1) = 1.2 * TorqueGrav(1);
+                        TorqueGrav(7) = 1.2 * TorqueGrav(7);
+                    }
+
+                    rate = DyrosMath::cubic(walking_tick, single2Double_pre, single2Double, 0, 1, 0, 0);
+                    if (current_step_num < total_step_num - 1)
+                        TorqueContact = WBC::ContactForceRedistributionTorqueWalking(rd_, TorqueGrav, fc_ratio, rate, foot_step_mu(current_step_num, 6));
+                    else
+                        TorqueContact = WBC::ContactForceRedistributionTorqueWalking(rd_, TorqueGrav, fc_ratio, rate, foot_step_mu(total_step_num - 1, 6));
+
+                    rd_.torque_desired_walk = TorqueGrav + TorqueContact;
+                }
+                else
+                {
+                    WBC::SetContact(rd_, rd_.ee_[0].contact, rd_.ee_[1].contact);
                     rate = 1.0;
-                    TorqueContact = WBC::ContactForceRedistributionTorqueWalking(rd_, TorqueGrav, fc_ratio, rate, foot_step(current_step_num, 6));
+                    TorqueGrav = WBC::GravityCompensationTorque(rd_);
+                    if (current_step_num < total_step_num - 1)
+                        TorqueContact = WBC::ContactForceRedistributionTorqueWalking(rd_, TorqueGrav, fc_ratio, rate, foot_step_mu(current_step_num + 1, 6));
+                    else
+                        TorqueContact = WBC::ContactForceRedistributionTorqueWalking(rd_, TorqueGrav, fc_ratio, rate, foot_step_mu(total_step_num - 2, 6));
+                    
+                    rd_.torque_desired_walk = TorqueGrav + TorqueContact;
                 }
                 fc_redis = rd_.fc_redist_;
             }
-            rd_.torque_desired_walk = TorqueGrav + TorqueContact;
+            else
+            {
+                WBC::SetContact(rd_, 1, 1);
+                rd_.torque_desired_walk = WBC::ContactForceRedistributionTorque(rd_, WBC::GravityCompensationTorque(rd_));
+            }
 
             for (int i = 0; i < MODEL_DOF; i++)
             {
                 rd_.torque_desired[i] = rd_.pos_kp_v[i] * (rd_.q_desired[i] - rd_.q_[i]) + rd_.pos_kv_v[i] * (-rd_.q_dot_[i]) + rd_.torque_desired_walk[i];
             }
-//file[1] <<contactMode<<"\t"<< TorqueContact(1) << "\t" << TorqueGrav(1) <<"\t" << TorqueContact(2) << "\t" << TorqueGrav(2) <<"\t" << TorqueContact(3) << "\t" << TorqueGrav(3) <<"\t" << TorqueContact(4) << "\t" << TorqueGrav(4) <<"\t" << TorqueContact(5) << "\t" << TorqueGrav(5) <<"\t"<<std::endl;
-        //    file[1] << walking_tick << "\t" << rd_.torque_desired_walk[0] << "\t" << rd_.torque_desired_walk[1] << "\t" << rd_.torque_desired_walk[2] << "\t" << rd_.torque_desired_walk[3] << "\t" << rd_.torque_desired[4] << "\t" << rd_.torque_desired_walk[5] << std::endl;
-        }
-        else if(rd_.tc_.walking_enable == 3.0)
-        {
-            TorqueGrav = WBC::GravityCompensationTorque(rd_);
 
+            if(walking_tick >= 1)
+            {
+                file[1] << walking_tick <<  "\t" << phaseChange <<"\t" <<phaseChange1 << "\t" << contactMode << "\t" << rd_.torque_desired[1] << "\t" << rd_.torque_desired_walk[1] << "\t" << TorqueContact(1) << "\t" << TorqueGrav(1) << "\t" << rd_.torque_desired[2] << "\t" << rd_.torque_desired_walk[2] << "\t" << TorqueContact(2) << "\t" << TorqueGrav(2) << "\t" << rd_.torque_desired[3] << "\t" << rd_.torque_desired_walk[3] << "\t" << TorqueContact(3) << "\t" << TorqueGrav(3) << "\t" << rd_.torque_desired[4] << "\t" << rd_.torque_desired_walk[4] << "\t" << TorqueContact(4) << "\t" << TorqueGrav(4) << "\t" << rd_.torque_desired[5] << "\t" << rd_.torque_desired_walk[5] << "\t" << TorqueContact(5) << "\t" << TorqueGrav(5) << "\t" << std::endl;
+            }
+        }
+        else if (rd_.tc_.walking_enable == 3.0)
+        {
+            WBC::SetContact(rd_, 1, 1);
+            rd_.torque_desired_walk = WBC::ContactForceRedistributionTorque(rd_, WBC::GravityCompensationTorque(rd_));
             for (int i = 0; i < MODEL_DOF; i++)
             {
-                rd_.torque_desired[i] = rd_.pos_kp_v[i] * (rd_.q_desired[i] - rd_.q_[i]) + rd_.pos_kv_v[i] * (-rd_.q_dot_[i]) + TorqueGrav[i];
+                rd_.torque_desired[i] = rd_.pos_kp_v[i] * (rd_.q_desired[i] - rd_.q_[i]) + rd_.pos_kv_v[i] * (-rd_.q_dot_[i]) + rd_.torque_desired_walk[i];
             }
         }
     }
@@ -226,7 +255,6 @@ void CustomController::computeFast()
                     foot_step_dir = -1.0;
                 }
 
-                wlk_on = true;
                 setWalkingParameter();
 
                 //////InitModel//////
@@ -235,9 +263,16 @@ void CustomController::computeFast()
                 /////FootStep//////
                 footStepGenerator(rd_);
                 saveFootTrajectory();
+
+                cc_mutex.lock();
+                foot_step_mu = foot_step;
+                cc_mutex.unlock();
+
+                wlk_on = true;
             }
 
             walkingCompute(rd_);
+            file[0] <<walking_tick << "\t" <<current_step_num <<"\t" << total_step_num << "\t"<< com_refx.size()<<"\t"<< rd_.q_desired(0) << "\t"<< desired_leg_q_temp(0) <<  "\t"<< rd_.q_(0) << "\t" << rd_.q_desired(1)<< "\t"<< desired_leg_q_temp(1) << "\t" << rd_.q_(1) << "\t" << rd_.q_desired(2) << "\t"<< desired_leg_q_temp(2)<< "\t" << rd_.q_(2) << "\t" << rd_.q_desired(3) << "\t"<< desired_leg_q_temp(3)<< "\t" << rd_.q_(3) << "\t" << rd_.q_desired(4) << "\t"<< desired_leg_q_temp(4)<< "\t" << rd_.q_(4) << "\t" << rd_.q_desired(5) << "\t"<< desired_leg_q_temp(5)<< "\t" << rd_.q_(5) << std::endl;
         }
         else if (rd_.tc_.walking_enable == 3.0)
         {
@@ -1237,7 +1272,7 @@ void WalkingController::momentumControl(RobotData &Robot)
         q_rarmd.setZero();
         q_larmd.setZero();
         qd_prev.setZero();
-        desired_leg_q_dot.setZero();
+        rd_.q_desired_dot.setZero();
     }
     else
     {   
@@ -1246,7 +1281,7 @@ void WalkingController::momentumControl(RobotData &Robot)
         q_larmd.setZero();
         for(int i = 0; i <12; i++)
         {
-            desired_leg_q_dot(i) = (desired_leg_q(i)-desired_leg_q_prev(i))*Hz_;
+            rd_.q_desired_dot(i) = (rd_.q_desired(i)-rd_.q_desired_prev(i))*Hz_;
         }
         
         for(int i = 0; i < 3; i++)
