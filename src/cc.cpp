@@ -100,10 +100,20 @@ void CustomController::computeSlow()
     }
     else if (rd_.tc_.mode == 11)
     {
+        TorqueContact.setZero();
+        rd_.torque_desired_walk.setZero();
+        
         if (rd_.tc_.walking_enable == 1.0)
         {
+            if (rd_.tc_init)
+            {
+                //Initialize settings for Task Control!
+                rd_.tc_init = false;
+                rd_.q_desired = rd_.q_;
+            }
+
             //Pinocchio model
-        /*        CMM = pinocchio::computeCentroidalMap(model, model_data, rd_.q_);
+            CMM = pinocchio::computeCentroidalMap(model, model_data, rd_.q_);
             pinocchio::crba(model, model_data, rd_.q_);
             pinocchio::computeCoriolisMatrix(model, model_data, rd_.q_, qdot);
             pinocchio::rnea(model, model_data, rd_.q_, qdot_, qddot_);
@@ -112,12 +122,10 @@ void CustomController::computeSlow()
             G_ = model_data.tau;
 
             jointVelocityEstimate();
-*/
+
             Vector12d fc_redis;
             double fc_ratio = 0.000;
             fc_redis.setZero();
-            TorqueContact.setZero();
-            rd_.torque_desired_walk.setZero();
 
             if (walking_tick >= 1 && wlk_on == true && current_step_num != total_step_num)
             {
@@ -193,12 +201,7 @@ void CustomController::computeSlow()
 
             for (int i = 0; i < MODEL_DOF; i++)
             {
-                rd_.torque_desired[i] = rd_.pos_kp_v[i] * (rd_.q_desired[i] - rd_.q_[i]) + rd_.pos_kv_v[i] * (-rd_.q_dot_[i]) + rd_.torque_desired_walk[i];
-            }
-
-            if(walking_tick >= 1)
-            {
-                file[1] << walking_tick <<  "\t" << phaseChange <<"\t" <<phaseChange1 << "\t" << contactMode << "\t" << rd_.torque_desired[1] << "\t" << rd_.torque_desired_walk[1] << "\t" << TorqueContact(1) << "\t" << TorqueGrav(1) << "\t" << rd_.torque_desired[2] << "\t" << rd_.torque_desired_walk[2] << "\t" << TorqueContact(2) << "\t" << TorqueGrav(2) << "\t" << rd_.torque_desired[3] << "\t" << rd_.torque_desired_walk[3] << "\t" << TorqueContact(3) << "\t" << TorqueGrav(3) << "\t" << rd_.torque_desired[4] << "\t" << rd_.torque_desired_walk[4] << "\t" << TorqueContact(4) << "\t" << TorqueGrav(4) << "\t" << rd_.torque_desired[5] << "\t" << rd_.torque_desired_walk[5] << "\t" << TorqueContact(5) << "\t" << TorqueGrav(5) << "\t" << std::endl;
+                rd_.torque_desired[i] = rd_.pos_kp_v[i] * (rd_.q_desired[i] - rd_.q_[i]) + rd_.pos_kv_v[i] * (-rd_.q_dot_[i]) + rd_.torque_desired_walk[i];                
             }
         }
         else if (rd_.tc_.walking_enable == 3.0)
@@ -207,10 +210,11 @@ void CustomController::computeSlow()
             rd_.torque_desired_walk = WBC::ContactForceRedistributionTorque(rd_, WBC::GravityCompensationTorque(rd_));
             for (int i = 0; i < MODEL_DOF; i++)
             {
-                rd_.torque_desired[i] = rd_.pos_kp_v[i] * (rd_.q_desired[i] - rd_.q_[i]) + rd_.pos_kv_v[i] * (-rd_.q_dot_[i]) + rd_.torque_desired_walk[i];
+                rd_.torque_desired[i] = rd_.pos_kp_v[i] * (rd_.q_desired[i] - rd_.q_[i]) + rd_.pos_kv_v[i] * (-rd_.q_dot_[i]) + rd_.torque_desired_walk[i];                
             }
         }
     }
+    file[1] << walking_tick <<"\t"<< rd_.torque_desired[1] << "\t" << rd_.torque_desired_walk[1] << "\t" << TorqueContact(1) << "\t" << TorqueGrav(1) << "\t" << rd_.torque_desired[2] << "\t" << rd_.torque_desired_walk[2] << "\t" << TorqueContact(2) << "\t" << TorqueGrav(2) << "\t" << rd_.torque_desired[3] << "\t" << rd_.torque_desired_walk[3] << "\t" << TorqueContact(3) << "\t" << TorqueGrav(3) << "\t" << rd_.torque_desired[4] << "\t" << rd_.torque_desired_walk[4] << "\t" << TorqueContact(4) << "\t" << TorqueGrav(4) << "\t" << rd_.torque_desired[5] << "\t" << rd_.torque_desired_walk[5] << "\t" << TorqueContact(5) << "\t" << TorqueGrav(5) << "\t" << std::endl;
 }
 
 void CustomController::computeFast()
