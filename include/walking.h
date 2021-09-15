@@ -152,6 +152,13 @@ public:
     Eigen::VectorXd LFvz_trajectory_float;
     Eigen::VectorXd RFvz_trajectory_float;
 
+    Eigen::VectorXd LFvx_trajectory_float_mu;
+    Eigen::VectorXd RFvx_trajectory_float_mu;
+    Eigen::VectorXd LFvy_trajectory_float_mu;
+    Eigen::VectorXd RFvy_trajectory_float_mu;
+    Eigen::VectorXd LFvz_trajectory_float_mu;
+    Eigen::VectorXd RFvz_trajectory_float_mu;
+
     Eigen::Matrix3x12d Ag_leg;
     Eigen::Matrix3x8d Ag_armR;
     Eigen::Matrix3x8d Ag_armL;

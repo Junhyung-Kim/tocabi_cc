@@ -201,10 +201,10 @@ void CustomController::computeSlow()
 
             for (int i = 0; i < MODEL_DOF; i++)
             {
-                rd_.torque_desired[i] = rd_.pos_kp_v[i] * (rd_.q_desired[i] - rd_.q_[i]) + rd_.pos_kv_v[i] * (-rd_.q_dot_[i]) + rd_.torque_desired_walk[i];                
+                rd_.torque_desired[i] = rd_.pos_kp_v[i] * (rd_.q_desired[i] - rd_.q_[i]) + rd_.pos_kv_v[i] * (-q_dot_est[i]) + rd_.torque_desired_walk[i];                
             }
         }
-        else if (rd_.tc_.walking_enable == 3.0)
+        else if (rd_.tc_.walking_enable == 3.0 || rd_.tc_.walking_enable == 2.0)
         {
             WBC::SetContact(rd_, 1, 1);
             rd_.torque_desired_walk = WBC::ContactForceRedistributionTorque(rd_, WBC::GravityCompensationTorque(rd_));
@@ -214,7 +214,8 @@ void CustomController::computeSlow()
             }
         }
     }
-    file[1] << walking_tick <<"\t"<< rd_.torque_desired[1] << "\t" << rd_.torque_desired_walk[1] << "\t" << TorqueContact(1) << "\t" << TorqueGrav(1) << "\t" << rd_.torque_desired[2] << "\t" << rd_.torque_desired_walk[2] << "\t" << TorqueContact(2) << "\t" << TorqueGrav(2) << "\t" << rd_.torque_desired[3] << "\t" << rd_.torque_desired_walk[3] << "\t" << TorqueContact(3) << "\t" << TorqueGrav(3) << "\t" << rd_.torque_desired[4] << "\t" << rd_.torque_desired_walk[4] << "\t" << TorqueContact(4) << "\t" << TorqueGrav(4) << "\t" << rd_.torque_desired[5] << "\t" << rd_.torque_desired_walk[5] << "\t" << TorqueContact(5) << "\t" << TorqueGrav(5) << "\t" << std::endl;
+    //file[1] << walking_tick <<"\t"<< rd_.torque_desired[1] << "\t" << rd_.torque_desired_walk[1] << "\t" << TorqueContact(1) << "\t" << TorqueGrav(1) << "\t" << rd_.torque_desired[2] << "\t" << rd_.torque_desired_walk[2] << "\t" << TorqueContact(2) << "\t" << TorqueGrav(2) << "\t" << rd_.torque_desired[3] << "\t" << rd_.torque_desired_walk[3] << "\t" << TorqueContact(3) << "\t" << TorqueGrav(3) << "\t" << rd_.torque_desired[4] << "\t" << rd_.torque_desired_walk[4] << "\t" << TorqueContact(4) << "\t" << TorqueGrav(4) << "\t" << rd_.torque_desired[5] << "\t" << rd_.torque_desired_walk[5] << "\t" << TorqueContact(5) << "\t" << TorqueGrav(5) << "\t" << std::endl;
+    //   file[0] <<walking_tick << "\t" <<current_step_num <<"\t" << total_step_num << "\t"<< com_refx.size()<<"\t"<< rd_.q_desired(0) << "\t"<< desired_leg_q_temp(0) <<  "\t"<< rd_.q_(0) << "\t" << rd_.q_desired(1)<< "\t"<< desired_leg_q_temp(1) << "\t" << rd_.q_(1) << "\t" << rd_.q_desired(2) << "\t"<< desired_leg_q_temp(2)<< "\t" << rd_.q_(2) << "\t" << rd_.q_desired(3) << "\t"<< desired_leg_q_temp(3)<< "\t" << rd_.q_(3) << "\t" << rd_.q_desired(4) << "\t"<< desired_leg_q_temp(4)<< "\t" << rd_.q_(4) << "\t" << rd_.q_desired(5) << "\t"<< desired_leg_q_temp(5)<< "\t" << rd_.q_(5) << std::endl;
 }
 
 void CustomController::computeFast()
@@ -270,13 +271,18 @@ void CustomController::computeFast()
 
                 cc_mutex.lock();
                 foot_step_mu = foot_step;
+                LFvx_trajectory_float_mu = LFvx_trajectory_float;
+                LFvy_trajectory_float_mu = LFvy_trajectory_float;
+                LFvz_trajectory_float_mu = LFvz_trajectory_float;
+                RFvx_trajectory_float_mu = RFvx_trajectory_float;
+                RFvy_trajectory_float_mu = RFvy_trajectory_float;
+                RFvz_trajectory_float_mu = RFvz_trajectory_float;
                 cc_mutex.unlock();
 
                 wlk_on = true;
             }
 
             walkingCompute(rd_);
-            file[0] <<walking_tick << "\t" <<current_step_num <<"\t" << total_step_num << "\t"<< com_refx.size()<<"\t"<< rd_.q_desired(0) << "\t"<< desired_leg_q_temp(0) <<  "\t"<< rd_.q_(0) << "\t" << rd_.q_desired(1)<< "\t"<< desired_leg_q_temp(1) << "\t" << rd_.q_(1) << "\t" << rd_.q_desired(2) << "\t"<< desired_leg_q_temp(2)<< "\t" << rd_.q_(2) << "\t" << rd_.q_desired(3) << "\t"<< desired_leg_q_temp(3)<< "\t" << rd_.q_(3) << "\t" << rd_.q_desired(4) << "\t"<< desired_leg_q_temp(4)<< "\t" << rd_.q_(4) << "\t" << rd_.q_desired(5) << "\t"<< desired_leg_q_temp(5)<< "\t" << rd_.q_(5) << std::endl;
         }
         else if (rd_.tc_.walking_enable == 3.0)
         {
