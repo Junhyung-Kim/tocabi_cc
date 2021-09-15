@@ -35,10 +35,11 @@ public:
     void flyWheelModel(double Ts, int nx, int nu, double *Ax, double *Bx, double *Ay, double *By);
     void mpcVariableInit();
     void mpcModelSetup();
+    void momentumControl(RobotData &Robot);
 
     //Joint velocity Estimator
     bool velEst = false;
-    Eigen::VectorQd q_est, q_dot_est;
+    Eigen::VectorQd q_est, q_dot_est, q_dot_est_mu;
 
     RobotData &rd_;
     RobotData rd_cc_;
@@ -113,6 +114,8 @@ public:
 
     //momentumControl
     CQuadraticProgram QP_m;
+    Eigen::Vector5d q_dm;
+    Eigen::Vector5d q_w;
 
     //WholebodyController &wbc_;
     //TaskCommand tc;

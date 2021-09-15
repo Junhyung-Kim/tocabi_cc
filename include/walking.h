@@ -63,6 +63,7 @@ public:
     double foot_height;
     std::atomic<double> zc;
     std::atomic<double> lipm_w;
+    std::atomic<double> total_mass;
     std::atomic<int> walking_tick;
     std::atomic<int> walking_init_tick;
     std::atomic<double> contactMode;
@@ -92,7 +93,6 @@ public:
     void setPelvTrajectory();
     void inverseKinematics(RobotData &Robot, Eigen::Isometry3d PELV_float_transform, Eigen::Isometry3d LF_float_transform, Eigen::Isometry3d RF_float_transform, Eigen::Vector12d &leg_q);
     void inverseKinematicsdob(RobotData &Robot);
-    void momentumControl(RobotData &Robot);
     void updateNextStepTime(RobotData &rd);
     void setWalkingParameter();
     void setInitPose(RobotData &Robot, Eigen::VectorQd &leg_q);
@@ -104,6 +104,7 @@ public:
     Eigen::Isometry3d LF_float_init;
     Eigen::Isometry3d LFx_float_init;
     Eigen::Isometry3d COM_float_init;
+    Eigen::Isometry3d COM_float_init_mu;
     Eigen::Isometry3d PELV_float_init;
     Eigen::Isometry3d PELV_float_init1;
     Eigen::Isometry3d SUF_float_init;
@@ -145,6 +146,13 @@ public:
     Eigen::VectorXd LFz_trajectory_float;
     Eigen::VectorXd RFz_trajectory_float;
 
+    Eigen::VectorXd LFx_trajectory_float_mu;
+    Eigen::VectorXd RFx_trajectory_float_mu;
+    Eigen::VectorXd LFy_trajectory_float_mu;
+    Eigen::VectorXd RFy_trajectory_float_mu;
+    Eigen::VectorXd LFz_trajectory_float_mu;
+    Eigen::VectorXd RFz_trajectory_float_mu;
+
     Eigen::VectorXd LFvx_trajectory_float;
     Eigen::VectorXd RFvx_trajectory_float;
     Eigen::VectorXd LFvy_trajectory_float;
@@ -159,6 +167,7 @@ public:
     Eigen::VectorXd LFvz_trajectory_float_mu;
     Eigen::VectorXd RFvz_trajectory_float_mu;
 
+    Eigen::Matrix6Qd Ag_;
     Eigen::Matrix3x12d Ag_leg;
     Eigen::Matrix3x8d Ag_armR;
     Eigen::Matrix3x8d Ag_armL;
@@ -167,6 +176,8 @@ public:
     Eigen::Matrix3x8d Agl_armR;
     Eigen::Matrix3x8d Agl_armL;
     Eigen::Matrix3x3d Agl_waist;
+    Eigen::Vector3d H_leg;
+
 
     Eigen::Isometry3d LF_trajectory_float;
     Eigen::Isometry3d RF_trajectory_float;
@@ -190,10 +201,14 @@ public:
     Eigen::VectorXd zmp_dy;
     Eigen::VectorXd com_refx;
     Eigen::VectorXd com_refy;
+    Eigen::VectorXd com_refx_mu;
+    Eigen::VectorXd com_refy_mu;
     Eigen::VectorXd com_refdx;
     Eigen::VectorXd com_refdy;
     Eigen::VectorXd zmp_refx;
     Eigen::VectorXd zmp_refy;
+    Eigen::VectorXd zmp_refx_mu;
+    Eigen::VectorXd zmp_refy_mu;
     Eigen::VectorXd b_offset;
 
     Eigen::Vector12d dob_hat;
@@ -202,9 +217,6 @@ public:
     Eigen::Vector12d desired_leg_q_temp;
     Eigen::VectorQd desired_init_q;
     double dobGain;
-
-    //momentum Control
-    Eigen::Matrix6Qd Ag_;
 
 private:
 };

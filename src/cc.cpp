@@ -47,7 +47,6 @@ CustomController::CustomController(RobotData &rd) : rd_(rd) //, wbc_(dc.wbc_)
     wlk_on = false;
 
     mpcVariableInit();
-    mpcModelSetup();
     std::cout << "Custom Controller Init" << std::endl;
 }
 
@@ -71,7 +70,6 @@ void CustomController::computeSlow()
 
             rd_.tc_init = false;
             std::cout << "cc mode 11" << std::endl;
-
 
             //rd_.link_[COM_id].x_desired = rd_.link_[COM_id].x_init;
         }
@@ -102,7 +100,7 @@ void CustomController::computeSlow()
     {
         TorqueContact.setZero();
         rd_.torque_desired_walk.setZero();
-        
+
         if (rd_.tc_.walking_enable == 1.0)
         {
             if (rd_.tc_init)
@@ -188,7 +186,7 @@ void CustomController::computeSlow()
                         TorqueContact = WBC::ContactForceRedistributionTorqueWalking(rd_, TorqueGrav, fc_ratio, rate, foot_step_mu(current_step_num + 1, 6));
                     else
                         TorqueContact = WBC::ContactForceRedistributionTorqueWalking(rd_, TorqueGrav, fc_ratio, rate, foot_step_mu(total_step_num - 2, 6));
-                    
+
                     rd_.torque_desired_walk = TorqueGrav + TorqueContact;
                 }
                 fc_redis = rd_.fc_redist_;
@@ -201,7 +199,7 @@ void CustomController::computeSlow()
 
             for (int i = 0; i < MODEL_DOF; i++)
             {
-                rd_.torque_desired[i] = rd_.pos_kp_v[i] * (rd_.q_desired[i] - rd_.q_[i]) + rd_.pos_kv_v[i] * (-q_dot_est[i]) + rd_.torque_desired_walk[i];                
+                rd_.torque_desired[i] = rd_.pos_kp_v[i] * (rd_.q_desired[i] - rd_.q_[i]) + rd_.pos_kv_v[i] * (-q_dot_est[i]) + rd_.torque_desired_walk[i];
             }
         }
         else if (rd_.tc_.walking_enable == 3.0 || rd_.tc_.walking_enable == 2.0)
@@ -210,7 +208,7 @@ void CustomController::computeSlow()
             rd_.torque_desired_walk = WBC::ContactForceRedistributionTorque(rd_, WBC::GravityCompensationTorque(rd_));
             for (int i = 0; i < MODEL_DOF; i++)
             {
-                rd_.torque_desired[i] = rd_.pos_kp_v[i] * (rd_.q_desired[i] - rd_.q_[i]) + rd_.pos_kv_v[i] * (-rd_.q_dot_[i]) + rd_.torque_desired_walk[i];                
+                rd_.torque_desired[i] = rd_.pos_kp_v[i] * (rd_.q_desired[i] - rd_.q_[i]) + rd_.pos_kv_v[i] * (-rd_.q_dot_[i]) + rd_.torque_desired_walk[i];
             }
         }
     }
@@ -269,6 +267,10 @@ void CustomController::computeFast()
                 footStepGenerator(rd_);
                 saveFootTrajectory();
 
+                setCpPosition();
+                cpReferencePatternGeneration();
+                cptoComTrajectory();
+
                 cc_mutex.lock();
                 foot_step_mu = foot_step;
                 LFvx_trajectory_float_mu = LFvx_trajectory_float;
@@ -277,12 +279,24 @@ void CustomController::computeFast()
                 RFvx_trajectory_float_mu = RFvx_trajectory_float;
                 RFvy_trajectory_float_mu = RFvy_trajectory_float;
                 RFvz_trajectory_float_mu = RFvz_trajectory_float;
+                LFx_trajectory_float_mu = LFx_trajectory_float;
+                LFy_trajectory_float_mu = LFy_trajectory_float;
+                LFz_trajectory_float_mu = LFz_trajectory_float;
+                RFx_trajectory_float_mu = RFx_trajectory_float;
+                RFy_trajectory_float_mu = RFy_trajectory_float;
+                RFz_trajectory_float_mu = RFz_trajectory_float;
+                COM_float_init_mu = COM_float_init;
+                com_refx_mu = com_refx;
+                com_refy_mu = com_refy;
+                zmp_refx_mu = zmp_refx;
+                zmp_refy_mu = zmp_refy;
                 cc_mutex.unlock();
 
                 wlk_on = true;
             }
 
             walkingCompute(rd_);
+            file[0] << walking_tick << "\t" << com_refx(walking_tick) << "\t" << foot_step(current_step_num, 0) << "\t" << RF_trajectory_float.translation()(0) << "\t" << LF_trajectory_float.translation()(0) << "\t" << zmp_refx(walking_tick) << std::endl;
         }
         else if (rd_.tc_.walking_enable == 3.0)
         {
@@ -310,8 +324,10 @@ void CustomController::computePlanner()
     {
         if (rd_.tc_.walking_enable == 1.0)
         {
-            if (mpc_on == false)
+            if (wlk_on == true && mpc_on == false)
             {
+                mpcModelSetup();
+
                 // maximum element in cost functions
                 if (ns[1] > 0 | ns[N] > 0)
                     mu0 = 1000.0;
@@ -386,21 +402,21 @@ void CustomController::computePlanner()
                 std::cout << "MPC INIT" << std::endl;
             }
 
-            if (wlk_on == true && mpc_on == true)
+            if (wlk_on == true && mpc_on == true && walking_tick >= 1)
             {
                 auto t1 = std::chrono::steady_clock::now();
 
                 /************************************************
                 *********box & general constraints**************
                 ************************************************/
-                d_lbx0x[0] = 0.0;
+                d_lbx0x[0] = com_refx_mu(3000);
                 d_lbx0x[1] = 0.0;
-                d_lbx0x[2] = 0.0;
+                d_lbx0x[2] = zmp_refx_mu(3000);
                 d_lbx0x[3] = 0.0;
                 d_lbx0x[4] = 0.0;
-                d_ubx0x[0] = 0.0;
+                d_ubx0x[0] = com_refx_mu(3000);
                 d_ubx0x[1] = 0.0;
-                d_ubx0x[2] = 0.0;
+                d_ubx0x[2] = zmp_refx_mu(3000);
                 d_ubx0x[3] = 0.0;
                 d_ubx0x[4] = 0.0;
 
@@ -433,16 +449,16 @@ void CustomController::computePlanner()
                     }
                 }
 
-                d_lbx1x[0] = -10;
-                d_lbx1x[1] = -10;
-                d_lbx1x[2] = -0.1;
-                d_lbx1x[3] = -10;
-                d_lbx1x[4] = -3;
-                d_ubx1x[0] = 10;
-                d_ubx1x[1] = 10;
-                d_ubx1x[2] = 0.25;
-                d_ubx1x[3] = 10;
-                d_ubx1x[4] = 3;
+                d_lbx1x[0] = 0.04;
+                d_lbx1x[1] = -100;
+                d_lbx1x[2] = 0.00;
+                d_lbx1x[3] = -5;
+                d_lbx1x[4] = -50;
+                d_ubx1x[0] = 0.24;
+                d_ubx1x[1] = 100;
+                d_ubx1x[2] = 0.24;
+                d_ubx1x[3] = 5;
+                d_ubx1x[4] = 50;
 
                 d_lbx1y[0] = -10;
                 d_lbx1y[1] = -10;
@@ -473,16 +489,16 @@ void CustomController::computePlanner()
                     }
                 }
 
-                d_lbxNx[0] = 0.1;
-                d_lbxNx[1] = 0.1;
-                d_lbxNx[2] = 0.1;
-                d_lbxNx[3] = 0.1;
-                d_lbxNx[4] = 0.1;
-                d_ubxNx[0] = 0.1;
-                d_ubxNx[1] = 0.1;
-                d_ubxNx[2] = 0.1;
-                d_ubxNx[3] = 0.1;
-                d_ubxNx[4] = 0.1;
+                d_lbxNx[0] = 0.14;
+                d_lbxNx[1] = 0.00;
+                d_lbxNx[2] = 0.14;
+                d_lbxNx[3] = 0.00;
+                d_lbxNx[4] = 0.00;
+                d_ubxNx[0] = 0.14;
+                d_ubxNx[1] = 0.00;
+                d_ubxNx[2] = 0.14;
+                d_ubxNx[3] = 0.00;
+                d_ubxNx[4] = 0.00;
 
                 d_lbxNy[0] = 0.1;
                 d_lbxNy[1] = 0.1;
@@ -596,15 +612,15 @@ void CustomController::computePlanner()
                 printf("\n -> Solver failed! Unknown return flag\n");
             }
             */
-                /*       for (ii = 1; ii <= N; ii++)
-            {
-                std::cout << " ii " << ii << std::endl;
-                d_ocp_qp_sol_get_x(ii, &qp_solx, x11x);
-            //    d_ocp_qp_sol_get_sl(ii, &qp_solx, slx);
-                d_print_mat(1, nx[ii], x11x, 1);
-              //  std::cout << "sl " << std::endl;
-              //  d_print_mat(1, ns[ii], slx, 1);
-            }*/
+                for (ii = 1; ii <= N; ii++)
+                {
+                    std::cout << " ii " << ii << std::endl;
+                    d_ocp_qp_sol_get_x(ii, &qp_solx, x11x);
+                    //    d_ocp_qp_sol_get_sl(ii, &qp_solx, slx);
+                    d_print_mat(1, nx[ii], x11x, 1);
+                    //  std::cout << "sl " << std::endl;
+                    //  d_print_mat(1, ns[ii], slx, 1);
+                }
             }
         }
     }
@@ -667,9 +683,10 @@ void CustomController::jointVelocityEstimate()
         tau_ = Cor_ * q_dot_est + G_;
 
         cc_mutex.lock();
-        q_dot_est = -(q_dot_est + B_dt.bottomRightCorner(MODEL_DOF, MODEL_DOF) * (rd_.torque_desired + L1 * (rd_.q_ - q_est) - tau_));
+        q_dot_est_mu = -(q_dot_est + B_dt.bottomRightCorner(MODEL_DOF, MODEL_DOF) * (rd_.torque_desired + L1 * (rd_.q_ - q_est) - tau_));
         Ag_ = CMM;
         cc_mutex.unlock();
+        q_dot_est = q_dot_est_mu;
     }
 }
 
@@ -690,9 +707,9 @@ void CustomController::flyWheelModel(double Ts, int nx, int nu, double *Ax, doub
     Ax[18] = 1.0;
     Ax[24] = 1.0;
 
-    Ax[1] = 2.77 * Ts;
+    Ax[1] = lipm_w * lipm_w * Ts;
     Ax[23] = 1.0 * Ts;
-    Ax[11] = -2.77 * Ts;
+    Ax[11] = -lipm_w * lipm_w * Ts;
     Ax[5] = 1.0 * Ts;
 
     Ay[0] = 1.0;
@@ -701,9 +718,9 @@ void CustomController::flyWheelModel(double Ts, int nx, int nu, double *Ax, doub
     Ay[18] = 1.0;
     Ay[24] = 1.0;
 
-    Ay[1] = 2.77 * Ts;
+    Ay[1] = lipm_w * lipm_w * Ts;
     Ay[23] = 1.0 * Ts;
-    Ay[11] = -2.77 * Ts;
+    Ay[11] = -lipm_w * lipm_w * Ts;
     Ay[5] = 1.0 * Ts;
 
     for (ii = 0; ii < nx * nu; ii++)
@@ -712,11 +729,11 @@ void CustomController::flyWheelModel(double Ts, int nx, int nu, double *Ax, doub
         By[ii] = 0.0;
     }
 
-    Bx[6] = 1 / (94.23 * 9.81) * Ts;
+    Bx[6] = 1 / (total_mass * zc) * Ts;
     Bx[2] = 1.00 * Ts;
     Bx[9] = 1.00 * Ts;
 
-    By[6] = 1 / (94.23 * 9.81) * Ts;
+    By[6] = 1 / (total_mass * zc) * Ts;
     By[2] = 1.00 * Ts;
     By[9] = 1.00 * Ts;
 }
@@ -1252,15 +1269,15 @@ void CustomController::mpcModelSetup()
     hDy[N] = DNy;
 }
 
-void WalkingController::momentumControl(RobotData &Robot)
+void CustomController::momentumControl(RobotData &Robot)
 {
     int variable_size, constraint_size;
 
     variable_size = 5;
     constraint_size = 5;
 
-    //  if (walking_tick == 0)
-    // QP_m.InitializeProblemSize(variable_size, constraint_size);
+    if (walking_tick == 0)
+        QP_m.InitializeProblemSize(variable_size, constraint_size);
 
     MatrixXd H, A, W;
     H.setZero(variable_size, variable_size);
@@ -1275,23 +1292,22 @@ void WalkingController::momentumControl(RobotData &Robot)
 
     Eigen::Vector3d q_waistd;
     Eigen::Vector8d q_rarmd, q_larmd;
-    /*  
-    if(walking_tick == 0)
+    /* if(walking_tick == 0)
     {
         q_waistd.setZero();
         q_rarmd.setZero();
         q_larmd.setZero();
-        qd_prev.setZero();
-        rd_.q_desired_dot.setZero();
+        //qd_prev.setZero();
+       // rd_.q_desired_dot.setZero();
     }
-    else
+    /*else
     {   
         q_waistd.setZero();
         q_rarmd.setZero();
         q_larmd.setZero();
         for(int i = 0; i <12; i++)
         {
-            rd_.q_desired_dot(i) = (rd_.q_desired(i)-rd_.q_desired_prev(i))*Hz_;
+            rd_.q_desired_dot(i) = (rd_.q_desired(i)-rd_.q_desired_prev(i))*wk_Hz;
         }
         
         for(int i = 0; i < 3; i++)
@@ -1300,37 +1316,37 @@ void WalkingController::momentumControl(RobotData &Robot)
         }        
         q_rarmd(1) = q_dm(4);
 	    q_larmd(1) = q_dm(3);
-    }
+    }*/
     H_leg.setZero();
-    H_leg = Ag_leg * Robot.q_dot_est.head(12) + Ag_waist * Robot.q_dot_est.segment(12,3) + Ag_armL * Robot.q_dot_est.segment(15,8) + Ag_armR * Robot.q_dot_est.segment(25,8);
+    H_leg = Ag_leg * q_dot_est_mu.head(12) + Ag_waist * q_dot_est_mu.segment(12, 3) + Ag_armL * q_dot_est_mu.segment(15, 8) + Ag_armR * q_dot_est_mu.segment(25, 8);
 
     Eigen::MatrixXd Ag_temp;
     Eigen::Matrix5d I;
     I.setIdentity();
-    double alpha = 0.05;
+    double alpha = 0.00;
 
     Ag_temp.resize(3, 5);
-    Ag_temp.block<3,3>(0,0) = Ag_waist;
-    Ag_temp.block<3,1>(0,3) = Ag_armL.block<3,1>(0,1);
-    Ag_temp.block<3,1>(0,4) = Ag_armR.block<3,1>(0,1);
-   
-    H = Ag_temp.transpose()*Ag_temp;// + alpha*I;
-    g = 2*Ag_temp.transpose()*H_leg;//- 2*alpha*qd_prev;
- 
+    Ag_temp.block<3, 3>(0, 0) = Ag_waist;
+    Ag_temp.block<3, 1>(0, 3) = Ag_armL.block<3, 1>(0, 1);
+    Ag_temp.block<3, 1>(0, 4) = Ag_armR.block<3, 1>(0, 1);
+
+    H = Ag_temp.transpose() * Ag_temp;   // + alpha*I;
+    g = 2 * Ag_temp.transpose() * H_leg; //- 2*alpha*qd_prev;
+
     A.setIdentity();
 
-    for(int i=0; i<3; i++)
-    {   
-        lbA(i) = (-0.2 - q_w(i))*Hz_;
-        ubA(i) = (0.2 - q_w(i))*Hz_;
+    for (int i = 0; i < 3; i++)
+    {
+        lbA(i) = (-0.2 - q_w(i)) * wk_Hz;
+        ubA(i) = (0.2 - q_w(i)) * wk_Hz;
     }
 
-    lbA(3) = (0.15 - q_w(3))*Hz_;
-    ubA(3) = (0.45 - q_w(3))*Hz_;
-    lbA(4) = (-0.45 - q_w(4))*Hz_;
-    ubA(4) = (-0.15 - q_w(4))*Hz_;
+    lbA(3) = (0.15 - q_w(3)) * wk_Hz;
+    ubA(3) = (0.45 - q_w(3)) * wk_Hz;
+    lbA(4) = (-0.45 - q_w(4)) * wk_Hz;
+    ubA(4) = (-0.15 - q_w(4)) * wk_Hz;
 
-    for(int i=0; i<variable_size; i++)
+    for (int i = 0; i < variable_size; i++)
     {
         lb(i) = -2.0;
         ub(i) = 2.0;
@@ -1347,7 +1363,6 @@ void WalkingController::momentumControl(RobotData &Robot)
     QP_m.UpdateSubjectToAx(A, lbA, ubA);
     QP_m.UpdateSubjectToX(lb, ub);
 
-    QP_m.SolveQPoases(100, q_dm);
-
-    qd_prev = q_dm;*/
+    q_dm = QP_m.SolveQPoases(100);
+    //qd_prev = q_dm;
 }

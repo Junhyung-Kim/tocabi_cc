@@ -7,9 +7,6 @@ void WalkingController::walkingCompute(RobotData &rd)
 
     if (walking_tick == 0)
     {
-        setCpPosition();
-        cpReferencePatternGeneration();
-        cptoComTrajectory();
         desired_init_q = rd.q_;
     }
 
@@ -196,6 +193,7 @@ void WalkingController::getRobotInitState(RobotData &rd)
         zc = COM_support_init.translation()(2);
 
         lipm_w = sqrt(GRAVITY / zc);
+        total_mass = rd.total_mass_;
     }
 }
 
