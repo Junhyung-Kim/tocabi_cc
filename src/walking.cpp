@@ -1313,6 +1313,11 @@ void WalkingController::setPelvTrajectory()
     PELV_trajectory_float.linear() = PELV_float_init.linear();
 }
 
+void WalkingController::mpcSoftVariable()
+{
+    int a;
+}
+
 void WalkingController::inverseKinematics(RobotData &Robot, Eigen::Isometry3d PELV_float_transform, Eigen::Isometry3d LF_float_transform, Eigen::Isometry3d RF_float_transform, Eigen::Vector12d &leg_q)
 {
     Eigen::Vector3d lp, rp;

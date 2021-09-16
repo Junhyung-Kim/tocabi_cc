@@ -88,6 +88,7 @@ public:
     void cpReferencePatternGeneration();
     void cptoComTrajectory();
     void setFootTrajectory();
+    void mpcSoftVariable();
     void setContactMode();
     void saveFootTrajectory();
     void setPelvTrajectory();

@@ -271,6 +271,8 @@ void CustomController::computeFast()
                 cpReferencePatternGeneration();
                 cptoComTrajectory();
 
+                mpcSoftVariable();
+
                 cc_mutex.lock();
                 foot_step_mu = foot_step;
                 LFvx_trajectory_float_mu = LFvx_trajectory_float;
@@ -296,7 +298,7 @@ void CustomController::computeFast()
             }
 
             walkingCompute(rd_);
-           // momentumControl(rd_);
+            momentumControl(rd_);
 
             file[0] << walking_tick << "\t" << com_refx(walking_tick) << "\t" << foot_step(current_step_num, 0) << "\t" << RF_trajectory_float.translation()(0) << "\t" << LF_trajectory_float.translation()(0) << "\t" << zmp_refx(walking_tick) << std::endl;
         }
@@ -411,6 +413,8 @@ void CustomController::computePlanner()
                 /************************************************
                 *********box & general constraints**************
                 ************************************************/
+
+                //Initial condition
                 d_lbx0x[0] = com_refx_mu(3000);
                 d_lbx0x[1] = 0.0;
                 d_lbx0x[2] = zmp_refx_mu(3000);
@@ -433,24 +437,7 @@ void CustomController::computePlanner()
                 d_ubx0y[3] = 0.0;
                 d_ubx0y[4] = 0.0;
 
-                for (ii = 0; ii < ng[0]; ii++)
-                {
-                    if (ii < nu[0] - nb[0]) // input
-                    {
-                        d_lg0x[ii] = -0.5; // umin
-                        d_ug0x[ii] = 0.5;  // umax
-                        d_lg0y[ii] = -0.5; // umin
-                        d_ug0y[ii] = 0.5;  // umax
-                    }
-                    else // state
-                    {
-                        d_lg0x[ii] = -4.0; // xmin
-                        d_ug0x[ii] = 4.0;  // xmax
-                        d_lg0y[ii] = -4.0; // xmin
-                        d_ug0y[ii] = 4.0;  // xmax
-                    }
-                }
-
+                //Box constraint
                 d_lbx1x[0] = 0.04;
                 d_lbx1x[1] = -100;
                 d_lbx1x[2] = 0.00;
@@ -473,24 +460,21 @@ void CustomController::computePlanner()
                 d_ubx1y[3] = 10;
                 d_ubx1y[4] = 3;
 
+                //General constraint
                 for (ii = 0; ii < ng[1]; ii++)
                 {
-                    if (ii < nu[1] - nb[1]) // input
-                    {
-                        d_lg1x[ii] = 0.0; // umin
-                        d_ug1x[ii] = 0.0; // umax
-                        d_lg1y[ii] = 0.0; // umin
-                        d_ug1y[ii] = 0.0; // umax
-                    }
-                    else // state
-                    {
-                        d_lg1x[ii] = 0.4; // xmin
-                        d_ug1x[ii] = 0.4; // xmax
-                        d_lg1y[ii] = 0.4; // xmin
-                        d_ug1y[ii] = 0.4; // xmax
-                    }
+                    d_lg1x[ii] = 0.4; // xmin
+                    d_ug1x[ii] = 0.4; // xmax
+                    d_lg1y[ii] = 0.4; // xmin
+                    d_ug1y[ii] = 0.4; // xmax
                 }
 
+                C1x[3] = 1.0;
+                C1x[4] = 1.0;
+                C1y[3] = 1.0;
+                C1y[4] = 1.0;
+
+                //Final condition
                 d_lbxNx[0] = 0.18;
                 d_lbxNx[1] = 0.00;
                 d_lbxNx[2] = 0.18;
@@ -513,34 +497,7 @@ void CustomController::computePlanner()
                 d_ubxNy[3] = 0.1;
                 d_ubxNy[4] = 0.1;
 
-                for (ii = 0; ii < ng[N]; ii++)
-                {
-                    d_lgNx[ii] = 0.2; // dmin
-                    d_ugNx[ii] = 0.2; // dmax
-                    d_lgNy[ii] = 0.2; // dmin
-                    d_ugNy[ii] = 0.2; // dmax
-                }
-
-                C1x[3] = 1.0;
-                C1x[4] = 1.0;
-                CNx[3] = 1.0;
-                CNx[4] = 1.0;
-
-                C1y[3] = 1.0;
-                C1y[4] = 1.0;
-
-                CNy[3] = 1.0;
-                CNy[4] = 1.0;
-
-                hCx[0] = C0x;
-
-                hd_lgx[0] = d_lg0x;
-                hd_ugx[0] = d_ug0x;
-
-                hCy[0] = C0y;
-
-                hd_lgy[0] = d_lg0y;
-                hd_ugy[0] = d_ug0y;
+                //Copy Data
                 hd_lsx[0] = d_ls0x;
                 hd_usx[0] = d_us0x;
                 hd_lsy[0] = d_ls0y;
@@ -570,14 +527,7 @@ void CustomController::computePlanner()
                 hd_lbxy[N] = d_lbxNy;
                 hd_ubxy[N] = d_ubxNy;
 
-                hCx[N] = CNx;
-                hd_lgx[N] = d_lgNx;
-                hd_ugx[N] = d_ugNx;
-
-                hCy[N] = CNy;
-                hd_lgy[N] = d_lgNy;
-                hd_ugy[N] = d_ugNy;
-
+                //MPC Setup
                 d_ocp_qp_set_all(hAx, hBx, hbx, hQx, hSx, hRx, hqx, hrx, hidxbx, hd_lbxx, hd_ubxx, hidxbu, hd_lbux, hd_ubux, hCx, hDx, hd_lgx, hd_ugx, hZlx, hZux, hzlx, hzux, hidxs, hd_lsx, hd_usx, &qpx);
                 d_ocp_qp_set_all(hAy, hBy, hby, hQy, hSy, hRy, hqy, hry, hidxbx, hd_lbxy, hd_ubxy, hidxbu, hd_lbuy, hd_ubuy, hCy, hDy, hd_lgy, hd_ugy, hZly, hZuy, hzly, hzuy, hidxs, hd_lsy, hd_usy, &qpy);
 
@@ -593,26 +543,26 @@ void CustomController::computePlanner()
                 // std::cout << "time " << endt.count() << std::endl;
 
                   
-            if (hpipm_statusx == 0)
-            {
-                printf("\n -> QP solved!\n");
-            }
-            else if (hpipm_statusx == 1)
-            {
-                printf("\n -> Solver failed! Maximum number of iterations reached\n");
-            }
-            else if (hpipm_statusx == 2)
-            {
-                printf("\n -> Solver failed! Minimum step lenght reached\n");
-            }
-            else if (hpipm_statusx == 2)
-            {
-                printf("\n -> Solver failed! NaN in computations\n");
-            }
-            else
-            {
-                printf("\n -> Solver failed! Unknown return flag\n");
-            }
+                if (hpipm_statusx == 0)
+                {
+                    printf("\n -> QP solved!\n");
+                }
+                else if (hpipm_statusx == 1)
+                {
+                    printf("\n -> Solver failed! Maximum number of iterations reached\n");
+                }
+                else if (hpipm_statusx == 2)
+                {
+                    printf("\n -> Solver failed! Minimum step lenght reached\n");
+                }
+                else if (hpipm_statusx == 2)
+                {
+                    printf("\n -> Solver failed! NaN in computations\n");
+                }
+                else
+                {
+                    printf("\n -> Solver failed! Unknown return flag\n");
+                }
             
             /*    for (ii = 1; ii <= N; ii++)
                 {
@@ -1242,19 +1192,33 @@ void CustomController::mpcVariableInit()
     hzuy[N] = zuNy;
 
     //General Constraint Input
-    D1x[1] = 0.0;
+    D1x[1] = 1.0;
     DNx[1] = 0.0;
-    D1y[1] = 0.0;
+    D1y[1] = 1.0;
     DNy[1] = 0.0;
+
+    //General Constraint X (Init, Final)
     hDx[0] = D0x;
     hDy[0] = D0y;
+    hCx[0] = C0x;
+    hCy[0] = C0y;
     for (ii = 1; ii < N; ii++)
     {
         hDx[ii] = D1x;
         hDy[ii] = D1y;
     }
-   hDx[N] = DNx;
-   hDy[N] = DNy;
+    hDx[N] = DNx;
+    hDy[N] = DNy;
+    hCx[N] = CNx;
+    hCy[N] = CNy;
+    hd_lgx[0] = d_lg0x;
+    hd_ugx[0] = d_ug0x;
+    hd_lgy[0] = d_lg0y;
+    hd_ugy[0] = d_ug0y;
+    hd_lgx[N] = d_lgNx;
+    hd_ugx[N] = d_ugNx;
+    hd_lgy[N] = d_lgNy;
+    hd_ugy[N] = d_ugNy;
 }
 
 void CustomController::mpcModelSetup()
