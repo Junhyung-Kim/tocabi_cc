@@ -296,6 +296,8 @@ void CustomController::computeFast()
             }
 
             walkingCompute(rd_);
+           // momentumControl(rd_);
+
             file[0] << walking_tick << "\t" << com_refx(walking_tick) << "\t" << foot_step(current_step_num, 0) << "\t" << RF_trajectory_float.translation()(0) << "\t" << LF_trajectory_float.translation()(0) << "\t" << zmp_refx(walking_tick) << std::endl;
         }
         else if (rd_.tc_.walking_enable == 3.0)
@@ -489,14 +491,14 @@ void CustomController::computePlanner()
                     }
                 }
 
-                d_lbxNx[0] = 0.14;
+                d_lbxNx[0] = 0.18;
                 d_lbxNx[1] = 0.00;
-                d_lbxNx[2] = 0.14;
+                d_lbxNx[2] = 0.18;
                 d_lbxNx[3] = 0.00;
                 d_lbxNx[4] = 0.00;
-                d_ubxNx[0] = 0.14;
+                d_ubxNx[0] = 0.18;
                 d_ubxNx[1] = 0.00;
-                d_ubxNx[2] = 0.14;
+                d_ubxNx[2] = 0.18;
                 d_ubxNx[3] = 0.00;
                 d_ubxNx[4] = 0.00;
 
@@ -590,7 +592,7 @@ void CustomController::computePlanner()
 
                 // std::cout << "time " << endt.count() << std::endl;
 
-                /*  
+                  
             if (hpipm_statusx == 0)
             {
                 printf("\n -> QP solved!\n");
@@ -611,16 +613,19 @@ void CustomController::computePlanner()
             {
                 printf("\n -> Solver failed! Unknown return flag\n");
             }
-            */
-                for (ii = 1; ii <= N; ii++)
+            
+            /*    for (ii = 1; ii <= N; ii++)
                 {
                     std::cout << " ii " << ii << std::endl;
                     d_ocp_qp_sol_get_x(ii, &qp_solx, x11x);
-                    //    d_ocp_qp_sol_get_sl(ii, &qp_solx, slx);
+                    d_ocp_qp_sol_get_sl(ii, &qp_solx, slx);
                     d_print_mat(1, nx[ii], x11x, 1);
-                    //  std::cout << "sl " << std::endl;
-                    //  d_print_mat(1, ns[ii], slx, 1);
-                }
+                    std::cout << "sl " << std::endl;
+                    d_print_mat(1, ns[ii], slx, 1);
+                    d_ocp_qp_sol_get_su(ii, &qp_solx, slx);
+                    std::cout << "su" << std::endl;
+                    d_print_mat(1, ns[ii], slx, 1);
+                }*/
             }
         }
     }
@@ -779,7 +784,6 @@ void CustomController::mpcVariableInit()
     nsbu = (int *)malloc((N + 1) * sizeof(int));
     nsg = (int *)malloc((N + 1) * sizeof(int));
     ns = (int *)malloc((N + 1) * sizeof(int));
-    nbxe = (int *)malloc((N + 1) * sizeof(int));
 
     hAx = (double **)malloc((N) * sizeof(double *));
     hBx = (double **)malloc((N) * sizeof(double *));
@@ -841,7 +845,6 @@ void CustomController::mpcVariableInit()
         nb[ii] = nbu[ii] + nbx[ii];
         ng[ii] = 1;
         nsbx[ii] = 0;
-        nbxe[ii] = 0;
     }
 
     nu[N] = 0;
@@ -853,7 +856,6 @@ void CustomController::mpcVariableInit()
     nx[0] = nx_;
     nb[0] = nbu[0] + nbx[0];
     nbx[0] = nx[0];
-    nbxe[0] = nx_;
     ng[0] = 0;
     nsbx[0] = 0;
 
@@ -981,11 +983,11 @@ void CustomController::mpcVariableInit()
 
     for (jj = 0; jj < nx_; jj++)
     {
-        x0x[jj] = 0;
+        x0x[jj] = 0.0;
         bx[jj] = 0.0;
         Qx[ii * (nx_ + 1)] = 3.0;
         qx[ii] = 0.0;
-        x0y[jj] = 0;
+        x0y[jj] = 0.0;
         by[jj] = 0.0;
         Qy[ii * (nx_ + 1)] = 3.0;
         qy[ii] = 0.0;
@@ -1111,12 +1113,21 @@ void CustomController::mpcVariableInit()
     u11y = (double *)malloc(nx_max * sizeof(double));
     sly = (double *)malloc(1 * sizeof(double));
     suy = (double *)malloc(1 * sizeof(double));
-}
 
-void CustomController::mpcModelSetup()
-{
-    flyWheelModel(Ts, nx_, nu_, Ax, Bx, Ay, By);
+    //Identify
+    hidxbx[0] = idxbx0;
+    hidxbu[0] = idxbu0;
+    hidxs[0] = idxs0;
+    hidxbx[N] = idxbxN;
+    hidxs[N] = idxsN;
+    for(ii = 1; ii < N; ii++)
+    {
+        hidxs[ii] = idxs1;
+        hidxbu[ii] = idxbu1;
+        hidxbx[ii] = idxbx1;
+    }
 
+    //INPUT CONSTRAINT
     d_lbu0x[0] = -100;
     d_lbu0x[1] = -100;
     d_ubu0x[0] = 100;
@@ -1137,33 +1148,49 @@ void CustomController::mpcModelSetup()
     d_ubu1y[0] = 100;
     d_ubu1y[1] = 100;
 
-    //MODEL
-    hAx[0] = Ax;
-    hBx[0] = Bx;
+    hd_lbux[0] = d_lbu0x;
+    hd_ubux[0] = d_ubu0x;
+    hd_lbuy[0] = d_lbu0y;
+    hd_ubuy[0] = d_ubu0y;
+
+    for (ii = 1; ii < N; ii++)
+    {
+        hd_lbux[ii] = d_lbu1x;
+        hd_ubux[ii] = d_ubu1x;
+        hd_lbuy[ii] = d_lbu1y;
+        hd_ubuy[ii] = d_ubu1y;
+    }
+
+    //SoftConstraint
+    hd_lsx[0] = d_ls0x;
+    hd_usx[0] = d_us0x;
+    hd_lsy[0] = d_ls0y;
+    hd_usy[0] = d_us0y;
+    for (ii = 1; ii < N; ii++)
+    {
+        hd_lsx[ii] = d_ls1x;
+        hd_usx[ii] = d_us1x;
+        hd_lsy[ii] = d_ls1y;
+        hd_usy[ii] = d_us1y;
+    }
+    hd_lsx[N] = d_lsNx;
+    hd_usx[N] = d_usNx;
+    hd_lsy[N] = d_lsNy;
+    hd_usy[N] = d_usNy;
+
+    //CostFunction
     hbx[0] = bx;
     hQx[0] = Qx;
     hSx[0] = Sx;
     hRx[0] = Rx;
     hqx[0] = qx;
     hrx[0] = rx;
-    hAy[0] = Ay;
-    hBy[0] = By;
     hby[0] = by;
     hQy[0] = Qy;
     hSy[0] = Sy;
     hRy[0] = Ry;
     hqy[0] = qy;
     hry[0] = ry;
-    hidxbx[0] = idxbx0;
-    hd_lbxx[0] = d_lbx0x;
-    hd_ubxx[0] = d_ubx0x;
-    hd_lbxy[0] = d_lbx0y;
-    hd_ubxy[0] = d_ubx0y;
-    hidxbu[0] = idxbu0;
-    hd_lbux[0] = d_lbu0x;
-    hd_ubux[0] = d_ubu0x;
-    hd_lbuy[0] = d_lbu0y;
-    hd_ubuy[0] = d_ubu0y;
     hZlx[0] = Zl0x;
     hZux[0] = Zu0x;
     hzlx[0] = zl0x;
@@ -1172,55 +1199,29 @@ void CustomController::mpcModelSetup()
     hZuy[0] = Zu0y;
     hzly[0] = zl0y;
     hzuy[0] = zu0y;
-    hidxs[0] = idxs0;
-    hd_lsx[0] = d_ls0x;
-    hd_usx[0] = d_us0x;
-    hd_lsy[0] = d_ls0y;
-    hd_usy[0] = d_us0y;
-
-    for (ii = 1; ii < N; ii++)
+    for(ii = 1; ii < N; ii++)
     {
-        hAx[ii] = Ax;
-        hBx[ii] = Bx;
         hbx[ii] = bx;
         hQx[ii] = Qx;
         hSx[ii] = Sx;
         hRx[ii] = Rx;
         hqx[ii] = qx;
         hrx[ii] = rx;
-        hAy[ii] = Ay;
-        hBy[ii] = By;
         hby[ii] = by;
         hQy[ii] = Qy;
         hSy[ii] = Sy;
         hRy[ii] = Ry;
         hqy[ii] = qy;
         hry[ii] = ry;
-        hidxbx[ii] = idxbx1;
-        hd_lbxx[ii] = d_lbx1x;
-        hd_ubxx[ii] = d_ubx1x;
-        hd_lbxy[ii] = d_lbx1y;
-        hd_ubxy[ii] = d_ubx1y;
-        hidxbu[ii] = idxbu1;
-        hd_lbux[ii] = d_lbu1x;
-        hd_ubux[ii] = d_ubu1x;
         hZlx[ii] = Zl1x;
         hZux[ii] = Zu1x;
         hzlx[ii] = zl1x;
         hzux[ii] = zu1x;
-        hd_lbuy[ii] = d_lbu1y;
-        hd_ubuy[ii] = d_ubu1y;
         hZly[ii] = Zl1y;
         hZuy[ii] = Zu1y;
         hzly[ii] = zl1y;
         hzuy[ii] = zu1y;
-        hidxs[ii] = idxs1;
-        hd_lsx[ii] = d_ls1x;
-        hd_usx[ii] = d_us1x;
-        hd_lsy[ii] = d_ls1y;
-        hd_usy[ii] = d_us1y;
     }
-
     hQx[N] = Qx;
     hSx[N] = Sx;
     hRx[N] = Rx;
@@ -1231,13 +1232,6 @@ void CustomController::mpcModelSetup()
     hRy[N] = Ry;
     hqy[N] = qy;
     hry[N] = ry;
-
-    hidxbx[N] = idxbxN;
-
-    hd_lbxx[N] = d_lbxNx;
-    hd_ubxx[N] = d_ubxNx;
-    hd_lbxy[N] = d_lbxNy;
-    hd_ubxy[N] = d_ubxNy;
     hZlx[N] = ZlNx;
     hZux[N] = ZuNx;
     hzlx[N] = zlNx;
@@ -1246,27 +1240,40 @@ void CustomController::mpcModelSetup()
     hZuy[N] = ZuNy;
     hzly[N] = zlNy;
     hzuy[N] = zuNy;
-    hidxs[N] = idxsN;
-    hd_lsx[N] = d_lsNx;
-    hd_usx[N] = d_usNx;
-    hd_lsy[N] = d_lsNy;
-    hd_usy[N] = d_usNy;
 
+    //General Constraint Input
     D1x[1] = 0.0;
     DNx[1] = 0.0;
     D1y[1] = 0.0;
     DNy[1] = 0.0;
-
     hDx[0] = D0x;
     hDy[0] = D0y;
-
     for (ii = 1; ii < N; ii++)
     {
         hDx[ii] = D1x;
         hDy[ii] = D1y;
     }
-    hDx[N] = DNx;
-    hDy[N] = DNy;
+   hDx[N] = DNx;
+   hDy[N] = DNy;
+}
+
+void CustomController::mpcModelSetup()
+{
+    flyWheelModel(Ts, nx_, nu_, Ax, Bx, Ay, By);
+
+    //MODEL
+    hAx[0] = Ax;
+    hBx[0] = Bx;
+    hAy[0] = Ay;
+    hBy[0] = By;
+
+    for (ii = 1; ii < N; ii++)
+    {
+        hAx[ii] = Ax;
+        hBx[ii] = Bx;
+        hAy[ii] = Ay;
+        hBy[ii] = By;
+    }
 }
 
 void CustomController::momentumControl(RobotData &Robot)

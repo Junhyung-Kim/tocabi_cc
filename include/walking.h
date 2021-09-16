@@ -91,6 +91,7 @@ public:
     void setContactMode();
     void saveFootTrajectory();
     void setPelvTrajectory();
+    void setIKparam();
     void inverseKinematics(RobotData &Robot, Eigen::Isometry3d PELV_float_transform, Eigen::Isometry3d LF_float_transform, Eigen::Isometry3d RF_float_transform, Eigen::Vector12d &leg_q);
     void inverseKinematicsdob(RobotData &Robot);
     void updateNextStepTime(RobotData &rd);

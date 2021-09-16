@@ -12,18 +12,7 @@ void WalkingController::walkingCompute(RobotData &rd)
 
     setPelvTrajectory();
     setContactMode();
-
-    RF_trajectory_float.linear() = RF_float_init.linear();
-    LF_trajectory_float.linear() = LF_float_init.linear();
-    
-    RF_trajectory_float.translation()(0) = RFx_trajectory_float(walking_tick);
-    RF_trajectory_float.translation()(1) = RFy_trajectory_float(walking_tick);
-    RF_trajectory_float.translation()(2) = RFz_trajectory_float(walking_tick);
-
-    LF_trajectory_float.translation()(0) = LFx_trajectory_float(walking_tick);
-    LF_trajectory_float.translation()(1) = LFy_trajectory_float(walking_tick);
-    LF_trajectory_float.translation()(2) = LFz_trajectory_float(walking_tick);
-
+    setIKparam();
     inverseKinematics(rd, PELV_trajectory_float, LF_trajectory_float, RF_trajectory_float, desired_leg_q);
 
     if (dob == 1)
@@ -1658,6 +1647,20 @@ void WalkingController::setInitPose(RobotData &Robot, Eigen::VectorQd &leg_q)
     {
         leg_q(i) = DyrosMath::QuinticSpline(walking_init_tick, 0.0, 3.0 * wk_Hz, q_init(i), 0.0, 0.0, q_target(i), 0.0, 0.0)(0);
     }
+}
+
+void WalkingController::setIKparam()
+{
+    RF_trajectory_float.linear() = RF_float_init.linear();
+    LF_trajectory_float.linear() = LF_float_init.linear();
+    
+    RF_trajectory_float.translation()(0) = RFx_trajectory_float(walking_tick);
+    RF_trajectory_float.translation()(1) = RFy_trajectory_float(walking_tick);
+    RF_trajectory_float.translation()(2) = RFz_trajectory_float(walking_tick);
+
+    LF_trajectory_float.translation()(0) = LFx_trajectory_float(walking_tick);
+    LF_trajectory_float.translation()(1) = LFy_trajectory_float(walking_tick);
+    LF_trajectory_float.translation()(2) = LFz_trajectory_float(walking_tick);
 }
 
 void WalkingController::updateInitTime()
