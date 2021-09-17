@@ -302,10 +302,11 @@ void CustomController::computeFast()
             if (wlk_on == true)
             {
                 walkingCompute(rd_);
-                //   momentumControl(rd_);
+                momentumControl(rd_);
             }
-
-            file[0] << walking_tick << "\t" << com_refx(walking_tick) << "\t" << foot_step(current_step_num, 0) << "\t" << RF_trajectory_float.translation()(0) << "\t" << LF_trajectory_float.translation()(0) << "\t" << zmp_refx(walking_tick) << std::endl;
+            
+            if(current_step_num != total_step_num)
+                file[0] << walking_tick - 1<< "\t" << com_refx(walking_tick - 1) << "\t" << foot_step(current_step_num, 0) << "\t" << RF_trajectory_float.translation()(0) << "\t" << LF_trajectory_float.translation()(0) << "\t" << zmp_refx(walking_tick - 1) << std::endl;
         }
         else if (rd_.tc_.walking_enable == 3.0)
         {
