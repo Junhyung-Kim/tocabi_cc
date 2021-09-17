@@ -77,8 +77,7 @@ public:
     double *d_lbxNx, *d_ubxNx, *d_lgNx, *d_ugNx, *C0x, *D0x, *C1x, *D1x, *CNx, *DNx, *Zl0x, *Zu0x, *zl0x, *zu0x, *d_ls0x, *d_us0x, *Zl1x, *Zu1x, *zl1x, *zu1x, *d_ls1x, *d_us1x, *ZlNx, *ZuNx, *zlNx, *zuNx, *d_lsNx, *d_usNx;
     double *d_lbxNy, *d_ubxNy, *d_lgNy, *d_ugNy, *C0y, *D0y, *C1y, *D1y, *CNy, *DNy, *Zl0y, *Zu0y, *zl0y, *zu0y, *d_ls0y, *d_us0y, *Zl1y, *Zu1y, *zl1y, *zu1y, *d_ls1y, *d_us1y, *ZlNy, *ZuNy, *zlNy, *zuNy, *d_lsNy, *d_usNy;
     double mu0;
-    double **ux, **xx, **lsx, **usx, **pix, **lam_lbx, **lam_lgx, **lam_ubx, **lam_ugx, **lam_lsx, **lam_usx, *x11x, *slx, *sux;
-    double **uy, **xy, **lsy, **usy, **piy, **lam_lby, **lam_lgy, **lam_uby, **lam_ugy, **lam_lsy, **lam_usy, *x11y, *sly, *suy, *s1x, *s1u, *u11x, *u11y;
+    double *x11x, *slx, *sux, *x11y, *sly, *suy, *s1x, *s1u, *u11x, *u11y;
     struct d_ocp_qp_dim dimx;
     struct d_ocp_qp_dim dimy;
     hpipm_size_t ipm_arg_sizex;

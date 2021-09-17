@@ -20,16 +20,6 @@ void WalkingController::walkingCompute(RobotData &rd)
         inverseKinematicsdob(rd);
     }
 
-    cc_mutex.lock();
-    for (int i = 0; i < 12; i++)
-    {
-        rd.q_desired(i) = desired_leg_q(i);
-    }
-    for (int i = 12; i < MODEL_DOF; i++)
-    {
-        rd.q_desired(i) = desired_init_q(i);
-    }
-    cc_mutex.unlock();
     updateNextStepTime(rd);
 }
 
@@ -1313,9 +1303,27 @@ void WalkingController::setPelvTrajectory()
     PELV_trajectory_float.linear() = PELV_float_init.linear();
 }
 
-void WalkingController::mpcSoftVariable()
+void WalkingController::mpcSoftVariable(RobotData &Robot)
 {
-    int a;
+    softBound = (double *)malloc((t_total * (total_step_num + 1) + t_temp - 1) * sizeof(double));
+    double RF_mass, LF_mass;
+    
+    RF_mass = 0.0;
+    LF_mass = 0.0;
+
+    for(int i = 0; i < 6; i++)
+    {
+        RF_mass += Robot.link_[Left_Foot + i].mass;
+        LF_mass = RF_mass;
+    }    
+
+    std::cout << "RF_mass" << RF_mass << std::endl;
+    std::cout << "LF_mass" << LF_mass << std::endl;
+
+    for(int i = 0; i < t_total * (total_step_num + 1) + t_temp - 1; i++)
+    {
+        //softBound[i] = ///
+    }
 }
 
 void WalkingController::inverseKinematics(RobotData &Robot, Eigen::Isometry3d PELV_float_transform, Eigen::Isometry3d LF_float_transform, Eigen::Isometry3d RF_float_transform, Eigen::Vector12d &leg_q)

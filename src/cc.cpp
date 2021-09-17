@@ -273,7 +273,7 @@ void CustomController::computeFast()
                 cpReferencePatternGeneration();
                 cptoComTrajectory();
 
-                mpcSoftVariable();
+                mpcSoftVariable(rd_);
 
                 cc_mutex.lock();
                 foot_step_mu = foot_step;
@@ -302,11 +302,22 @@ void CustomController::computeFast()
             if (wlk_on == true)
             {
                 walkingCompute(rd_);
-                momentumControl(rd_);
+                //  momentumControl(rd_);
+                        
+                cc_mutex.lock();
+                for (int i = 0; i < 12; i++)
+                {
+                    rd_.q_desired(i) = desired_leg_q(i);
+                }
+                for (int i = 12; i < MODEL_DOF; i++)
+                {
+                    rd_.q_desired(i) = desired_init_q(i);
+                }
+                cc_mutex.unlock();
             }
-            
-            if(current_step_num != total_step_num)
-                file[0] << walking_tick - 1<< "\t" << com_refx(walking_tick - 1) << "\t" << foot_step(current_step_num, 0) << "\t" << RF_trajectory_float.translation()(0) << "\t" << LF_trajectory_float.translation()(0) << "\t" << zmp_refx(walking_tick - 1) << std::endl;
+
+            if (current_step_num != total_step_num)
+                file[0] << walking_tick - 1 << "\t" << com_refx(walking_tick - 1) << "\t" << foot_step(current_step_num, 0) << "\t" << RF_trajectory_float.translation()(0) << "\t" << LF_trajectory_float.translation()(0) << "\t" << zmp_refx(walking_tick - 1) << std::endl;
         }
         else if (rd_.tc_.walking_enable == 3.0)
         {
@@ -546,7 +557,7 @@ void CustomController::computePlanner()
 
                 // std::cout << "time " << endt.count() << std::endl;
 
-                if (hpipm_statusx == 0)
+                /*      if (hpipm_statusx == 0)
                 {
                     printf("\n -> QP solved!\n");
                 }
@@ -566,7 +577,7 @@ void CustomController::computePlanner()
                 {
                     printf("\n -> Solver failed! Unknown return flag\n");
                 }
-
+*/
                 /*    for (ii = 1; ii <= N; ii++)
                 {
                     std::cout << " ii " << ii << std::endl;
@@ -703,30 +714,6 @@ void CustomController::mpcVariableInit()
     nu_ = 2;
 
     //resize
-    ux = (double **)malloc((N + 1) * sizeof(double *));
-    xx = (double **)malloc((N + 1) * sizeof(double *));
-    lsx = (double **)malloc((N + 1) * sizeof(double *));
-    usx = (double **)malloc((N + 1) * sizeof(double *));
-    pix = (double **)malloc((N + 1) * sizeof(double *));
-    lam_lbx = (double **)malloc((N + 1) * sizeof(double *));
-    lam_lgx = (double **)malloc((N + 1) * sizeof(double *));
-    lam_ubx = (double **)malloc((N + 1) * sizeof(double *));
-    lam_ugx = (double **)malloc((N + 1) * sizeof(double *));
-    lam_lsx = (double **)malloc((N + 1) * sizeof(double *));
-    lam_usx = (double **)malloc((N + 1) * sizeof(double *));
-
-    uy = (double **)malloc((N + 1) * sizeof(double *));
-    xy = (double **)malloc((N + 1) * sizeof(double *));
-    lsy = (double **)malloc((N + 1) * sizeof(double *));
-    usy = (double **)malloc((N + 1) * sizeof(double *));
-    piy = (double **)malloc((N + 1) * sizeof(double *));
-    lam_lby = (double **)malloc((N + 1) * sizeof(double *));
-    lam_lgy = (double **)malloc((N + 1) * sizeof(double *));
-    lam_uby = (double **)malloc((N + 1) * sizeof(double *));
-    lam_ugy = (double **)malloc((N + 1) * sizeof(double *));
-    lam_lsy = (double **)malloc((N + 1) * sizeof(double *));
-    lam_usy = (double **)malloc((N + 1) * sizeof(double *));
-
     nx = (int *)malloc((N + 1) * sizeof(int));
     nu = (int *)malloc((N + 1) * sizeof(int));
     nbu = (int *)malloc((N + 1) * sizeof(int));
@@ -866,7 +853,6 @@ void CustomController::mpcVariableInit()
     d_zeros(&d_ubu0y, nbu[0], 1);
     d_zeros(&d_lg0y, ng[0], 1);
     d_zeros(&d_ug0y, ng[0], 1);
-
     int_zeros(&idxbx0, nbx[0], 1);
     int_zeros(&idxbx1, nbx[1], 1);
     int_zeros(&idxbu1, nbu[1], 1);
@@ -952,32 +938,6 @@ void CustomController::mpcVariableInit()
         Rx[ii * (nu_ + 1)] = 50.0;
         ry[ii] = 0.0;
         Ry[ii * (nu_ + 1)] = 50.0;
-    }
-
-    for (ii = 0; ii <= N; ii++)
-    {
-        d_zeros(ux + ii, nu[ii], 1);
-        d_zeros(xx + ii, nx[ii], 1);
-        d_zeros(lsx + ii, ns[ii], 1);
-        d_zeros(usx + ii, ns[ii], 1);
-        d_zeros(pix + ii, nx[ii + 1], 1);
-        d_zeros(lam_lbx + ii, nb[ii], 1);
-        d_zeros(lam_ubx + ii, nb[ii], 1);
-        d_zeros(lam_lgx + ii, ng[ii], 1);
-        d_zeros(lam_ugx + ii, ng[ii], 1);
-        d_zeros(lam_lsx + ii, ns[ii], 1);
-        d_zeros(lam_usx + ii, ns[ii], 1);
-        d_zeros(uy + ii, nu[ii], 1);
-        d_zeros(xy + ii, nx[ii], 1);
-        d_zeros(lsy + ii, ns[ii], 1);
-        d_zeros(usy + ii, ns[ii], 1);
-        d_zeros(piy + ii, nx[ii + 1], 1);
-        d_zeros(lam_lby + ii, nb[ii], 1);
-        d_zeros(lam_uby + ii, nb[ii], 1);
-        d_zeros(lam_lgy + ii, ng[ii], 1);
-        d_zeros(lam_ugy + ii, ng[ii], 1);
-        d_zeros(lam_lsy + ii, ns[ii], 1);
-        d_zeros(lam_usy + ii, ns[ii], 1);
     }
 
     for (ii = 0; ii < nbu[0]; ii++)
@@ -1262,7 +1222,7 @@ void CustomController::momentumControl(RobotData &Robot)
 
     Eigen::Vector3d q_waistd;
     Eigen::Vector8d q_rarmd, q_larmd;
-    /* if(walking_tick == 0)
+    /* if(walking_tick == 1)
     {
         q_waistd.setZero();
         q_rarmd.setZero();

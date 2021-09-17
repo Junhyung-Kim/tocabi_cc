@@ -88,7 +88,7 @@ public:
     void cpReferencePatternGeneration();
     void cptoComTrajectory();
     void setFootTrajectory();
-    void mpcSoftVariable();
+    void mpcSoftVariable(RobotData &Robot);
     void setContactMode();
     void saveFootTrajectory();
     void setPelvTrajectory();
@@ -180,7 +180,6 @@ public:
     Eigen::Matrix3x3d Agl_waist;
     Eigen::Vector3d H_leg;
 
-
     Eigen::Isometry3d LF_trajectory_float;
     Eigen::Isometry3d RF_trajectory_float;
     Eigen::Isometry3d LFD_trajectory_float;
@@ -212,6 +211,9 @@ public:
     Eigen::VectorXd zmp_refx_mu;
     Eigen::VectorXd zmp_refy_mu;
     Eigen::VectorXd b_offset;
+
+    //MPC variable
+    double *softBound;
 
     Eigen::Vector12d dob_hat;
     Eigen::Vector12d dob_hat_prev;
