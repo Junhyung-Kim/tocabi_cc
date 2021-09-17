@@ -45,6 +45,7 @@ CustomController::CustomController(RobotData &rd) : rd_(rd) //, wbc_(dc.wbc_)
 
     mpc_on = false;
     wlk_on = false;
+    velEst_f = false;
 
     mpcVariableInit();
     std::cout << "Custom Controller Init" << std::endl;
@@ -120,6 +121,7 @@ void CustomController::computeSlow()
             G_ = model_data.tau;
 
             jointVelocityEstimate();
+            velEst_f = true;
 
             Vector12d fc_redis;
             double fc_ratio = 0.000;
@@ -225,7 +227,7 @@ void CustomController::computeFast()
     {
         if (rd_.tc_.walking_enable == 1.0)
         {
-            if (wlk_on == false)
+            if (wlk_on == false && velEst_f == true)
             {
                 wk_Hz = 1000;
                 wk_dt = 1 / wk_Hz;
@@ -297,8 +299,11 @@ void CustomController::computeFast()
                 wlk_on = true;
             }
 
-            walkingCompute(rd_);
-            momentumControl(rd_);
+            if (wlk_on == true)
+            {
+                walkingCompute(rd_);
+                //   momentumControl(rd_);
+            }
 
             file[0] << walking_tick << "\t" << com_refx(walking_tick) << "\t" << foot_step(current_step_num, 0) << "\t" << RF_trajectory_float.translation()(0) << "\t" << LF_trajectory_float.translation()(0) << "\t" << zmp_refx(walking_tick) << std::endl;
         }
@@ -470,9 +475,7 @@ void CustomController::computePlanner()
                 }
 
                 C1x[3] = 1.0;
-                C1x[4] = 1.0;
                 C1y[3] = 1.0;
-                C1y[4] = 1.0;
 
                 //Final condition
                 d_lbxNx[0] = 0.18;
@@ -542,7 +545,6 @@ void CustomController::computePlanner()
 
                 // std::cout << "time " << endt.count() << std::endl;
 
-                  
                 if (hpipm_statusx == 0)
                 {
                     printf("\n -> QP solved!\n");
@@ -563,8 +565,8 @@ void CustomController::computePlanner()
                 {
                     printf("\n -> Solver failed! Unknown return flag\n");
                 }
-            
-            /*    for (ii = 1; ii <= N; ii++)
+
+                /*    for (ii = 1; ii <= N; ii++)
                 {
                     std::cout << " ii " << ii << std::endl;
                     d_ocp_qp_sol_get_x(ii, &qp_solx, x11x);
@@ -1070,7 +1072,7 @@ void CustomController::mpcVariableInit()
     hidxs[0] = idxs0;
     hidxbx[N] = idxbxN;
     hidxs[N] = idxsN;
-    for(ii = 1; ii < N; ii++)
+    for (ii = 1; ii < N; ii++)
     {
         hidxs[ii] = idxs1;
         hidxbu[ii] = idxbu1;
@@ -1149,7 +1151,7 @@ void CustomController::mpcVariableInit()
     hZuy[0] = Zu0y;
     hzly[0] = zl0y;
     hzuy[0] = zu0y;
-    for(ii = 1; ii < N; ii++)
+    for (ii = 1; ii < N; ii++)
     {
         hbx[ii] = bx;
         hQx[ii] = Qx;
@@ -1191,12 +1193,6 @@ void CustomController::mpcVariableInit()
     hzly[N] = zlNy;
     hzuy[N] = zuNy;
 
-    //General Constraint Input
-    D1x[1] = 1.0;
-    DNx[1] = 0.0;
-    D1y[1] = 1.0;
-    DNy[1] = 0.0;
-
     //General Constraint X (Init, Final)
     hDx[0] = D0x;
     hDy[0] = D0y;
@@ -1219,6 +1215,8 @@ void CustomController::mpcVariableInit()
     hd_ugx[N] = d_ugNx;
     hd_lgy[N] = d_lgNy;
     hd_ugy[N] = d_ugNy;
+    C1x[4] = 1.0;
+    C1y[4] = 1.0;
 }
 
 void CustomController::mpcModelSetup()
@@ -1247,7 +1245,7 @@ void CustomController::momentumControl(RobotData &Robot)
     variable_size = 5;
     constraint_size = 5;
 
-    if (walking_tick == 0)
+    if (walking_tick == 1)
         QP_m.InitializeProblemSize(variable_size, constraint_size);
 
     MatrixXd H, A, W;
@@ -1308,19 +1306,19 @@ void CustomController::momentumControl(RobotData &Robot)
 
     for (int i = 0; i < 3; i++)
     {
-        lbA(i) = (-0.2 - q_w(i)) * wk_Hz;
-        ubA(i) = (0.2 - q_w(i)) * wk_Hz;
+        lbA(i) = (-0.5 - q_w(i)) * wk_Hz;
+        ubA(i) = (0.5 - q_w(i)) * wk_Hz;
     }
 
-    lbA(3) = (0.15 - q_w(3)) * wk_Hz;
-    ubA(3) = (0.45 - q_w(3)) * wk_Hz;
-    lbA(4) = (-0.45 - q_w(4)) * wk_Hz;
-    ubA(4) = (-0.15 - q_w(4)) * wk_Hz;
+    lbA(3) = (0.0 - q_w(3)) * wk_Hz;
+    ubA(3) = (0.9 - q_w(3)) * wk_Hz;
+    lbA(4) = (-0.9 - q_w(4)) * wk_Hz;
+    ubA(4) = (0.0 - q_w(4)) * wk_Hz;
 
     for (int i = 0; i < variable_size; i++)
     {
-        lb(i) = -2.0;
-        ub(i) = 2.0;
+        lb(i) = -5.0;
+        ub(i) = 5.0;
     }
 
     lb(3) = -0.5;
