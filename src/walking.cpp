@@ -14,56 +14,6 @@ void WalkingController::walkingCompute(RobotData &rd)
     setContactMode();
     setIKparam();
     inverseKinematics(rd, PELV_trajectory_float, LF_trajectory_float, RF_trajectory_float, desired_leg_q);
-/*
-    double prx, pry, prz, plx, ply, plz;
-    prx = com_refx(walking_tick) - RFx_trajectory_float(walking_tick);
-    pry = com_refy(walking_tick) - RFy_trajectory_float(walking_tick);
-    prz = COM_float_init.translation()(2) - RFz_trajectory_float(walking_tick);
-
-    prx = -prx;
-    pry = -pry;
-    prz = -prz;
-
-    plx = com_refx(walking_tick) - LFx_trajectory_float(walking_tick);
-    ply = com_refy(walking_tick) - LFy_trajectory_float(walking_tick);
-    plz = COM_float_init.translation()(2) - LFz_trajectory_float(walking_tick);
-
-    plx = -plx;
-    ply = -ply;
-    plz = -plz;
-
-    if(current_step_num > 0)
-    {
-        double vrx, vry, vrz, vlx, vly, vlz;
-        if(foot_step(current_step_num,6) == 1)
-        {
-            vrx = RFvx_trajectory_float(walking_tick) - com_refdx(walking_tick);
-            vry = RFvy_trajectory_float(walking_tick) - com_refdy(walking_tick);
-            vrz = RFvz_trajectory_float(walking_tick);
-            vlx = LFvx_trajectory_float(walking_tick) - com_refdx(walking_tick);
-            vly = LFvy_trajectory_float(walking_tick) - com_refdy(walking_tick);
-            vlz = LFvz_trajectory_float(walking_tick);
-        }
-        else
-        {
-            vrx = RFvx_trajectory_float(walking_tick) - com_refdx(walking_tick);
-            vry = RFvy_trajectory_float(walking_tick) - com_refdy(walking_tick);
-            vrz = RFvz_trajectory_float(walking_tick);
-            vlx = LFvx_trajectory_float(walking_tick) - com_refdx(walking_tick);
-            vly = LFvy_trajectory_float(walking_tick) - com_refdy(walking_tick);
-            vlz = LFvz_trajectory_float(walking_tick);
-        }
-
-        if(current_step_num & 2 == 0)
-        {
-            softBoundx[walking_tick] = RF_mass / 2 * (-prz * vry + pry * vrz) + LF_mass / 2 * (-plz * vly + ply * vlz);
-            softBoundx[walking_tick] = -1 * softBoundx[walking_tick];
-        }
-        
-        softBoundx[walking_tick] = RF_mass / 2 * (-prz * vry + pry * vrz) + LF_mass / 2 * (-plz * vly + ply * vlz);
-        softBoundy[walking_tick] = RF_mass / 2 * (prz * vrx - pry * vrz) + LF_mass / 2 * (plz * vlx - ply * vlz);
-    }
-*/
 
     if (dob == 1)
     {
@@ -1372,14 +1322,14 @@ void WalkingController::mpcSoftVariable(RobotData &Robot)
 
     for (int i = 0; i < t_total * (total_step_num + 1) + t_temp - 1; i++)
     {
-        softBoundx[i] = RF_mass/2 * (-(RFz_trajectory_float(i)-COM_float_init.translation()(2)) * RFvy_trajectory_float(i) - RFy_trajectory_float(i)*RFvz_trajectory_float(i)) + LF_mass/2 *(-(LFz_trajectory_float(i)-COM_float_init.translation()(2)) * LFvy_trajectory_float(i) - LFy_trajectory_float(i)*LFvz_trajectory_float(i));
-        softBoundx1[i] = -RF_mass/2*RFvz_trajectory_float(i) - LF_mass/2*LFvz_trajectory_float(i);
-        softBoundx2[i] = RF_mass/2 *(RFz_trajectory_float(i)-COM_float_init.translation()(2))+LF_mass/2 *(LFz_trajectory_float(i)-COM_float_init.translation()(2)) ;
-        //softBoundx[walking_tick -1]+softBoundx2[walking_tick -1] * com_refdy(walking_tick-1) + softBoundx1[walking_tick -1]*com_refy(walking_tick -1) 
-        
-        softBoundy[i] = RF_mass/2 *((RFz_trajectory_float(i)-COM_float_init.translation()(2)) * RFvx_trajectory_float(i) - (- RFy_trajectory_float(i))*RFvz_trajectory_float(i)) + LF_mass/2*((LFz_trajectory_float(i)-COM_float_init.translation()(2)) * LFvx_trajectory_float(i) - (- LFy_trajectory_float(i))*LFvz_trajectory_float(i));
-        softBoundy1[i] = RF_mass/2 * RFvz_trajectory_float(i) + LF_mass/2 * LFvz_trajectory_float(i);
-        softBoundy2[i] = -RF_mass/2 *(RFz_trajectory_float(i)-COM_float_init.translation()(2))-LF_mass/2 *(LFz_trajectory_float(i)-COM_float_init.translation()(2));
+        softBoundx[i] = RF_mass / 2 * (-(RFz_trajectory_float(i) - COM_float_init.translation()(2)) * RFvy_trajectory_float(i) - RFy_trajectory_float(i) * RFvz_trajectory_float(i)) + LF_mass / 2 * (-(LFz_trajectory_float(i) - COM_float_init.translation()(2)) * LFvy_trajectory_float(i) - LFy_trajectory_float(i) * LFvz_trajectory_float(i));
+        softBoundx1[i] = -RF_mass / 2 * RFvz_trajectory_float(i) - LF_mass / 2 * LFvz_trajectory_float(i);
+        softBoundx2[i] = RF_mass / 2 * (RFz_trajectory_float(i) - COM_float_init.translation()(2)) + LF_mass / 2 * (LFz_trajectory_float(i) - COM_float_init.translation()(2));
+        //softBoundx[walking_tick -1]+softBoundx2[walking_tick -1] * com_refdy(walking_tick-1) + softBoundx1[walking_tick -1]*com_refy(walking_tick -1)
+
+        softBoundy[i] = RF_mass / 2 * ((RFz_trajectory_float(i) - COM_float_init.translation()(2)) * RFvx_trajectory_float(i) - (-RFy_trajectory_float(i)) * RFvz_trajectory_float(i)) + LF_mass / 2 * ((LFz_trajectory_float(i) - COM_float_init.translation()(2)) * LFvx_trajectory_float(i) - (-LFy_trajectory_float(i)) * LFvz_trajectory_float(i));
+        softBoundy1[i] = RF_mass / 2 * RFvz_trajectory_float(i) + LF_mass / 2 * LFvz_trajectory_float(i);
+        softBoundy2[i] = -RF_mass / 2 * (RFz_trajectory_float(i) - COM_float_init.translation()(2)) - LF_mass / 2 * (LFz_trajectory_float(i) - COM_float_init.translation()(2));
     }
 }
 
