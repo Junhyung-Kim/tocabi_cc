@@ -213,8 +213,8 @@ public:
     Eigen::VectorXd b_offset;
 
     //MPC variable
-    double *softBound;
-
+    double *softBoundx, *softBoundy, *softBoundx1, *softBoundy1, *softBoundx2, *softBoundy2;
+    double RF_mass, LF_mass;
     Eigen::Vector12d dob_hat;
     Eigen::Vector12d dob_hat_prev;
     Eigen::Vector12d desired_leg_q;

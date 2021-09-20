@@ -302,7 +302,7 @@ void CustomController::computeFast()
             if (wlk_on == true)
             {
                 walkingCompute(rd_);
-                //  momentumControl(rd_);
+                momentumControl(rd_);
                         
                 cc_mutex.lock();
                 for (int i = 0; i < 12; i++)
@@ -316,8 +316,8 @@ void CustomController::computeFast()
                 cc_mutex.unlock();
             }
 
-            if (current_step_num != total_step_num)
-                file[0] << walking_tick - 1 << "\t" << com_refx(walking_tick - 1) << "\t" << foot_step(current_step_num, 0) << "\t" << RF_trajectory_float.translation()(0) << "\t" << LF_trajectory_float.translation()(0) << "\t" << zmp_refx(walking_tick - 1) << std::endl;
+            if (current_step_num != total_step_num && wlk_on == true)
+                file[0] << current_step_num <<"\t"<< softBoundx[walking_tick -1]+softBoundx2[walking_tick -1] * com_refdy(walking_tick-1) + softBoundx1[walking_tick -1]*com_refy(walking_tick -1) <<"\t" <<softBoundy[walking_tick -1]+softBoundy2[walking_tick -1] * com_refdx(walking_tick-1) + softBoundy1[walking_tick -1]*com_refx(walking_tick -1) <<"\t"<<H_leg(0) << "\t"<<H_leg(1)<<std::endl; //RFz_trajectory_float(walking_tick -1) << "\t" <<COM_float_init.translation()(2)<< std::endl;
         }
         else if (rd_.tc_.walking_enable == 3.0)
         {
@@ -1293,6 +1293,6 @@ void CustomController::momentumControl(RobotData &Robot)
     QP_m.UpdateSubjectToAx(A, lbA, ubA);
     QP_m.UpdateSubjectToX(lb, ub);
 
-    q_dm = QP_m.SolveQPoases(100);
+ //   q_dm = QP_m.SolveQPoases(100);
     //qd_prev = q_dm;
 }

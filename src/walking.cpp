@@ -14,6 +14,56 @@ void WalkingController::walkingCompute(RobotData &rd)
     setContactMode();
     setIKparam();
     inverseKinematics(rd, PELV_trajectory_float, LF_trajectory_float, RF_trajectory_float, desired_leg_q);
+/*
+    double prx, pry, prz, plx, ply, plz;
+    prx = com_refx(walking_tick) - RFx_trajectory_float(walking_tick);
+    pry = com_refy(walking_tick) - RFy_trajectory_float(walking_tick);
+    prz = COM_float_init.translation()(2) - RFz_trajectory_float(walking_tick);
+
+    prx = -prx;
+    pry = -pry;
+    prz = -prz;
+
+    plx = com_refx(walking_tick) - LFx_trajectory_float(walking_tick);
+    ply = com_refy(walking_tick) - LFy_trajectory_float(walking_tick);
+    plz = COM_float_init.translation()(2) - LFz_trajectory_float(walking_tick);
+
+    plx = -plx;
+    ply = -ply;
+    plz = -plz;
+
+    if(current_step_num > 0)
+    {
+        double vrx, vry, vrz, vlx, vly, vlz;
+        if(foot_step(current_step_num,6) == 1)
+        {
+            vrx = RFvx_trajectory_float(walking_tick) - com_refdx(walking_tick);
+            vry = RFvy_trajectory_float(walking_tick) - com_refdy(walking_tick);
+            vrz = RFvz_trajectory_float(walking_tick);
+            vlx = LFvx_trajectory_float(walking_tick) - com_refdx(walking_tick);
+            vly = LFvy_trajectory_float(walking_tick) - com_refdy(walking_tick);
+            vlz = LFvz_trajectory_float(walking_tick);
+        }
+        else
+        {
+            vrx = RFvx_trajectory_float(walking_tick) - com_refdx(walking_tick);
+            vry = RFvy_trajectory_float(walking_tick) - com_refdy(walking_tick);
+            vrz = RFvz_trajectory_float(walking_tick);
+            vlx = LFvx_trajectory_float(walking_tick) - com_refdx(walking_tick);
+            vly = LFvy_trajectory_float(walking_tick) - com_refdy(walking_tick);
+            vlz = LFvz_trajectory_float(walking_tick);
+        }
+
+        if(current_step_num & 2 == 0)
+        {
+            softBoundx[walking_tick] = RF_mass / 2 * (-prz * vry + pry * vrz) + LF_mass / 2 * (-plz * vly + ply * vlz);
+            softBoundx[walking_tick] = -1 * softBoundx[walking_tick];
+        }
+        
+        softBoundx[walking_tick] = RF_mass / 2 * (-prz * vry + pry * vrz) + LF_mass / 2 * (-plz * vly + ply * vlz);
+        softBoundy[walking_tick] = RF_mass / 2 * (prz * vrx - pry * vrz) + LF_mass / 2 * (plz * vlx - ply * vlz);
+    }
+*/
 
     if (dob == 1)
     {
@@ -99,6 +149,14 @@ void WalkingController::getRobotInitState(RobotData &rd)
 {
     if (walking_tick == 0)
     {
+        RF_mass = 0.0;
+        LF_mass = 0.0;
+
+        for (int i = 0; i < 6; i++)
+        {
+            RF_mass += rd.link_[Left_Foot + i].mass;
+            LF_mass = RF_mass;
+        }
         contactMode = 1.0;
         RF_float_init.translation() = rd.link_[Right_Foot].xpos;
         RFx_float_init.translation() = rd.link_[Right_Foot].xipos;
@@ -1305,24 +1363,23 @@ void WalkingController::setPelvTrajectory()
 
 void WalkingController::mpcSoftVariable(RobotData &Robot)
 {
-    softBound = (double *)malloc((t_total * (total_step_num + 1) + t_temp - 1) * sizeof(double));
-    double RF_mass, LF_mass;
-    
-    RF_mass = 0.0;
-    LF_mass = 0.0;
+    softBoundx = (double *)malloc((t_total * (total_step_num + 1) + t_temp - 1) * sizeof(double));
+    softBoundy = (double *)malloc((t_total * (total_step_num + 1) + t_temp - 1) * sizeof(double));
+    softBoundx1 = (double *)malloc((t_total * (total_step_num + 1) + t_temp - 1) * sizeof(double));
+    softBoundy1 = (double *)malloc((t_total * (total_step_num + 1) + t_temp - 1) * sizeof(double));
+    softBoundx2 = (double *)malloc((t_total * (total_step_num + 1) + t_temp - 1) * sizeof(double));
+    softBoundy2 = (double *)malloc((t_total * (total_step_num + 1) + t_temp - 1) * sizeof(double));
 
-    for(int i = 0; i < 6; i++)
+    for (int i = 0; i < t_total * (total_step_num + 1) + t_temp - 1; i++)
     {
-        RF_mass += Robot.link_[Left_Foot + i].mass;
-        LF_mass = RF_mass;
-    }    
-
-    std::cout << "RF_mass" << RF_mass << std::endl;
-    std::cout << "LF_mass" << LF_mass << std::endl;
-
-    for(int i = 0; i < t_total * (total_step_num + 1) + t_temp - 1; i++)
-    {
-        //softBound[i] = ///
+        softBoundx[i] = RF_mass/2 * (-(RFz_trajectory_float(i)-COM_float_init.translation()(2)) * RFvy_trajectory_float(i) - RFy_trajectory_float(i)*RFvz_trajectory_float(i)) + LF_mass/2 *(-(LFz_trajectory_float(i)-COM_float_init.translation()(2)) * LFvy_trajectory_float(i) - LFy_trajectory_float(i)*LFvz_trajectory_float(i));
+        softBoundx1[i] = -RF_mass/2*RFvz_trajectory_float(i) - LF_mass/2*LFvz_trajectory_float(i);
+        softBoundx2[i] = RF_mass/2 *(RFz_trajectory_float(i)-COM_float_init.translation()(2))+LF_mass/2 *(LFz_trajectory_float(i)-COM_float_init.translation()(2)) ;
+        //softBoundx[walking_tick -1]+softBoundx2[walking_tick -1] * com_refdy(walking_tick-1) + softBoundx1[walking_tick -1]*com_refy(walking_tick -1) 
+        
+        softBoundy[i] = RF_mass/2 *((RFz_trajectory_float(i)-COM_float_init.translation()(2)) * RFvx_trajectory_float(i) - (- RFy_trajectory_float(i))*RFvz_trajectory_float(i)) + LF_mass/2*((LFz_trajectory_float(i)-COM_float_init.translation()(2)) * LFvx_trajectory_float(i) - (- LFy_trajectory_float(i))*LFvz_trajectory_float(i));
+        softBoundy1[i] = RF_mass/2 * RFvz_trajectory_float(i) + LF_mass/2 * LFvz_trajectory_float(i);
+        softBoundy2[i] = -RF_mass/2 *(RFz_trajectory_float(i)-COM_float_init.translation()(2))-LF_mass/2 *(LFz_trajectory_float(i)-COM_float_init.translation()(2));
     }
 }
 
@@ -1468,15 +1525,16 @@ void WalkingController::inverseKinematicsdob(RobotData &Robot)
 
     double defaultGain = 0.0;
     double compliantGain = 3.0;
-    double rejectionGain = -25.0;//-3.5;
+    double rejectionGain = -25.0; //-3.5;
     double rejectionGainSim[12] = {-19.0, -19.0, -19.0, -19.0, -19.0, -19.0, -19.0, -19.0, -19.0, -19.0, -19.0, -19.0};
-    double rejectionGainReal[12] = {-3.0, -3.0, -3.0, -3.0, -3.0, -3.0, -3.0, -3.0, -3.0, -3.0, -3.0, -3.0};;
+    double rejectionGainReal[12] = {-3.0, -3.0, -3.0, -3.0, -3.0, -3.0, -3.0, -3.0, -3.0, -3.0, -3.0, -3.0};
+    ;
     double rejectionGain_[12];
     double compliantTick = 0.05 * wk_Hz;
 
     memcpy(rejectionGain_, rejectionGainSim, sizeof(rejectionGainSim));
-    
-    if(current_step_num != 0)
+
+    if (current_step_num != 0)
     {
         for (int i = 0; i < 12; i++)
         {
@@ -1496,17 +1554,17 @@ void WalkingController::inverseKinematicsdob(RobotData &Robot)
                     }
                     else
                     {
-                        dobGain = DyrosMath::QuinticSpline(walking_tick, t_start + t_total - t_rest_last - t_double2, t_start + t_total- t_rest_last, compliantGain, 0.0, 0.0, defaultGain, 0.0, 0.0)(0);
+                        dobGain = DyrosMath::QuinticSpline(walking_tick, t_start + t_total - t_rest_last - t_double2, t_start + t_total - t_rest_last, compliantGain, 0.0, 0.0, defaultGain, 0.0, 0.0)(0);
                     }
                 }
                 else
                 {
 
-                    if (walking_tick <t_start_real + t_double1 + t_rest_temp) // the period for lifting the right foot
+                    if (walking_tick < t_start_real + t_double1 + t_rest_temp) // the period for lifting the right foot
                     {
                         dobGain = DyrosMath::QuinticSpline(walking_tick, t_start_real + t_rest_temp, t_start_real + t_double1 + t_rest_temp, 0.0, 0.0, 0.0, rejectionGain_[i], 0.0, 0.0)(0);
                     } // the period for lifting the right foot
-                    else if(walking_tick <t_start_real + t_double1 + (t_total - t_rest_init - t_rest_last - t_double1 - t_double2 - t_imp))
+                    else if (walking_tick < t_start_real + t_double1 + (t_total - t_rest_init - t_rest_last - t_double1 - t_double2 - t_imp))
                     {
                         dobGain = rejectionGain_[i];
                     }
@@ -1529,7 +1587,7 @@ void WalkingController::inverseKinematicsdob(RobotData &Robot)
                     }
                     else if (walking_tick >= t_start + t_total - t_rest_last - t_double2 - compliantTick && walking_tick < t_start + t_total - t_rest_last - t_double2)
                     {
-                        dobGain = DyrosMath::QuinticSpline(walking_tick, t_start + t_total - t_rest_last - t_double2 - compliantTick, + t_total - t_rest_last - t_double2, defaultGain, 0.0, 0.0, compliantGain, 0.0, 0.0)(0);
+                        dobGain = DyrosMath::QuinticSpline(walking_tick, t_start + t_total - t_rest_last - t_double2 - compliantTick, +t_total - t_rest_last - t_double2, defaultGain, 0.0, 0.0, compliantGain, 0.0, 0.0)(0);
                     }
                     else
                     {
@@ -1538,11 +1596,11 @@ void WalkingController::inverseKinematicsdob(RobotData &Robot)
                 }
                 else
                 {
-                    if (walking_tick <t_start_real + t_double1 + t_rest_temp) // the period for lifting the right foot
+                    if (walking_tick < t_start_real + t_double1 + t_rest_temp) // the period for lifting the right foot
                     {
                         dobGain = DyrosMath::QuinticSpline(walking_tick, t_start_real + t_rest_temp, t_start_real + t_double1 + t_rest_temp, 0.0, 0.0, 0.0, rejectionGain_[i], 0.0, 0.0)(0);
                     } // the period for lifting the right foot
-                    else if(walking_tick <t_start_real + t_double1 + (t_total - t_rest_init - t_rest_last - t_double1 - t_double2 - t_imp))
+                    else if (walking_tick < t_start_real + t_double1 + (t_total - t_rest_init - t_rest_last - t_double1 - t_double2 - t_imp))
                     {
                         dobGain = rejectionGain_[i];
                     }
@@ -1666,7 +1724,7 @@ void WalkingController::setIKparam()
 {
     RF_trajectory_float.linear() = RF_float_init.linear();
     LF_trajectory_float.linear() = LF_float_init.linear();
-    
+
     RF_trajectory_float.translation()(0) = RFx_trajectory_float(walking_tick);
     RF_trajectory_float.translation()(1) = RFy_trajectory_float(walking_tick);
     RF_trajectory_float.translation()(2) = RFz_trajectory_float(walking_tick);
