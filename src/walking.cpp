@@ -1313,8 +1313,8 @@ void WalkingController::setPelvTrajectory()
 
 void WalkingController::mpcSoftVariable(RobotData &Robot)
 {
-    softBoundx = (double *)malloc((t_total * (total_step_num + 1) + t_temp - 1) * sizeof(double));
-    softBoundy = (double *)malloc((t_total * (total_step_num + 1) + t_temp - 1) * sizeof(double));
+    softBoundx = (double **)malloc((t_total * (total_step_num + 1) + t_temp - 1) * sizeof(double *));
+    softBoundy = (double **)malloc((t_total * (total_step_num + 1) + t_temp - 1) * sizeof(double *));
     softBoundx1 = (double *)malloc((t_total * (total_step_num + 1) + t_temp - 1) * sizeof(double));
     softBoundy1 = (double *)malloc((t_total * (total_step_num + 1) + t_temp - 1) * sizeof(double));
     softBoundx2 = (double *)malloc((t_total * (total_step_num + 1) + t_temp - 1) * sizeof(double));
@@ -1326,16 +1326,18 @@ void WalkingController::mpcSoftVariable(RobotData &Robot)
     {
         softCx[i] = (double *)malloc(5 * sizeof(double));
         softCy[i] = (double *)malloc(5 * sizeof(double));
+        softBoundx[i] = (double *)malloc(1 * sizeof(double));
+        softBoundy[i] = (double *)malloc(1 * sizeof(double));
     }
 
     for (int i = 0; i < t_total * (total_step_num + 1) + t_temp - 1; i++)
     {
-        softBoundx[i] = RF_mass / 2 * (-(RFz_trajectory_float(i) - COM_float_init.translation()(2)) * RFvy_trajectory_float(i) - RFy_trajectory_float(i) * RFvz_trajectory_float(i)) + LF_mass / 2 * (-(LFz_trajectory_float(i) - COM_float_init.translation()(2)) * LFvy_trajectory_float(i) - LFy_trajectory_float(i) * LFvz_trajectory_float(i));
+        softBoundx[i][0] = RF_mass / 2 * (-(RFz_trajectory_float(i) - COM_float_init.translation()(2)) * RFvy_trajectory_float(i) - RFy_trajectory_float(i) * RFvz_trajectory_float(i)) + LF_mass / 2 * (-(LFz_trajectory_float(i) - COM_float_init.translation()(2)) * LFvy_trajectory_float(i) - LFy_trajectory_float(i) * LFvz_trajectory_float(i));
         softBoundx1[i] = -RF_mass / 2 * RFvz_trajectory_float(i) - LF_mass / 2 * LFvz_trajectory_float(i);
         softBoundx2[i] = RF_mass / 2 * (RFz_trajectory_float(i) - COM_float_init.translation()(2)) + LF_mass / 2 * (LFz_trajectory_float(i) - COM_float_init.translation()(2));
         //softBoundx[walking_tick -1]+softBoundx2[walking_tick -1] * com_refdy(walking_tick-1) + softBoundx1[walking_tick -1]*com_refy(walking_tick -1)
 
-        softBoundy[i] = RF_mass / 2 * ((RFz_trajectory_float(i) - COM_float_init.translation()(2)) * RFvx_trajectory_float(i) - (-RFy_trajectory_float(i)) * RFvz_trajectory_float(i)) + LF_mass / 2 * ((LFz_trajectory_float(i) - COM_float_init.translation()(2)) * LFvx_trajectory_float(i) - (-LFy_trajectory_float(i)) * LFvz_trajectory_float(i));
+        softBoundy[i][0] = RF_mass / 2 * ((RFz_trajectory_float(i) - COM_float_init.translation()(2)) * RFvx_trajectory_float(i) - (-RFy_trajectory_float(i)) * RFvz_trajectory_float(i)) + LF_mass / 2 * ((LFz_trajectory_float(i) - COM_float_init.translation()(2)) * LFvx_trajectory_float(i) - (-LFy_trajectory_float(i)) * LFvz_trajectory_float(i));
         softBoundy1[i] = RF_mass / 2 * RFvz_trajectory_float(i) + LF_mass / 2 * LFvz_trajectory_float(i);
         softBoundy2[i] = -RF_mass / 2 * (RFz_trajectory_float(i) - COM_float_init.translation()(2)) - LF_mass / 2 * (LFz_trajectory_float(i) - COM_float_init.translation()(2));
 
@@ -1359,8 +1361,8 @@ void WalkingController::mpcStateContraint(RobotData &Robot)
     xU = (double **)malloc((t_total * (total_step_num + 1) + t_temp - 1) * sizeof(double *));
     yL = (double **)malloc((t_total * (total_step_num + 1) + t_temp - 1) * sizeof(double *));
     yU = (double **)malloc((t_total * (total_step_num + 1) + t_temp - 1) * sizeof(double *));
-    zmpx = (double *)malloc((t_total * (total_step_num + 1) + t_temp - 1) * sizeof(double));
-    zmpy = (double *)malloc((t_total * (total_step_num + 1) + t_temp - 1) * sizeof(double));
+    zmpx = (double **)malloc((t_total * (total_step_num + 1) + t_temp - 1) * sizeof(double *));
+    zmpy = (double **)malloc((t_total * (total_step_num + 1) + t_temp - 1) * sizeof(double *));
 
     for (int i = 0; i < t_total * (total_step_num + 1) + t_temp - 1; i++)
     {
@@ -1368,83 +1370,86 @@ void WalkingController::mpcStateContraint(RobotData &Robot)
         yL[i] = (double *)malloc(5 * sizeof(double));
         xU[i] = (double *)malloc(5 * sizeof(double));
         yU[i] = (double *)malloc(5 * sizeof(double));
+        zmpx[i] = (double *)malloc(5 * sizeof(double));
+        zmpy[i] = (double *)malloc(5 * sizeof(double));
     }
 
     for (int i = 0; i < t_total * (total_step_num + 1) + t_temp - 1; i++)
     {
+        //state boundary
         int j = (i - t_temp) / t_total;
         if (i < t_temp + t_total + t_double1 + t_rest_temp || (i >= t_temp + 2*t_total - t_rest_last - t_double2 - t_imp - t_rest_temp && i<=t_temp+t_total*2))
         {
-            yL[i][0] = -0.1525;
-            yU[i][0] = 0.1525;
+            yL[i][0] = -0.2025;
+            yU[i][0] = 0.2025;
 
-            yL[i][2] = -0.1525;
-            yU[i][2] = 0.1525;
+            yL[i][2] = -0.2025;
+            yU[i][2] = 0.2025;
         }
         else if(i >= t_temp + t_total + t_double1 + t_rest_temp && i < t_temp + 2*t_total - t_rest_last - t_double2 - t_imp - t_rest_temp)
         {
             if (foot_step(1, 6) == 1)
             {
-                yL[i][0] = 0.0525;
-                yU[i][0] = 0.1525;
+                yL[i][0] = 0.0025;
+                yU[i][0] = 0.2025;
 
-                yL[i][2] = 0.0525;
-                yU[i][2] = 0.1525;
+                yL[i][2] = 0.0025;
+                yU[i][2] = 0.2025;
             }
             else
             {
-                yL[i][0] = -0.1525;
-                yU[i][0] = -0.0525;
+                yL[i][0] = -0.2025;
+                yU[i][0] = -0.0025;
 
-                yL[i][2] = -0.1525;
-                yU[i][2] = -0.0525;
+                yL[i][2] = -0.2025;
+                yU[i][2] = -0.0025;
             }
         }
         else if (j > 1 && j < total_step_num)
         {
             if (i <= t_start_real + t_total * j + t_double1 + t_rest_temp && i >= t_start + t_total * (j)-1)
             {
-                yL[i][0] = -0.1525;
-                yU[i][0] = 0.1525;
+                yL[i][0] = -0.2025;
+                yU[i][0] = 0.2025;
 
-                yL[i][2] = -0.1525;
-                yU[i][2] = 0.1525;
+                yL[i][2] = -0.2025;
+                yU[i][2] = 0.2025;
             }
             else if(t_start_real + t_total * j + t_double1 + t_rest_temp <=i &&  i<=t_start + t_total * j + t_total - t_rest_last - t_double2 - t_imp - t_rest_temp)
             {
                 if (foot_step(j, 6) == 1)
                 {
-                    yL[i][0] = 0.0525;
-                    yU[i][0] = 0.1525;
+                    yL[i][0] = 0.0025;
+                    yU[i][0] = 0.2025;
 
-                    yL[i][2] = 0.0525;
-                    yU[i][2] = 0.1525;
+                    yL[i][2] = 0.0025;
+                    yU[i][2] = 0.2025;
                 }
                 else
                 {
-                    yL[i][0] = -0.1525;
-                    yU[i][0] = -0.0525;
+                    yL[i][0] = -0.2025;
+                    yU[i][0] = -0.0025;
 
-                    yL[i][2] = -0.1525;
-                    yU[i][2] = -0.0525;
+                    yL[i][2] = -0.2025;
+                    yU[i][2] = -0.0025;
                 }
             }
             else
             {
-                yL[i][0] = -0.1525;
-                yU[i][0] = 0.1525;
+                yL[i][0] = -0.2025;
+                yU[i][0] = 0.2025;
 
-                yL[i][2] = -0.1525;
-                yU[i][2] = 0.1525;
+                yL[i][2] = -0.2025;
+                yU[i][2] = 0.2025;
             }
         }
         else
         {
-            yL[i][0] = -0.1525;
-            yU[i][0] = 0.1525;
+            yL[i][0] = -0.2025;
+            yU[i][0] = 0.2025;
 
-            yL[i][2] = -0.1525;
-            yU[i][2] = 0.1525;
+            yL[i][2] = -0.2025;
+            yU[i][2] = 0.2025;
         }
 
         yL[i][1] = -10;
@@ -1453,6 +1458,38 @@ void WalkingController::mpcStateContraint(RobotData &Robot)
         yU[i][3] = 10;
         yL[i][4] = -10;
         yU[i][4] = 10;
+        
+        //qx
+        zmpx[i][0] = 0.0;
+        zmpx[i][1] = 0.0;
+        zmpx[i][3] = 0.0;
+        zmpx[i][4] = 0.0;
+        zmpy[i][0] = 0.0;
+        zmpy[i][1] = 0.0;
+        zmpy[i][3] = 0.0;
+        zmpy[i][4] = 0.0;
+
+        Eigen::Vector2d zmp_xyo;
+        zmp_xyo.setZero();
+
+        if(i < t_temp)
+        {
+            zmpy[i][2] = COM_float_init.translation()(1);
+            zmpx[i][2] = COM_float_init.translation()(0);
+        }
+        else
+        {
+            if(j == 0)
+            {
+                zmpy[i][2] = foot_step(j+1,1) + zmp_xyo(1);
+                zmpx[i][2] = COM_float_init.translation()(0) + zmp_xyo(0);
+            }
+            else
+            {
+                zmpy[i][2] = foot_step(j-1,1) + zmp_xyo(1);
+                zmpx[i][2] = foot_step(j-1,0) + zmp_xyo(0);
+            }
+        }
     }
 }
 

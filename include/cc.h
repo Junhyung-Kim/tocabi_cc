@@ -78,6 +78,7 @@ public:
     double *d_lbxNy, *d_ubxNy, *d_lgNy, *d_ugNy, *C0y, *D0y, *C1y, *D1y, *CNy, *DNy, *Zl0y, *Zu0y, *zl0y, *zu0y, *d_ls0y, *d_us0y, *Zl1y, *Zu1y, *zl1y, *zu1y, *d_ls1y, *d_us1y, *ZlNy, *ZuNy, *zlNy, *zuNy, *d_lsNy, *d_usNy;
     double mu0;
     double *x11x, *slx, *sux, *x11y, *sly, *suy, *s1x, *s1u, *u11x, *u11y;
+    double **softCx_mu, **softCy_mu, **zmpx_mu, **zmpy_mu, **xL_mu, **xU_mu, **yL_mu, **yU_mu, **softBoundx_mu, **softBoundy_mu;
     struct d_ocp_qp_dim dimx;
     struct d_ocp_qp_dim dimy;
     hpipm_size_t ipm_arg_sizex;
