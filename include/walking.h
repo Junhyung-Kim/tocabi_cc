@@ -89,6 +89,7 @@ public:
     void cptoComTrajectory();
     void setFootTrajectory();
     void mpcSoftVariable(RobotData &Robot);
+    void mpcStateContraint(RobotData &Robot);
     void setContactMode();
     void saveFootTrajectory();
     void setPelvTrajectory();
@@ -213,7 +214,7 @@ public:
     Eigen::VectorXd b_offset;
 
     //MPC variable
-    double *softBoundx, *softBoundy, *softBoundx1, *softBoundy1, *softBoundx2, *softBoundy2;
+    double *softBoundx, *softBoundy, *softBoundx1, *softBoundy1, *softBoundx2, *softBoundy2, **softCx, **softCy, **xL, **xU, **yL, **yU, *zmpx, *zmpy;
     double RF_mass, LF_mass;
     Eigen::Vector12d dob_hat;
     Eigen::Vector12d dob_hat_prev;

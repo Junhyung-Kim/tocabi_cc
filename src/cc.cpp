@@ -274,6 +274,7 @@ void CustomController::computeFast()
                 cptoComTrajectory();
 
                 mpcSoftVariable(rd_);
+                mpcStateContraint(rd_);
 
                 cc_mutex.lock();
                 foot_step_mu = foot_step;
@@ -317,7 +318,8 @@ void CustomController::computeFast()
             }
 
             if (current_step_num != total_step_num && wlk_on == true)
-                file[0] << current_step_num << "\t" << softBoundx[walking_tick - 1] + softBoundx2[walking_tick - 1] * com_refdy(walking_tick - 1) + softBoundx1[walking_tick - 1] * com_refy(walking_tick - 1) << "\t" << softBoundy[walking_tick - 1] + softBoundy2[walking_tick - 1] * com_refdx(walking_tick - 1) + softBoundy1[walking_tick - 1] * com_refx(walking_tick - 1) << "\t" << H_leg(0) << "\t" << H_leg(1) << std::endl; //RFz_trajectory_float(walking_tick -1) << "\t" <<COM_float_init.translation()(2)<< std::endl;
+                file[0] <<walking_tick - 1<<"\t"<<current_step_num << "\t"<<foot_step(current_step_num,0)<< "\t"<<foot_step(current_step_num,1)<<"\t" << zmp_refx(walking_tick) <<"\t" << zmp_refy(walking_tick) << "\t" << RF_trajectory_float.translation()(0)<<"\t" << LF_trajectory_float.translation()(0) << "\t" << RF_trajectory_float.translation()(2)<<"\t" << LF_trajectory_float.translation()(2)<<"\t"<<(yL[walking_tick-1])[0]<<"\t"<<yU[walking_tick-1][0]<<std::endl;//"\t"<<softCx[walking_tick-1][1] <<"\t"<<softBoundy[walking_tick] <<"\t"<<softBoundy2[walking_tick] <<std::endl;
+                //file[0] << current_step_num << "\t" << softBoundx[walking_tick - 1] - softCx[walking_tick-1][1] * com_refdy(walking_tick - 1) - softCx[walking_tick-1][0] * com_refy(walking_tick - 1) << "\t" << softBoundy[walking_tick - 1] + softBoundy2[walking_tick - 1] * com_refdx(walking_tick - 1) + softBoundy1[walking_tick - 1] * com_refx(walking_tick - 1) << "\t" << H_leg(0) << "\t" << H_leg(1) << std::endl; //RFz_trajectory_float(walking_tick -1) << "\t" <<COM_float_init.translation()(2)<< std::endl;
         }
         else if (rd_.tc_.walking_enable == 3.0)
         {
@@ -541,6 +543,10 @@ void CustomController::computePlanner()
                 hd_ubxx[N] = d_ubxNx;
                 hd_lbxy[N] = d_lbxNy;
                 hd_ubxy[N] = d_ubxNy;
+
+                //ZMP tracking cost
+                //hqx
+                //
 
                 //MPC Setup
                 d_ocp_qp_set_all(hAx, hBx, hbx, hQx, hSx, hRx, hqx, hrx, hidxbx, hd_lbxx, hd_ubxx, hidxbu, hd_lbux, hd_ubux, hCx, hDx, hd_lgx, hd_ugx, hZlx, hZux, hzlx, hzux, hidxs, hd_lsx, hd_usx, &qpx);
@@ -1296,3 +1302,62 @@ void CustomController::momentumControl(RobotData &Robot)
     //   q_dm = QP_m.SolveQPoases(100);
     //qd_prev = q_dm;
 }
+/*
+void WalkingController::mpcStateContraint(RobotData &Robot)
+{
+    xL = (double **)malloc((t_total * (total_step_num + 1) + t_temp - 1) * sizeof(double *));
+    xU = (double **)malloc((t_total * (total_step_num + 1) + t_temp - 1) * sizeof(double *));
+    yL = (double **)malloc((t_total * (total_step_num + 1) + t_temp - 1) * sizeof(double *));
+    yU = (double **)malloc((t_total * (total_step_num + 1) + t_temp - 1) * sizeof(double *));
+    zmpx = (double *)malloc((t_total * (total_step_num + 1) + t_temp - 1) * sizeof(double));
+    zmpy = (double *)malloc((t_total * (total_step_num + 1) + t_temp - 1) * sizeof(double));
+
+    double *array_lx, *array_ux, *array_ly, *array_uy;
+   // array_ux = (double *)malloc(5 * sizeof(double));
+   // array_lx = (double *)malloc(5 * sizeof(double));
+   // array_uy = (double *)malloc(5 * sizeof(double));
+   // array_ly = (double *)malloc(5 * sizeof(double));
+    d_zeros(&array_lx, 5, 1);
+    d_zeros(&array_ux, 5, 1);
+    d_zeros(&array_ly, 5, 1);
+    d_zeros(&array_uy, 5, 1);
+    array_ux[1] = 10.0;
+    array_ux[3] = 10.0;
+    array_ux[4] = 10.0;
+    array_lx[1] = -10.0;
+    array_lx[3] = -10.0;
+    array_lx[4] = -10.0;
+    array_uy[1] = 10.0;
+    array_uy[3] = 10.0;
+    array_uy[4] = 10.0;
+    array_ly[1] = -10.0;
+    array_ly[3] = -10.0;
+    array_ly[4] = -10.0;
+    //-0.1025, 0.1025
+    for (int i = 0; i < t_total * (total_step_num + 1) + t_temp - 1; i++)
+    {
+        if (i < t_temp + t_total + t_double1 + t_rest_temp) // || (i >= t_start + t_total - t_rest_last - t_double2 - t_imp - t_rest_temp && i<=t_temp+t_total*2))
+        {
+            array_uy[0] = 0.1525;
+            array_ly[0] = -0.1525;
+            array_uy[2] = 0.1525;
+            array_ly[2] = -0.1525;
+        }
+        else
+        {
+            array_uy[0] = 0.0;
+            //  array_ly[0] = 0.0;
+            array_uy[2] = 0.0;
+            array_ly[2] = 0.0;
+        }
+            yL[i] = array_ly;
+            yU[i] = array_uy;
+            xL[i] = array_lx;
+            xU[i] = array_ux;
+
+            if(i>1 && i<3500)
+            std::cout <<i<< "sss  " <<yU[i][0] <<" "<<yU[i-1][0]<< std::endl;
+
+    }
+    d_print_mat(1,5,yU[3000],1);
+}*/
