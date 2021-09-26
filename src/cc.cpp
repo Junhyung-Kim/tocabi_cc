@@ -295,7 +295,7 @@ void CustomController::computeFast()
                 com_refy_mu = com_refy;
                 zmp_refx_mu = zmp_refx;
                 zmp_refy_mu = zmp_refy;
-                softCx_mu = softCx;
+              /*  softCx_mu = softCx;
                 softCy_mu = softCy;
                 softBoundx_mu = softBoundx;
                 softBoundy_mu = softBoundy;
@@ -304,7 +304,18 @@ void CustomController::computeFast()
                 xL_mu = xL;
                 xU_mu = xU;
                 yL_mu = yL;
-                yU_mu = yU;
+                yU_mu = yU;*/
+                
+                softCx_mu = softCx_s;
+                softCy_mu = softCy_s;
+                softBoundx_mu = softBoundx_s;
+                softBoundy_mu = softBoundy_s;
+                zmpx_mu = zmpx_s;
+                zmpy_mu = zmpy_s;
+                xL_mu = xL_s;
+                xU_mu = xU_s;
+                yL_mu = yL_s;
+                yU_mu = yU_s;
                 cc_mutex.unlock();
 
                 wlk_on = true;
@@ -315,7 +326,7 @@ void CustomController::computeFast()
                 walkingCompute(rd_);
                 momentumControl(rd_);
 
-                cc_mutex.lock();
+                cc_mutex.lock(); 
                 for (int i = 0; i < 12; i++)
                 {
                     rd_.q_desired(i) = desired_leg_q(i);
@@ -328,8 +339,10 @@ void CustomController::computeFast()
             }
 
             if (current_step_num != total_step_num && wlk_on == true)
-                file[0] << com_refy_mu(walking_tick -1) << "\t" << zmp_refy_mu(walking_tick -1) << "\t" << yL_mu[walking_tick-1][0]<< "\t" << yL_mu[walking_tick-1][1]<< "\t" << yL_mu[walking_tick-1][2]<< "\t" << yL_mu[walking_tick-1][3] << "\t" << yL_mu[walking_tick-1][4]<< "\t" << yU_mu[walking_tick-1][0]<< "\t" << yU_mu[walking_tick-1][1]<< "\t" << yU_mu[walking_tick-1][2]<< "\t" << yU_mu[walking_tick-1][3] << "\t" << yU_mu[walking_tick-1][4] <<std::endl;       //file[0] <<walking_tick - 1<<"\t"<<current_step_num << "\t"<<foot_step(current_step_num,0)<< "\t"<<foot_step(current_step_num,1)<<"\t" << zmp_refx(walking_tick) <<"\t" << zmp_refy(walking_tick) << "\t" << RF_trajectory_float.translation()(0)<<"\t" << LF_trajectory_float.translation()(0) << "\t" << RF_trajectory_float.translation()(2)<<"\t" << LF_trajectory_float.translation()(2)<<"\t"<<zmpx[walking_tick -1][2]<<std::endl;//"\t"<<softCx[walking_tick-1][1] <<"\t"<<softBoundy[walking_tick] <<"\t"<<softBoundy2[walking_tick] <<std::endl;
-                //file[0] << current_step_num << "\t" << softBoundx[walking_tick - 1] - softCx[walking_tick-1][1] * com_refdy(walking_tick - 1) - softCx[walking_tick-1][0] * com_refy(walking_tick - 1) << "\t" << softBoundy[walking_tick - 1] + softBoundy2[walking_tick - 1] * com_refdx(walking_tick - 1) + softBoundy1[walking_tick - 1] * com_refx(walking_tick - 1) << "\t" << H_leg(0) << "\t" << H_leg(1) << std::endl; //RFz_trajectory_float(walking_tick -1) << "\t" <<COM_float_init.translation()(2)<< std::endl;
+                //file[0] << RF_trajectory_float.translation()(0) << "\t"<< LF_trajectory_float.translation()(0) << "\t"<< foot_step(current_step_num,0) << "\t"<< com_refx(walking_tick-1)<< "\t"<<zmp_refx(walking_tick-1) <<"\t"<< softCy[walking_tick-1][0]<<"\t"<< softCy_mu[walking_tick-1][0] << "\t"<<-softBoundx1[walking_tick-1]<<std::endl;
+                //file[0] << com_refy_mu(walking_tick -1) << "\t" << zmp_refy_mu(walking_tick -1) << "\t" << yL_mu[walking_tick-1][0]<< "\t" << yL_mu[walking_tick-1][1]<< "\t" << yL_mu[walking_tick-1][2]<< "\t" << yL_mu[walking_tick-1][3] << "\t" << yL_mu[walking_tick-1][4]<< "\t" << yU_mu[walking_tick-1][0]<< "\t" << yU_mu[walking_tick-1][1]<< "\t" << yU_mu[walking_tick-1][2]<< "\t" << yU_mu[walking_tick-1][3] << "\t" << yU_mu[walking_tick-1][4] <<std::endl;       //file[0] <<walking_tick - 1<<"\t"<<current_step_num << "\t"<<foot_step(current_step_num,0)<< "\t"<<foot_step(current_step_num,1)<<"\t" << zmp_refx(walking_tick) <<"\t" << zmp_refy(walking_tick) << "\t" << RF_trajectory_float.translation()(0)<<"\t" << LF_trajectory_float.translation()(0) << "\t" << RF_trajectory_float.translation()(2)<<"\t" << LF_trajectory_float.translation()(2)<<"\t"<<zmpx[walking_tick -1][2]<<std::endl;//"\t"<<softCx[walking_tick-1][1] <<"\t"<<softBoundy[walking_tick] <<"\t"<<softBoundy2[walking_tick] <<std::endl;
+              //  file[0] <<walking_tick-1<<"\t"<< com_refx(walking_tick-1) << "\t" <<zmp_refx(walking_tick-1)<<"\t"<< xL[walking_tick-1][2]<<"\t"<< xU[walking_tick-1][2]<<"\t"<< yL[walking_tick-1][2]<<"\t"<< yU[walking_tick-1][2] << std::endl;//softBoundx[walking_tick - 1][0] - softCy[walking_tick-1][1] * com_refdy(walking_tick - 1) - softCy[walking_tick-1][0] * com_refy(walking_tick - 1) << "\t" << softBoundy[walking_tick - 1][0] + softBoundy2[walking_tick - 1] * com_refdx(walking_tick - 1) + softBoundy1[walking_tick - 1] * com_refx(walking_tick - 1) << "\t" << H_leg(0) << "\t" << H_leg(1) <<"\t" << -softBoundy1[walking_tick-1] << "\t" << -softBoundy2[walking_tick-1] <<"\t" <<debug_temp1 <<std::endl; //RFz_trajectory_float(walking_tick -1) << "\t" <<COM_float_init.translation()(2)<< std::endl;
+                file[0] <<walking_tick-1<<"\t"<< com_refx(walking_tick-1) << "\t" <<zmp_refx(walking_tick-1)<<"\t"<< com_refy(walking_tick-1) << "\t" <<zmp_refy(walking_tick-1)<<"\t"<< xL[walking_tick-1][0]<<"\t"<< xU[walking_tick-1][0]<<"\t"<< yL[walking_tick-1][0]<<"\t"<< yU[walking_tick-1][0] << std::endl;
         }
         else if (rd_.tc_.walking_enable == 3.0)
         {
@@ -444,30 +457,30 @@ void CustomController::computePlanner()
                 ************************************************/
 
                 //Initial condition
-                d_lbx0x[0] = com_refx_mu(3100);
-                d_lbx0x[1] = 0.0;
-                d_lbx0x[2] = zmp_refx_mu(3100);
+                d_lbx0x[0] = com_refx_mu(4201);
+                d_lbx0x[1] = com_refdx(4201);
+                d_lbx0x[2] = zmp_refx_mu(4201);
                 d_lbx0x[3] = 0.0;
-                d_lbx0x[4] = 0.0;
-                d_ubx0x[0] = com_refx_mu(3100);
-                d_ubx0x[1] = 0.0;
-                d_ubx0x[2] = zmp_refx_mu(3100);
+                d_lbx0x[4] = 1.2;
+                d_ubx0x[0] = com_refx_mu(4201);
+                d_ubx0x[1] = com_refdx(4201);
+                d_ubx0x[2] = zmp_refx_mu(4201);
                 d_ubx0x[3] = 0.0;
-                d_ubx0x[4] = 0.0;
+                d_ubx0x[4] = 1.2;
 
                 d_lbx0y[0] = com_refy_mu(3100);
-                d_lbx0y[1] = 0.0;
+                d_lbx0y[1] = com_refdy(3100);
                 d_lbx0y[2] = zmp_refy_mu(3100);
                 d_lbx0y[3] = 0.0;
-                d_lbx0y[4] = 0.0;
+                d_lbx0y[4] = 3.03;
                 d_ubx0y[0] = com_refy_mu(3100);
-                d_ubx0y[1] = 0.0;
+                d_ubx0y[1] = com_refdy(3100);
                 d_ubx0y[2] = zmp_refy_mu(3100);
                 d_ubx0y[3] = 0.0;
-                d_ubx0y[4] = 0.0;
+                d_ubx0y[4] = 3.03;
 
                 //Box constraint
-                d_lbx1x[0] = 0.04;
+               /* d_lbx1x[0] = 0.04;
                 d_lbx1x[1] = -100;
                 d_lbx1x[2] = 0.00;
                 d_lbx1x[3] = -5;
@@ -476,53 +489,51 @@ void CustomController::computePlanner()
                 d_ubx1x[1] = 100;
                 d_ubx1x[2] = 0.24;
                 d_ubx1x[3] = 5;
-                d_ubx1x[4] = 50;
-
-        /*        d_lbx1y[0] = -10;
-                d_lbx1y[1] = -10;
-                d_lbx1y[2] = -0.1;
-                d_lbx1y[3] = -10;
-                d_lbx1y[4] = -3;
-                d_ubx1y[0] = 10;
-                d_ubx1y[1] = 10;
-                d_ubx1y[2] = 0.25;
-                d_ubx1y[3] = 10;
-                d_ubx1y[4] = 3;
-*/
-                //General constraint
-                for (ii = 0; ii < ng[1]; ii++)
+                d_ubx1x[4] = 50; 
+                */
+               //General constraint
+             /*   for (ii = 0; ii < ng[1]; ii++)
                 {
                     d_lg1x[ii] = 0.4; // xmin
                     d_ug1x[ii] = 0.4; // xmax
-                    d_lg1y[ii] = 0.4; // xmin
-                    d_ug1y[ii] = 0.4; // xmax
                 }
-
-                C1x[3] = 1.0;
-                C1y[3] = 1.0;
-
+            */
                 //Final condition
-                d_lbxNx[0] = 0.18;
-                d_lbxNx[1] = 0.00;
-                d_lbxNx[2] = 0.18;
-                d_lbxNx[3] = 0.00;
-                d_lbxNx[4] = 0.00;
-                d_ubxNx[0] = 0.18;
-                d_ubxNx[1] = 0.00;
-                d_ubxNx[2] = 0.18;
-                d_ubxNx[3] = 0.00;
-                d_ubxNx[4] = 0.00;
+                d_lbxNx[0] = com_refx_mu(5299);
+                d_lbxNx[1] = -10.0;
+                d_lbxNx[2] = zmp_refx_mu(5301);
+                d_lbxNx[3] = 0.0;
+                d_lbxNx[4] = -10.0;
+                d_ubxNx[0] = com_refx_mu(5299);
+                d_ubxNx[1] = 10.0;
+                d_ubxNx[2] = zmp_refx_mu(5301);
+                d_ubxNx[3] = 0.0;
+                d_ubxNx[4] = 10.0;
 
-                d_lbxNy[0] = com_refy_mu(4200);
-                d_lbxNy[1] = 0.0;
-                d_lbxNy[2] = zmp_refy_mu(4200);
+                d_lbxNy[0] = com_refy_mu(4199);
+                d_lbxNy[1] = -10.0;
+                d_lbxNy[2] = zmp_refy_mu(5201);
                 d_lbxNy[3] = 0.0;
-                d_lbxNy[4] = 0.0;
-                d_ubxNy[0] = com_refy_mu(4200);
-                d_ubxNy[1] = 0.0;
-                d_ubxNy[2] = zmp_refy_mu(4200);
+                d_lbxNy[4] = -10.0;
+                d_ubxNy[0] = com_refy_mu(4199);
+                d_ubxNy[1] = 10.0;
+                d_ubxNy[2] = zmp_refy_mu(5201);
                 d_ubxNy[3] = 0.0;
-                d_ubxNy[4] = 0.0;
+                d_ubxNy[4] = 10.0;
+
+                std::copy(softCx_mu + 420,softCx_mu + N+420,hCx);
+                std::copy(xL_mu + 420,xL_mu + N+420,hd_lbxx);
+                std::copy(xU_mu + 420,xU_mu + N+420,hd_ubxx);
+                std::copy(softBoundx_mu + 420,softBoundx_mu + N+420,hd_lgx);
+                std::copy(softBoundx_mu + 420,softBoundx_mu + N+420,hd_ugx);
+                std::copy(zmpx_mu + 420,zmpx_mu + N+420,hqx);
+                
+                std::copy(softCy_mu + 310,softCy_mu + N+310,hCy);
+                std::copy(yL_mu + 310,yL_mu + N+310,hd_lbxy);
+                std::copy(yU_mu + 310,yU_mu + N+310,hd_ubxy);
+                std::copy(softBoundy_mu + 310,softBoundy_mu + N+310,hd_lgy);
+                std::copy(softBoundy_mu + 310,softBoundy_mu + N+310,hd_ugy);
+                std::copy(zmpy_mu + 310,zmpy_mu + N+310,hqy);
 
                 //Copy Data
                 hd_lbxx[0] = d_lbx0x;
@@ -530,66 +541,46 @@ void CustomController::computePlanner()
                 hd_lbxy[0] = d_lbx0y;
                 hd_ubxy[0] = d_ubx0y;
 
-                for (ii = 1; ii < N; ii++)
+              /*  for(ii =1; ii<N; ii++)
                 {
-                    hd_lgx[ii] = d_lg1x;
-                    hd_ugx[ii] = d_ug1x;
-                    hCx[ii] = C1x;
+                    hd_lgx[ii] = softBoundx_mu[10*ii + 3100];
+                    hd_ugx[ii] = softBoundx_mu[10*ii + 3100];
+                    hCx[ii] = softCx_mu[10*ii + 3100];
+            /*        hd_lbxx[ii] = yL_mu[10*ii + 3100];
+                    hd_ubxx[ii] = yU_mu[10*ii + 3100];
+
                     hd_lgy[ii] = softBoundy_mu[10*ii + 3100];
                     hd_ugy[ii] = softBoundy_mu[10*ii + 3100];
                     hCy[ii] = softCy_mu[10*ii + 3100];
-                    hd_lbxx[ii] = d_lbx1x;
-                    hd_ubxx[ii] = d_ubx1x;
                     hd_lbxy[ii] = yL_mu[10*ii + 3100];
                     hd_ubxy[ii] = yU_mu[10*ii + 3100];
-                }
+                    hqy[ii] = zmpy_mu[10*ii + 3100];*/
+                //}
 
+           /*     hCx[0] = C0x;
+                hCx[N] = CNx;
+    */
                 hd_lbxx[N] = d_lbxNx;
                 hd_ubxx[N] = d_ubxNx;
                 hd_lbxy[N] = d_lbxNy;
                 hd_ubxy[N] = d_ubxNy;
-
-                //ZMP tracking cost
-                //hqx
-                
 
                 //MPC Setup
                 d_ocp_qp_set_all(hAx, hBx, hbx, hQx, hSx, hRx, hqx, hrx, hidxbx, hd_lbxx, hd_ubxx, hidxbu, hd_lbux, hd_ubux, hCx, hDx, hd_lgx, hd_ugx, hZlx, hZux, hzlx, hzux, hidxs, hd_lsx, hd_usx, &qpx);
                 d_ocp_qp_set_all(hAy, hBy, hby, hQy, hSy, hRy, hqy, hry, hidxbx, hd_lbxy, hd_ubxy, hidxbu, hd_lbuy, hd_ubuy, hCy, hDy, hd_lgy, hd_ugy, hZly, hZuy, hzly, hzuy, hidxs, hd_lsy, hd_usy, &qpy);
 
                 d_ocp_qp_sol_create(&dimx, &qp_solx, qp_sol_memx);
-            //    d_ocp_qp_ipm_solve(&qpx, &qp_solx, &argx, &workspacex);
-            //    d_ocp_qp_ipm_get_status(&workspacex, &hpipm_statusx);
+                d_ocp_qp_ipm_solve(&qpx, &qp_solx, &argx, &workspacex);
+                d_ocp_qp_ipm_get_status(&workspacex, &hpipm_statusx);
                 d_ocp_qp_sol_create(&dimy, &qp_soly, qp_sol_memy);
-                d_ocp_qp_ipm_solve(&qpy, &qp_soly, &argy, &workspacey);
-                d_ocp_qp_ipm_get_status(&workspacey, &hpipm_statusy);
+              //  d_ocp_qp_ipm_solve(&qpy, &qp_soly, &argy, &workspacey);
+              //  d_ocp_qp_ipm_get_status(&workspacey, &hpipm_statusy);
                 auto t3 = std::chrono::steady_clock::now();
                 std::chrono::duration<double, std::milli> endt = t3 - t1;
 
                 // std::cout << "time " << endt.count() << std::endl;
-/*
-                if (hpipm_statusx == 0)
-                {
-                    printf("\n -> QP solved!\n");
-                }
-                else if (hpipm_statusx == 1)
-                {
-                    printf("\n -> Solver failed! Maximum number of iterations reached\n");
-                }
-                else if (hpipm_statusx == 2)
-                {
-                    printf("\n -> Solver failed! Minimum step lenght reached\n");
-                }
-                else if (hpipm_statusx == 2)
-                {
-                    printf("\n -> Solver failed! NaN in computations\n");
-                }
-                else
-                {
-                    printf("\n -> Solver failed! Unknown return flag\n");
-                }
-*/
-                /*if (hpipm_statusy == 0)
+
+            /*    if (hpipm_statusy == 0)
                 {
                     printf("\n -> QP solved!\n");
                 }
@@ -608,20 +599,54 @@ void CustomController::computePlanner()
                 else
                 {
                     printf("\n -> Solver failed! Unknown return flag\n");
-                }
-*/
-                    for (ii = 1; ii <= N; ii++)
+                }*/
+
+
+
+                if(debug_temp == true)
                 {
-                    std::cout << " ii " << ii << std::endl;
-                    d_ocp_qp_sol_get_x(ii, &qp_soly, x11x);
-                    d_ocp_qp_sol_get_sl(ii, &qp_soly, slx);
-                    d_print_mat(1, nx[ii], x11x, 1);
-                    std::cout << "sl " << std::endl;
-                    d_print_mat(1, ns[ii], slx, 1);
-                    d_ocp_qp_sol_get_su(ii, &qp_soly, slx);
-                    std::cout << "su" << std::endl;
-                    d_print_mat(1, ns[ii], sly, 1);
+
+                    for (ii = 0; ii <= N; ii++)
+                    {
+                        std::cout << " ii " << ii << std::endl;
+                        d_ocp_qp_sol_get_x(ii, &qp_solx, x11x);
+                        d_ocp_qp_sol_get_sl(ii, &qp_solx, slx);
+                        d_print_mat(1, nx[ii], x11x, 1);
+                        std::cout << "sl " << std::endl;
+                        d_print_mat(1, ns[ii], slx, 1);
+                        d_ocp_qp_sol_get_su(ii, &qp_solx, slx);
+                        std::cout << "su" << std::endl;
+                        d_print_mat(1, ns[ii], slx, 1);
+                        for(int i = 0; i<10; i++)
+                        {
+                            file[1] << x11x[0] << "\t" << x11x[1] << "\t" << x11x[2] << "\t" << x11x[3] << "\t" << x11x[4] << "\t" << hd_ubxx[ii][0] << "\t" << hd_lbxx[ii][0]<<"\t"<< hd_ubxx[ii][2] << "\t" << hd_lbxx[ii][2]<< "\t"<<com_refx_mu(5299)<<"\t"<<zmp_refx_mu(5301)<<"\t"<<com_refx_mu(4201)<<"\t"<<zmp_refx_mu(4201)<<std::endl; 
+                        }
+                    }
+
+                    if (hpipm_statusx == 0)
+                    {
+                        printf("\n -> QP solved!\n");
+                    }
+                    else if (hpipm_statusx == 1)
+                    {
+                        printf("\n -> Solver failed! Maximum number of iterations reached\n");
+                    }
+                    else if (hpipm_statusx == 2)
+                    {
+                        printf("\n -> Solver failed! Minimum step lenght reached\n");
+                    }
+                    else if (hpipm_statusx == 2)
+                    {
+                        printf("\n -> Solver failed! NaN in computations\n");
+                    }
+                    else
+                    {
+                        printf("\n -> Solver failed! Unknown return flag\n");
+                    }
                 }
+
+                
+                debug_temp = false;
             }
         }
     }
@@ -730,11 +755,11 @@ void CustomController::flyWheelModel(double Ts, int nx, int nu, double *Ax, doub
         By[ii] = 0.0;
     }
 
-    Bx[6] = 1 / (total_mass * zc) * Ts;
+    Bx[6] = 1.0 / (total_mass * zc) * Ts;
     Bx[2] = 1.00 * Ts;
     Bx[9] = 1.00 * Ts;
 
-    By[6] = 1 / (total_mass * zc) * Ts;
+    By[6] = 1.0 / (total_mass * zc) * Ts;
     By[2] = 1.00 * Ts;
     By[9] = 1.00 * Ts;
 }
@@ -956,21 +981,30 @@ void CustomController::mpcVariableInit()
     {
         x0x[jj] = 0.0;
         bx[jj] = 0.0;
-        Qx[ii * (nx_ + 1)] = 3.0;
-        qx[ii] = 0.0;
+        Qx[jj * (nx_ + 1)] = 3.0;
+        qx[jj] = 0.0;
         x0y[jj] = 0.0;
         by[jj] = 0.0;
-        Qy[ii * (nx_ + 1)] = 3.0;
-        qy[ii] = 0.0;
+        Qy[jj * (nx_ + 1)] = 3.0;
+        qy[jj] = 0.0;
     }
+
+    Qy[0] = 0.5;
+    Qy[2 * (nx_ + 1)] = 1000;
+
+    Qx[0] = 0.5;
+    Qx[2 * (nx_ + 1)] = 10000;
 
     for (ii = 0; ii < nu_; ii++)
     {
         rx[ii] = 0.0;
-        Rx[ii * (nu_ + 1)] = 50.0;
+        Rx[ii * (nu_ + 1)] = 3.0;
         ry[ii] = 0.0;
-        Ry[ii * (nu_ + 1)] = 50.0;
+        Ry[ii * (nu_ + 1)] = 3.0;
     }
+
+    Rx[0] = 1000.0;
+    Ry[0] = 10.0;
 
     for (ii = 0; ii < nbu[0]; ii++)
     {
@@ -1017,12 +1051,12 @@ void CustomController::mpcVariableInit()
 
     for (ii = 0; ii < ns[1]; ii++)
     {
-        Zl1x[ii] = 0e3;
-        Zu1x[ii] = 0e3;
+        Zl1x[ii] = 3000;
+        Zu1x[ii] = 3000;
         zl1x[ii] = 1e2;
         zu1x[ii] = 1e2;
-        Zl1y[ii] = 0e3;
-        Zu1y[ii] = 0e3;
+        Zl1y[ii] = 3;
+        Zu1y[ii] = 3;
         zl1y[ii] = 1e2;
         zu1y[ii] = 1e2;
         idxs1[ii] = nu[1] + nx[1] + ii;
@@ -1191,10 +1225,13 @@ void CustomController::mpcVariableInit()
     hDy[0] = D0y;
     hCx[0] = C0x;
     hCy[0] = C0y;
+
     for (ii = 1; ii < N; ii++)
     {
         hDx[ii] = D1x;
         hDy[ii] = D1y;
+        hCx[ii] = C1x;
+        hCy[ii] = C1y;
     }
     hDx[N] = DNx;
     hDy[N] = DNy;
@@ -1208,8 +1245,7 @@ void CustomController::mpcVariableInit()
     hd_ugx[N] = d_ugNx;
     hd_lgy[N] = d_lgNy;
     hd_ugy[N] = d_ugNy;
-    C1x[4] = 1.0;
-    C1y[4] = 1.0;
+
 }
 
 void CustomController::mpcModelSetup()
@@ -1254,31 +1290,7 @@ void CustomController::momentumControl(RobotData &Robot)
 
     Eigen::Vector3d q_waistd;
     Eigen::Vector8d q_rarmd, q_larmd;
-    /* if(walking_tick == 1)
-    {
-        q_waistd.setZero();
-        q_rarmd.setZero();
-        q_larmd.setZero();
-        //qd_prev.setZero();
-       // rd_.q_desired_dot.setZero();
-    }
-    /*else
-    {   
-        q_waistd.setZero();
-        q_rarmd.setZero();
-        q_larmd.setZero();
-        for(int i = 0; i <12; i++)
-        {
-            rd_.q_desired_dot(i) = (rd_.q_desired(i)-rd_.q_desired_prev(i))*wk_Hz;
-        }
-        
-        for(int i = 0; i < 3; i++)
-        {
-           q_waistd(i) = q_dm(i);
-        }        
-        q_rarmd(1) = q_dm(4);
-	    q_larmd(1) = q_dm(3);
-    }*/
+
     H_leg.setZero();
     H_leg = Ag_leg * q_dot_est_mu.head(12) + Ag_waist * q_dot_est_mu.segment(12, 3) + Ag_armL * q_dot_est_mu.segment(15, 8) + Ag_armR * q_dot_est_mu.segment(25, 8);
 
@@ -1324,6 +1336,8 @@ void CustomController::momentumControl(RobotData &Robot)
     QP_m.UpdateMinProblem(H, g);
     QP_m.UpdateSubjectToAx(A, lbA, ubA);
     QP_m.UpdateSubjectToX(lb, ub);
+
+    debug_temp1 += H_leg(1)/wk_Hz;
 
     //   q_dm = QP_m.SolveQPoases(100);
     //qd_prev = q_dm;

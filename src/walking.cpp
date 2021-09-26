@@ -1321,7 +1321,11 @@ void WalkingController::mpcSoftVariable(RobotData &Robot)
     softBoundy2 = (double *)malloc((t_total * (total_step_num + 1) + t_temp - 1) * sizeof(double));
     softCx = (double **)malloc((t_total * (total_step_num + 1) + t_temp - 1) * sizeof(double *));
     softCy = (double **)malloc((t_total * (total_step_num + 1) + t_temp - 1) * sizeof(double *));
-
+    softCx_s = (double **)malloc((t_total * (total_step_num + 1) + t_temp - 1)/10 * sizeof(double *));
+    softCy_s = (double **)malloc((t_total * (total_step_num + 1) + t_temp - 1)/10 * sizeof(double *));
+    softBoundx_s = (double **)malloc((t_total * (total_step_num + 1) + t_temp - 1)/10 * sizeof(double *));
+    softBoundy_s = (double **)malloc((t_total * (total_step_num + 1) + t_temp - 1)/10 * sizeof(double *));
+    
     for (int i = 0; i < t_total * (total_step_num + 1) + t_temp - 1; i++)
     {
         softCx[i] = (double *)malloc(5 * sizeof(double));
@@ -1337,7 +1341,7 @@ void WalkingController::mpcSoftVariable(RobotData &Robot)
         softBoundx2[i] = RF_mass / 2 * (RFz_trajectory_float(i) - COM_float_init.translation()(2)) + LF_mass / 2 * (LFz_trajectory_float(i) - COM_float_init.translation()(2));
         //softBoundx[walking_tick -1]+softBoundx2[walking_tick -1] * com_refdy(walking_tick-1) + softBoundx1[walking_tick -1]*com_refy(walking_tick -1)
 
-        softBoundy[i][0] = RF_mass / 2 * ((RFz_trajectory_float(i) - COM_float_init.translation()(2)) * RFvx_trajectory_float(i) - (-RFy_trajectory_float(i)) * RFvz_trajectory_float(i)) + LF_mass / 2 * ((LFz_trajectory_float(i) - COM_float_init.translation()(2)) * LFvx_trajectory_float(i) - (-LFy_trajectory_float(i)) * LFvz_trajectory_float(i));
+        softBoundy[i][0] = RF_mass / 2 * ((RFz_trajectory_float(i) - COM_float_init.translation()(2)) * RFvx_trajectory_float(i) - (-RFx_trajectory_float(i)) * RFvz_trajectory_float(i)) + LF_mass / 2 * ((LFz_trajectory_float(i) - COM_float_init.translation()(2)) * LFvx_trajectory_float(i) - (-LFx_trajectory_float(i)) * LFvz_trajectory_float(i));
         softBoundy1[i] = RF_mass / 2 * RFvz_trajectory_float(i) + LF_mass / 2 * LFvz_trajectory_float(i);
         softBoundy2[i] = -RF_mass / 2 * (RFz_trajectory_float(i) - COM_float_init.translation()(2)) - LF_mass / 2 * (LFz_trajectory_float(i) - COM_float_init.translation()(2));
 
@@ -1345,13 +1349,21 @@ void WalkingController::mpcSoftVariable(RobotData &Robot)
         softCx[i][1] = -softBoundy2[i];
         softCx[i][2] = 0.0;
         softCx[i][3] = 0.0;
-        softCx[i][4] = 0.0;
+        softCx[i][4] = 1.0;
 
         softCy[i][0] = -softBoundx1[i];
         softCy[i][1] = -softBoundx2[i];
         softCy[i][2] = 0.0;
         softCy[i][3] = 0.0;
-        softCy[i][4] = 0.0;
+        softCy[i][4] = 1.0;
+    }
+
+    for (int i = 0; i < (t_total * (total_step_num + 1) + t_temp - 1)/10; i++)
+    {
+        softCx_s[i] = softCx[10*i];
+        softCy_s[i] = softCy[10*i];
+        softBoundx_s[i] = softBoundy[10*i];
+        softBoundy_s[i] = softBoundx[10*i];
     }
 }
 
@@ -1363,6 +1375,14 @@ void WalkingController::mpcStateContraint(RobotData &Robot)
     yU = (double **)malloc((t_total * (total_step_num + 1) + t_temp - 1) * sizeof(double *));
     zmpx = (double **)malloc((t_total * (total_step_num + 1) + t_temp - 1) * sizeof(double *));
     zmpy = (double **)malloc((t_total * (total_step_num + 1) + t_temp - 1) * sizeof(double *));
+
+    xL_s = (double **)malloc((t_total * (total_step_num + 1) + t_temp - 1)/10 * sizeof(double *));
+    xU_s = (double **)malloc((t_total * (total_step_num + 1) + t_temp - 1)/10 * sizeof(double *));
+    yL_s = (double **)malloc((t_total * (total_step_num + 1) + t_temp - 1)/10 * sizeof(double *));
+    yU_s = (double **)malloc((t_total * (total_step_num + 1) + t_temp - 1)/10 * sizeof(double *));
+    zmpx_s = (double **)malloc((t_total * (total_step_num + 1) + t_temp - 1)/10 * sizeof(double *));
+    zmpy_s = (double **)malloc((t_total * (total_step_num + 1) + t_temp - 1)/10 * sizeof(double *));
+
 
     for (int i = 0; i < t_total * (total_step_num + 1) + t_temp - 1; i++)
     {
@@ -1380,76 +1400,135 @@ void WalkingController::mpcStateContraint(RobotData &Robot)
         int j = (i - t_temp) / t_total;
         if (i < t_temp + t_total + t_double1 + t_rest_temp || (i >= t_temp + 2*t_total - t_rest_last - t_double2 - t_imp - t_rest_temp && i<=t_temp+t_total*2))
         {
-            yL[i][0] = -0.2025;
-            yU[i][0] = 0.2025;
+            yL[i][0] = -0.17;
+            yU[i][0] = 0.17;
 
-            yL[i][2] = -0.2025;
-            yU[i][2] = 0.2025;
+            yL[i][2] = -0.17;
+            yU[i][2] = 0.17;
+
+            if(i < t_temp + t_total + t_double1 + t_rest_temp)
+            {
+                xL[i][0] = RFx_float_init.translation()(0) - 0.15;
+                xU[i][0] = RFx_float_init.translation()(0) + 0.15;
+
+                xL[i][2] = RFx_float_init.translation()(0) - 0.15;
+                xU[i][2] = RFx_float_init.translation()(0) + 0.15;
+            }
+            else
+            {
+                xL[i][0] = RFx_float_init.translation()(0) - 0.15;
+                xU[i][0] = foot_step(0,0) + 0.15;
+
+                xL[i][2] = RFx_float_init.translation()(0) - 0.15;
+                xU[i][2] = foot_step(0,0) + 0.15;
+            }
         }
         else if(i >= t_temp + t_total + t_double1 + t_rest_temp && i < t_temp + 2*t_total - t_rest_last - t_double2 - t_imp - t_rest_temp)
         {
             if (foot_step(1, 6) == 1)
             {
-                yL[i][0] = 0.0025;
-                yU[i][0] = 0.2025;
+                yL[i][0] = 0.0225;
+                yU[i][0] = 0.17;
 
-                yL[i][2] = 0.0025;
-                yU[i][2] = 0.2025;
+                yL[i][2] = 0.0225;
+                yU[i][2] = 0.17;
+
+                xL[i][0] = RFx_float_init.translation()(0) - 0.15;
+                xU[i][0] = RFx_float_init.translation()(0) + 0.15;
+
+                xL[i][2] = RFx_float_init.translation()(0) - 0.15;
+                xU[i][2] = RFx_float_init.translation()(0) + 0.15;
             }
             else
             {
-                yL[i][0] = -0.2025;
-                yU[i][0] = -0.0025;
+                yL[i][0] = -0.17;
+                yU[i][0] = -0.0225;
 
-                yL[i][2] = -0.2025;
-                yU[i][2] = -0.0025;
+                yL[i][2] = -0.17;
+                yU[i][2] = -0.0225;
+
+                xL[i][0] = RFx_float_init.translation()(0) - 0.15;
+                xU[i][0] = RFx_float_init.translation()(0) + 0.15;
+
+                xL[i][2] = RFx_float_init.translation()(0) - 0.15;
+                xU[i][2] = RFx_float_init.translation()(0) + 0.15;
             }
         }
         else if (j > 1 && j < total_step_num)
         {
             if (i <= t_start_real + t_total * j + t_double1 + t_rest_temp && i >= t_start + t_total * (j)-1)
             {
-                yL[i][0] = -0.2025;
-                yU[i][0] = 0.2025;
+                yL[i][0] = -0.17;
+                yU[i][0] = 0.17;
 
-                yL[i][2] = -0.2025;
-                yU[i][2] = 0.2025;
+                yL[i][2] = -0.17;
+                yU[i][2] = 0.17;
+
+                xL[i][0] = foot_step(j-1,0) - 0.15;
+                xU[i][0] = foot_step(j-1,0) + 0.15;
+
+                xL[i][2] = foot_step(j-1,0) - 0.15;
+                xU[i][2] = foot_step(j-1,0) + 0.15;
             }
             else if(t_start_real + t_total * j + t_double1 + t_rest_temp <=i &&  i<=t_start + t_total * j + t_total - t_rest_last - t_double2 - t_imp - t_rest_temp)
             {
                 if (foot_step(j, 6) == 1)
                 {
-                    yL[i][0] = 0.0025;
-                    yU[i][0] = 0.2025;
+                    yL[i][0] = 0.0225;
+                    yU[i][0] = 0.17;
 
-                    yL[i][2] = 0.0025;
-                    yU[i][2] = 0.2025;
+                    yL[i][2] = 0.0225;
+                    yU[i][2] = 0.17;
+
+                    xL[i][0] = foot_step(j-1,0) - 0.15;
+                    xU[i][0] = foot_step(j-1,0) + 0.15;
+
+                    xL[i][2] = foot_step(j-1,0) - 0.15;
+                    xU[i][2] = foot_step(j-1,0) + 0.15;
                 }
                 else
                 {
-                    yL[i][0] = -0.2025;
-                    yU[i][0] = -0.0025;
+                    yL[i][0] = -0.17;
+                    yU[i][0] = -0.0225;
 
-                    yL[i][2] = -0.2025;
-                    yU[i][2] = -0.0025;
+                    yL[i][2] = -0.17;
+                    yU[i][2] = -0.0225;
+                    
+                    xL[i][0] = foot_step(j-1,0) - 0.15;
+                    xU[i][0] = foot_step(j-1,0) + 0.15;
+
+                    xL[i][2] = foot_step(j-1,0) - 0.15;
+                    xU[i][2] = foot_step(j-1,0) + 0.15;
                 }
             }
             else
             {
-                yL[i][0] = -0.2025;
-                yU[i][0] = 0.2025;
+                yL[i][0] = -0.17;
+                yU[i][0] = 0.17;
 
-                yL[i][2] = -0.2025;
-                yU[i][2] = 0.2025;
+                yL[i][2] = -0.17;
+                yU[i][2] = 0.17;
+
+                xL[i][0] = foot_step(j-1,0) - 0.15;
+                xU[i][0] = foot_step(j,0) + 0.15;
+
+                xL[i][2] = foot_step(j-1,0) - 0.15;
+                xU[i][2] = foot_step(j,0) + 0.15;
             }
         }
         else
         {
-            yL[i][0] = -0.2025;
-            yU[i][0] = 0.2025;
+            yL[i][0] = -0.17;
+            yU[i][0] = 0.17;
 
-            yL[i][2] = -0.2025;
-            yU[i][2] = 0.2025;
+            yL[i][2] = -0.17;
+            yU[i][2] = 0.17;
+            
+            xL[i][0] = foot_step(j-1,0) - 0.15;
+            xU[i][0] = foot_step(j-1,0) + 0.15;
+
+            xL[i][2] = foot_step(j-1,0) - 0.15;
+            xU[i][2] = foot_step(j-1,0) + 0.15;
         }
 
         yL[i][1] = -10;
@@ -1458,6 +1537,13 @@ void WalkingController::mpcStateContraint(RobotData &Robot)
         yU[i][3] = 10;
         yL[i][4] = -10;
         yU[i][4] = 10;
+
+        xL[i][1] = -10;
+        xU[i][1] = 10;
+        xL[i][3] = -10;
+        xU[i][3] = 10;
+        xL[i][4] = -10;
+        xU[i][4] = 10;
         
         //qx
         zmpx[i][0] = 0.0;
@@ -1474,22 +1560,55 @@ void WalkingController::mpcStateContraint(RobotData &Robot)
 
         if(i < t_temp)
         {
-            zmpy[i][2] = COM_float_init.translation()(1);
-            zmpx[i][2] = COM_float_init.translation()(0);
+            zmpy[i][2] = -1000*COM_float_init.translation()(1);
+            zmpx[i][2] = -10000*COM_float_init.translation()(0);
         }
         else
         {
             if(j == 0)
             {
-                zmpy[i][2] = foot_step(j+1,1) + zmp_xyo(1);
-                zmpx[i][2] = COM_float_init.translation()(0) + zmp_xyo(0);
+                zmpy[i][2] = -1000*(foot_step(j+1,1) + zmp_xyo(1));
+                zmpx[i][2] = -10000*(COM_float_init.translation()(0) + zmp_xyo(0));
             }
             else
             {
-                zmpy[i][2] = foot_step(j-1,1) + zmp_xyo(1);
-                zmpx[i][2] = foot_step(j-1,0) + zmp_xyo(0);
+                zmpy[i][2] = -1000*(foot_step(j-1,1) + zmp_xyo(1));
+                zmpx[i][2] = -10000*(foot_step(j-1,0) + zmp_xyo(0));
             }
         }
+
+        if(i == t_temp + t_total)
+        {
+            xL[i][2] = zmp_refx(i);
+            yL[i][2] = zmp_refy(i);
+            xU[i][2] = zmp_refx(i);
+            yU[i][2] = zmp_refy(i);
+            xL[i][0] = com_refx(i);//(COM_float_init.translation()(1)+foot_step(1,0))/2;
+            yL[i][0] = COM_float_init.translation()(1);
+            xU[i][0] = com_refx(i);//(COM_float_init.translation()(1)+foot_step(1,0))/2;
+            yU[i][0] = COM_float_init.translation()(1);
+        }
+        else if(i == t_temp + t_total*j)// && j>=2 && j <= total_step_num-3)
+        {
+            xL[i][2] = zmp_refx(i);
+            yL[i][2] = zmp_refy(i);
+            xU[i][2] = zmp_refx(i);
+            yU[i][2] = zmp_refy(i);
+            xL[i][0] = com_refx(i);
+            yL[i][0] = COM_float_init.translation()(1);
+            xU[i][0] = com_refx(i);
+            yU[i][0] = COM_float_init.translation()(1);
+        }
+    }
+
+    for (int i = 0; i < (t_total * (total_step_num + 1) + t_temp - 1)/10; i++)
+    {
+        xL_s[i] = xL[10*i];
+        yL_s[i] = yL[10*i];
+        xU_s[i] = xU[10*i];
+        yU_s[i] = yU[10*i];
+        zmpx_s[i] = zmpx[10*i];
+        zmpy_s[i] = zmpy[10*i];
     }
 }
 

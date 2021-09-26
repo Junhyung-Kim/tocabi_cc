@@ -22,6 +22,8 @@ public:
     const int LEFT = 0;
     const int RIGHT = 1;
     Eigen::VectorXd debug;
+    bool debug_temp = true;
+    double debug_temp1 = 0.0;
 
     //Ui WalkingParameter
     std::atomic<double> wk_Hz;
@@ -215,6 +217,7 @@ public:
 
     //MPC variable
     double **softBoundx, **softBoundy, *softBoundx1, *softBoundy1, *softBoundx2, *softBoundy2, **softCx, **softCy, **xL, **xU, **yL, **yU, **zmpx, **zmpy;
+    double **softCx_s, **softCy_s, **softBoundx_s, **softBoundy_s, **zmpx_s, **zmpy_s, **xL_s, **xU_s, **yL_s, **yU_s;
     double RF_mass, LF_mass;
     Eigen::Vector12d dob_hat;
     Eigen::Vector12d dob_hat_prev;
