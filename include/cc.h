@@ -65,7 +65,6 @@ public:
     double Ts = 0.01; 
     int nx_;
     int nu_;
-    std::atomic<int> N;
     double timeHorizon = 1.1;
     size_t K;
     int ii, jj;

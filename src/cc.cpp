@@ -321,6 +321,11 @@ void CustomController::computeFast()
                 cc_mutex.unlock();
 
                 wlk_on = true;
+
+                for(int i = 0; i < t_total * (total_step_num + 1) + t_temp - 1 + 3*N; i++ )
+                {
+                    file[0] <<t_total * (total_step_num + 1) + t_temp - 1<<"\t"<<xL[i][0] <<"\t" << xU[i][0] <<"\t"<<xL[i][1] <<"\t" << xU[i][1] <<"\t"<<xL[i][2] <<"\t" << xU[i][2] <<"\t"<<xL[i][3] <<"\t" << xU[i][3] <<"\t"<<xL[i][4] <<"\t" << xU[i][4] <<"\t"<<yL[i][0] <<"\t" <<yU[i][0] <<"\t"<<yL[i][1] <<"\t" << yU[i][1] <<"\t"<<yL[i][2] <<"\t" << yU[i][2] <<"\t"<<yL[i][3] <<"\t" << yU[i][3] <<"\t"<<yL[i][4] <<"\t" << yU[i][4] <<std::endl;
+                }
             }
 
             if (wlk_on == true)
@@ -449,7 +454,7 @@ void CustomController::computePlanner()
                 std::cout << "MPC INIT" << std::endl;
             }
 
-            if (wlk_on == true && mpc_on == true && walking_tick >= 0)
+            if (wlk_on == true && mpc_on == true && walking_tick >= 0)// && mpc_cycle <= 500)
             {
                 auto t1 = std::chrono::steady_clock::now();
 
@@ -526,7 +531,7 @@ void CustomController::computePlanner()
                 d_ocp_qp_sol_get_x(1, &qp_solx, x11x);
                 d_ocp_qp_sol_get_x(1, &qp_soly, x11y);
 
-                file[1] << mpc_cycle << "\t" << x11x[0] << "\t" << x11x[2] << "\t" << x11x[4] << "\t" << x11y[0] << "\t" << x11y[2] << "\t" << x11y[4] << "\t" << yL_mu[mpc_cycle][2] << "\t" << yU_mu[mpc_cycle][2] << "\t" << com_refx_mu(2000 + 10 * mpc_cycle) << "\t" << com_refy_mu(2000 + 10 * mpc_cycle) << "\t" << zmp_refx_mu(2000 + 10 * mpc_cycle) << "\t" << zmp_refy_mu(2000 + 10 * mpc_cycle) << std::endl;
+                file[1] <<(t_total * (total_step_num + 1) + t_temp - 1) <<"\t" << mpc_cycle << "\t" << x11x[0] << "\t" << x11x[2] << "\t" << x11x[4] << "\t" << x11y[0] << "\t" << x11y[2] << "\t" << x11y[4] << "\t" << yL_mu[mpc_cycle][2] << "\t" << yU_mu[mpc_cycle][2]<<"\t" << com_refx_mu(10 * mpc_cycle) << "\t" << com_refy_mu(10 * mpc_cycle) << "\t" << zmp_refx_mu(10 * mpc_cycle) << "\t" << zmp_refy_mu(10 * mpc_cycle) << std::endl;
                 /*    if (debug_temp == true)
                     {
 
@@ -581,7 +586,7 @@ void CustomController::computePlanner()
                     std::cout << "mpc" << mpc_cycle << std::endl;
                 }
 
-                /*                if((debug_temp == true) && (hpipm_statusy != 0 || hpipm_statusx != 0)) 
+                /*if((debug_temp == true) && (hpipm_statusy != 0 || hpipm_statusx != 0)) 
                 {
                     std::cout <<"error at " << mpc_cycle << std::endl;
                     std::cout << hd_lbxx[0][0] << "\t" << hd_lbxx[0][1] << "\t"<< hd_lbxx[0][2] << "\t"<< hd_lbxx[0][3] << "\t"<< hd_lbxx[0][4] << std::endl;    
@@ -967,8 +972,8 @@ void CustomController::mpcVariableInit()
         Ry[ii * (nu_ + 1)] = 3.0;
     }
 
-    Rx[0] = 10000.0;
-    Ry[0] = 1000.0;
+    Rx[0] = 1000.0;
+    Ry[0] = 50.0;
 
     for (ii = 0; ii < nbu[0]; ii++)
     {

@@ -97,6 +97,7 @@ public:
     void setPelvTrajectory();
     void setIKparam();
     void inverseKinematics(RobotData &Robot, Eigen::Isometry3d PELV_float_transform, Eigen::Isometry3d LF_float_transform, Eigen::Isometry3d RF_float_transform, Eigen::Vector12d &leg_q);
+    void jacobianInverseKinematics(RobotData &Robot, Eigen::Isometry3d PELV_float, Eigen::Isometry3d LF_float, Eigen::Isometry3d RF_float, Eigen::Isometry3d PELV_float_pos, Eigen::Isometry3d LF_float_pos, Eigen::Isometry3d RF_float_pos);
     void inverseKinematicsdob(RobotData &Robot);
     void updateNextStepTime(RobotData &rd);
     void setWalkingParameter();
@@ -219,6 +220,7 @@ public:
     double **softBoundx, **softBoundy, *softBoundx1, *softBoundy1, *softBoundx2, *softBoundy2, **softCx, **softCy, **xL, **xU, **yL, **yU, **zmpx, **zmpy;
     double **softCx_s, **softCy_s, **softBoundx_s, **softBoundy_s, **softCx_s1, **softCy_s1, **softBoundx_s1, **softBoundy_s1, **zmpx_s, **zmpy_s, **xL_s, **xU_s, **yL_s, **yU_s, **zmpx_s1, **zmpy_s1, **xL_s1, **xU_s1, **yL_s1, **yU_s1;
     double RF_mass, LF_mass;
+    std::atomic<int> N;
     Eigen::Vector12d dob_hat;
     Eigen::Vector12d dob_hat_prev;
     Eigen::Vector12d desired_leg_q;
