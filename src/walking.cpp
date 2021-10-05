@@ -13,8 +13,8 @@ void WalkingController::walkingCompute(RobotData &rd)
     setPelvTrajectory();
     setContactMode();
     setIKparam();
-    jacobianInverseKinematics(rd, PELVD_trajectory_float, LFD_trajectory_float, RFD_trajectory_float, PELV_trajectory_float, LF_trajectory_float, RF_trajectory_float);
-//    inverseKinematics(rd, PELV_trajectory_float, LF_trajectory_float, RF_trajectory_float, desired_leg_q);
+  //  jacobianInverseKinematics(rd, PELVD_trajectory_float, LFD_trajectory_float, RFD_trajectory_float, PELV_trajectory_float, LF_trajectory_float, RF_trajectory_float);
+    inverseKinematics(rd, PELV_trajectory_float, LF_trajectory_float, RF_trajectory_float, desired_leg_q);
 
     if (dob == 1)
     {
@@ -1593,54 +1593,65 @@ void WalkingController::mpcStateContraint(RobotData &Robot)
 
         if (i < t_temp)
         {
-            zmpy[i][2] = -2 * 10000 * COM_float_init.translation()(1);
-            zmpx[i][2] = -2 * 10000 * COM_float_init.translation()(0);
+            zmpy[i][2] = -100000 * COM_float_init.translation()(1);
+            zmpx[i][2] = -500000 * COM_float_init.translation()(0);
         }
         else
         {
             if (j == 0)
             {
-                zmpy[i][2] = -2 * 10000 * (foot_step(j + 1, 1) + zmp_xyo(1));
-                zmpx[i][2] = -2 * 10000 * (COM_float_init.translation()(0) + zmp_xyo(0));
+                zmpy[i][2] = -100000 * (foot_step(j + 1, 1) + zmp_xyo(1));
+                zmpx[i][2] = -500000 * (COM_float_init.translation()(0) + zmp_xyo(0));
             }
             else
             {
-                zmpy[i][2] = -2 * 10000 * (foot_step(j - 1, 1) + zmp_xyo(1));
-                zmpx[i][2] = -2 * 10000 * (foot_step(j - 1, 0) + zmp_xyo(0));
+                zmpy[i][2] = -100000 * (foot_step(j - 1, 1) + zmp_xyo(1));
+                zmpx[i][2] = -500000 * (foot_step(j - 1, 0) + zmp_xyo(0));
             }
         }
 
-        if (i == t_temp + t_total)
+        if (i == t_temp + t_total + t_rest_init)
         {
             xL[i][2] = zmp_refx(i);
-            yL[i][2] = zmp_refy(i);
+            yL[i][2] = yL[i-1][2];
             xU[i][2] = zmp_refx(i);
-            yU[i][2] = zmp_refy(i);
+            yU[i][2] = yU[i-1][2];
             xL[i][0] = com_refx(i); //(COM_float_init.translation()(1)+foot_step(1,0))/2;
-            yL[i][0] = COM_float_init.translation()(1);
+            yL[i][0] = com_refy(i);//COM_float_init.translation()(1);
             xU[i][0] = com_refx(i); //(COM_float_init.translation()(1)+foot_step(1,0))/2;
-            yU[i][0] = COM_float_init.translation()(1);
+            yU[i][0] = com_refy(i);//COM_float_init.translation()(1);
 
             xL[i][3] = 0.0;
             yL[i][3] = 0.0;
             xU[i][3] = 0.0;
             yU[i][3] = 0.0;
         }
-        else if (i == t_temp + t_total * j)
+        else if (i == t_temp + t_total * j + t_rest_init && j!=1)
         {
-            xL[i][2] = zmp_refx(i);
-            yL[i][2] = zmp_refy(i);
-            xU[i][2] = zmp_refx(i);
-            yU[i][2] = zmp_refy(i);
             xL[i][0] = com_refx(i);
-            yL[i][0] = COM_float_init.translation()(1);
+            yL[i][0] = com_refy(i);//COM_float_init.translation()(1);
             xU[i][0] = com_refx(i);
-            yU[i][0] = COM_float_init.translation()(1);
+            yU[i][0] = com_refy(i);//COM_float_init.translation()(1);
 
             xL[i][3] = 0.0;
             yL[i][3] = 0.0;
             xU[i][3] = 0.0;
             yU[i][3] = 0.0;
+
+            if(j != total_step_num && j!=0)
+            {
+                xL[i][2] = zmp_refx(i);
+                yL[i][2] = zmp_refy(i);
+                xU[i][2] = zmp_refx(i);
+                yU[i][2] = zmp_refy(i);
+            }
+            else
+            {
+                xL[i][3] = xL[i-1][3];
+                yL[i][3] = yL[i-1][3];
+                xU[i][3] = xU[i-1][3];
+                yU[i][3] = yU[i-1][3];
+            }
         }
     }
 
@@ -1653,9 +1664,18 @@ void WalkingController::mpcStateContraint(RobotData &Robot)
 
         yL[i][0] = COM_float_init.translation()(1);
         yU[i][0] = COM_float_init.translation()(1);
-        yL[i][2] = yL[t_total * (total_step_num + 1) + t_temp - 2][2];
-        yU[i][2] = yU[t_total * (total_step_num + 1) + t_temp - 2][2];
 
+        if(i < t_total * (total_step_num + 1) + t_temp - 1 + 30 * N -1)
+        {
+            yL[i][2] = yL[t_total * (total_step_num + 1) + t_temp - 2][2];
+            yU[i][2] = yU[t_total * (total_step_num + 1) + t_temp - 2][2];
+        }
+        else
+        {
+            yL[i][2] = 0.0;
+            yU[i][2] = 0.0;
+        }
+        
         xL[i][1] = 0.0;
         yL[i][1] = 0.0;
         xU[i][1] = 0.0;
@@ -1813,20 +1833,27 @@ void WalkingController::inverseKinematics(RobotData &Robot, Eigen::Isometry3d PE
 void WalkingController::jacobianInverseKinematics(RobotData &Robot, Eigen::Isometry3d PELV_float, Eigen::Isometry3d LF_float, Eigen::Isometry3d RF_float, Eigen::Isometry3d PELV_float_pos, Eigen::Isometry3d LF_float_pos, Eigen::Isometry3d RF_float_pos)
 {
     Eigen::MatrixXd LF, RF;
-  //  Eigen::Vector3d LF_dot, RF_dot, LF_pos, RF_pos, LF_posR, RF_posR;
-    Eigen::Vector6d LF_dot, RF_dot, LF_pos, RF_pos, LF_posR, RF_posR;
+    Eigen::Vector3d LF_dot, RF_dot, LF_pos, RF_pos, LF_posR, RF_posR;
+  //  Eigen::Vector6d LF_dot, RF_dot, LF_pos, RF_pos, LF_posR, RF_posR;
   
- //   Eigen::Vector4d qLdot, qRdot;
-    Eigen::Vector6d qLdot, qRdot;
+    Eigen::Vector4d qLdot, qRdot;
+   // Eigen::Vector6d qLdot, qRdot;
     double pos_gain = 100.0; 
 
     LF_dot.setZero();
+    RF_dot.setZero();
 
-//    LF = Robot.ee_[0].jac_contact.block<3,4>(0,6).cast<Eigen::rScalar>();
-//    RF = Robot.ee_[1].jac_contact.block<3,4>(0,12).cast<Eigen::rScalar>();
+    LF_pos.setZero();
+    RF_pos.setZero();
 
-    LF = Robot.ee_[0].jac_contact.block<3,6>(0,6).cast<Eigen::rScalar>();
-    RF = Robot.ee_[1].jac_contact.block<3,6>(0,12).cast<Eigen::rScalar>();
+    LF_posR.setZero();
+    RF_posR.setZero();
+
+    LF = Robot.ee_[0].jac_contact.block<3,4>(0,6).cast<Eigen::rScalar>();
+    RF = Robot.ee_[1].jac_contact.block<3,4>(0,12).cast<Eigen::rScalar>();
+
+  //  LF = Robot.ee_[0].jac_contact.block<3,6>(0,6).cast<Eigen::rScalar>();
+  //  RF = Robot.ee_[1].jac_contact.block<3,6>(0,12).cast<Eigen::rScalar>();
 
     LF_dot.segment<3>(0) = LF_float.translation() - PELV_float.translation();
     RF_dot.segment<3>(0) = RF_float.translation() - PELV_float.translation();
@@ -1834,8 +1861,8 @@ void WalkingController::jacobianInverseKinematics(RobotData &Robot, Eigen::Isome
     LF_pos.segment<3>(0) = LF_float_pos.translation() - PELV_float_pos.translation();
     RF_pos.segment<3>(0) = RF_float_pos.translation() - PELV_float_pos.translation();
 
-    LF_posR = LF_float_current.translation() - PELV_float_current.translation();
-    RF_posR = RF_float_current.translation() - PELV_float_current.translation();
+    LF_posR.segment<3>(0) = LF_float_current.translation() - PELV_float_current.translation();
+    RF_posR.segment<3>(0) = RF_float_current.translation() - PELV_float_current.translation();
 
     qLdot = LF.transpose() *((LF*LF.transpose()).inverse() * LF_dot + pos_gain*(LF_pos - LF_posR));
     qRdot = RF.transpose() *((RF*RF.transpose()).inverse() * RF_dot + pos_gain*(RF_pos - RF_posR));
@@ -1855,11 +1882,11 @@ void WalkingController::jacobianInverseKinematics(RobotData &Robot, Eigen::Isome
     {
         for(int i = 0; i < 4; i++)
         {
-            desired_leg_q(i) = desired_leg_q(i) + qLdot(i)/wk_Hz;
+            desired_leg_q(i) = Robot.q_(i) + qLdot(i)/wk_Hz;
         }
         for(int i = 6; i < 10; i++)
         {
-            desired_leg_q(i) = desired_leg_q(i) + qRdot(i-6)/wk_Hz;
+            desired_leg_q(i) = Robot.q_(i) + qRdot(i-6)/wk_Hz;
         }
     }
     
@@ -2054,7 +2081,7 @@ void WalkingController::setWalkingParameter()
     t_total= 2.0*wk_Hz;*/
     t_rest_temp = 0.0 * wk_Hz;
 
-    foot_height = 0.00;
+    foot_height = 0.03;
 
     t_imp = 0.0 * wk_Hz;
     t_last = t_total + t_temp;
