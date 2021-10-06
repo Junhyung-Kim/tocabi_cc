@@ -320,6 +320,11 @@ void CustomController::computeFast()
 
                 cc_mutex.unlock();
 
+                for(int i = 0; i<total_step_num; i++)
+                {
+                    file[0] << foot_step(i,0) << "\t" << foot_step(i,1) << std::endl;
+                }
+
                 wlk_on = true;
             }
 
@@ -338,8 +343,6 @@ void CustomController::computeFast()
                     rd_.q_desired(i) = desired_init_q(i);
                 }
                 cc_mutex.unlock();
-
-                file[0] << com_refx(walking_tick -1)<<"\t"<< com_refy(walking_tick -1)<<"\t"<< zmp_refx(walking_tick -1)<<"\t"<< zmp_refy(walking_tick -1)<< std::endl;
 
                 // file[0] << softBoundx[walking_tick - 1][0] - softCy[walking_tick-1][1] * com_refdy(walking_tick - 1) - softCy[walking_tick-1][0] * com_refy(walking_tick - 1)  << std::endl;
                 //file[0] << com_refy_mu(walking_tick -1) << "\t" << zmp_refy_mu(walking_tick -1) <<std::endl;// "\t" << yL_mu[walking_tick-1][0]<< "\t" << yL_mu[walking_tick-1][1]<< "\t" << yL_mu[walking_tick-1][2]<< "\t" << yL_mu[walking_tick-1][3] << "\t" << yL_mu[walking_tick-1][4]<< "\t" << yU_mu[walking_tick-1][0]<< "\t" << yU_mu[walking_tick-1][1]<< "\t" << yU_mu[walking_tick-1][2]<< "\t" << yU_mu[walking_tick-1][3] << "\t" << yU_mu[walking_tick-1][4] <<std::endl;       //file[0] <<walking_tick - 1<<"\t"<<current_step_num << "\t"<<foot_step(current_step_num,0)<< "\t"<<foot_step(current_step_num,1)<<"\t" << zmp_refx(walking_tick) <<"\t" << zmp_refy(walking_tick) << "\t" << RF_trajectory_float.translation()(0)<<"\t" << LF_trajectory_float.translation()(0) << "\t" << RF_trajectory_float.translation()(2)<<"\t" << LF_trajectory_float.translation()(2)<<"\t"<<zmpx[walking_tick -1][2]<<std::endl;//"\t"<<softCx[walking_tick-1][1] <<"\t"<<softBoundy[walking_tick] <<"\t"<<softBoundy2[walking_tick] <<std::endl;
@@ -452,7 +455,7 @@ void CustomController::computePlanner()
                 std::cout << "MPC INIT" << std::endl;
             }
 
-            if (wlk_on == true && mpc_on == true && walking_tick >= 0 && mpc_cycle < (t_total * (total_step_num + 1) + t_temp - 1+30 * N)/10 -1)
+            if (wlk_on == true && mpc_on == true && walking_tick >= 0 && mpc_cycle < (t_total * (total_step_num + 1) + t_temp - 1)/10 -1)
             {
                 auto t1 = std::chrono::steady_clock::now();
 
@@ -464,13 +467,13 @@ void CustomController::computePlanner()
                 if (mpc_cycle == 0)
                 {
                     d_lbx0x[0] = com_refx_mu(0);
-                    d_lbx0x[1] = com_refdx(0);
-                    d_lbx0x[2] = zmp_refx_mu(0);
+                    d_lbx0x[1] = 0.0;
+                    d_lbx0x[2] = com_refx_mu(0);
                     d_lbx0x[3] = 0.0;
                     d_lbx0x[4] = 0.0;
                     d_ubx0x[0] = com_refx_mu(0);
-                    d_ubx0x[1] = com_refdx(0);
-                    d_ubx0x[2] = zmp_refx_mu(0);
+                    d_ubx0x[1] = 0.0;
+                    d_ubx0x[2] = com_refx_mu(0);
                     d_ubx0x[3] = 0.0;
                     d_ubx0x[4] = 0.0;
 
@@ -961,17 +964,17 @@ void CustomController::mpcVariableInit()
     Qy[2 * (nx_ + 1)] = 100000;//5000;
 
     Qx[0] = 0.5;
-    Qx[2 * (nx_ + 1)] = 500000;
+    Qx[2 * (nx_ + 1)] = 900000;
 
     for (ii = 0; ii < nu_; ii++)
     {
         rx[ii] = 0.0;
-        Rx[ii * (nu_ + 1)] = 3.0;
+        Rx[ii * (nu_ + 1)] = 20.0;
         ry[ii] = 0.0;
         Ry[ii * (nu_ + 1)] = 10.0;
     }
 
-    Rx[0] = 1000.0;
+    Rx[0] = 2000.0;
     Ry[0] = 400.0;
 
     for (ii = 0; ii < nbu[0]; ii++)
@@ -1002,8 +1005,8 @@ void CustomController::mpcVariableInit()
     //SOFT CONSTARINT
     for (ii = 0; ii < ns[0]; ii++)
     {
-        Zl0x[ii] = 4000.0;
-        Zu0x[ii] = 4000.0;
+        Zl0x[ii] = 1000.0;
+        Zu0x[ii] = 1000.0;
         zl0x[ii] = 0;
         zu0x[ii] = 0;
         Zl0y[ii] = 500.0;
@@ -1019,8 +1022,8 @@ void CustomController::mpcVariableInit()
 
     for (ii = 0; ii < ns[1]; ii++)
     {
-        Zl1x[ii] = 4000.0;
-        Zu1x[ii] = 4000.0;
+        Zl1x[ii] = 1000.0;
+        Zu1x[ii] = 1000.0;
         zl1x[ii] = 0;
         zu1x[ii] = 0;
         Zl1y[ii] = 500.0;
@@ -1032,8 +1035,8 @@ void CustomController::mpcVariableInit()
         d_us1x[ii] = 0.0;
         d_ls1y[ii] = 0.0; //-1.0;
         d_us1y[ii] = 0.0;
-        ZlNx[ii] = 4000.0;
-        ZuNx[ii] = 4900.0;
+        ZlNx[ii] = 1000.0;
+        ZuNx[ii] = 1000.0;
         zlNx[ii] = 0;
         zuNx[ii] = 0;
         ZlNy[ii] = 500.0;
@@ -1075,9 +1078,9 @@ void CustomController::mpcVariableInit()
     }
 
     //INPUT CONSTRAINT
-    d_lbu0x[0] = -1.5;
+    d_lbu0x[0] = -0.4;
     d_lbu0x[1] = -10;
-    d_ubu0x[0] = 1.5;
+    d_ubu0x[0] = 0.4;
     d_ubu0x[1] = 10;
 
     d_lbu0y[0] = -1.3;
@@ -1085,9 +1088,9 @@ void CustomController::mpcVariableInit()
     d_ubu0y[0] = 1.3;
     d_ubu0y[1] = 8;
 
-    d_lbu1x[0] = -1.5;
+    d_lbu1x[0] = -0.4;
     d_lbu1x[1] = -10;
-    d_ubu1x[0] = 1.5;
+    d_ubu1x[0] = 0.4;
     d_ubu1x[1] = 10;
 
     d_lbu1y[0] = -1.3;
