@@ -1594,19 +1594,19 @@ void WalkingController::mpcStateContraint(RobotData &Robot)
         if (i < t_temp)
         {
             zmpy[i][2] = -100000 * COM_float_init.translation()(1);
-            zmpx[i][2] = -900000 * COM_float_init.translation()(0);
+            zmpx[i][2] = -999000 * COM_float_init.translation()(0);
         }
         else
         {
             if (j == 0)
             {
                 zmpy[i][2] = -100000 * (foot_step(j + 1, 1) + zmp_xyo(1));
-                zmpx[i][2] = -900000 * (COM_float_init.translation()(0) + zmp_xyo(0));
+                zmpx[i][2] = -999000 * (COM_float_init.translation()(0) + zmp_xyo(0));
             }
             else
             {
                 zmpy[i][2] = -100000 * (foot_step(j - 1, 1) + zmp_xyo(1));
-                zmpx[i][2] = -900000 * (foot_step(j - 1, 0) + zmp_xyo(0));
+                zmpx[i][2] = -999000 * (foot_step(j - 1, 0) + zmp_xyo(0));
             }
         }
 
@@ -1629,16 +1629,16 @@ void WalkingController::mpcStateContraint(RobotData &Robot)
             yL[i][0] = com_refy(i);//COM_float_init.translation()(1);
             yU[i][0] = com_refy(i);//COM_float_init.translation()(1);
 
-            xL[i][3] = 0.0;
+            xL[i][3] = 0.0; 
             yL[i][3] = 0.0;
             xU[i][3] = 0.0;
             yU[i][3] = 0.0;
 
             if(j != total_step_num && j!=0)
             {
-                xL[i][2] = zmp_refx(i);
+                xL[i][2] = zmp_refx(i) ;
                 yL[i][2] = zmp_refy(i);
-                xU[i][2] = zmp_refx(i);
+                xU[i][2] = zmp_refx(i) ;
                 yU[i][2] = zmp_refy(i);
             }
             else
@@ -1654,7 +1654,7 @@ void WalkingController::mpcStateContraint(RobotData &Robot)
             }
         }
 
-        if(i <= t_temp)
+        if(i <= t_temp + t_rest_init)
         {
             xL[i][0] = com_refx(0);
             xU[i][0] = com_refx(0);
@@ -1928,7 +1928,7 @@ void WalkingController::inverseKinematicsdob(RobotData &Robot)
 
     double defaultGain = 0.0;
     double compliantGain = 3.0;
-    double rejectionGain = -25.0; //-3.5;
+    double rejectionGain = -20.0; //-3.5;
     double rejectionGainSim[12] = {-19.0, -19.0, -19.0, -19.0, -19.0, -19.0, -19.0, -19.0, -19.0, -19.0, -19.0, -19.0};
     double rejectionGainReal[12] = {-3.0, -3.0, -3.0, -3.0, -3.0, -3.0, -3.0, -3.0, -3.0, -3.0, -3.0, -3.0};
     ;

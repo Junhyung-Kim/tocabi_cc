@@ -201,7 +201,7 @@ void CustomController::computeSlow()
 
             for (int i = 0; i < MODEL_DOF; i++)
             {
-                rd_.torque_desired[i] = rd_.pos_kp_v[i] * (rd_.q_desired[i] - rd_.q_[i]) + rd_.pos_kv_v[i] * (-q_dot_est[i]) + rd_.torque_desired_walk[i];
+                rd_.torque_desired[i] = rd_.pos_kp_v[i] * (rd_.q_desired[i] - rd_.q_[i]) + rd_.pos_kv_v[i] * (-rd_.q_dot_[i]) + rd_.torque_desired_walk[i];
             }
         }
         else if (rd_.tc_.walking_enable == 3.0 || rd_.tc_.walking_enable == 2.0)
@@ -320,11 +320,6 @@ void CustomController::computeFast()
 
                 cc_mutex.unlock();
 
-                for(int i = 0; i<total_step_num; i++)
-                {
-                    file[0] << foot_step(i,0) << "\t" << foot_step(i,1) << std::endl;
-                }
-
                 wlk_on = true;
             }
 
@@ -344,8 +339,9 @@ void CustomController::computeFast()
                 }
                 cc_mutex.unlock();
 
-                // file[0] << softBoundx[walking_tick - 1][0] - softCy[walking_tick-1][1] * com_refdy(walking_tick - 1) - softCy[walking_tick-1][0] * com_refy(walking_tick - 1)  << std::endl;
-                //file[0] << com_refy_mu(walking_tick -1) << "\t" << zmp_refy_mu(walking_tick -1) <<std::endl;// "\t" << yL_mu[walking_tick-1][0]<< "\t" << yL_mu[walking_tick-1][1]<< "\t" << yL_mu[walking_tick-1][2]<< "\t" << yL_mu[walking_tick-1][3] << "\t" << yL_mu[walking_tick-1][4]<< "\t" << yU_mu[walking_tick-1][0]<< "\t" << yU_mu[walking_tick-1][1]<< "\t" << yU_mu[walking_tick-1][2]<< "\t" << yU_mu[walking_tick-1][3] << "\t" << yU_mu[walking_tick-1][4] <<std::endl;       //file[0] <<walking_tick - 1<<"\t"<<current_step_num << "\t"<<foot_step(current_step_num,0)<< "\t"<<foot_step(current_step_num,1)<<"\t" << zmp_refx(walking_tick) <<"\t" << zmp_refy(walking_tick) << "\t" << RF_trajectory_float.translation()(0)<<"\t" << LF_trajectory_float.translation()(0) << "\t" << RF_trajectory_float.translation()(2)<<"\t" << LF_trajectory_float.translation()(2)<<"\t"<<zmpx[walking_tick -1][2]<<std::endl;//"\t"<<softCx[walking_tick-1][1] <<"\t"<<softBoundy[walking_tick] <<"\t"<<softBoundy2[walking_tick] <<std::endl;
+                
+              // file[0] <<H_leg(0)<<"\t"<<H_leg(1)<<"\t"<< q_dot_est_mu(0) << "\t" << rd_.q_dot_(0) <<"\t" << q_dot_est_mu(1) << "\t" << rd_.q_dot_(1) <<"\t" << q_dot_est_mu(2) << "\t" << rd_.q_dot_(2) <<"\t" << q_dot_est_mu(3) << "\t" << rd_.q_dot_(3) <<"\t" << q_dot_est_mu(4) << "\t" << rd_.q_dot_(4) <<"\t" << q_dot_est_mu(5) << "\t" << rd_.q_dot_(5) <<std::endl;
+              //file[0] << com_refy_mu(walking_tick -1) << "\t" << zmp_refy_mu(walking_tick -1) <<std::endl;// "\t" << yL_mu[walking_tick-1][0]<< "\t" << yL_mu[walking_tick-1][1]<< "\t" << yL_mu[walking_tick-1][2]<< "\t" << yL_mu[walking_tick-1][3] << "\t" << yL_mu[walking_tick-1][4]<< "\t" << yU_mu[walking_tick-1][0]<< "\t" << yU_mu[walking_tick-1][1]<< "\t" << yU_mu[walking_tick-1][2]<< "\t" << yU_mu[walking_tick-1][3] << "\t" << yU_mu[walking_tick-1][4] <<std::endl;       //file[0] <<walking_tick - 1<<"\t"<<current_step_num << "\t"<<foot_step(current_step_num,0)<< "\t"<<foot_step(current_step_num,1)<<"\t" << zmp_refx(walking_tick) <<"\t" << zmp_refy(walking_tick) << "\t" << RF_trajectory_float.translation()(0)<<"\t" << LF_trajectory_float.translation()(0) << "\t" << RF_trajectory_float.translation()(2)<<"\t" << LF_trajectory_float.translation()(2)<<"\t"<<zmpx[walking_tick -1][2]<<std::endl;//"\t"<<softCx[walking_tick-1][1] <<"\t"<<softBoundy[walking_tick] <<"\t"<<softBoundy2[walking_tick] <<std::endl;
             }
             //file[0] << RF_trajectory_float.translation()(0) << "\t"<< LF_trajectory_float.translation()(0) << "\t"<< foot_step(current_step_num,0) << "\t"<< com_refx(walking_tick-1)<< "\t"<<zmp_refx(walking_tick-1) <<"\t"<< softCy[walking_tick-1][0]<<"\t"<< softCy_mu[walking_tick-1][0] << "\t"<<-softBoundx1[walking_tick-1]<<std::endl;
             //  file[0] <<walking_tick-1<<"\t"<< com_refx(walking_tick-1) << "\t" <<zmp_refx(walking_tick-1)<<"\t"<< xL[walking_tick-1][2]<<"\t"<< xU[walking_tick-1][2]<<"\t"<< yL[walking_tick-1][2]<<"\t"<< yU[walking_tick-1][2] << std::endl;//softBoundx[walking_tick - 1][0] - softCy[walking_tick-1][1] * com_refdy(walking_tick - 1) - softCy[walking_tick-1][0] * com_refy(walking_tick - 1) << "\t" << softBoundy[walking_tick - 1][0] + softBoundy2[walking_tick - 1] * com_refdx(walking_tick - 1) + softBoundy1[walking_tick - 1] * com_refx(walking_tick - 1) << "\t" << H_leg(0) << "\t" << H_leg(1) <<"\t" << -softBoundy1[walking_tick-1] << "\t" << -softBoundy2[walking_tick-1] <<"\t" <<debug_temp1 <<std::endl; //RFz_trajectory_float(walking_tick -1) << "\t" <<COM_float_init.translation()(2)<< std::endl;
@@ -651,8 +647,8 @@ void CustomController::jointVelocityEstimate()
     A_dt = I - dt * A_dt;
 
     double L, L1;
-    L = 0.4;
-    L1 = 0.4;
+    L = 0.004;
+    L1 = 0.004;
 
     if (velEst == false)
     {
@@ -664,18 +660,17 @@ void CustomController::jointVelocityEstimate()
     if (velEst == true)
     {
         Eigen::VectorQd q_temp;
-        Eigen::VectorVQd q_dot_virtual;
+       // Eigen::VectorVQd q_dot_virtual;
 
         q_temp = q_est;
 
         q_est = q_est + dt * q_dot_est + L * (rd_.q_ - q_est);
 
-        q_dot_virtual.segment<MODEL_DOF>(6) = q_dot_est;
+        //q_dot_virtual.segment<MODEL_DOF>(6) = q_dot_est;
 
-        q_dot_est = (q_temp - q_est) * 1000.0;
+        q_dot_est = (q_temp - q_est) * 2000.0;
 
         Eigen::VectorQd tau_;
-
         tau_ = Cor_ * q_dot_est + G_;
 
         cc_mutex.lock();
