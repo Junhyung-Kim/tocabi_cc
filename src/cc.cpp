@@ -959,7 +959,7 @@ void CustomController::mpcVariableInit()
     Qy[2 * (nx_ + 1)] = 100000;//5000;
 
     Qx[0] = 0.5;
-    Qx[2 * (nx_ + 1)] = 900000;
+    Qx[2 * (nx_ + 1)] = 999000;
 
     for (ii = 0; ii < nu_; ii++)
     {
