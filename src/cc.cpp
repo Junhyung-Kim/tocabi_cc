@@ -337,15 +337,8 @@ void CustomController::computeFast()
                 {
                     rd_.q_desired(i) = desired_init_q(i);
                 }
-                cc_mutex.unlock();
-
-                
-              // file[0] <<H_leg(0)<<"\t"<<H_leg(1)<<"\t"<< q_dot_est_mu(0) << "\t" << rd_.q_dot_(0) <<"\t" << q_dot_est_mu(1) << "\t" << rd_.q_dot_(1) <<"\t" << q_dot_est_mu(2) << "\t" << rd_.q_dot_(2) <<"\t" << q_dot_est_mu(3) << "\t" << rd_.q_dot_(3) <<"\t" << q_dot_est_mu(4) << "\t" << rd_.q_dot_(4) <<"\t" << q_dot_est_mu(5) << "\t" << rd_.q_dot_(5) <<std::endl;
-              //file[0] << com_refy_mu(walking_tick -1) << "\t" << zmp_refy_mu(walking_tick -1) <<std::endl;// "\t" << yL_mu[walking_tick-1][0]<< "\t" << yL_mu[walking_tick-1][1]<< "\t" << yL_mu[walking_tick-1][2]<< "\t" << yL_mu[walking_tick-1][3] << "\t" << yL_mu[walking_tick-1][4]<< "\t" << yU_mu[walking_tick-1][0]<< "\t" << yU_mu[walking_tick-1][1]<< "\t" << yU_mu[walking_tick-1][2]<< "\t" << yU_mu[walking_tick-1][3] << "\t" << yU_mu[walking_tick-1][4] <<std::endl;       //file[0] <<walking_tick - 1<<"\t"<<current_step_num << "\t"<<foot_step(current_step_num,0)<< "\t"<<foot_step(current_step_num,1)<<"\t" << zmp_refx(walking_tick) <<"\t" << zmp_refy(walking_tick) << "\t" << RF_trajectory_float.translation()(0)<<"\t" << LF_trajectory_float.translation()(0) << "\t" << RF_trajectory_float.translation()(2)<<"\t" << LF_trajectory_float.translation()(2)<<"\t"<<zmpx[walking_tick -1][2]<<std::endl;//"\t"<<softCx[walking_tick-1][1] <<"\t"<<softBoundy[walking_tick] <<"\t"<<softBoundy2[walking_tick] <<std::endl;
-            }
-            //file[0] << RF_trajectory_float.translation()(0) << "\t"<< LF_trajectory_float.translation()(0) << "\t"<< foot_step(current_step_num,0) << "\t"<< com_refx(walking_tick-1)<< "\t"<<zmp_refx(walking_tick-1) <<"\t"<< softCy[walking_tick-1][0]<<"\t"<< softCy_mu[walking_tick-1][0] << "\t"<<-softBoundx1[walking_tick-1]<<std::endl;
-            //  file[0] <<walking_tick-1<<"\t"<< com_refx(walking_tick-1) << "\t" <<zmp_refx(walking_tick-1)<<"\t"<< xL[walking_tick-1][2]<<"\t"<< xU[walking_tick-1][2]<<"\t"<< yL[walking_tick-1][2]<<"\t"<< yU[walking_tick-1][2] << std::endl;//softBoundx[walking_tick - 1][0] - softCy[walking_tick-1][1] * com_refdy(walking_tick - 1) - softCy[walking_tick-1][0] * com_refy(walking_tick - 1) << "\t" << softBoundy[walking_tick - 1][0] + softBoundy2[walking_tick - 1] * com_refdx(walking_tick - 1) + softBoundy1[walking_tick - 1] * com_refx(walking_tick - 1) << "\t" << H_leg(0) << "\t" << H_leg(1) <<"\t" << -softBoundy1[walking_tick-1] << "\t" << -softBoundy2[walking_tick-1] <<"\t" <<debug_temp1 <<std::endl; //RFz_trajectory_float(walking_tick -1) << "\t" <<COM_float_init.translation()(2)<< std::endl;
-            // file[0] <<walking_tick-1<<"\t"<< com_refx(walking_tick-1) << "\t" <<zmp_refx(walking_tick-1)<<"\t"<< com_refy(walking_tick-1) << "\t" <<zmp_refy(walking_tick-1)<<"\t"<< xL[walking_tick-1][0]<<"\t"<< xU[walking_tick-1][0]<<"\t"<< yL[walking_tick-1][0]<<"\t"<< yU[walking_tick-1][0] << std::endl;
+                cc_mutex.unlock();             
+           }
         }
         else if (rd_.tc_.walking_enable == 3.0)
         {
@@ -385,16 +378,16 @@ void CustomController::computePlanner()
 
                 //solver Setup
                 int iter_max = 60;
-                double alpha_min = 1e-3;
-                double tol_stat = 1e-3;
-                double tol_eq = 1e-3;
-                double tol_ineq = 1e-3;
-                double tol_comp = 1e-3;
-                double reg_prim = 1e-5;
-                int warm_start = 1;
+                double alpha_min = 3e-3;
+                double tol_stat = 3e-3;
+                double tol_eq = 3e-3;
+                double tol_ineq = 3e-3;
+                double tol_comp = 3e-3;
+                double reg_prim = 3e-3;
+                int warm_start = 0;
                 int pred_corr = 1;
                 int ric_alg = 0;
-                int comp_res_exit = 1;
+                int comp_res_exit = 0;
                 enum hpipm_mode mode = SPEED_ABS;
 
                 dim_sizex = d_ocp_qp_dim_memsize(N);
@@ -411,7 +404,9 @@ void CustomController::computePlanner()
                 d_ocp_qp_ipm_arg_set_tol_ineq(&tol_ineq, &argx);
                 d_ocp_qp_ipm_arg_set_tol_comp(&tol_comp, &argx);
                 d_ocp_qp_ipm_arg_set_reg_prim(&reg_prim, &argx);
-
+                d_ocp_qp_ipm_arg_set_warm_start(&warm_start, &argx);
+                d_ocp_qp_ipm_arg_set_ric_alg(&ric_alg, &argx);
+                
                 d_ocp_qp_dim_set_all(nx, nu, nbx, nbu, ng, nsbx, nsbu, nsg, &dimx);
                 qp_sizex = d_ocp_qp_memsize(&dimx);
                 qp_memx = malloc(qp_sizex);
@@ -436,6 +431,8 @@ void CustomController::computePlanner()
                 d_ocp_qp_ipm_arg_set_tol_ineq(&tol_ineq, &argy);
                 d_ocp_qp_ipm_arg_set_tol_comp(&tol_comp, &argy);
                 d_ocp_qp_ipm_arg_set_reg_prim(&reg_prim, &argy);
+                d_ocp_qp_ipm_arg_set_warm_start(&warm_start, &argy);
+                d_ocp_qp_ipm_arg_set_ric_alg(&ric_alg, &argy);
 
                 d_ocp_qp_dim_set_all(nx, nu, nbx, nbu, ng, nsbx, nsbu, nsg, &dimy);
                 qp_sizey = d_ocp_qp_memsize(&dimy);
@@ -447,14 +444,14 @@ void CustomController::computePlanner()
                 ipm_memy = malloc(ipm_sizey);
                 d_ocp_qp_ipm_ws_create(&dimy, &argy, &workspacey, ipm_memy);
 
+                d_ocp_qp_sol_create(&dimx, &qp_solx, qp_sol_memx);
+                d_ocp_qp_sol_create(&dimy, &qp_soly, qp_sol_memy);
                 mpc_on = true;
                 std::cout << "MPC INIT" << std::endl;
             }
 
-            if (wlk_on == true && mpc_on == true && walking_tick >= 0 && mpc_cycle < (t_total * (total_step_num + 1) + t_temp - 1)/10 -1)
+            if (wlk_on == true && mpc_on == true && walking_tick >= 0 && mpc_cycle < (t_total * (total_step_num + 1) + t_temp - 1)/mpct -1)
             {
-                auto t1 = std::chrono::steady_clock::now();
-
                 /************************************************
                 *********box & general constraints**************
                 ************************************************/
@@ -514,21 +511,17 @@ void CustomController::computePlanner()
 
                 //MPC Setup
                 d_ocp_qp_set_all(hAx, hBx, hbx, hQx, hSx, hRx, hqx, hrx, hidxbx, hd_lbxx, hd_ubxx, hidxbu, hd_lbux, hd_ubux, hCx, hDx, hd_lgx, hd_ugx, hZlx, hZux, hzlx, hzux, hidxs, hd_lsx, hd_usx, &qpx);
-                d_ocp_qp_set_all(hAy, hBy, hby, hQy, hSy, hRy, hqy, hry, hidxbx, hd_lbxy, hd_ubxy, hidxbu, hd_lbuy, hd_ubuy, hCy, hDy, hd_lgy, hd_ugy, hZly, hZuy, hzly, hzuy, hidxs, hd_lsy, hd_usy, &qpy);
-
-                d_ocp_qp_sol_create(&dimx, &qp_solx, qp_sol_memx);
                 d_ocp_qp_ipm_solve(&qpx, &qp_solx, &argx, &workspacex);
                 d_ocp_qp_ipm_get_status(&workspacex, &hpipm_statusx);
-                d_ocp_qp_sol_create(&dimy, &qp_soly, qp_sol_memy);
+                d_ocp_qp_sol_get_x(1, &qp_solx, x11x);
+                
+                d_ocp_qp_set_all(hAy, hBy, hby, hQy, hSy, hRy, hqy, hry, hidxbx, hd_lbxy, hd_ubxy, hidxbu, hd_lbuy, hd_ubuy, hCy, hDy, hd_lgy, hd_ugy, hZly, hZuy, hzly, hzuy, hidxs, hd_lsy, hd_usy, &qpy);
                 d_ocp_qp_ipm_solve(&qpy, &qp_soly, &argy, &workspacey);
                 d_ocp_qp_ipm_get_status(&workspacey, &hpipm_statusy);
-                auto t3 = std::chrono::steady_clock::now();
-                std::chrono::duration<double, std::milli> endt = t3 - t1;
-
-                d_ocp_qp_sol_get_x(1, &qp_solx, x11x);
                 d_ocp_qp_sol_get_x(1, &qp_soly, x11y);
 
-                file[1] <<(t_total * (total_step_num + 1) + t_temp - 1) <<"\t" << mpc_cycle << "\t" << x11x[0] << "\t" << x11x[2] << "\t" << x11x[4] << "\t" << x11y[0] << "\t" << x11y[2] << "\t" << x11y[4] << "\t" << xL_mu[mpc_cycle][0] << "\t" << xU_mu[mpc_cycle][0]<<"\t" << xL_mu[mpc_cycle][1] << "\t" << xU_mu[mpc_cycle][1]<<"\t" << xL_mu[mpc_cycle][2] << "\t" << xU_mu[mpc_cycle][2]<<"\t" << com_refx_mu(10 * mpc_cycle) << "\t" << com_refy_mu(10 * mpc_cycle) << "\t" << zmp_refx_mu(10 * mpc_cycle) << "\t" << zmp_refy_mu(10 * mpc_cycle) << std::endl;
+                
+              //  file[1] <<(t_total * (total_step_num + 1) + t_temp - 1) <<"\t" << mpc_cycle << "\t" << x11x[0] << "\t" << x11x[2] << "\t" << x11x[4] << "\t" << x11y[0] << "\t" << x11y[2] << "\t" << x11y[4] << "\t" << xL_mu[mpc_cycle][0] << "\t" << xU_mu[mpc_cycle][0]<<"\t" << xL_mu[mpc_cycle][1] << "\t" << xU_mu[mpc_cycle][1]<<"\t" << xL_mu[mpc_cycle][2] << "\t" << xU_mu[mpc_cycle][2]<<"\t" << com_refx_mu(mpct * mpc_cycle) << "\t" << com_refy_mu(mpct * mpc_cycle) << "\t" << zmp_refx_mu(mpct * mpc_cycle) << "\t" << zmp_refy_mu(mpct * mpc_cycle) << std::endl;
                 /*    if (debug_temp == true)
                     {
 
@@ -959,7 +952,7 @@ void CustomController::mpcVariableInit()
     Qy[2 * (nx_ + 1)] = 100000;//5000;
 
     Qx[0] = 0.5;
-    Qx[2 * (nx_ + 1)] = 999000;
+    Qx[2 * (nx_ + 1)] = 990000;
 
     for (ii = 0; ii < nu_; ii++)
     {

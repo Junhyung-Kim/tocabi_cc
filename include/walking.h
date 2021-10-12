@@ -18,6 +18,7 @@ public:
     const int Right_Hand = 31;
     const int Head = 33;
     const int COM_id = 34;
+    int mpct = 5;
 
     const int LEFT = 0;
     const int RIGHT = 1;

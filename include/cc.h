@@ -42,6 +42,9 @@ public:
     std::atomic<bool> velEst_f;
     Eigen::VectorQd q_est, q_dot_est, q_dot_est_mu;
 
+    bool mpcx = false;
+    bool mpcy = false;
+
     RobotData &rd_;
     RobotData rd_cc_;
 
@@ -62,10 +65,10 @@ public:
     std::atomic<bool> mpc_on;
 
     int cycle = 0;
-    double Ts = 0.01; 
+    double Ts = 0.005; 
     int nx_;
     int nu_;
-    double timeHorizon = 1.1;
+    double timeHorizon = 1.0;
     size_t K;
     int ii, jj;
     int *nx, *nu, *nbu, *nbx, *nb, *ng, *nsbx, *nsbu, *nsg, *ns, *idxbx1, *idxbu1, *idxbx0, *idxbu0, *idxs0, *idxs1, *idxsN, **hidxbx, **hidxbu, **hidxs, *idxbxN;

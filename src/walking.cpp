@@ -1322,14 +1322,14 @@ void WalkingController::mpcSoftVariable(RobotData &Robot)
     softBoundy2 = (double *)malloc((t_total * (total_step_num + 1) + t_temp - 1 + 30 * N) * sizeof(double));
     softCx = (double **)malloc((t_total * (total_step_num + 1) + t_temp - 1 + 30 * N) * sizeof(double *));
     softCy = (double **)malloc((t_total * (total_step_num + 1) + t_temp - 1 + 30 * N) * sizeof(double *));
-    softCx_s = (double **)malloc((t_total * (total_step_num + 1) + t_temp - 1 + 30 * N) / 10 * sizeof(double *));
-    softCy_s = (double **)malloc((t_total * (total_step_num + 1) + t_temp - 1 + 30 * N) / 10 * sizeof(double *));
-    softBoundx_s = (double **)malloc((t_total * (total_step_num + 1) + t_temp - 1 + 30 * N) / 10 * sizeof(double *));
-    softBoundy_s = (double **)malloc((t_total * (total_step_num + 1) + t_temp - 1 + 30 * N) / 10 * sizeof(double *));
-    softCx_s1 = (double **)malloc((t_total * (total_step_num + 1) + t_temp - 1 + 30 * N) / 10 * sizeof(double *));
-    softCy_s1 = (double **)malloc((t_total * (total_step_num + 1) + t_temp - 1 + 30 * N) / 10 * sizeof(double *));
-    softBoundx_s1 = (double **)malloc((t_total * (total_step_num + 1) + t_temp - 1 + 30 * N) / 10 * sizeof(double *));
-    softBoundy_s1 = (double **)malloc((t_total * (total_step_num + 1) + t_temp - 1 + 30 * N) / 10 * sizeof(double *));
+    softCx_s = (double **)malloc((t_total * (total_step_num + 1) + t_temp - 1 + 30 * N) / mpct * sizeof(double *));
+    softCy_s = (double **)malloc((t_total * (total_step_num + 1) + t_temp - 1 + 30 * N) / mpct * sizeof(double *));
+    softBoundx_s = (double **)malloc((t_total * (total_step_num + 1) + t_temp - 1 + 30 * N) / mpct * sizeof(double *));
+    softBoundy_s = (double **)malloc((t_total * (total_step_num + 1) + t_temp - 1 + 30 * N) / mpct * sizeof(double *));
+    softCx_s1 = (double **)malloc((t_total * (total_step_num + 1) + t_temp - 1 + 30 * N) / mpct * sizeof(double *));
+    softCy_s1 = (double **)malloc((t_total * (total_step_num + 1) + t_temp - 1 + 30 * N) / mpct * sizeof(double *));
+    softBoundx_s1 = (double **)malloc((t_total * (total_step_num + 1) + t_temp - 1 + 30 * N) / mpct * sizeof(double *));
+    softBoundy_s1 = (double **)malloc((t_total * (total_step_num + 1) + t_temp - 1 + 30 * N) / mpct * sizeof(double *));
 
     for (int i = 0; i < t_total * (total_step_num + 1) + t_temp - 1 + 30 * N; i++)
     {
@@ -1380,17 +1380,17 @@ void WalkingController::mpcSoftVariable(RobotData &Robot)
         softCy[i][4] = 0.0;
     }
 
-    for (int i = 0; i < (t_total * (total_step_num + 1) + t_temp - 1 + 30 * N) / 10; i++)
+    for (int i = 0; i < (t_total * (total_step_num + 1) + t_temp - 1 + 30 * N) / mpct; i++)
     {
-        softCx_s[i] = softCx[10 * i];
-        softCy_s[i] = softCy[10 * i];
-        softBoundx_s[i] = softBoundy[10 * i];
-        softBoundy_s[i] = softBoundx[10 * i];
+        softCx_s[i] = softCx[mpct * i];
+        softCy_s[i] = softCy[mpct * i];
+        softBoundx_s[i] = softBoundy[mpct * i];
+        softBoundy_s[i] = softBoundx[mpct * i];
 
-        softCx_s1[i] = softCx[10 * i + 5];
-        softCy_s1[i] = softCy[10 * i + 5];
-        softBoundx_s1[i] = softBoundy[10 * i + 5];
-        softBoundy_s1[i] = softBoundx[10 * i + 5];
+        softCx_s1[i] = softCx[mpct * i];
+        softCy_s1[i] = softCy[mpct * i];
+        softBoundx_s1[i] = softBoundy[mpct * i];
+        softBoundy_s1[i] = softBoundx[mpct * i];
     }
 }
 
@@ -1403,19 +1403,19 @@ void WalkingController::mpcStateContraint(RobotData &Robot)
     zmpx = (double **)malloc((t_total * (total_step_num + 1) + t_temp - 1 + 30 * N) * sizeof(double *));
     zmpy = (double **)malloc((t_total * (total_step_num + 1) + t_temp - 1 + 30 * N) * sizeof(double *));
 
-    xL_s = (double **)malloc((t_total * (total_step_num + 1) + t_temp - 1 + 30 * N) / 10 * sizeof(double *));
-    xU_s = (double **)malloc((t_total * (total_step_num + 1) + t_temp - 1 + 30 * N) / 10 * sizeof(double *));
-    yL_s = (double **)malloc((t_total * (total_step_num + 1) + t_temp - 1 + 30 * N) / 10 * sizeof(double *));
-    yU_s = (double **)malloc((t_total * (total_step_num + 1) + t_temp - 1 + 30 * N) / 10 * sizeof(double *));
-    zmpx_s = (double **)malloc((t_total * (total_step_num + 1) + t_temp - 1 + 30 * N) / 10 * sizeof(double *));
-    zmpy_s = (double **)malloc((t_total * (total_step_num + 1) + t_temp - 1 + 30 * N) / 10 * sizeof(double *));
+    xL_s = (double **)malloc((t_total * (total_step_num + 1) + t_temp - 1 + 30 * N) / mpct * sizeof(double *));
+    xU_s = (double **)malloc((t_total * (total_step_num + 1) + t_temp - 1 + 30 * N) / mpct * sizeof(double *));
+    yL_s = (double **)malloc((t_total * (total_step_num + 1) + t_temp - 1 + 30 * N) / mpct * sizeof(double *));
+    yU_s = (double **)malloc((t_total * (total_step_num + 1) + t_temp - 1 + 30 * N) / mpct * sizeof(double *));
+    zmpx_s = (double **)malloc((t_total * (total_step_num + 1) + t_temp - 1 + 30 * N) / mpct * sizeof(double *));
+    zmpy_s = (double **)malloc((t_total * (total_step_num + 1) + t_temp - 1 + 30 * N) / mpct * sizeof(double *));
 
-    xL_s1 = (double **)malloc((t_total * (total_step_num + 1) + t_temp - 1 + 30 * N) / 10 * sizeof(double *));
-    xU_s1 = (double **)malloc((t_total * (total_step_num + 1) + t_temp - 1 + 30 * N) / 10 * sizeof(double *));
-    yL_s1 = (double **)malloc((t_total * (total_step_num + 1) + t_temp - 1 + 30 * N) / 10 * sizeof(double *));
-    yU_s1 = (double **)malloc((t_total * (total_step_num + 1) + t_temp - 1 + 30 * N) / 10 * sizeof(double *));
-    zmpx_s1 = (double **)malloc((t_total * (total_step_num + 1) + t_temp - 1 + 30 * N) / 10 * sizeof(double *));
-    zmpy_s1 = (double **)malloc((t_total * (total_step_num + 1) + t_temp - 1 + 30 * N) / 10 * sizeof(double *));
+    xL_s1 = (double **)malloc((t_total * (total_step_num + 1) + t_temp - 1 + 30 * N) / mpct * sizeof(double *));
+    xU_s1 = (double **)malloc((t_total * (total_step_num + 1) + t_temp - 1 + 30 * N) / mpct * sizeof(double *));
+    yL_s1 = (double **)malloc((t_total * (total_step_num + 1) + t_temp - 1 + 30 * N) / mpct * sizeof(double *));
+    yU_s1 = (double **)malloc((t_total * (total_step_num + 1) + t_temp - 1 + 30 * N) / mpct * sizeof(double *));
+    zmpx_s1 = (double **)malloc((t_total * (total_step_num + 1) + t_temp - 1 + 30 * N) / mpct * sizeof(double *));
+    zmpy_s1 = (double **)malloc((t_total * (total_step_num + 1) + t_temp - 1 + 30 * N) / mpct * sizeof(double *));
 
     for (int i = 0; i < t_total * (total_step_num + 1) + t_temp - 1 + 30 * N; i++)
     {
@@ -1594,7 +1594,7 @@ void WalkingController::mpcStateContraint(RobotData &Robot)
         if (i < t_temp)
         {
             zmpy[i][2] = -100000 * COM_float_init.translation()(1);
-            zmpx[i][2] = -999000 * COM_float_init.translation()(0);
+            zmpx[i][2] = -990000 * COM_float_init.translation()(0);
         }
         else
         {
@@ -1701,21 +1701,21 @@ void WalkingController::mpcStateContraint(RobotData &Robot)
         yU[i][3] = 0.0;
     }
 
-    for (int i = 0; i < (t_total * (total_step_num + 1) + t_temp - 1 + 30 * N) / 10; i++)
+    for (int i = 0; i < (t_total * (total_step_num + 1) + t_temp - 1 + 30 * N) / mpct; i++)
     {
-        xL_s[i] = xL[10 * i];
-        yL_s[i] = yL[10 * i];
-        xU_s[i] = xU[10 * i];
-        yU_s[i] = yU[10 * i];
-        zmpx_s[i] = zmpx[10 * i];
-        zmpy_s[i] = zmpy[10 * i];
+        xL_s[i] = xL[mpct * i];
+        yL_s[i] = yL[mpct * i];
+        xU_s[i] = xU[mpct * i];
+        yU_s[i] = yU[mpct * i];
+        zmpx_s[i] = zmpx[mpct * i];
+        zmpy_s[i] = zmpy[mpct * i];
 
-        xL_s1[i] = xL[10 * i + 5];
-        yL_s1[i] = yL[10 * i + 5];
-        xU_s1[i] = xU[10 * i + 5];
-        yU_s1[i] = yU[10 * i + 5];
-        zmpx_s1[i] = zmpx[10 * i + 5];
-        zmpy_s1[i] = zmpy[10 * i + 5];
+        xL_s1[i] = xL[mpct * i];
+        yL_s1[i] = yL[mpct * i];
+        xU_s1[i] = xU[mpct * i];
+        yU_s1[i] = yU[mpct * i];
+        zmpx_s1[i] = zmpx[mpct * i];
+        zmpy_s1[i] = zmpy[mpct * i];
     }
 }
 
@@ -2086,7 +2086,7 @@ void WalkingController::setWalkingParameter()
     t_rest_last = 0.1 * wk_Hz;
     t_double1 = 0.1 * wk_Hz;
     t_double2 = 0.1 * wk_Hz;
-    t_total = 1.1 * wk_Hz;
+    t_total = 1.0 * wk_Hz;
     t_temp = 2.0 * wk_Hz;
     /*t_double1 = 0.35*wk_Hz;
     t_double2 = 0.35*wk_Hz;
