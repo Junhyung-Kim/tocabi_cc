@@ -337,8 +337,8 @@ void CustomController::computeFast()
                 {
                     rd_.q_desired(i) = desired_init_q(i);
                 }
-                cc_mutex.unlock();             
-           }
+                cc_mutex.unlock();
+            }
         }
         else if (rd_.tc_.walking_enable == 3.0)
         {
@@ -406,7 +406,7 @@ void CustomController::computePlanner()
                 d_ocp_qp_ipm_arg_set_reg_prim(&reg_prim, &argx);
                 d_ocp_qp_ipm_arg_set_warm_start(&warm_start, &argx);
                 d_ocp_qp_ipm_arg_set_ric_alg(&ric_alg, &argx);
-                
+
                 d_ocp_qp_dim_set_all(nx, nu, nbx, nbu, ng, nsbx, nsbu, nsg, &dimx);
                 qp_sizex = d_ocp_qp_memsize(&dimx);
                 qp_memx = malloc(qp_sizex);
@@ -450,98 +450,40 @@ void CustomController::computePlanner()
                 std::cout << "MPC INIT" << std::endl;
             }
 
-            if (wlk_on == true && mpc_on == true && walking_tick >= 0 && mpc_cycle < (t_total * (total_step_num + 1) + t_temp - 1)/mpct -1)
+            if (wlk_on == true && mpc_s == true && mpc_on == true && walking_tick >= 0 && mpc_cycle < 1809)//(t_total * (total_step_num + 1) + t_temp - 1) / mpct - 1)
             {
                 /************************************************
                 *********box & general constraints**************
                 ************************************************/
 
-                //Initial condition
-                if (mpc_cycle == 0)
+                //Initial condition               
+                datax = std::async(std::launch::async, &CustomController::mpc_variablex, this);
+                datay = std::async(std::launch::async, &CustomController::mpc_variabley, this);
+
+                while (true)
                 {
-                    d_lbx0x[0] = com_refx_mu(0);
-                    d_lbx0x[1] = 0.0;
-                    d_lbx0x[2] = com_refx_mu(0);
-                    d_lbx0x[3] = 0.0;
-                    d_lbx0x[4] = 0.0;
-                    d_ubx0x[0] = com_refx_mu(0);
-                    d_ubx0x[1] = 0.0;
-                    d_ubx0x[2] = com_refx_mu(0);
-                    d_ubx0x[3] = 0.0;
-                    d_ubx0x[4] = 0.0;
-
-                    d_lbx0y[0] = 0.0; //com_refy_mu(2000);
-                    d_lbx0y[1] = 0.0; //com_refdy(2000);
-                    d_lbx0y[2] = 0.0; //zmp_refy_mu(2000);
-                    d_lbx0y[3] = 0.0;
-                    d_lbx0y[4] = 0.0;
-                    d_ubx0y[0] = 0.0; //com_refy_mu(2000);
-                    d_ubx0y[1] = 0.0; //com_refdy(2000);
-                    d_ubx0y[2] = 0.0; //zmp_refy_mu(2000);
-                    d_ubx0y[3] = 0.0;
-                    d_ubx0y[4] = 0.0;
-                }
-                else
-                {
-                    d_lbx0x = x11x;
-                    d_ubx0x = x11x;
-                    d_lbx0y = x11y;
-                    d_ubx0y = x11y;
-                }
-
-                std::copy(softCx_mu + mpc_cycle, softCx_mu + N + mpc_cycle, hCx);
-                std::copy(xL_mu + mpc_cycle, xL_mu + N + 1 + mpc_cycle, hd_lbxx);
-                std::copy(xU_mu + mpc_cycle, xU_mu + N + 1 + mpc_cycle, hd_ubxx);
-                std::copy(softBoundx_mu + mpc_cycle, softBoundx_mu + N + mpc_cycle, hd_lgx);
-                std::copy(softBoundx_mu + mpc_cycle, softBoundx_mu + N + mpc_cycle, hd_ugx);
-                std::copy(zmpx_mu + mpc_cycle, zmpx_mu + N + 1 + mpc_cycle, hqx);
-
-                std::copy(softCy_mu + mpc_cycle, softCy_mu + N + mpc_cycle, hCy);
-                std::copy(yL_mu + mpc_cycle, yL_mu + N + 1 + mpc_cycle, hd_lbxy);
-                std::copy(yU_mu + mpc_cycle, yU_mu + N + 1 + mpc_cycle, hd_ubxy);
-                std::copy(softBoundy_mu + mpc_cycle, softBoundy_mu + N + mpc_cycle, hd_lgy);
-                std::copy(softBoundy_mu + mpc_cycle, softBoundy_mu + N + mpc_cycle, hd_ugy);
-                std::copy(zmpy_mu + mpc_cycle, zmpy_mu + N + 1 + mpc_cycle, hqy);
-
-                //Copy Data
-                hd_lbxx[0] = d_lbx0x;
-                hd_ubxx[0] = d_ubx0x;
-                hd_lbxy[0] = d_lbx0y;
-                hd_ubxy[0] = d_ubx0y;
-
-                //MPC Setup
-                d_ocp_qp_set_all(hAx, hBx, hbx, hQx, hSx, hRx, hqx, hrx, hidxbx, hd_lbxx, hd_ubxx, hidxbu, hd_lbux, hd_ubux, hCx, hDx, hd_lgx, hd_ugx, hZlx, hZux, hzlx, hzux, hidxs, hd_lsx, hd_usx, &qpx);
-                d_ocp_qp_ipm_solve(&qpx, &qp_solx, &argx, &workspacex);
-                d_ocp_qp_ipm_get_status(&workspacex, &hpipm_statusx);
-                d_ocp_qp_sol_get_x(1, &qp_solx, x11x);
-                
-                d_ocp_qp_set_all(hAy, hBy, hby, hQy, hSy, hRy, hqy, hry, hidxbx, hd_lbxy, hd_ubxy, hidxbu, hd_lbuy, hd_ubuy, hCy, hDy, hd_lgy, hd_ugy, hZly, hZuy, hzly, hzuy, hidxs, hd_lsy, hd_usy, &qpy);
-                d_ocp_qp_ipm_solve(&qpy, &qp_soly, &argy, &workspacey);
-                d_ocp_qp_ipm_get_status(&workspacey, &hpipm_statusy);
-                d_ocp_qp_sol_get_x(1, &qp_soly, x11y);
-
-                
-              //  file[1] <<(t_total * (total_step_num + 1) + t_temp - 1) <<"\t" << mpc_cycle << "\t" << x11x[0] << "\t" << x11x[2] << "\t" << x11x[4] << "\t" << x11y[0] << "\t" << x11y[2] << "\t" << x11y[4] << "\t" << xL_mu[mpc_cycle][0] << "\t" << xU_mu[mpc_cycle][0]<<"\t" << xL_mu[mpc_cycle][1] << "\t" << xU_mu[mpc_cycle][1]<<"\t" << xL_mu[mpc_cycle][2] << "\t" << xU_mu[mpc_cycle][2]<<"\t" << com_refx_mu(mpct * mpc_cycle) << "\t" << com_refy_mu(mpct * mpc_cycle) << "\t" << zmp_refx_mu(mpct * mpc_cycle) << "\t" << zmp_refy_mu(mpct * mpc_cycle) << std::endl;
-                /*    if (debug_temp == true)
+                    if (mpcx_data == true && mpcy_data == true)
                     {
-
-                    /*for (ii = 0; ii <= N; ii++)
-                    {
-                        std::cout << " ii " << ii << std::endl;
-                        
-                        d_ocp_qp_sol_get_sl(ii, &qp_solx, slx);
-                        d_print_mat(1, nx[ii], x11x, 1);
-                        std::cout << "sl " << std::endl;
-                        d_print_mat(1, ns[ii], slx, 1);
-                        d_ocp_qp_sol_get_su(ii, &qp_solx, slx);
-                        std::cout << "su" << std::endl;
-                        d_print_mat(1, ns[ii], slx, 1);
-                        for(int i = 0; i<10; i++)
-                        {
-                            file[1] << x11x[0] << "\t" << x11x[1] << "\t" << x11x[2] << "\t" << x11x[3] << "\t" << x11x[4] << "\t" << hd_ubxx[ii][0] << "\t" << hd_lbxx[ii][0]<<"\t"<< hd_ubxx[ii][2] << "\t" << hd_lbxx[ii][2]<< "\t"<<com_refx_mu(5299)<<"\t"<<zmp_refx_mu(5301)<<"\t"<<com_refx_mu(4201)<<"\t"<<zmp_refx_mu(4201)<<std::endl; 
-                        }
+                        mpcy_data = false;
+                        mpcx_data = false;
+                        break;
                     }
-                */
+                }
+
+                solverx = std::async(std::launch::async, &CustomController::walking_x, this);
+                solvery = std::async(std::launch::async, &CustomController::walking_y, this);
+
+                while (true)
+                {
+                    if (mpcx == true && mpcy == true)
+                    {
+                        mpcy = false;
+                        mpcx = false;
+                        break;
+                    }
+                }
+
+                file[1] <<(t_total * (total_step_num + 1) + t_temp - 1) <<"\t" << mpc_cycle << "\t" << x11x[0] << "\t" << x11x[2] << "\t" << x11x[4] << "\t" << x11y[0] << "\t" << x11y[2] << "\t" << x11y[4] << "\t" << yL_mu[mpc_cycle][0] << "\t" << yU_mu[mpc_cycle][0]<<"\t" << yL_mu[mpc_cycle][1] << "\t" << yU_mu[mpc_cycle][1]<<"\t" << yL_mu[mpc_cycle][2] << "\t" << yU_mu[mpc_cycle][2]<<"\t" << com_refx_mu(mpct * mpc_cycle) << "\t" << com_refy_mu(mpct * mpc_cycle) << "\t" << zmp_refx_mu(mpct * mpc_cycle) << "\t" << zmp_refy_mu(mpct * mpc_cycle) << std::endl;
 
                 if (hpipm_statusx == 1)
                 {
@@ -576,40 +518,14 @@ void CustomController::computePlanner()
                     std::cout << "mpc" << mpc_cycle << std::endl;
                 }
 
-                /*if((debug_temp == true) && (hpipm_statusy != 0 || hpipm_statusx != 0)) 
-                {
-                    std::cout <<"error at " << mpc_cycle << std::endl;
-                    std::cout << hd_lbxx[0][0] << "\t" << hd_lbxx[0][1] << "\t"<< hd_lbxx[0][2] << "\t"<< hd_lbxx[0][3] << "\t"<< hd_lbxx[0][4] << std::endl;    
-                    if(hpipm_statusx != 0)
-                    {
-                        std::cout <<x11x[0] << "\t"<<x11x[1] << "\t"<<x11x[2] << "\t"<<x11x[3] << "\t"<<x11x[4] << std::endl;
-                    }
-
-                    if(hpipm_statusy != 0)
-                    {
-                        std::cout <<x11y[0] << "\t"<<x11y[1] << "\t"<<x11y[2] << "\t"<<x11y[3] << "\t"<<x11y[4] << std::endl;
-                    }
-
-                    for (int i = 0; i < N+1; i++)
-                    {
-                        d_ocp_qp_sol_get_x(i, &qp_solx, x11x);
-                        d_ocp_qp_sol_get_x(i, &qp_soly, x11y);
-                        file[1] << mpc_cycle << "\t" << hpipm_statusx << "\t" << hpipm_statusy << "\t" << hd_lbxx[i][0] << "\t" << hd_ubxx[i][0] << "\t" << hd_lbxy[i][0] << "\t" << hd_ubxy[i][0] << "\t" << hd_lbxx[i][2] << "\t" << hd_ubxx[i][2] << "\t" << hd_lbxy[i][2] << "\t" << hd_ubxy[i][2] << "\t"<<x11x[0] << "\t"<<x11x[1] << "\t"<<x11x[2] << "\t"<<x11x[3] << "\t"<<x11x[4] <<"\t"<<x11y[0] << "\t"<<x11y[1] << "\t"<<x11y[2] << "\t"<<x11y[3] << "\t"<<x11y[4] <<std::endl;
-                    }
-                    debug_temp = false;
-                }
-
-                if((hpipm_statusy != 0 || hpipm_statusx != 0)) 
-                {                   
-                    std::cout <<"error at " << mpc_cycle << std::endl;
-                }
-*/
-
                 mpc_cycle++;
             }
+
+            mpc_s = true;
         }
     }
 }
+
 void CustomController::copyRobotData(RobotData &rd_l)
 {
     std::memcpy(&rd_cc_, &rd_l, sizeof(RobotData));
@@ -653,7 +569,7 @@ void CustomController::jointVelocityEstimate()
     if (velEst == true)
     {
         Eigen::VectorQd q_temp;
-       // Eigen::VectorVQd q_dot_virtual;
+        // Eigen::VectorVQd q_dot_virtual;
 
         q_temp = q_est;
 
@@ -943,15 +859,15 @@ void CustomController::mpcVariableInit()
         qx[jj] = 0.0;
         x0y[jj] = 0.0;
         by[jj] = 0.0;
-        Qy[jj * (nx_ + 1)] = 3.0;
+        Qy[jj * (nx_ + 1)] = 1.0;
         qy[jj] = 0.0;
     }
 
     Qy[0] = 0.5;
     Qy[1] = 0.5;
-    Qy[2 * (nx_ + 1)] = 100000;//5000;
+    Qy[2 * (nx_ + 1)] = 100000; //5000;
 
-    Qx[0] = 0.5;
+    Qx[0] = 3;
     Qx[2 * (nx_ + 1)] = 990000;
 
     for (ii = 0; ii < nu_; ii++)
@@ -962,8 +878,8 @@ void CustomController::mpcVariableInit()
         Ry[ii * (nu_ + 1)] = 10.0;
     }
 
-    Rx[0] = 2000.0;
-    Ry[0] = 400.0;
+    Rx[0] = 200.0;
+    Ry[0] = 200.0;
 
     for (ii = 0; ii < nbu[0]; ii++)
     {
@@ -1066,9 +982,9 @@ void CustomController::mpcVariableInit()
     }
 
     //INPUT CONSTRAINT
-    d_lbu0x[0] = -0.4;
+    d_lbu0x[0] = -0.3;
     d_lbu0x[1] = -10;
-    d_ubu0x[0] = 0.4;
+    d_ubu0x[0] = 0.3;
     d_ubu0x[1] = 10;
 
     d_lbu0y[0] = -1.3;
@@ -1076,9 +992,9 @@ void CustomController::mpcVariableInit()
     d_ubu0y[0] = 1.3;
     d_ubu0y[1] = 8;
 
-    d_lbu1x[0] = -0.4;
+    d_lbu1x[0] = -0.3;
     d_lbu1x[1] = -10;
-    d_ubu1x[0] = 0.4;
+    d_ubu1x[0] = 0.3;
     d_ubu1x[1] = 10;
 
     d_lbu1y[0] = -1.3;

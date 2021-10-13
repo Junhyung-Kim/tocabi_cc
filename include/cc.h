@@ -1,13 +1,15 @@
 #include <vector>
 #include <array>
 #include <string>
-#include <chrono> 
+#include <chrono>
 #include "hpipm_d_ocp_qp_dim.h"
 #include "hpipm_d_ocp_qp_sol.h"
 #include "hpipm_d_ocp_qp_utils.h"
 #include "math_type_define.h"
 #include "d_tools.c"
 #include "walking.h"
+
+#include <future>
 
 class CustomController : virtual public WalkingController
 {
@@ -19,7 +21,7 @@ public:
             ///change this directory when you use this code on the other computer///
             "/home/jhk/data/walking/0_tocabi_.txt",
             "/home/jhk/data/walking/1_tocabi_.txt",
-    };
+        };
 
     std::fstream file[2];
 
@@ -37,13 +39,118 @@ public:
     void mpcModelSetup();
     void momentumControl(RobotData &Robot);
 
+    void mpc_variablex()
+    {
+        if (mpc_cycle == 0)
+        {
+            d_lbx0x[0] = com_refx_mu(0);
+            d_lbx0x[1] = 0.0;
+            d_lbx0x[2] = com_refx_mu(0);
+            d_lbx0x[3] = 0.0;
+            d_lbx0x[4] = 0.0;
+            d_ubx0x[0] = com_refx_mu(0);
+            d_ubx0x[1] = 0.0;
+            d_ubx0x[2] = com_refx_mu(0);
+            d_ubx0x[3] = 0.0;
+            d_ubx0x[4] = 0.0;
+        }
+        else
+        {
+            d_lbx0x = x11x;
+            d_ubx0x = x11x;
+        }
+
+        std::copy(softCx_mu + mpc_cycle, softCx_mu + N + mpc_cycle, hCx);
+        std::copy(xL_mu + mpc_cycle, xL_mu + N + 1 + mpc_cycle, hd_lbxx);
+        std::copy(xU_mu + mpc_cycle, xU_mu + N + 1 + mpc_cycle, hd_ubxx);
+        std::copy(softBoundx_mu + mpc_cycle, softBoundx_mu + N + mpc_cycle, hd_lgx);
+        std::copy(softBoundx_mu + mpc_cycle, softBoundx_mu + N + mpc_cycle, hd_ugx);
+        std::copy(zmpx_mu + mpc_cycle, zmpx_mu + N + 1 + mpc_cycle, hqx);
+
+        hd_lbxx[0] = d_lbx0x;
+        hd_ubxx[0] = d_ubx0x;
+
+        mpcx_data = true;
+    }
+
+    void mpc_variabley()
+    {
+        if (mpc_cycle == 0)
+        {
+            d_lbx0y[0] = 0.0; //com_refy_mu(2000);
+            d_lbx0y[1] = 0.0; //com_refdy(2000);
+            d_lbx0y[2] = 0.0; //zmp_refy_mu(2000);
+            d_lbx0y[3] = 0.0;
+            d_lbx0y[4] = 0.0;
+            d_ubx0y[0] = 0.0; //com_refy_mu(2000);
+            d_ubx0y[1] = 0.0; //com_refdy(2000);
+            d_ubx0y[2] = 0.0; //zmp_refy_mu(2000);
+            d_ubx0y[3] = 0.0;
+            d_ubx0y[4] = 0.0;
+        }
+        else
+        {
+            d_lbx0y = x11y;
+            d_ubx0y = x11y;
+        }
+
+        std::copy(softCy_mu + mpc_cycle, softCy_mu + N + mpc_cycle, hCy);
+        std::copy(yL_mu + mpc_cycle, yL_mu + N + 1 + mpc_cycle, hd_lbxy);
+        std::copy(yU_mu + mpc_cycle, yU_mu + N + 1 + mpc_cycle, hd_ubxy);
+        std::copy(softBoundy_mu + mpc_cycle, softBoundy_mu + N + mpc_cycle, hd_lgy);
+        std::copy(softBoundy_mu + mpc_cycle, softBoundy_mu + N + mpc_cycle, hd_ugy);
+        std::copy(zmpy_mu + mpc_cycle, zmpy_mu + N + 1 + mpc_cycle, hqy);
+
+        hd_lbxy[0] = d_lbx0y;
+        hd_ubxy[0] = d_ubx0y;
+
+        mpcy_data = true;
+    }
+
+    void walking_x()
+    {
+        if (mpcx == false)
+        {
+            //MPC Setup
+            d_ocp_qp_set_all(hAx, hBx, hbx, hQx, hSx, hRx, hqx, hrx, hidxbx, hd_lbxx, hd_ubxx, hidxbu, hd_lbux, hd_ubux, hCx, hDx, hd_lgx, hd_ugx, hZlx, hZux, hzlx, hzux, hidxs, hd_lsx, hd_usx, &qpx);
+            d_ocp_qp_ipm_solve(&qpx, &qp_solx, &argx, &workspacex);
+            d_ocp_qp_ipm_get_status(&workspacex, &hpipm_statusx);
+            d_ocp_qp_sol_get_x(1, &qp_solx, x11x);
+            mpcx = true;
+            // debugx++;
+            // std::cout << "loopx " << debugx << std::endl;
+        }
+    }
+
+    void walking_y()
+    {
+        if (mpcy == false)
+        {
+            d_ocp_qp_set_all(hAy, hBy, hby, hQy, hSy, hRy, hqy, hry, hidxbx, hd_lbxy, hd_ubxy, hidxbu, hd_lbuy, hd_ubuy, hCy, hDy, hd_lgy, hd_ugy, hZly, hZuy, hzly, hzuy, hidxs, hd_lsy, hd_usy, &qpy);
+            d_ocp_qp_ipm_solve(&qpy, &qp_soly, &argy, &workspacey);
+            d_ocp_qp_ipm_get_status(&workspacey, &hpipm_statusy);
+            d_ocp_qp_sol_get_x(1, &qp_soly, x11y);
+            mpcy = true;
+            //  debugy++;
+            //  std::cout << "loopy " << debugy << std::endl;
+        }
+    }
+
+    std::future<void> solverx;
+    std::future<void> solvery;
+    std::future<void> datax;
+    std::future<void> datay;
+
     //Joint velocity Estimator
     bool velEst = false;
     std::atomic<bool> velEst_f;
     Eigen::VectorQd q_est, q_dot_est, q_dot_est_mu;
 
-    bool mpcx = false;
-    bool mpcy = false;
+    std::atomic<bool> mpcx = false;
+    std::atomic<bool> mpcy = false;
+    std::atomic<bool> mpcx_data = false;
+    std::atomic<bool> mpcy_data = false;
+    bool mpc_s = false;
 
     RobotData &rd_;
     RobotData rd_cc_;
@@ -65,7 +172,7 @@ public:
     std::atomic<bool> mpc_on;
 
     int cycle = 0;
-    double Ts = 0.005; 
+    double Ts = 0.005;
     int nx_;
     int nu_;
     double timeHorizon = 1.0;
@@ -99,6 +206,7 @@ public:
     void *ipm_arg_memy;
     void *dim_memy;
     void *ipm_memy;
+
     struct d_ocp_qp_ipm_arg argx;
     struct d_ocp_qp_sol qp_solx;
     struct d_ocp_qp_ipm_ws workspacex;
