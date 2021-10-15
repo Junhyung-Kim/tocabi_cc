@@ -1593,20 +1593,20 @@ void WalkingController::mpcStateContraint(RobotData &Robot)
 
         if (i < t_temp)
         {
-            zmpy[i][2] = -100000 * COM_float_init.translation()(1);
+            zmpy[i][2] = -500000 * COM_float_init.translation()(1);
             zmpx[i][2] = -990000 * COM_float_init.translation()(0);
         }
         else
         {
             if (j == 0)
             {
-                zmpy[i][2] = -100000 * (foot_step(j + 1, 1) + zmp_xyo(1));
+                zmpy[i][2] = -500000 * (foot_step(j + 1, 1) + zmp_xyo(1));
                 zmpx[i][2] = -999000 * (COM_float_init.translation()(0) + zmp_xyo(0));
             }
             else
             {
-                zmpy[i][2] = -100000 * (foot_step(j - 1, 1) + zmp_xyo(1));
-                zmpx[i][2] = -999000 * (foot_step(j - 1, 0) + zmp_xyo(0));
+                zmpy[i][2] = -500000 * (foot_step(j - 1, 1) + zmp_xyo(1));
+                zmpx[i][2] = -999000 * (zmp_refx(i) + zmp_xyo(0));
             }
         }
 
