@@ -955,7 +955,7 @@ void CustomController::mpcVariableInit()
     for (ii = 0; ii < nu_; ii++)
     {
         rx[ii] = 0.0;
-        Rx[ii * (nu_ + 1)] = 20.0;
+        Rx[ii * (nu_ + 1)] = 4.0;
         ry[ii] = 0.0;
         Ry[ii * (nu_ + 1)] = 10.0;
     }
@@ -1008,8 +1008,8 @@ void CustomController::mpcVariableInit()
 
     for (ii = 0; ii < ns[1]; ii++)
     {
-        Zl1x[ii] = 1000.0;
-        Zu1x[ii] = 1000.0;
+        Zl1x[ii] = 2000.0;
+        Zu1x[ii] = 2000.0;
         zl1x[ii] = 0;
         zu1x[ii] = 0;
         Zl1y[ii] = 500.0;
