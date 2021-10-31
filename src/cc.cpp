@@ -484,7 +484,7 @@ void CustomController::computePlanner()
                     //   std::cout <<"d8 " << d8 << std::endl;
                 }
                */
-                file[1] << (t_total * (total_step_num + 1) + t_temp - 1) << "\t" << mpc_cycle << "\t" << x11x[0] << "\t" << x11x[2] << "\t" << x11x[4] << "\t" << x11y[0] << "\t" << x11y[2] << "\t" << x11y[4] << "\t" << hd_lbxx[1][0] << "\t" << hd_ubxx[1][0] << "\t" << hd_lbxx[1][1] << "\t" << hd_ubxx[1][1] << "\t" << hd_lbxx[1][2] << "\t" << hd_ubxx[1][2] << "\t" << com_refx_mu(mpct * mpc_cycle) << "\t" << com_refy_mu(mpct * mpc_cycle) << "\t" << zmp_refx_mu(mpct * mpc_cycle) << "\t" << zmp_refy_mu(mpct * mpc_cycle) << std::endl;
+                file[1] << (t_total * (total_step_num + 1) + t_temp - 1) << "\t" << mpc_cycle << "\t" << x11x[0] << "\t" << x11x[2] << "\t" << x11x[4] << "\t" << x11y[0] << "\t" << x11y[2] << "\t" << x11y[4] << "\t" << hd_lbxy[1][0] << "\t" << hd_ubxy[1][0] << "\t" << hd_lbxy[1][1] << "\t" << hd_ubxy[1][1] << "\t" << hd_lbxy[1][2] << "\t" << hd_ubxy[1][2] << "\t" << com_refx_mu(mpct * mpc_cycle) << "\t" << com_refy_mu(mpct * mpc_cycle) << "\t" << zmp_refx_mu(mpct * mpc_cycle) << "\t" << zmp_refy_mu(mpct * mpc_cycle) << std::endl;
 
                 if (hpipm_statusx == 1)
                 {
@@ -947,7 +947,7 @@ void CustomController::mpcVariableInit()
 
     Qy[0] = 0.5;
     Qy[1] = 0.5;
-    Qy[2 * (nx_ + 1)] = 500000; //5000;
+    Qy[2 * (nx_ + 1)] = 600000; //5000;
 
     Qx[0] = 3;
     Qx[2 * (nx_ + 1)] = 999000;
@@ -955,13 +955,13 @@ void CustomController::mpcVariableInit()
     for (ii = 0; ii < nu_; ii++)
     {
         rx[ii] = 0.0;
-        Rx[ii * (nu_ + 1)] = 4.0;
+        Rx[ii * (nu_ + 1)] = 20.0;
         ry[ii] = 0.0;
         Ry[ii * (nu_ + 1)] = 10.0;
     }
 
     Rx[0] = 300.0;
-    Ry[0] = 200.0;
+    Ry[0] = 800.0;
 
     for (ii = 0; ii < nbu[0]; ii++)
     {
@@ -995,8 +995,8 @@ void CustomController::mpcVariableInit()
         Zu0x[ii] = 1000.0;
         zl0x[ii] = 0;
         zu0x[ii] = 0;
-        Zl0y[ii] = 500.0;
-        Zu0y[ii] = 500.0;
+        Zl0y[ii] = 1000.0;
+        Zu0y[ii] = 1000.0;
         zl0y[ii] = 0;
         zu0y[ii] = 0;
         idxs0[ii] = nu[0] + nx[0] + ii;
@@ -1008,12 +1008,12 @@ void CustomController::mpcVariableInit()
 
     for (ii = 0; ii < ns[1]; ii++)
     {
-        Zl1x[ii] = 2000.0;
-        Zu1x[ii] = 2000.0;
+        Zl1x[ii] = 1000.0;
+        Zu1x[ii] = 1000.0;
         zl1x[ii] = 0;
         zu1x[ii] = 0;
-        Zl1y[ii] = 500.0;
-        Zu1y[ii] = 500.0;
+        Zl1y[ii] = 1000.0;
+        Zu1y[ii] = 1000.0;
         zl1y[ii] = 0;
         zu1y[ii] = 0;
         idxs1[ii] = nu[1] + nx[1] + ii;
@@ -1069,9 +1069,9 @@ void CustomController::mpcVariableInit()
     d_ubu0x[0] = 0.3;
     d_ubu0x[1] = 10;
 
-    d_lbu0y[0] = -1.3;
+    d_lbu0y[0] = -1.2;
     d_lbu0y[1] = -8;
-    d_ubu0y[0] = 1.3;
+    d_ubu0y[0] = 1.2;
     d_ubu0y[1] = 8;
 
     d_lbu1x[0] = -0.3;
@@ -1079,9 +1079,9 @@ void CustomController::mpcVariableInit()
     d_ubu1x[0] = 0.3;
     d_ubu1x[1] = 10;
 
-    d_lbu1y[0] = -1.3;
+    d_lbu1y[0] = -1.2;
     d_lbu1y[1] = -8;
-    d_ubu1y[0] = 1.3;
+    d_ubu1y[0] = 1.2;
     d_ubu1y[1] = 8;
 
     hd_lbux[0] = d_lbu0x;

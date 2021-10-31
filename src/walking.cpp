@@ -1474,10 +1474,10 @@ void WalkingController::mpcStateContraint(RobotData &Robot)
             }
             else
             {
-                yL[i][0] = -0.125;
+                yL[i][0] = -0.150;
                 yU[i][0] = -0.040;
 
-                yL[i][2] = -0.125;
+                yL[i][2] = -0.150;
                 yU[i][2] = -0.040;
 
                 xL[i][0] = RFx_float_init.translation()(0) - 0.10;
@@ -1593,19 +1593,19 @@ void WalkingController::mpcStateContraint(RobotData &Robot)
 
         if (i < t_temp)
         {
-            zmpy[i][2] = -500000 * COM_float_init.translation()(1);
+            zmpy[i][2] = -600000 * COM_float_init.translation()(1);
             zmpx[i][2] = -990000 * zmp_refx(i);//COM_float_init.translation()(0);
         }
         else
         {
             if (j == 0)
             {
-                zmpy[i][2] = -500000 * (/*foot_step(j + 1, 1)*/ zmp_refy(i) + zmp_xyo(1));
+                zmpy[i][2] = -600000 * (/*foot_step(j + 1, 1)*/ zmp_refy(i) + zmp_xyo(1));
                 zmpx[i][2] = -999000 * (zmp_refx(i)/*COM_float_init.translation()(0)*/ + zmp_xyo(0));
             }
             else
             {
-                zmpy[i][2] = -500000 * (zmp_refy(i)/*foot_step(j - 1, 1)*/ + zmp_xyo(1));
+                zmpy[i][2] = -600000 * (zmp_refy(i)/*foot_step(j - 1, 1)*/ + zmp_xyo(1));
                 zmpx[i][2] = -999000 * (zmp_refx(i) + zmp_xyo(0));
             }
         }
@@ -1625,19 +1625,23 @@ void WalkingController::mpcStateContraint(RobotData &Robot)
         else if (i == t_temp + t_total * j + t_rest_init && j!=1)
         {
             xL[i][3] = 0.0; 
-            yL[i][3] = 0.0;
             xU[i][3] = 0.0;
-            yU[i][3] = 0.0;
+
+            if(j!=0)
+            {
+                yL[i][3] = 0.0;
+                yU[i][3] = 0.0;
+            }
 
             if(j != total_step_num && j!=0)
             {
-              //  xL[i][2] = zmp_refx(i);
+               // xL[i][2] = zmp_refx(i);
               //  xU[i][2] = zmp_refx(i);
             }
             else
             {
-               // yL[i][2] = yL[i-1][2];
-              //  yU[i][2] = yU[i-1][2];
+              //  yL[i][2] = yL[i-1][2];
+              ///  yU[i][2] = yU[i-1][2];
             }
 
             if(j !=0)
