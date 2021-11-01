@@ -1014,8 +1014,8 @@ void CustomController::mpcVariableInit()
         zu1x[ii] = 0;
         Zl1y[ii] = 1000.0;
         Zu1y[ii] = 1000.0;
-        zl1y[ii] = 0;
-        zu1y[ii] = 0;
+        zl1y[ii] = 1000.0;
+        zu1y[ii] = 1000.0;
         idxs1[ii] = nu[1] + nx[1] + ii;
         d_ls1x[ii] = 0.0; //-1.0;
         d_us1x[ii] = 0.0;

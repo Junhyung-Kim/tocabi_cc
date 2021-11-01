@@ -1617,18 +1617,20 @@ void WalkingController::mpcStateContraint(RobotData &Robot)
             xU[i][2] = xU[i-1][2];//zmp_refx(i);
             yU[i][2] = yU[i-1][2];
          */
-            xL[i][3] = 0.0;
+          //  xL[i][3] = 0.0;
             yL[i][3] = 0.0;
-            xU[i][3] = 0.0;
+          //  xU[i][3] = 0.0;
             yU[i][3] = 0.0;
         }
         else if (i == t_temp + t_total * j + t_rest_init && j!=1)
         {
-            xL[i][3] = 0.0; 
-            xU[i][3] = 0.0;
-
             if(j!=0)
             {
+                if(j!= 1)
+                {
+                    xL[i][3] = 0.0; 
+                    xU[i][3] = 0.0;
+                }
                 yL[i][3] = 0.0;
                 yU[i][3] = 0.0;
             }
