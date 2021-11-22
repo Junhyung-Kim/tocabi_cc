@@ -99,6 +99,8 @@ void CustomController::computeSlow()
     }
     else if (rd_.tc_.mode == 11)
     {
+    //    ftandZMP(rd_);
+    //    zmpControl(rd_);
         TorqueContact.setZero();
         rd_.torque_desired_walk.setZero();
 
@@ -214,8 +216,6 @@ void CustomController::computeSlow()
             }
         }
     }
-    //file[1] << walking_tick <<"\t"<< rd_.torque_desired[1] << "\t" << rd_.torque_desired_walk[1] << "\t" << TorqueContact(1) << "\t" << TorqueGrav(1) << "\t" << rd_.torque_desired[2] << "\t" << rd_.torque_desired_walk[2] << "\t" << TorqueContact(2) << "\t" << TorqueGrav(2) << "\t" << rd_.torque_desired[3] << "\t" << rd_.torque_desired_walk[3] << "\t" << TorqueContact(3) << "\t" << TorqueGrav(3) << "\t" << rd_.torque_desired[4] << "\t" << rd_.torque_desired_walk[4] << "\t" << TorqueContact(4) << "\t" << TorqueGrav(4) << "\t" << rd_.torque_desired[5] << "\t" << rd_.torque_desired_walk[5] << "\t" << TorqueContact(5) << "\t" << TorqueGrav(5) << "\t" << std::endl;
-    //   file[0] <<walking_tick << "\t" <<current_step_num <<"\t" << total_step_num << "\t"<< com_refx.size()<<"\t"<< rd_.q_desired(0) << "\t"<< desired_leg_q_temp(0) <<  "\t"<< rd_.q_(0) << "\t" << rd_.q_desired(1)<< "\t"<< desired_leg_q_temp(1) << "\t" << rd_.q_(1) << "\t" << rd_.q_desired(2) << "\t"<< desired_leg_q_temp(2)<< "\t" << rd_.q_(2) << "\t" << rd_.q_desired(3) << "\t"<< desired_leg_q_temp(3)<< "\t" << rd_.q_(3) << "\t" << rd_.q_desired(4) << "\t"<< desired_leg_q_temp(4)<< "\t" << rd_.q_(4) << "\t" << rd_.q_desired(5) << "\t"<< desired_leg_q_temp(5)<< "\t" << rd_.q_(5) << std::endl;
 }
 
 void CustomController::computeFast()
@@ -323,21 +323,89 @@ void CustomController::computeFast()
                 wlk_on = true;
             }
 
-            if (wlk_on == true)
+            if (wlk_on == true && (mpc_cycle > 0 || rd_.tc_.MPC == false))
             {
+                /////ModelUpdate//////
+                getRobotState(rd_);
+
+                ZMP_FT = WBC::GetZMPpos_fromFT(rd_);
+
+                if (rd_.tc_.MPC == true)
+                {
+                    PELV_trajectory_float.translation()(0) = com_mpcx[walking_tick / 5];
+                    PELV_trajectory_float.translation()(1) = com_mpcy[walking_tick / 5];
+                    PELV_trajectory_float.translation()(2) = PELV_float_init.translation()(2);
+                    PELV_trajectory_float.linear() = PELV_float_init.linear();
+                }
+
                 walkingCompute(rd_);
-                momentumControl(rd_);
+
+                if (rd_.tc_.mom == true)
+                    momentumControl(rd_);
 
                 cc_mutex.lock();
                 for (int i = 0; i < 12; i++)
                 {
                     rd_.q_desired(i) = desired_leg_q(i);
                 }
-                for (int i = 12; i < MODEL_DOF; i++)
+                if (walking_tick == 0)
                 {
-                    rd_.q_desired(i) = desired_init_q(i);
+                    for (int i = 12; i < MODEL_DOF; i++)
+                    {
+                        rd_.q_desired(i) = desired_init_q(i);
+                    }
+                }
+                else
+                {
+                    if (rd_.tc_.mom == true)
+                    {
+                        rd_.q_desired(12) = rd_.q_desired(12) + q_dm(0) / wk_Hz;
+                        rd_.q_desired(13) = rd_.q_desired(13) + q_dm(1) / wk_Hz;
+                        rd_.q_desired(14) = rd_.q_desired(14) + q_dm(2) / wk_Hz;
+                        rd_.q_desired(16) = rd_.q_desired(16) + q_dm(3) / wk_Hz;
+                        rd_.q_desired(26) = rd_.q_desired(26) + q_dm(4) / wk_Hz;
+                    }
                 }
                 cc_mutex.unlock();
+
+                if (rd_.tc_.MPC == true)
+                {
+                    if (walking_tick % 5 == 0)
+                    {
+                        int mpc_temp;
+                        if (walking_tick == 0)
+                        {
+                            walking_tick++;
+                            mpc_temp = mpc_cycle;
+                            mpc_cycle_prev = mpc_temp;
+                        }
+                        else
+                        {
+                            if (mpc_cycle > mpc_cycle_prev)
+                            {
+                                walking_tick++;
+                                mpc_temp = mpc_cycle;
+                                mpc_cycle_prev = mpc_temp;
+                            }
+
+                            if (mpc_cycle >= (t_total * (total_step_num + 1) + t_temp - 1 + 30 * N) / mpct)
+                            {
+                                walking_tick++;
+                            }
+                        }
+                    }
+                    else
+                    {
+                        walking_tick++;
+                    }
+                }
+                else
+                {
+                    walking_tick++;
+                }
+                file[0] << H_leg(0) << "\t" << CMM(0) <<"\t"<<mom_mpcy[walking_tick / 5]<<"\t"<< H_leg(1)<<"\t" << CMM(1) << "\t"<<mom_mpcx[walking_tick / 5]<<std::endl; 
+               // file[1] << desired_leg_q_temp(0) << "\t" << desired_leg_q(0) << "\t" <<  rd_.q_[0] << "\t" << desired_leg_q_temp(1) << "\t" << desired_leg_q(1) << "\t" <<  rd_.q_[1] << "\t" << desired_leg_q_temp(2) << "\t" << desired_leg_q(2) << "\t" << rd_.q_[2] << "\t" << desired_leg_q_temp(3) << "\t" << desired_leg_q(3) << "\t" << rd_.q_[3] << "\t" << desired_leg_q_temp(4) << "\t" << desired_leg_q(4) << "\t" << rd_.q_[4] << "\t" << desired_leg_q_temp(5) << "\t" <<desired_leg_q(5) << "\t" <<  rd_.q_[5] << "\t" << rd_.q_desired(12)  << "\t" <<  rd_.q_[12] << "\t" << rd_.q_desired(13) << "\t" <<  rd_.q_[13] << "\t" << rd_.q_desired(14) << "\t" <<  rd_.q_[14] << "\t" << rd_.q_desired(16) << "\t" <<  rd_.q_[16] << "\t" << rd_.q_desired(26) << "\t" <<  rd_.q_[26] << std::endl;
+               // file[0] << ZMP_FT(0)- 0.0146 << "\t" << ZMP_FT(1) <<"\t" << zmp_refx(walking_tick-1) <<"\t"<< zmp_refy(walking_tick-1)<<"\t"<<com_refx(walking_tick -1 )<<"\t"<<com_refy(walking_tick -1 )<<"\t"<<PELV_float_current.translation()(0)- 0.0146<<"\t"<<PELV_float_current.translation()(1)<<"\t"<< PELV_trajectory_float.translation()(1)<< "\t" <<com_sup(0) << "\t" <<comR_sup(0) - 0.0146<<"\t"<< com_sup(1) << "\t" <<comR_sup(1) <<"\t" << com_refy(walking_tick -1 )-0.102 << std::endl;
             }
         }
         else if (rd_.tc_.walking_enable == 3.0)
@@ -366,7 +434,7 @@ void CustomController::computePlanner()
     {
         if (rd_.tc_.walking_enable == 1.0)
         {
-            if (wlk_on == true && mpc_on == false)
+            if (wlk_on == true && mpc_on == false && rd_.tc_.MPC == true)
             {
                 mpcModelSetup();
 
@@ -445,83 +513,92 @@ void CustomController::computePlanner()
 
                 d_ocp_qp_sol_create(&dimx, &qp_solx, qp_sol_memx);
                 d_ocp_qp_sol_create(&dimy, &qp_soly, qp_sol_memy);
-                mpc_on = true;
                 std::cout << "MPC INIT" << std::endl;
+                mpc_on = true;
             }
 
-            if (wlk_on == true && mpc_s == true && mpc_on == true && walking_tick >= 0 && mpc_cycle < 1800) //(t_total * (total_step_num + 1) + t_temp - 1) / mpct - 1)
+            if (wlk_on == true && mpc_s == true && mpc_cycle < (t_total * (total_step_num + 1) + t_temp - 1 + 30 * N) / mpct && rd_.tc_.MPC == true)
             {
                 /************************************************
                 *********box & general constraints**************
                 ************************************************/
+                if (walking_tick % 5 == 0)
+                {
+                    auto t4 = std::chrono::steady_clock::now();
+                    mpc_variablex();
+                    mpc_variabley();
+                    solverx = std::async(std::launch::async, &CustomController::walking_x, this);
+                    solvery = std::async(std::launch::async, &CustomController::walking_y, this);
+                    solverx.wait();
+                    solvery.wait();
 
-                auto t4 = std::chrono::steady_clock::now();
-                mpc_variablex();
-                mpc_variabley();
-                solverx = std::async(std::launch::async, &CustomController::walking_x, this);
-                solvery = std::async(std::launch::async, &CustomController::walking_y, this);
-                solverx.wait();
-                solvery.wait();
-                auto t5 = std::chrono::steady_clock::now();
-                auto d1 = std::chrono::duration_cast<std::chrono::microseconds>(t5 - t4).count();
-                 
-                 if(d1 >= 5000)
-                 {
-                     std::cout << d1 << std::endl;
-                     std::cout <<"mpc " << mpc_cycle << std::endl;
-                 }
+                    if (hpipm_statusx != 0)
+                    {
+                        if (hpipm_statusx == 1)
+                        {
+                            printf("\n -> x : Solver failed! Maximum number of iterations reached\n");
+                            std::cout << "mpc" << mpc_cycle << std::endl;
+                        }
+                        else if (hpipm_statusx == 2)
+                        {
+                            printf("\n -> x : Solver failed! Minimum step lenght reached\n");
+                            std::cout << "mpc" << mpc_cycle << std::endl;
+                        }
+                        else if (hpipm_statusx == 2)
+                        {
+                            printf("\n -> x : Solver failed! NaN in computations\n");
+                            std::cout << "mpc" << mpc_cycle << std::endl;
+                        }
+                        else
+                        {
+                            printf("\n -> x : Unknown Error\n");
+                            std::cout << "mpc" << mpc_cycle << std::endl;
+                        }
+                    }
 
-                 //std::cout << "solvemicro " << d7 <<" "<<d8<<std::endl;
-                /*     if (d7 >= 5000)
-                {
-                    std::cout << mpc_cycle << std::endl;
-                    std::cout << "d7 " << d7 << std::endl;
-                }
+                    if (hpipm_statusy != 0)
+                    {
+                        if (hpipm_statusy == 1)
+                        {
+                            printf("\n -> y : Solver failed! Maximum number of iterations reached\n");
+                            std::cout << "mpc" << mpc_cycle << std::endl;
+                        }
+                        else if (hpipm_statusy == 2)
+                        {
+                            printf("\n -> y : Solver failed! Minimum step lenght reached\n");
 
-                if (d8 >= 5000)
-                {
-                    // std::cout << mpc_cycle<< std::endl;
-                    //   std::cout <<"d8 " << d8 << std::endl;
-                }
-               */
-                file[1] << (t_total * (total_step_num + 1) + t_temp - 1) << "\t" << mpc_cycle << "\t" << x11x[0] << "\t" << x11x[2] << "\t" << x11x[4] << "\t" << x11y[0] << "\t" << x11y[2] << "\t" << x11y[4] << "\t" << hd_lbxy[1][0] << "\t" << hd_ubxy[1][0] << "\t" << hd_lbxy[1][1] << "\t" << hd_ubxy[1][1] << "\t" << hd_lbxy[1][2] << "\t" << hd_ubxy[1][2] << "\t" << com_refx_mu(mpct * mpc_cycle) << "\t" << com_refy_mu(mpct * mpc_cycle) << "\t" << zmp_refx_mu(mpct * mpc_cycle) << "\t" << zmp_refy_mu(mpct * mpc_cycle) << std::endl;
+                            std::cout << "mpc" << mpc_cycle << std::endl;
+                        }
+                        else if (hpipm_statusy == 2)
+                        {
+                            printf("\n -> y : Solver failed! NaN in computations\n");
+                            std::cout << "mpc" << mpc_cycle << std::endl;
+                        }
+                        else
+                        {
+                            printf("\n -> y : Unknown Error\n");
+                            std::cout << "mpc" << mpc_cycle << std::endl;
+                        }
+                    }
 
-                if (hpipm_statusx == 1)
-                {
-                    printf("\n -> x : Solver failed! Maximum number of iterations reached\n");
-                    std::cout << "mpc" << mpc_cycle << std::endl;
-                }
-                else if (hpipm_statusx == 2)
-                {
-                    printf("\n -> x : Solver failed! Minimum step lenght reached\n");
-                    std::cout << "mpc" << mpc_cycle << std::endl;
-                }
-                else if (hpipm_statusx == 2)
-                {
-                    printf("\n -> x : Solver failed! NaN in computations\n");
-                    std::cout << "mpc" << mpc_cycle << std::endl;
-                }
+                    auto t5 = std::chrono::steady_clock::now();
+                    auto d1 = std::chrono::duration_cast<std::chrono::microseconds>(t5 - t4).count();
 
-                if (hpipm_statusy == 1)
-                {
-                    printf("\n -> y : Solver failed! Maximum number of iterations reached\n");
-                    std::cout << "mpc" << mpc_cycle << std::endl;
-                }
-                else if (hpipm_statusy == 2)
-                {
-                    printf("\n -> y : Solver failed! Minimum step lenght reached\n");
+                    if (d1 >= 5000)
+                    {
+                        std::cout << d1 << std::endl;
+                        std::cout << "mpc " << mpc_cycle << std::endl;
+                    }
 
-                    std::cout << "mpc" << mpc_cycle << std::endl;
+                    cc_mutex.lock();
+                    com_mpcx.push_back(x11x[0]);
+                    com_mpcy.push_back(x11y[0]);
+                    mom_mpcx.push_back(x11x[4]);
+                    mom_mpcy.push_back(x11y[4]);
+                    cc_mutex.unlock();
+                    mpc_cycle++;
                 }
-                else if (hpipm_statusy == 2)
-                {
-                    printf("\n -> y : Solver failed! NaN in computations\n");
-                    std::cout << "mpc" << mpc_cycle << std::endl;
-                }
-
-                mpc_cycle++;
             }
-
             mpc_s = true;
         }
     }
@@ -598,6 +675,8 @@ void CustomController::walking_x()
     d_ocp_qp_ipm_solve(&qpx, &qp_solx, &argx, &workspacex);
     d_ocp_qp_ipm_get_status(&workspacex, &hpipm_statusx);
     d_ocp_qp_sol_get_x(1, &qp_solx, x11x);
+    d_ocp_qp_sol_get_sl(1, &qp_solx, slx);
+    d_ocp_qp_sol_get_su(1, &qp_solx, sux);
 }
 
 void CustomController::walking_y()
@@ -606,6 +685,8 @@ void CustomController::walking_y()
     d_ocp_qp_ipm_solve(&qpy, &qp_soly, &argy, &workspacey);
     d_ocp_qp_ipm_get_status(&workspacey, &hpipm_statusy);
     d_ocp_qp_sol_get_x(1, &qp_soly, x11y);
+    d_ocp_qp_sol_get_sl(1, &qp_soly, sly);
+    d_ocp_qp_sol_get_su(1, &qp_soly, suy);
 }
 
 void CustomController::copyRobotData(RobotData &rd_l)
@@ -991,10 +1072,10 @@ void CustomController::mpcVariableInit()
     //SOFT CONSTARINT
     for (ii = 0; ii < ns[0]; ii++)
     {
-        Zl0x[ii] = 1000.0;
-        Zu0x[ii] = 1000.0;
-        zl0x[ii] = 0;
-        zu0x[ii] = 0;
+        Zl0x[ii] = 3000.0;
+        Zu0x[ii] = 2000.0;
+        zl0x[ii] = 3000.0;
+        zu0x[ii] = 2000.0;
         Zl0y[ii] = 1000.0;
         Zu0y[ii] = 1000.0;
         zl0y[ii] = 0;
@@ -1008,10 +1089,10 @@ void CustomController::mpcVariableInit()
 
     for (ii = 0; ii < ns[1]; ii++)
     {
-        Zl1x[ii] = 1000.0;
-        Zu1x[ii] = 1000.0;
-        zl1x[ii] = 0;
-        zu1x[ii] = 0;
+        Zl1x[ii] = 3000.0;
+        Zu1x[ii] = 2000.0;
+        zl1x[ii] = 3000.0;
+        zu1x[ii] = 2000.0;
         Zl1y[ii] = 1000.0;
         Zu1y[ii] = 1000.0;
         zl1y[ii] = 1000.0;
@@ -1230,7 +1311,7 @@ void CustomController::momentumControl(RobotData &Robot)
     variable_size = 5;
     constraint_size = 5;
 
-    if (walking_tick == 1)
+    if (walking_tick == 0)
         QP_m.InitializeProblemSize(variable_size, constraint_size);
 
     MatrixXd H, A, W;
@@ -1246,35 +1327,84 @@ void CustomController::momentumControl(RobotData &Robot)
 
     Eigen::Vector3d q_waistd;
     Eigen::Vector8d q_rarmd, q_larmd;
+    Eigen::Vector3d H_leg_ref;
 
     H_leg.setZero();
-    H_leg = Ag_leg * q_dot_est_mu.head(12) + Ag_waist * q_dot_est_mu.segment(12, 3) + Ag_armL * q_dot_est_mu.segment(15, 8) + Ag_armR * q_dot_est_mu.segment(25, 8);
+    H_leg_ref.setZero();
+
+    if(Robot.tc_.MPC == true)
+    {
+        if(mom_mpcy[walking_tick/5] == 0)
+        {
+            H_leg_ref(0) = mom_mpcy[walking_tick / 5 - 1];
+        }
+        else
+        {
+            H_leg_ref(0) = mom_mpcy[walking_tick / 5];
+        }
+
+        if(mom_mpcx[walking_tick/5] == 0)
+        {
+            H_leg_ref(1) = mom_mpcx[walking_tick / 5 - 1];
+        }
+        else
+        {
+            H_leg_ref(1) = mom_mpcx[walking_tick / 5];
+        }
+    
+        H_leg = Ag_leg * q_dot_est_mu.head(12) + Ag_waist * q_dot_est_mu.segment(12, 3) + Ag_armL * q_dot_est_mu.segment(15, 8) + Ag_armR * q_dot_est_mu.segment(25, 8);
+
+        H_leg(0) = H_leg(0) - H_leg_ref(0);
+        H_leg(1) = H_leg(1) - H_leg_ref(1);
+    }
+    else
+    {
+        H_leg = Ag_leg * q_dot_est_mu.head(12) + Ag_waist * q_dot_est_mu.segment(12, 3) + Ag_armL * q_dot_est_mu.segment(15, 8) + Ag_armR * q_dot_est_mu.segment(25, 8);
+    }
 
     Eigen::MatrixXd Ag_temp;
     Eigen::Matrix5d I;
+    Eigen::Matrix5d alpha;
+    Eigen::Vector5d qd_prev;
+
     I.setIdentity();
-    double alpha = 0.00;
+    alpha.setIdentity();
+    alpha = 0.01 * alpha;
+    alpha(3, 3) = 0.0005;
+    alpha(4, 4) = 0.0005;
 
     Ag_temp.resize(3, 5);
     Ag_temp.block<3, 3>(0, 0) = Ag_waist;
     Ag_temp.block<3, 1>(0, 3) = Ag_armL.block<3, 1>(0, 1);
     Ag_temp.block<3, 1>(0, 4) = Ag_armR.block<3, 1>(0, 1);
 
-    H = Ag_temp.transpose() * Ag_temp;   // + alpha*I;
-    g = 2 * Ag_temp.transpose() * H_leg; //- 2*alpha*qd_prev;
+    if (walking_tick == 0)
+    {
+        qd_prev.setZero();
+    }
+
+    q_w(0) = Robot.q_desired(12);
+    q_w(1) = Robot.q_desired(13);
+    q_w(2) = Robot.q_desired(14);
+
+    q_w(3) = Robot.q_desired(16);
+    q_w(4) = Robot.q_desired(26);
+
+    H = Ag_temp.transpose() * Ag_temp + alpha * I;
+    g = 2 * Ag_temp.transpose() * H_leg; // - 2*alpha*qd_prev;
 
     A.setIdentity();
 
     for (int i = 0; i < 3; i++)
     {
-        lbA(i) = (-0.5 - q_w(i)) * wk_Hz;
-        ubA(i) = (0.5 - q_w(i)) * wk_Hz;
+        lbA(i) = (-0.3 - q_w(i)) * wk_Hz;
+        ubA(i) = (0.3 - q_w(i)) * wk_Hz;
     }
 
-    lbA(3) = (0.0 - q_w(3)) * wk_Hz;
-    ubA(3) = (0.9 - q_w(3)) * wk_Hz;
-    lbA(4) = (-0.9 - q_w(4)) * wk_Hz;
-    ubA(4) = (0.0 - q_w(4)) * wk_Hz;
+    lbA(3) = (-0.6 - q_w(3)) * wk_Hz;
+    ubA(3) = (1.2 - q_w(3)) * wk_Hz;
+    lbA(4) = (-1.2 - q_w(4)) * wk_Hz;
+    ubA(4) = (0.6 - q_w(4)) * wk_Hz;
 
     for (int i = 0; i < variable_size; i++)
     {
@@ -1282,19 +1412,92 @@ void CustomController::momentumControl(RobotData &Robot)
         ub(i) = 5.0;
     }
 
-    lb(3) = -0.5;
-    lb(4) = -0.5;
+    lb(3) = -3.0;
+    lb(4) = -3.0;
 
-    ub(3) = 0.5;
-    ub(4) = 0.5;
+    ub(3) = 3.0;
+    ub(4) = 3.0;
 
-    QP_m.EnableEqualityCondition(0.001);
+    QP_m.EnableEqualityCondition(0.005);
     QP_m.UpdateMinProblem(H, g);
     QP_m.UpdateSubjectToAx(A, lbA, ubA);
     QP_m.UpdateSubjectToX(lb, ub);
 
-    debug_temp1 += H_leg(1) / wk_Hz;
+    q_dm = QP_m.SolveQPoases(100);
+    qd_prev = q_dm;
+}
 
-    //   q_dm = QP_m.SolveQPoases(100);
-    //qd_prev = q_dm;
+void CustomController::zmpControl(RobotData &Robot)
+{
+    static Vector3d zmp_pos_max = (Eigen::Vector3d() << 0, 0, 0).finished();
+    static Vector3d zmp_pos_min = (Eigen::Vector3d() << 0, 0, 0).finished();
+
+    for (int i = 0; i < 3; i++)
+    {
+        pr(i) = Robot.ee_[1].xpos_contact(i);
+        pl(i) = Robot.ee_[0].xpos_contact(i);
+        //ZMP_ft(i) = rd_.ZMP_ft(i);
+    }
+
+    //zmp_l(0) = /(fr_l(2) + fl_l(2));
+   // zmp_l(0) = Robot.ee_[0].cp_(0) + (-Robot.ContactForce_FT(4) - Robot.ContactForce_FT(0) * (Robot.ee_[0].cp_(2) - Robot.ee_[0].cp_(2))) / Robot.ContactForce_FT(2);
+  //  zmp_l(1) = Robot.ee_[0].cp_(1) + (Robot.ContactForce_FT(3) - Robot.ContactForce_FT(1) * (Robot.ee_[0].cp_(2) - Robot.ee_[0].cp_(2))) / Robot.ContactForce_FT(2);
+
+    zmpl(0) = pl(0) + (-fl_l(4)) / fl_l(2);
+    zmpl(1) = pl(1) + (-fl_l(3)) / fl_l(2);
+
+    zmpr(0) = pr(0) + (-fr_l(4)) / fr_l(2);
+    zmpr(1) = pr(1) + (-fr_l(3)) / fr_l(2);
+
+
+    if (Robot.ee_[0].contact && Robot.ee_[1].contact)
+    {
+        zmp_ft(0) = (zmpl(0) * fl_l(2) + zmpr(0) * fr_l(2)) / (fl_l(2) + fr_l(2));
+        zmp_ft(1) = (zmpl(1) * fl_l(2) + zmpr(1) * fr_l(2)) / (fl_l(2) + fr_l(2));
+    }
+    else if (Robot.ee_[0].contact)
+    {
+        zmp_ft(0) = zmpl(0);
+        zmp_ft(1) = zmpl(1);
+    }
+    else
+    {
+        zmp_ft(0) = zmpr(0);
+        zmp_ft(1) = zmpr(1);
+    }
+
+    //zmp_ft(0) = (-fr_l(4))/(fl_l(2)+fr_l(2))
+    /*
+    zmpl(0) = pl(0) + (fl(4)) / fl(2);
+    zmpl(1) = pl(1) + (fl(3)) / fl(2);
+
+    zmpr(0) = pr(0) + (fr(4)) / fr(2);
+    zmpr(1) = pr(1) + (fr(3)) / fr(2);
+
+    zmp_ftraw(0) = (zmpl(0) * fl(2) + zmpr(0) * fr(2)) / (fl(2) + fr(2));
+    zmp_ftraw(1) = (zmpl(1) * fl(2) + zmpr(1) * fr(2)) / (fl(2) + fr(2));
+
+    if (contactMode == 1)
+    {
+        zmp_ftraw(0) = (zmpl(0) * fl_l(2) + zmpr(0) * fr_l(2)) / (fl_l(2) + fr_l(2));
+        zmp_ftraw(1) = (zmpl(1) * fl_l(2) + zmpr(1) * fr_l(2)) / (fl_l(2) + fr_l(2));
+    }
+    else if (contactMode == 2)
+    {
+        zmp_ftraw(0) = zmpl(0);
+        zmp_ftraw(1) = zmpl(1);
+    }
+    else
+    {
+        zmp_ftraw(0) = zmpr(0);
+        zmp_ftraw(1) = zmpr(1);
+    }*/
+/*
+    for (int i = 0; i < 2; i++)
+    {
+        if (zmp_pos_max(i) < zmp_ft(i))
+            zmp_pos_max(i) = zmp_ft(i);
+        if (zmp_pos_min(i) > zmp_ft(i))
+            zmp_pos_min(i) = zmp_ft(i);
+    }*/
 }

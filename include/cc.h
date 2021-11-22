@@ -2,6 +2,7 @@
 #include <array>
 #include <string>
 #include <chrono>
+#include <thread>
 #include "hpipm_d_ocp_qp_dim.h"
 #include "hpipm_d_ocp_qp_sol.h"
 #include "hpipm_d_ocp_qp_utils.h"
@@ -38,6 +39,7 @@ public:
     void mpcVariableInit();
     void mpcModelSetup();
     void momentumControl(RobotData &Robot);
+    void zmpControl(RobotData &Robot);
 
     void mpc_variablex();
     void mpc_variabley();
@@ -68,6 +70,12 @@ public:
     Eigen::VectorQd TorqueContact;
     Eigen::VectorQd TorqueGrav;
     double rate;
+
+    std::vector<double> com_mpcx;
+    std::vector<double> com_mpcy;
+
+    std::vector<double> mom_mpcx;
+    std::vector<double> mom_mpcy;
 
     //MPC
     std::atomic<bool> wlk_on;
@@ -125,6 +133,7 @@ public:
     int hpipm_statusy; // 0 normal; 1 max iter
     int nx_max;
     std::atomic<int> mpc_cycle = 0;
+    std::atomic<int> mpc_cycle_prev = 0;
 
     //momentumControl
     CQuadraticProgram QP_m;

@@ -104,7 +104,11 @@ public:
     void setWalkingParameter();
     void setInitPose(RobotData &Robot, Eigen::VectorQd &leg_q);
     void walkingInitialize(RobotData &Robot);
+    void comController(RobotData &Robot);
+    void supportToFloatPattern();
     void updateInitTime();
+
+    void ftandZMP(RobotData &Robot);
     
     Eigen::Isometry3d RF_float_init;
     Eigen::Isometry3d RFx_float_init;
@@ -196,6 +200,10 @@ public:
     std::atomic<int> current_step_num;
     std::atomic<int> total_step_num;
 
+    Eigen::Vector6d fr, fl, fr_l, fl_l;
+    Eigen::Vector3d pr, pl;
+    Eigen::Vector2d zmpl, zmpr, zmp_ft, zmp_ftraw;
+
     //////Capture Point//////
     Eigen::VectorXd capturePoint_ox;
     Eigen::VectorXd capturePoint_oy;
@@ -216,6 +224,13 @@ public:
     Eigen::VectorXd zmp_refx_mu;
     Eigen::VectorXd zmp_refy_mu;
     Eigen::VectorXd b_offset;
+
+    Eigen::Vector3d ZMP_FT;
+    Eigen::Vector4d com_sup;
+    Eigen::Vector4d comR_sup;
+    Eigen::Vector4d pelvR_sup;
+    Eigen::Vector4d pelvPR_sup;
+    Eigen::Vector4d SUP_foot;
 
     //MPC variable
     double **softBoundx, **softBoundy, *softBoundx1, *softBoundy1, *softBoundx2, *softBoundy2, **softCx, **softCy, **xL, **xU, **yL, **yU, **zmpx, **zmpy;
