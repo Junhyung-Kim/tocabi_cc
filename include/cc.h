@@ -40,6 +40,7 @@ public:
     void mpcVariableInit();
     void mpcModelSetup();
     void momentumControl(RobotData &Robot);
+    void zmpCalc(RobotData &Robot);
     void zmpControl(RobotData &Robot);
 
     void mpc_variablex();

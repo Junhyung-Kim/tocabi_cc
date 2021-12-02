@@ -207,7 +207,7 @@ public:
 
     Eigen::Vector6d fr, fl, fr_l, fl_l;
     Eigen::Vector3d pr, pl;
-    Eigen::Vector2d zmpl, zmpr, zmp_ft, zmp_ftraw;
+    Eigen::Vector2d zmpl, zmpr;
 
     //////Capture Point//////
     Eigen::VectorXd capturePoint_ox;
@@ -230,7 +230,7 @@ public:
     Eigen::VectorXd zmp_refy_mu;
     Eigen::VectorXd b_offset;
 
-    Eigen::Vector3d ZMP_FT;
+    Eigen::Vector3d ZMP_FT, ZMP_FT_l, ZMP_FT_prev, ZMP_FT_mu, ZMP_FT_l_mu;
     Eigen::Vector4d com_sup;
     Eigen::Vector4d comR_sup;
     Eigen::Vector4d pelvR_sup;

@@ -2330,9 +2330,6 @@ void WalkingController::supportToFloatPattern(RobotData &Robot)
 
 void WalkingController::comController(RobotData &Robot)
 {
-    //PELV_trajectory_float.translation()(0) = PELV_trajectory_float.translation()(0) - 3.0 * (PELV_float_current.translation()(0) - PELV_trajectory_float.translation()(0));
-    //PELV_trajectory_float.translation()(1) = PELV_trajectory_float.translation()(1) - 3.0 * (PELV_float_current.translation()(1) - PELV_trajectory_float.translation()(1));
-
     PELV_trajectory_float_c.translation()(0) = PELV_trajectory_float.translation()(0) - 2.5 * (pelvR_sup(0) - com_sup(0)); // - 0.0146);
     PELV_trajectory_float_c.translation()(1) = PELV_trajectory_float.translation()(1) - 2.8 * (pelvR_sup(1) - com_sup(1));
     PELV_trajectory_float_c.translation()(2) = PELV_float_init.translation()(2);
