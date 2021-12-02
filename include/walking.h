@@ -1,6 +1,7 @@
 #include "tocabi_lib/robot_data.h"
 #include <vector>
 #include <mutex>
+#include <shared_mutex>
 #include <array>
 #include <string>
 #include <chrono>
@@ -68,13 +69,16 @@ public:
     std::atomic<double> lipm_w;
     std::atomic<double> total_mass;
     std::atomic<int> walking_tick;
+    int walking_tick_prev;
     std::atomic<int> walking_init_tick;
+    std::atomic<int> debugg_int;
     std::atomic<double> contactMode;
     std::atomic<double> phaseChange;
     std::atomic<double> phaseChange1;
 
     //mutex
     std::mutex cc_mutex;
+    std::mutex cc_mutex1;
 
     //walkingInit
     Eigen::VectorQd q_target, q_init;
@@ -105,7 +109,7 @@ public:
     void setInitPose(RobotData &Robot, Eigen::VectorQd &leg_q);
     void walkingInitialize(RobotData &Robot);
     void comController(RobotData &Robot);
-    void supportToFloatPattern();
+    void supportToFloatPattern(RobotData &Robot);
     void updateInitTime();
 
     void ftandZMP(RobotData &Robot);
@@ -137,6 +141,7 @@ public:
     Eigen::Isometry3d COM_float_current;
     Eigen::Isometry3d COM_support_current;
     Eigen::Isometry3d PELV_trajectory_float;
+    Eigen::Isometry3d PELV_trajectory_float_c;
     Eigen::Isometry3d PELVD_trajectory_float;
     Eigen::Vector3d foot_distance;
     Eigen::Vector3d COMV_support_currentV;
@@ -236,6 +241,8 @@ public:
     double **softBoundx, **softBoundy, *softBoundx1, *softBoundy1, *softBoundx2, *softBoundy2, **softCx, **softCy, **xL, **xU, **yL, **yU, **zmpx, **zmpy;
     double **softCx_s, **softCy_s, **softBoundx_s, **softBoundy_s, **softCx_s1, **softCy_s1, **softBoundx_s1, **softBoundy_s1, **zmpx_s, **zmpy_s, **xL_s, **xU_s, **yL_s, **yU_s, **zmpx_s1, **zmpy_s1, **xL_s1, **xU_s1, **yL_s1, **yU_s1;
     double RF_mass, LF_mass;
+    double Qx1_mpc, Qx2_mpc, Qx3_mpc, Qx4_mpc, Qx5_mpc, Rx1_mpc, Rx2_mpc, Zl0x_mpc, Zu0x_mpc, zl0x_mpc, zu0x_mpc, Zl1x_mpc, Zu1x_mpc, zl1x_mpc, zu1x_mpc, ZlNx_mpc, ZuNx_mpc, zlNx_mpc, zuNx_mpc;
+    double Qy1_mpc, Qy2_mpc, Qy3_mpc, Qy4_mpc, Qy5_mpc, Ry1_mpc, Ry2_mpc, Zl0y_mpc, Zu0y_mpc, zl0y_mpc, zu0y_mpc, Zl1y_mpc, Zu1y_mpc, zl1y_mpc, zu1y_mpc, ZlNy_mpc, ZuNy_mpc, zlNy_mpc, zuNy_mpc;
     std::atomic<int> N;
     Eigen::Vector12d dob_hat;
     Eigen::Vector12d dob_hat_prev;

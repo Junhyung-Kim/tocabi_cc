@@ -9,6 +9,7 @@
 #include "math_type_define.h"
 #include "d_tools.c"
 #include "walking.h"
+#include "std_msgs/String.h"
 
 #include <future>
 
@@ -71,15 +72,30 @@ public:
     Eigen::VectorQd TorqueGrav;
     double rate;
 
-    std::vector<double> com_mpcx;
-    std::vector<double> com_mpcy;
+    std::atomic<double> com_mpcx;
+    std::atomic<double> com_mpcy;
+
+    std::vector<double> com_mpcx_mu;
+    std::vector<double> com_mpcy_mu;
 
     std::vector<double> mom_mpcx;
     std::vector<double> mom_mpcy;
 
+    std::vector<double> mom_mpcx_mu;
+    std::vector<double> mom_mpcy_mu;
+
     //MPC
     std::atomic<bool> wlk_on;
     std::atomic<bool> mpc_on;
+
+    //dist 
+    ros::Publisher dist_pub;
+
+    Eigen::Vector3d pelv_lp;
+    Eigen::Vector3d pelv_lp_mu;
+    Eigen::Vector3d pelv_lp_prev;
+    double debug_temp;
+    bool debug = false;
 
     int cycle = 0;
     double Ts = 0.005;

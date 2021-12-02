@@ -24,6 +24,8 @@ endif()
 
 find_package(catkin REQUIRED
   roscpp
+  std_msgs 
+  message_generation
   tocabi_lib
   tocabi_msgs
   eigen_conversions
