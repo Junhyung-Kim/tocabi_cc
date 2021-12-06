@@ -2161,24 +2161,6 @@ void WalkingController::walkingInitialize(RobotData &Robot)
     q_init = Robot.q_;
 }
 
-void WalkingController::ftandZMP(RobotData &Robot)
-{
-    for (int i = 0; i < 6; i++)
-    {
-        fr(i) = Robot.RF_FT(i);
-        fl(i) = Robot.LF_FT(i);
-
-        if (walking_tick == 0)
-        {
-            fr_l(i) = fr(i);
-            fl_l(i) = fl(i);
-        }
-    }
-
-    fr_l = DyrosMath::lowPassFilter(fr, fr_l, 1 / wk_Hz, 1 / (2 * PI * 8));
-    fl_l = DyrosMath::lowPassFilter(fl, fl_l, 1 / wk_Hz, 1 / (2 * PI * 8));
-}
-
 void WalkingController::supportToFloatPattern(RobotData &Robot)
 {
     Eigen::Isometry3d SF_float, SFR_float, SPR_float, PSR_float, SW_SUP;

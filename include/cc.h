@@ -3,13 +3,12 @@
 #include <string>
 #include <chrono>
 #include <thread>
-#include "hpipm_d_ocp_qp_dim.h"
+#include "hpipm_d_ocp_qp.h"
 #include "hpipm_d_ocp_qp_sol.h"
 #include "hpipm_d_ocp_qp_utils.h"
 #include "math_type_define.h"
 #include "d_tools.c"
 #include "walking.h"
-#include "std_msgs/String.h"
 
 #include <future>
 
@@ -48,6 +47,8 @@ public:
     void walking_x();
     void walking_y();
 
+    void mob(RobotData &Robot);
+
     std::future<void> solverx;
     std::future<void> solvery;
 
@@ -64,9 +65,21 @@ public:
     //pinocchiio
     Eigen::VectorQd q_;
     Eigen::VectorQd qdot, qddot, qdot_, qddot_;
+    Eigen::VectorXd q_1, qdot1, qddot1, qdot_1, qddot_1;
     Eigen::MatrixXd CMM;
     Eigen::MatrixQQd Cor_;
+    Eigen::MatrixQQd M_;
     Eigen::VectorQd G_;
+
+    Eigen::MatrixXd Cor_1;
+    Eigen::MatrixVQVQd M_1;
+    Eigen::VectorVQd G_1;
+
+    Eigen::VectorQd torque_dis_prev;
+    Eigen::VectorQd torque_dis;
+    Eigen::VectorQd torque_dis_l;
+    Eigen::VectorQd Int_dis;
+    bool mob_start = false;
 
     //Contact Redistribution
     Eigen::VectorQd TorqueContact;
@@ -76,21 +89,17 @@ public:
     std::atomic<double> com_mpcx;
     std::atomic<double> com_mpcy;
 
-    std::vector<double> com_mpcx_mu;
-    std::vector<double> com_mpcy_mu;
+    std::atomic<double> zmp_mpcx;
+    std::atomic<double> zmp_mpcy;
 
     std::vector<double> mom_mpcx;
     std::vector<double> mom_mpcy;
 
-    std::vector<double> mom_mpcx_mu;
-    std::vector<double> mom_mpcy_mu;
+    Eigen::Vector2d RT, LT, RT_prev, LT_prev, RT_l, LT_l, RT_mu, LT_mu;
 
     //MPC
     std::atomic<bool> wlk_on;
     std::atomic<bool> mpc_on;
-
-    //dist 
-    ros::Publisher dist_pub;
 
     Eigen::Vector3d pelv_lp;
     Eigen::Vector3d pelv_lp_mu;

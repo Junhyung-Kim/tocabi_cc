@@ -111,8 +111,6 @@ public:
     void comController(RobotData &Robot);
     void supportToFloatPattern(RobotData &Robot);
     void updateInitTime();
-
-    void ftandZMP(RobotData &Robot);
     
     Eigen::Isometry3d RF_float_init;
     Eigen::Isometry3d RFx_float_init;
@@ -205,7 +203,7 @@ public:
     std::atomic<int> current_step_num;
     std::atomic<int> total_step_num;
 
-    Eigen::Vector6d fr, fl, fr_l, fl_l;
+    Eigen::Vector6d Fr, Fl, Fr_mu, Fl_mu, Fr_l, Fl_l, Fr_prev, Fl_prev;
     Eigen::Vector3d pr, pl;
     Eigen::Vector2d zmpl, zmpr;
 
@@ -236,6 +234,12 @@ public:
     Eigen::Vector4d pelvR_sup;
     Eigen::Vector4d pelvPR_sup;
     Eigen::Vector4d SUP_foot;
+
+    //Ankle Controller
+    double arp, ark, app, apk, mobgain1, mobgain2, mobgain3, mobgain4, mobgain5, mobgain6;
+    std::vector<double> mobgain;
+    Eigen::VectorQd torque_est;
+    int ft_ok;
 
     //MPC variable
     double **softBoundx, **softBoundy, *softBoundx1, *softBoundy1, *softBoundx2, *softBoundy2, **softCx, **softCy, **xL, **xU, **yL, **yU, **zmpx, **zmpy;
