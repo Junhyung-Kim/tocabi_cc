@@ -92,8 +92,8 @@ public:
     std::atomic<double> zmp_mpcx;
     std::atomic<double> zmp_mpcy;
 
-    std::vector<double> mom_mpcx;
-    std::vector<double> mom_mpcy;
+    std::atomic<double> mom_mpcx;
+    std::atomic<double> mom_mpcy;
 
     Eigen::Vector2d RT, LT, RT_prev, LT_prev, RT_l, LT_l, RT_mu, LT_mu;
 

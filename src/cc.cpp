@@ -124,7 +124,7 @@ CustomController::CustomController(RobotData &rd) : rd_(rd) //, wbc_(dc.wbc_)
     qddot = Eigen::VectorXd::Zero(model.nv);
     qdot_ = Eigen::VectorXd::Zero(model.nv);
     qddot_ = Eigen::VectorXd::Zero(model.nv);
-   
+
     pinocchio::JointModelFreeFlyer root_joint;
     pinocchio::Model model2;
     pinocchio::urdf::buildModel("/home/jhk/catkin_ws/src/dyros_tocabi_v2/tocabi_description/robots/dyros_tocabi_with_redhands.urdf", root_joint, model2);
@@ -139,7 +139,7 @@ CustomController::CustomController(RobotData &rd) : rd_(rd) //, wbc_(dc.wbc_)
     qddot1 = Eigen::VectorXd::Zero(model1.nv);
     qdot_1 = Eigen::VectorXd::Zero(model1.nv);
     qddot_1 = Eigen::VectorXd::Zero(model1.nv);
-    
+
     mpc_on = false;
     wlk_on = false;
     velEst_f = false;
@@ -229,24 +229,24 @@ void CustomController::computeSlow()
             }
 
             q_1(6) = rd_.q_virtual_(39);
-            
+
             for (int i = 0; i < MODEL_DOF; i++)
             {
-                q_1(i+7) = rd_.q_virtual_(i + 6);
-                qdot_1(i+6) = rd_.q_dot_virtual_(i + 6);
-                qddot_1(i+6) = rd_.q_ddot_virtual_(i + 6);
+                q_1(i + 7) = rd_.q_virtual_(i + 6);
+                qdot_1(i + 6) = rd_.q_dot_virtual_(i + 6);
+                qddot_1(i + 6) = rd_.q_ddot_virtual_(i + 6);
             }
-     
+
             pinocchio::crba(model1, model_data1, q_1);
             pinocchio::computeCoriolisMatrix(model1, model_data1, q_1, qdot_1);
             pinocchio::computeGeneralizedGravity(model1, model_data1, q_1);
             pinocchio::nonLinearEffects(model1, model_data1, q_1, qdot_1);
- 
+
             Cor_1 = model_data1.C;
             G_1 = model_data1.g;
 
             M_1 = model_data1.M;
-            M_1.block(6,6,MODEL_DOF,MODEL_DOF).triangularView<Eigen::StrictlyLower>() = model_data1.M.block(6,6,MODEL_DOF,MODEL_DOF).transpose().triangularView<Eigen::StrictlyLower>();
+            M_1.block(6, 6, MODEL_DOF, MODEL_DOF).triangularView<Eigen::StrictlyLower>() = model_data1.M.block(6, 6, MODEL_DOF, MODEL_DOF).transpose().triangularView<Eigen::StrictlyLower>();
 
             mob(rd_);
 
@@ -328,27 +328,26 @@ void CustomController::computeSlow()
 
             for (int i = 0; i < MODEL_DOF; i++)
             {
-                if ((rd_.ankleHybrid == true) && (i == 4) && walking_tick > 500)
+                /*    if ((rd_.ankleHybrid == true) && (i == 4) && walking_tick > 500)
                 {
-                    rd_.torque_desired[i] = rd_.pos_kp_v[i] * (rd_.q_desired[i] - rd_.q_[i]) + rd_.pos_kv_v[i] * (-rd_.q_dot_[i]) + rd_.torque_desired_walk[i] + arp * (LT_mu(1) - torque_est(i));
+                    rd_.torque_desired[i] = rd_.pos_kp_v[i] * (rd_.q_desired[i] - rd_.q_[i]) + rd_.pos_kv_v[i] * (-rd_.q_dot_[i]) + 1.0 * LT_mu(1) + app * (LT_mu(1) - torque_est(i));
                 }
                 else if ((rd_.ankleHybrid == true) && (i == 10) && walking_tick > 500)
                 {
-                    rd_.torque_desired[i] = rd_.pos_kp_v[i] * (rd_.q_desired[i] - rd_.q_[i]) + rd_.pos_kv_v[i] * (-rd_.q_dot_[i]) + rd_.torque_desired_walk[i] + arp * (RT_mu(1) - torque_est(i));
+                    rd_.torque_desired[i] = rd_.pos_kp_v[i] * (rd_.q_desired[i] - rd_.q_[i]) + rd_.pos_kv_v[i] * (-rd_.q_dot_[i]) + 1.0 * RT_mu(1) + app * (RT_mu(1) - torque_est(i));
                 }
                 else if ((rd_.ankleHybrid == true) && (i == 5) && walking_tick > 500)
                 {
-                    rd_.torque_desired[i] = rd_.pos_kp_v[i] * (rd_.q_desired[i] - rd_.q_[i]) + rd_.pos_kv_v[i] * (-rd_.q_dot_[i]) + rd_.torque_desired_walk[i] + app * (LT_mu(0) - torque_est(i));
+                    rd_.torque_desired[i] = rd_.pos_kp_v[i] * (rd_.q_desired[i] - rd_.q_[i]) + rd_.pos_kv_v[i] * (-rd_.q_dot_[i]) + 1.0 * LT_mu(0) + arp * (LT_mu(0) - torque_est(i));
                 }
                 else if ((rd_.ankleHybrid == true) && (i == 11) && walking_tick > 500)
                 {
-                    rd_.torque_desired[i] = rd_.pos_kp_v[i] * (rd_.q_desired[i] - rd_.q_[i]) + rd_.pos_kv_v[i] * (-rd_.q_dot_[i]) + rd_.torque_desired_walk[i] + app * (RT_mu(0) - torque_est(i));
-                    ;
+                    rd_.torque_desired[i] = rd_.pos_kp_v[i] * (rd_.q_desired[i] - rd_.q_[i]) + rd_.pos_kv_v[i] * (-rd_.q_dot_[i]) + 1.0 * RT_mu(0) + arp * (RT_mu(0) - torque_est(i));
                 }
                 else
-                {
-                    rd_.torque_desired[i] = rd_.pos_kp_v[i] * (rd_.q_desired[i] - rd_.q_[i]) + rd_.pos_kv_v[i] * (-rd_.q_dot_[i]) + rd_.torque_desired_walk[i];
-                }
+                {*/
+                rd_.torque_desired[i] = rd_.pos_kp_v[i] * (rd_.q_desired[i] - rd_.q_[i]) + rd_.pos_kv_v[i] * (-rd_.q_dot_[i]) + rd_.torque_desired_walk[i];
+                // }
             }
         }
         else if (rd_.tc_.walking_enable == 3.0 || rd_.tc_.walking_enable == 2.0)
@@ -490,8 +489,8 @@ void CustomController::computeFast()
                     momentumControl(rd_);
 
                 cc_mutex.lock();
-                RT_mu = RT;
-                LT_mu = LT;
+                RT_mu = RT_l;
+                LT_mu = LT_l;
                 for (int i = 0; i < 12; i++)
                 {
                     rd_.q_desired(i) = desired_leg_q(i);
@@ -551,10 +550,13 @@ void CustomController::computeFast()
                 {
                     walking_tick++;
                 }
+
                 if (rd_.tc_.MPC == true)
-                    file[1] << PELV_trajectory_float.translation()(0) << "\t" << PELV_trajectory_float.translation()(1) << "\t" << PELV_trajectory_float.translation()(2) << std::endl;
-                //file[1] << walking_tick - 1 << "\t" << -hqx[1][2] / Qx3_mpc << "\t" << com_refx(walking_tick) << "\t" << zmp_refx(walking_tick) << "\t" << x11x[0] << "\t" << x11x[1] << "\t" << x11x[2] << "\t" << x11x[4] << "\t" << hd_lbxx[1][0] << "\t" << hd_ubxx[1][0] << std::endl; //  PELV_trajectory_float.translation()(0)<<"\t"<< PELV_trajectory_float.translation()(1)<<"\t"<< PELV_trajectory_float.translation()(2)<<std::endl;
-                //"\t"<< desired_leg_q_temp(0) << "\t" << desired_leg_q(0) << "\t" <<  rd_.q_[0] << "\t" << desired_leg_q_temp(1) << "\t" << desired_leg_q(1) << "\t" <<  rd_.q_[1] << "\t" << desired_leg_q_temp(2) << "\t" << desired_leg_q(2) << "\t" << rd_.q_[2] << "\t" << desired_leg_q_temp(3) << "\t" << desired_leg_q(3) << "\t" << rd_.q_[3] << "\t" << desired_leg_q_temp(4) << "\t" << desired_leg_q(4) << "\t" << rd_.q_[4] << "\t" << desired_leg_q_temp(5) << "\t" <<desired_leg_q(5) << "\t" <<  rd_.q_[5] << "\t" << rd_.q_desired(12)  << "\t" <<  rd_.q_[12] << "\t" << rd_.q_desired(13) << "\t" <<  rd_.q_[13] << "\t" << rd_.q_desired(14) << "\t" <<  rd_.q_[14] << "\t" << rd_.q_desired(16) << "\t" <<  rd_.q_[16] << "\t" << rd_.q_desired(26) << "\t" <<  rd_.q_[26] << std::endl;
+                    file[1] << PELV_trajectory_float.translation()(0) << "\t" << rd_.link_[Pelvis].xipos(0) << "\t" << PELV_trajectory_float.translation()(1) << "\t" << rd_.link_[Pelvis].xipos(1) << "\t" << zmp_mpcx << "\t" << ZMP_FT_l(0) << "\t" << zmp_mpcy << "\t" << ZMP_FT_l(1) << "\t" << mom_mpcx << "\t" << H_leg_data(1) << "\t" << mom_mpcy << "\t" << H_leg_data(0) << std::endl;
+
+                //file[0] << rd_.q_virtual_(0) << "\t"<< rd_.q_virtual_(1) << "\t"<< rd_.q_virtual_(2) << "\t"<< rd_.q_virtual_(3) << "\t"<< rd_.q_virtual_(4) << "\t"<< rd_.q_virtual_(5) << "\t"<< rd_.q_virtual_(6) << "\t"<< rd_.q_virtual_(7) << "\t"<< rd_.q_virtual_(8) << "\t"<< rd_.q_virtual_(9) << "\t"<< rd_.q_virtual_(10) << "\t"<< rd_.q_virtual_(11) << "\t"<< rd_.q_virtual_(39) << std::endl;
+                //file[0] << RT_mu(0)<< "\t" << Fr_l(3) <<"\t"<< RT_mu(1)<< "\t" << Fr_l(4) <<"\t"<< LT_mu(0)<< "\t" << Fl_l(3) <<"\t"<< LT_mu(1)<< "\t" << Fl_l(4) <<"\t" <<zmp_mpcx <<"\t"<<ZMP_FT_l(0)<<"\t" <<zmp_mpcy <<"\t"<<ZMP_FT_l(1)<<std::endl;
+                //file[0] << control_input(0) << "\t" << control_input(1) << "\t" << control_input(2) << "\t" << control_input(3) << "\t" << zmp_mpcx << "\t" << ZMP_FT_l(0) << "\t" << zmp_mpcy << "\t" << ZMP_FT_l(1) << "\t"<<pr(0)<<"\t" << pl(0)<<std::endl;
             }
         }
         else if (rd_.tc_.walking_enable == 3.0)
@@ -740,8 +742,8 @@ void CustomController::computePlanner()
                     zmp_mpcx = x11x[2];
                     zmp_mpcy = x11y[2];
 
-                    //     mom_mpcx = x11x[4];
-                    //     mom_mpcy = x11y[4];
+                    mom_mpcx = x11x[4];
+                    mom_mpcy = x11y[4];
 
                     auto t5 = std::chrono::steady_clock::now();
                     auto d1 = std::chrono::duration_cast<std::chrono::microseconds>(t5 - t4).count();
@@ -767,14 +769,15 @@ void CustomController::mpc_variablex()
 
     if (mpc_cycle == 0)
     {
+        ZMP_FT = WBC::GetZMPpos_fromFT(rd_);
         d_lbx0x[0] = com_refx_mu(0);
         d_lbx0x[1] = 0.0;
-        d_lbx0x[2] = com_refx_mu(0);
+        d_lbx0x[2] = ZMP_FT(0);
         d_lbx0x[3] = 0.0;
         d_lbx0x[4] = 0.0;
         d_ubx0x[0] = com_refx_mu(0);
         d_ubx0x[1] = 0.0;
-        d_ubx0x[2] = com_refx_mu(0);
+        d_ubx0x[2] = ZMP_FT(0);
         d_ubx0x[3] = 0.0;
         d_ubx0x[4] = 0.0;
 
@@ -1505,25 +1508,11 @@ void CustomController::momentumControl(RobotData &Robot)
 
     if (Robot.tc_.MPC == true)
     {
-        if (mom_mpcy[walking_tick / 5] == 0)
-        {
-            H_leg_ref(0) = mom_mpcy[walking_tick / 5 - 1];
-        }
-        else
-        {
-            H_leg_ref(0) = mom_mpcy[walking_tick / 5];
-        }
-
-        if (mom_mpcx[walking_tick / 5] == 0)
-        {
-            H_leg_ref(1) = mom_mpcx[walking_tick / 5 - 1];
-        }
-        else
-        {
-            H_leg_ref(1) = mom_mpcx[walking_tick / 5];
-        }
+        H_leg_ref(0) = mom_mpcy;
+        H_leg_ref(1) = mom_mpcx;
 
         H_leg = Ag_leg * q_dot_est_mu.head(12) + Ag_waist * q_dot_est_mu.segment(12, 3) + Ag_armL * q_dot_est_mu.segment(15, 8) + Ag_armR * q_dot_est_mu.segment(25, 8);
+        H_leg_data = H_leg;
 
         H_leg(0) = H_leg(0) - H_leg_ref(0);
         H_leg(1) = H_leg(1) - H_leg_ref(1);
@@ -1626,14 +1615,15 @@ void CustomController::zmpCalc(RobotData &Robot)
 
     for (int i = 0; i < 6; i++)
     {
-        Fr_l(i) = DyrosMath::lowPassFilter(Fr(i), Fr_prev(i), 1 / wk_Hz, 1 / (2 * 3.14 * 10));
-        Fl_l(i) = DyrosMath::lowPassFilter(Fl(i), Fl_prev(i), 1 / wk_Hz, 1 / (2 * 3.14 * 10));
+        Fr_l(i) = DyrosMath::lowPassFilter(Fr(i), Fr_prev(i), 1 / wk_Hz, 1 / (2 * 3.14 * 6));
+        Fl_l(i) = DyrosMath::lowPassFilter(Fl(i), Fl_prev(i), 1 / wk_Hz, 1 / (2 * 3.14 * 6));
     }
     Fr_prev = Fr_l;
     Fl_prev = Fl_l;
+    ZMP_FT_prev = ZMP_FT_l;
 
-    ZMP_FT(0) = ZMP_FT(0) - 0.02;
-    ZMP_FT_l(0) = ZMP_FT_l(0) - 0.02;
+    ZMP_FT(0) = ZMP_FT(0);
+    ZMP_FT_l(0) = ZMP_FT_l(0);
 
     cc_mutex.lock();
     pelv_lp_mu = pelv_lp;
@@ -1653,12 +1643,14 @@ void CustomController::zmpControl(RobotData &Robot)
 
         for (int i = 0; i < 2; i++)
         {
-            pr(i) = rd_.link_[Right_Foot].xipos(i);
-            pl(i) = rd_.link_[Left_Foot].xipos(i);
+            pr(i) = Robot.ee_[1].xpos_contact(i);
+            pl(i) = Robot.ee_[0].xpos_contact(i);
         }
 
         double A, B, C, xi, yi, alpha, Lz, Lz1;
         Eigen::Vector3d desired_ankle_torque, pr_temp, pl_temp;
+
+        int k;
 
         if (contactMode == 1)
         {
@@ -1672,25 +1664,33 @@ void CustomController::zmpControl(RobotData &Robot)
             {
                 xi = pl(0);
                 yi = pl(1);
-            }
+            } 
             else if (yi < pr(1))
             {
                 xi = pr(0);
                 yi = pr(1);
             }
 
-            pr_temp(0) = pr(0) - zmp_mpcx; //zmp_refx(walking_tick);
-            pr_temp(1) = pr(1) - zmp_mpcy; //zmp_refy(walking_tick);
-            pr_temp(2) = 0.0;
+            pl_temp(0) = pl(0) - zmp_mpcx; //zmp_refx(walking_tick);
+            pl_temp(1) = pl(1) - zmp_mpcy; //zmp_refy(walking_tick);
+            pl_temp(2) = 0.0;
 
             pr_temp(0) = pr(0) - zmp_mpcx; //zmp_refx(walking_tick);
             pr_temp(1) = pr(1) - zmp_mpcy; //zmp_refy(walking_tick);
             pl_temp(2) = 0.0;
 
             Lz = sqrt((pr(0) - pl(0)) * (pr(0) - pl(0)) + (pr(1) - pl(1)) * (pr(1) - pl(1)));
-            Lz1 = sqrt((xi - pl(0)) * (xi - pl(0)) + (yi - pl(1)) * (yi - pl(1)));
+            Lz1 = sqrt((zmp_mpcx - pl(0)) * (zmp_mpcx - pl(0)) + (zmp_mpcy - pl(1)) * (zmp_mpcy - pl(1)));
             alpha = Lz1 / Lz;
 
+            if (alpha > 1)
+            {
+                alpha = 1;
+            }
+            else if (alpha < 0)
+            {
+                alpha = 0;
+            }
             desired_ankle_torque = -DyrosMath::skew(pl_temp) * Fl_l.segment<3>(0) - DyrosMath::skew(pr_temp) * Fr_l.segment<3>(0);
         }
         else if (contactMode == 2)
@@ -1714,6 +1714,19 @@ void CustomController::zmpControl(RobotData &Robot)
             desired_ankle_torque = -DyrosMath::skew(pr_temp) * Fr_l.segment<3>(0);
         }
 
+        for(int i = 0; i < 2; i++)
+        {
+            if(desired_ankle_torque(i) > 90)
+            {
+                desired_ankle_torque(i) = 90;
+            }
+
+            if(desired_ankle_torque(i) < -90)
+            {
+                desired_ankle_torque(i) = -90;
+            }
+        }
+
         LT = (1 - alpha) * desired_ankle_torque.segment<2>(0);
         RT = (alpha)*desired_ankle_torque.segment<2>(0);
 
@@ -1725,12 +1738,39 @@ void CustomController::zmpControl(RobotData &Robot)
 
         for (int i = 0; i < 2; i++)
         {
-            LT_l(i) = DyrosMath::lowPassFilter(LT(i), LT_prev(i), 1 / 2000.0, 1 / (2.0 * 3.14 * 8.0));
-            RT_l(i) = DyrosMath::lowPassFilter(RT(i), RT_prev(i), 1 / 2000.0, 1 / (2.0 * 3.14 * 8.0));
+            LT_l(i) = DyrosMath::lowPassFilter(LT(i), LT_prev(i), 1 / 1000.0, 1 / (2.0 * 3.14 * 6.0));
+            RT_l(i) = DyrosMath::lowPassFilter(RT(i), RT_prev(i), 1 / 1000.0, 1 / (2.0 * 3.14 * 6.0));
         }
 
         LT_prev = LT_l;
         RT_prev = RT_l;
+
+        if (walking_tick == 2)
+        {
+            control_input.setZero();
+        }
+
+        control_input(0) = apk / 1000.0 * (LT(1) - Fl_l(4)) + (1 - app / 1000.0) * control_input(0); //pitch
+        control_input(1) = -ark / 1000.0 * (LT(0) - Fl_l(3)) + (1 - arp / 1000.0) * control_input(1); //roll
+
+        control_input(2) = apk / 1000.0 * (RT(1) - Fr_l(4)) + (1 - app / 1000.0) * control_input(2);
+        control_input(3) = -ark / 1000.0 * (RT(0) - Fr_l(3)) + (1 - arp / 1000.0) * control_input(3);
+
+        for (int i = 0; i < 4; i++)
+        {
+            if (control_input(i) > 0.15)
+            {
+                control_input(i) = 0.15;
+            }
+
+            if (control_input(i) < -0.15)
+            {
+                control_input(i) = -0.15;
+            }
+        }
+        
+       // file[0] << pr(0) << "\t" << pl(0) << "\t" << zmp_mpcx << "\t" <<ZMP_FT_prev(0)<<"\t"<< com_refx(0) << "\t" << rd_.link_[Pelvis].xipos(0) << std::endl;
+        file[0] << zmp_mpcx << "\t"<<ZMP_FT_l(0)<<"\t"<< zmp_mpcy << "\t" << ZMP_FT_l(1) <<"\t" << alpha << "\t" << LT(1) << "\t" << Fl_l(4) <<  "\t" << LT(0) << "\t" << Fl_l(3) << std::endl;
     }
 }
 
@@ -1776,16 +1816,21 @@ void CustomController::mob(RobotData &Robot)
 
         for (int i = 0; i < MODEL_DOF; i++)
         {
-            torque_dis(i) = mobgain[i] * (M_1.block(6,6,MODEL_DOF,MODEL_DOF) * qdot_1.segment<MODEL_DOF>(6) - Int_dis)(i);
+            torque_dis(i) = mobgain[i] * (M_1.block(6, 6, MODEL_DOF, MODEL_DOF) * qdot_1.segment<MODEL_DOF>(6) - Int_dis)(i);
         }
 
         for (int i = 0; i < MODEL_DOF; i++)
         {
-            torque_dis_l(i) = DyrosMath::lowPassFilter(torque_dis(i), torque_dis_prev(i), 1 / 2000.0, 1 / (2.0 * 3.14 * 8.0));
+            torque_dis_l(i) = DyrosMath::lowPassFilter(torque_dis(i), torque_dis_prev(i), 1 / 2000.0, 1 / (2.0 * 3.14 * 4.0));
         }
 
         torque_dis_prev = torque_dis_l;
 
-        torque_est = torque_dis_l + rd_.torque_desired;    
+        torque_est = torque_dis_l + rd_.torque_desired;
+        /*
+        Eigen::VectorQd torque_m;
+        Eigen::VectorVQd nonlinear;
+        nonlinear = WBC::CalcNonlinear(Robot);
+        torque_m = rd_.A_.block(6,6,MODEL_DOF,MODEL_DOF) * rd_.torque_elmo_ + nonlinear.segment<MODEL_DOF>(6)  + contacttorque;*/
     }
 }

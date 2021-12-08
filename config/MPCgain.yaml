@@ -46,11 +46,10 @@ ZuNy : 500.0
 zlNy : 0
 zuNy : 0
 
-arp : 0
-ark : 0
-
-app : 0
-apk : 0
+arp : 30
+ark : 0.001
+app : 30
+apk : 0.001
 
 mobgain1 : 40
 mobgain2 : 40
@@ -60,5 +59,7 @@ mobgain5 : 40
 mobgain6 : 40
 
 ft : 0
+
+
 
 

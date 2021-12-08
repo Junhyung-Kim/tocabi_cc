@@ -100,7 +100,7 @@ public:
     void setContactMode();
     void saveFootTrajectory();
     void setPelvTrajectory();
-    void setIKparam();
+    void setIKparam(RobotData &Robot);
     void inverseKinematics(RobotData &Robot, Eigen::Isometry3d PELV_float_transform, Eigen::Isometry3d LF_float_transform, Eigen::Isometry3d RF_float_transform, Eigen::Vector12d &leg_q);
     void jacobianInverseKinematics(RobotData &Robot, Eigen::Isometry3d PELV_float, Eigen::Isometry3d LF_float, Eigen::Isometry3d RF_float, Eigen::Isometry3d PELV_float_pos, Eigen::Isometry3d LF_float_pos, Eigen::Isometry3d RF_float_pos);
     void inverseKinematicsdob(RobotData &Robot);
@@ -191,6 +191,7 @@ public:
     Eigen::Matrix3x8d Agl_armL;
     Eigen::Matrix3x3d Agl_waist;
     Eigen::Vector3d H_leg;
+    Eigen::Vector3d H_leg_data;
 
     Eigen::Isometry3d LF_trajectory_float;
     Eigen::Isometry3d RF_trajectory_float;
@@ -206,6 +207,8 @@ public:
     Eigen::Vector6d Fr, Fl, Fr_mu, Fl_mu, Fr_l, Fl_l, Fr_prev, Fl_prev;
     Eigen::Vector3d pr, pl;
     Eigen::Vector2d zmpl, zmpr;
+
+    Eigen::Vector4d control_input;
 
     //////Capture Point//////
     Eigen::VectorXd capturePoint_ox;

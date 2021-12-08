@@ -19,7 +19,7 @@ void WalkingController::walkingCompute(RobotData &rd)
     comController(rd);
 
     setContactMode();
-    setIKparam();
+    setIKparam(rd);
 
     if (rd.tc_.MPC == true)
         inverseKinematics(rd, PELV_trajectory_float_c, LF_trajectory_float, RF_trajectory_float, desired_leg_q);
@@ -1935,7 +1935,7 @@ void WalkingController::inverseKinematicsdob(RobotData &Robot)
     dob_hat = 0.3 * dob_hat + 0.7 * dob_hat_prev;
 
     double defaultGain = 0.0;
-    double compliantGain = 3.0;
+    double compliantGain = 3.5;
     double rejectionGain = -20.0; //-3.5;
     double rejectionGainSim[12] = {-9.0, -9.0, -9.0, -9.0, -9.0, -9.0, -9.0, -9.0, -9.0, -9.0, -9.0, -9.0};
     double rejectionGainReal[12] = {-3.0, -3.0, -3.0, -3.0, -3.0, -3.0, -3.0, -3.0, -3.0, -3.0, -3.0, -3.0};
@@ -2129,10 +2129,22 @@ void WalkingController::setInitPose(RobotData &Robot, Eigen::VectorQd &leg_q)
     }
 }
 
-void WalkingController::setIKparam()
+void WalkingController::setIKparam(RobotData &Robot)
 {
-    RF_trajectory_float.linear() = RF_float_init.linear();
-    LF_trajectory_float.linear() = LF_float_init.linear();
+    if(walking_tick == 0)
+    {
+        RF_trajectory_float.linear() = RF_float_init.linear();
+        LF_trajectory_float.linear() = LF_float_init.linear();
+    }
+
+    if(Robot.ankleHybrid == true)
+    {
+        RF_trajectory_float.linear() = RF_float_init.linear();
+        LF_trajectory_float.linear() = LF_float_init.linear(); 
+
+        RF_trajectory_float.linear() = RF_trajectory_float.linear() * DyrosMath::rotateWithX(-control_input(2)) * DyrosMath::rotateWithX(-control_input(3));
+        LF_trajectory_float.linear() = LF_trajectory_float.linear() * DyrosMath::rotateWithX(-control_input(0)) * DyrosMath::rotateWithX(-control_input(1)); 
+    }
 
     RF_trajectory_float.translation()(0) = RFx_trajectory_float(walking_tick);
     RF_trajectory_float.translation()(1) = RFy_trajectory_float(walking_tick);
@@ -2312,8 +2324,8 @@ void WalkingController::supportToFloatPattern(RobotData &Robot)
 
 void WalkingController::comController(RobotData &Robot)
 {
-    PELV_trajectory_float_c.translation()(0) = PELV_trajectory_float.translation()(0) - 2.5 * (pelvR_sup(0) - com_sup(0)); // - 0.0146);
-    PELV_trajectory_float_c.translation()(1) = PELV_trajectory_float.translation()(1) - 2.8 * (pelvR_sup(1) - com_sup(1));
+    PELV_trajectory_float_c.translation()(0) = PELV_trajectory_float.translation()(0) - 0.5 * (pelvR_sup(0) - com_sup(0)); // - 0.0146);
+    PELV_trajectory_float_c.translation()(1) = PELV_trajectory_float.translation()(1) - 0.8 * (pelvR_sup(1) - com_sup(1));
     PELV_trajectory_float_c.translation()(2) = PELV_float_init.translation()(2);
     PELV_trajectory_float_c.linear() = PELV_float_init.linear();
 }
