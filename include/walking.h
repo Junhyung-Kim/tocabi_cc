@@ -63,6 +63,13 @@ public:
     std::atomic<double> double2Single_pre;
     std::atomic<double> single2Double;
     std::atomic<double> single2Double_pre;
+    std::atomic<double> double2Single1;
+    std::atomic<double> double2Single_pre1;
+    std::atomic<double> single2Double1;
+    std::atomic<double> single2Double_pre1;
+
+    Eigen::Isometry3d supportfoot_float_current_yaw_only;
+
     double t_imp;
     double foot_height;
     std::atomic<double> zc;
@@ -75,6 +82,14 @@ public:
     std::atomic<double> contactMode;
     std::atomic<double> phaseChange;
     std::atomic<double> phaseChange1;
+
+    std::atomic<double> phaseChange2;
+    std::atomic<double> phaseChange3;
+
+    //FT
+    Eigen::Vector2d RT, LT, RT_prev, LT_prev, RT_l, LT_l, RT_mu, LT_mu;
+    Eigen::Vector3d RF_d, LF_d, z_ctrl;
+    double K_fx, T_fx, K_fy, T_fy, K_fz, T_fz;
 
     //mutex
     std::mutex cc_mutex;
@@ -143,8 +158,6 @@ public:
     Eigen::Isometry3d PELVD_trajectory_float;
     Eigen::Vector3d foot_distance;
     Eigen::Vector3d COMV_support_currentV;
-    Eigen::Vector3d yx_vibm;
-    Eigen::Vector3d yy_vibm;
     Eigen::Vector6d SUF_float_initV;
     Eigen::Vector6d SWF_float_initV;
     Eigen::Isometry3d RF_support_init;
@@ -210,6 +223,8 @@ public:
 
     Eigen::Vector4d control_input;
 
+    Eigen::Vector3d com_support_current_;
+
     //////Capture Point//////
     Eigen::VectorXd capturePoint_ox;
     Eigen::VectorXd capturePoint_oy;
@@ -231,15 +246,19 @@ public:
     Eigen::VectorXd zmp_refy_mu;
     Eigen::VectorXd b_offset;
 
+    double pelv_xp, pelv_yp;
+
     Eigen::Vector3d ZMP_FT, ZMP_FT_l, ZMP_FT_prev, ZMP_FT_mu, ZMP_FT_l_mu;
     Eigen::Vector4d com_sup;
     Eigen::Vector4d comR_sup;
     Eigen::Vector4d pelvR_sup;
+    
+    Eigen::Vector3d pelvR_sup1;
     Eigen::Vector4d pelvPR_sup;
     Eigen::Vector4d SUP_foot;
 
     //Ankle Controller
-    double arp, ark, app, apk, mobgain1, mobgain2, mobgain3, mobgain4, mobgain5, mobgain6;
+    double arp_d, ark_d, app_d, apk_d, arp_s, ark_s, app_s, apk_s, mobgain1, mobgain2, mobgain3, mobgain4, mobgain5, mobgain6;
     std::vector<double> mobgain;
     Eigen::VectorQd torque_est;
     int ft_ok;
@@ -257,6 +276,43 @@ public:
     Eigen::Vector12d desired_leg_q_temp;
     Eigen::VectorQd desired_init_q;
     double dobGain;
+
+    //vibrationcontrol
+    Eigen::Matrix2d Ax_vib;
+    Eigen::Vector2d Bx_vib;
+    Eigen::MatrixXd Cx_vib;
+    
+    Eigen::Vector3d Dx_vib;
+    Eigen::Vector2d kx_vib;
+    Eigen::Vector2d cx_vib;
+    Eigen::Vector2d xx_vib;
+    Eigen::Vector2d xx_vib_est;
+    Eigen::Vector2d final_posx;
+
+    Eigen::Matrix2d Ay_vib;
+    Eigen::Vector2d By_vib;
+    Eigen::MatrixXd Cy_vib;
+    Eigen::Vector3d Dy_vib;
+    Eigen::Vector2d ky_vib;
+    Eigen::Vector2d cy_vib;
+    Eigen::Vector2d xy_vib;
+    Eigen::Vector2d xy_vib_est;
+    Eigen::Vector2d final_posy;
+    Eigen::MatrixXd L1, L2;
+
+    Eigen::Vector2d yx_vibm;
+    Eigen::Vector2d yx_vib;
+    Eigen::Vector2d yy_vib;
+    Eigen::Vector2d yy_vibm;
+
+    std::atomic<double> zmp_mpcx;
+    std::atomic<double> zmp_mpcy;
+
+    double ux_vib;
+    double uy_vib;
+
+    double m;
+    bool vib_est = false;
 
 private:
 };

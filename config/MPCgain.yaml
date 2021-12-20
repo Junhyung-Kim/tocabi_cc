@@ -28,7 +28,7 @@ Qy3 : 600000
 Qy4 : 1.0
 Qy5 : 1.0
 
-Ry1 : 800.0
+Ry1 : 1200.0
 Ry2 : 10.0
 
 Zl0y : 1000.0
@@ -46,10 +46,27 @@ ZuNy : 500.0
 zlNy : 0
 zuNy : 0
 
-arp : 30
-ark : 0.001
-app : 30
-apk : 0.001
+arp_d : 40
+ark_d : 0.003
+app_d : 40
+apk_d : 0.003
+
+arp_s : 60
+ark_s : 0.004
+app_s : 60
+apk_s : 0.004
+
+pelv_xp : 0.24
+pelv_yp : 2.8
+
+K_fx : 0.0005
+T_fx : 30
+
+K_fy : 0.0005 
+T_fy : 30
+
+K_fz : 0.0001
+T_fz : 50
 
 mobgain1 : 40
 mobgain2 : 40

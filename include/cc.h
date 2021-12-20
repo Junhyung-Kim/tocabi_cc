@@ -41,6 +41,7 @@ public:
     void momentumControl(RobotData &Robot);
     void zmpCalc(RobotData &Robot);
     void zmpControl(RobotData &Robot);
+    void dspForceControl(RobotData &Robot, double alpha);
 
     void mpc_variablex();
     void mpc_variabley();
@@ -89,13 +90,10 @@ public:
     std::atomic<double> com_mpcx;
     std::atomic<double> com_mpcy;
 
-    std::atomic<double> zmp_mpcx;
-    std::atomic<double> zmp_mpcy;
-
     std::atomic<double> mom_mpcx;
     std::atomic<double> mom_mpcy;
 
-    Eigen::Vector2d RT, LT, RT_prev, LT_prev, RT_l, LT_l, RT_mu, LT_mu;
+    Eigen::Vector3d F_diff, F_diff_m;
 
     //MPC
     std::atomic<bool> wlk_on;

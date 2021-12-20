@@ -31,6 +31,7 @@ CustomController::CustomController(RobotData &rd) : rd_(rd) //, wbc_(dc.wbc_)
         file[i].open(FILE_NAMES[i].c_str(), std::ios_base::out);
     }
 
+    rd_.mujoco_dist = false;
     ros::NodeHandle nh;
     nh.getParam("/tocabi_controller/Qx1", Qx1_mpc);
     nh.getParam("/tocabi_controller/Qx2", Qx2_mpc);
@@ -80,10 +81,18 @@ CustomController::CustomController(RobotData &rd) : rd_(rd) //, wbc_(dc.wbc_)
     nh.getParam("/tocabi_controller/zlNy", zlNy_mpc);
     nh.getParam("/tocabi_controller/zuNy", zuNy_mpc);
 
-    nh.getParam("/tocabi_controller/arp", arp);
-    nh.getParam("/tocabi_controller/ark", ark);
-    nh.getParam("/tocabi_controller/app", app);
-    nh.getParam("/tocabi_controller/apk", apk);
+    nh.getParam("/tocabi_controller/arp_d", arp_d);
+    nh.getParam("/tocabi_controller/ark_d", ark_d);
+    nh.getParam("/tocabi_controller/app_d", app_d);
+    nh.getParam("/tocabi_controller/apk_d", apk_d);
+
+    nh.getParam("/tocabi_controller/arp_s", arp_s);
+    nh.getParam("/tocabi_controller/ark_s", ark_s);
+    nh.getParam("/tocabi_controller/app_s", app_s);
+    nh.getParam("/tocabi_controller/apk_s", apk_s);
+
+    nh.getParam("/tocabi_controller/pelv_xp", pelv_xp);
+    nh.getParam("/tocabi_controller/pelv_yp", pelv_yp);
 
     nh.getParam("/tocabi_controller/mobgain1", mobgain1);
     nh.getParam("/tocabi_controller/mobgain2", mobgain2);
@@ -91,6 +100,15 @@ CustomController::CustomController(RobotData &rd) : rd_(rd) //, wbc_(dc.wbc_)
     nh.getParam("/tocabi_controller/mobgain4", mobgain4);
     nh.getParam("/tocabi_controller/mobgain5", mobgain5);
     nh.getParam("/tocabi_controller/mobgain6", mobgain6);
+
+    nh.getParam("/tocabi_controller/K_fx", K_fx);
+    nh.getParam("/tocabi_controller/T_fx", T_fx);
+
+    nh.getParam("/tocabi_controller/K_fy", K_fy);
+    nh.getParam("/tocabi_controller/T_fy", T_fy);
+
+    nh.getParam("/tocabi_controller/K_fz", K_fz);
+    nh.getParam("/tocabi_controller/T_fz", T_fz);
 
     mobgain.push_back(mobgain1);
     mobgain.push_back(mobgain2);
@@ -236,7 +254,7 @@ void CustomController::computeSlow()
                 qdot_1(i + 6) = rd_.q_dot_virtual_(i + 6);
                 qddot_1(i + 6) = rd_.q_ddot_virtual_(i + 6);
             }
-
+/*
             pinocchio::crba(model1, model_data1, q_1);
             pinocchio::computeCoriolisMatrix(model1, model_data1, q_1, qdot_1);
             pinocchio::computeGeneralizedGravity(model1, model_data1, q_1);
@@ -249,7 +267,7 @@ void CustomController::computeSlow()
             M_1.block(6, 6, MODEL_DOF, MODEL_DOF).triangularView<Eigen::StrictlyLower>() = model_data1.M.block(6, 6, MODEL_DOF, MODEL_DOF).transpose().triangularView<Eigen::StrictlyLower>();
 
             mob(rd_);
-
+*/
             Vector12d fc_redis;
             double fc_ratio = 0.000;
             fc_redis.setZero();
@@ -328,26 +346,7 @@ void CustomController::computeSlow()
 
             for (int i = 0; i < MODEL_DOF; i++)
             {
-                /*    if ((rd_.ankleHybrid == true) && (i == 4) && walking_tick > 500)
-                {
-                    rd_.torque_desired[i] = rd_.pos_kp_v[i] * (rd_.q_desired[i] - rd_.q_[i]) + rd_.pos_kv_v[i] * (-rd_.q_dot_[i]) + 1.0 * LT_mu(1) + app * (LT_mu(1) - torque_est(i));
-                }
-                else if ((rd_.ankleHybrid == true) && (i == 10) && walking_tick > 500)
-                {
-                    rd_.torque_desired[i] = rd_.pos_kp_v[i] * (rd_.q_desired[i] - rd_.q_[i]) + rd_.pos_kv_v[i] * (-rd_.q_dot_[i]) + 1.0 * RT_mu(1) + app * (RT_mu(1) - torque_est(i));
-                }
-                else if ((rd_.ankleHybrid == true) && (i == 5) && walking_tick > 500)
-                {
-                    rd_.torque_desired[i] = rd_.pos_kp_v[i] * (rd_.q_desired[i] - rd_.q_[i]) + rd_.pos_kv_v[i] * (-rd_.q_dot_[i]) + 1.0 * LT_mu(0) + arp * (LT_mu(0) - torque_est(i));
-                }
-                else if ((rd_.ankleHybrid == true) && (i == 11) && walking_tick > 500)
-                {
-                    rd_.torque_desired[i] = rd_.pos_kp_v[i] * (rd_.q_desired[i] - rd_.q_[i]) + rd_.pos_kv_v[i] * (-rd_.q_dot_[i]) + 1.0 * RT_mu(0) + arp * (RT_mu(0) - torque_est(i));
-                }
-                else
-                {*/
                 rd_.torque_desired[i] = rd_.pos_kp_v[i] * (rd_.q_desired[i] - rd_.q_[i]) + rd_.pos_kv_v[i] * (-rd_.q_dot_[i]) + rd_.torque_desired_walk[i];
-                // }
             }
         }
         else if (rd_.tc_.walking_enable == 3.0 || rd_.tc_.walking_enable == 2.0)
@@ -491,6 +490,16 @@ void CustomController::computeFast()
                 cc_mutex.lock();
                 RT_mu = RT_l;
                 LT_mu = LT_l;
+
+                if (rd_.ankleHybrid == true)
+                {
+                    /*     desired_leg_q(4) = desired_leg_q(4) + control_input(0);
+                    desired_leg_q(10) = desired_leg_q(10) + control_input(2);
+
+                    desired_leg_q(5) = desired_leg_q(5) + control_input(1);
+                    desired_leg_q(11) = desired_leg_q(11) + control_input(3);*/
+                }
+
                 for (int i = 0; i < 12; i++)
                 {
                     rd_.q_desired(i) = desired_leg_q(i);
@@ -550,13 +559,23 @@ void CustomController::computeFast()
                 {
                     walking_tick++;
                 }
+                file[1] << rd_.link_[COM_id].xpos(0) << "\t" << com_mpcx <<"\t"<<PELV_trajectory_float_c.translation()(1)<<"\t"<< rd_.link_[COM_id].xpos(1) << "\t" << com_mpcy << "\t" << zmp_mpcy << "\t" << ZMP_FT_l(1)<<"\t"<<z_ctrl(2)<< std::endl;
+              //  file[1] << rd_.link_[Pelvis].xipos(1)<<"\t"<< rd_.link_[Pelvis].v(1)<<"\t"<< PELV_trajectory_float.translation()(1) <<std::endl; 
+                /*   if (rd_.tc_.MPC == true)
+                    file[1] << PELV_trajectory_float.translation()(0) <<"\t"<< PELV_trajectory_float_c.translation()(0) << "\t" << rd_.link_[COM_id].xpos(0) << "\t" <<com_mpcx<<"\t"<< PELV_trajectory_float.translation()(1)<<"\t"<< PELV_trajectory_float_c.translation()(1) << "\t" << rd_.link_[COM_id].xpos(1) << "\t"<<com_mpcy<<"\t" <<rd_.link_[Pelvis].xipos(1)<<std::endl;
+                else*/
+                //                    file[1] << xy_vib_est(0) <<"\t"<<uy_vib<< "\t"<<com_mpcy <<"\t" <<PELV_trajectory_float.translation()(1)<<"\t"<< rd_.link_[COM_id].xpos(1) << "\t"<< xy_vib_est(1) <<"\t"<< rd_.link_[COM_id].v(1) << "\t"<<yy_vib(0) <<"\t" << yy_vibm(0)<< "\t"<<yy_vib(1) <<"\t" << yy_vibm(1)<< std::endl;//"\t"<< xy_vib_est(0) << "\t" << rd_.link_[Pelvis].xpos(1) << "\t"<< xy_vib_est(1) << "\t" << rd_.link_[Pelvis].v(1) << std::endl;
 
-                if (rd_.tc_.MPC == true)
-                    file[1] << PELV_trajectory_float.translation()(0) << "\t" << rd_.link_[Pelvis].xipos(0) << "\t" << PELV_trajectory_float.translation()(1) << "\t" << rd_.link_[Pelvis].xipos(1) << "\t" << zmp_mpcx << "\t" << ZMP_FT_l(0) << "\t" << zmp_mpcy << "\t" << ZMP_FT_l(1) << "\t" << mom_mpcx << "\t" << H_leg_data(1) << "\t" << mom_mpcy << "\t" << H_leg_data(0) << std::endl;
+           //     file[1] << rd_.link_[Pelvis].xipos(0) << "\t"<< rd_.link_[Pelvis].xipos(1) << "\t"<< rd_.link_[Pelvis].v(0) << "\t"<< rd_.link_[Pelvis].v(1) << "\t" <<  ZMP_FT_l(0) << "\t" <<ZMP_FT_l(1) << "\t" << com_refx(walking_tick)<<"\t" << com_refy(walking_tick)<<"\t"<< PELV_float_init.translation()(2)<<"\t"<<rd_.total_mass_ << "\t" << std::endl;
+
+                //file[1] << desired_leg_q(0) <<"\t" << rd_.q_(0) <<"\t"<< desired_leg_q(1) <<"\t" << rd_.q_(1) <<"\t"<< desired_leg_q(2) <<"\t" << rd_.q_(2) <<"\t"<< desired_leg_q(3) <<"\t" << rd_.q_(3) <<"\t"<< desired_leg_q(4) <<"\t" << rd_.q_(4) <<"\t"<< desired_leg_q(5) <<"\t" << rd_.q_(5) <<std::endl;
+                //   file[1] << PELV_trajectory_float.translation()(0) << "\t" << rd_.link_[Pelvis].xipos(0) << "\t" << PELV_trajectory_float.translation()(1) << "\t" << rd_.link_[Pelvis].xipos(1) << "\t" << zmp_mpcx << "\t" << ZMP_FT_l(0) << "\t" << zmp_mpcy << "\t" << ZMP_FT_l(1) << "\t" << mom_mpcx << "\t" << H_leg_data(1) << "\t" << mom_mpcy << "\t" << H_leg_data(0) << std::endl;
 
                 //file[0] << rd_.q_virtual_(0) << "\t"<< rd_.q_virtual_(1) << "\t"<< rd_.q_virtual_(2) << "\t"<< rd_.q_virtual_(3) << "\t"<< rd_.q_virtual_(4) << "\t"<< rd_.q_virtual_(5) << "\t"<< rd_.q_virtual_(6) << "\t"<< rd_.q_virtual_(7) << "\t"<< rd_.q_virtual_(8) << "\t"<< rd_.q_virtual_(9) << "\t"<< rd_.q_virtual_(10) << "\t"<< rd_.q_virtual_(11) << "\t"<< rd_.q_virtual_(39) << std::endl;
                 //file[0] << RT_mu(0)<< "\t" << Fr_l(3) <<"\t"<< RT_mu(1)<< "\t" << Fr_l(4) <<"\t"<< LT_mu(0)<< "\t" << Fl_l(3) <<"\t"<< LT_mu(1)<< "\t" << Fl_l(4) <<"\t" <<zmp_mpcx <<"\t"<<ZMP_FT_l(0)<<"\t" <<zmp_mpcy <<"\t"<<ZMP_FT_l(1)<<std::endl;
                 //file[0] << control_input(0) << "\t" << control_input(1) << "\t" << control_input(2) << "\t" << control_input(3) << "\t" << zmp_mpcx << "\t" << ZMP_FT_l(0) << "\t" << zmp_mpcy << "\t" << ZMP_FT_l(1) << "\t"<<pr(0)<<"\t" << pl(0)<<std::endl;
+
+              //  file[1] << rd_.link_[Pelvis].xipos(0) << "\t"<< rd_.link_[Pelvis].xipos(1) << "\t"<< rd_.link_[Pelvis].v(0) << "\t"<< rd_.link_[Pelvis].v(1) << "\t" <<  ZMP_FT_l(0) << "\t" <<ZMP_FT_l(1) << "\t" << com_mpcx/*COM_float_current.translation()(0)*/<<"\t" << com_mpcy/*COM_float_current.translation()(1)*/<<"\t"<< COM_float_current.translation()(2)<<"\t"<<rd_.total_mass_ << "\t" << std::endl;
             }
         }
         else if (rd_.tc_.walking_enable == 3.0)
@@ -564,14 +583,23 @@ void CustomController::computeFast()
             wk_Hz = 1000;
             wk_dt = 1 / wk_Hz;
             setInitPose(rd_, desired_init_q);
-            updateInitTime();
+
 
             cc_mutex.lock();
-            for (int i = 0; i < MODEL_DOF; i++)
+            for (int i = 0; i < 12; i++)
             {
-                rd_.q_desired(i) = desired_init_q(i);
+                rd_.q_desired(i) = desired_leg_q(i);
+            }
+            if (walking_tick == 0)
+            {
+                for (int i = 12; i < MODEL_DOF; i++)
+                {
+                    rd_.q_desired(i) = desired_init_q(i);
+                }
             }
             cc_mutex.unlock();
+           
+            //file[1] << rd_.link_[COM_id].xpos(0) << "\t" << rd_.link_[COM_id].xpos(1) << "\t" << rd_.link_[COM_id].v(0) << "\t" << rd_.link_[COM_id].v(1) << "\t" << ZMP_FT_l(0) << "\t" << ZMP_FT_l(1) << "\t" << COM_float_current.translation()(0) << "\t" << COM_float_current.translation()(1) << "\t" << COM_float_current.translation()(2) << "\t" << rd_.total_mass_ << "\t" << std::endl;
         }
     }
 }
@@ -770,12 +798,12 @@ void CustomController::mpc_variablex()
     if (mpc_cycle == 0)
     {
         ZMP_FT = WBC::GetZMPpos_fromFT(rd_);
-        d_lbx0x[0] = com_refx_mu(0);
+        d_lbx0x[0] = com_refx(0);//rd_.link_[COM_id].xpos(0);
         d_lbx0x[1] = 0.0;
         d_lbx0x[2] = ZMP_FT(0);
         d_lbx0x[3] = 0.0;
         d_lbx0x[4] = 0.0;
-        d_ubx0x[0] = com_refx_mu(0);
+        d_ubx0x[0] = com_refx(0);//rd_.link_[COM_id].xpos(0);
         d_ubx0x[1] = 0.0;
         d_ubx0x[2] = ZMP_FT(0);
         d_ubx0x[3] = 0.0;
@@ -855,9 +883,6 @@ void CustomController::walking_y()
     d_ocp_qp_ipm_solve(&qpy, &qp_soly, &argy, &workspacey);
     d_ocp_qp_ipm_get_status(&workspacey, &hpipm_statusy);
     d_ocp_qp_sol_get_x(1, &qp_soly, x11y);
-    // d_ocp_qp_sol_get_sl(1, &qp_soly, sly);
-    // d_ocp_qp_sol_get_su(1, &qp_soly, suy);
-    //file[0] << walking_tick << "\t" << mpc_cycle << "\t" << zmp_refy_mu(walking_tick) << "\t" << x11y[0] << "\t" << x11y[2] << "\t" << hd_ubxx[1][0] << "\t" << hd_lbxx[1][0] << std::endl;
 }
 
 void CustomController::copyRobotData(RobotData &rd_l)
@@ -1311,6 +1336,7 @@ void CustomController::mpcVariableInit()
     hidxs[0] = idxs0;
     hidxbx[N] = idxbxN;
     hidxs[N] = idxsN;
+
     for (ii = 1; ii < N; ii++)
     {
         hidxs[ii] = idxs1;
@@ -1357,6 +1383,7 @@ void CustomController::mpcVariableInit()
     hd_usx[0] = d_us0x;
     hd_lsy[0] = d_ls0y;
     hd_usy[0] = d_us0y;
+
     for (ii = 1; ii < N; ii++)
     {
         hd_lsx[ii] = d_ls1x;
@@ -1364,6 +1391,7 @@ void CustomController::mpcVariableInit()
         hd_lsy[ii] = d_ls1y;
         hd_usy[ii] = d_us1y;
     }
+
     hd_lsx[N] = d_lsNx;
     hd_usx[N] = d_usNx;
     hd_lsy[N] = d_lsNy;
@@ -1390,6 +1418,7 @@ void CustomController::mpcVariableInit()
     hZuy[0] = Zu0y;
     hzly[0] = zl0y;
     hzuy[0] = zu0y;
+
     for (ii = 1; ii < N; ii++)
     {
         hbx[ii] = bx;
@@ -1413,6 +1442,7 @@ void CustomController::mpcVariableInit()
         hzly[ii] = zl1y;
         hzuy[ii] = zu1y;
     }
+
     hQx[N] = Qx;
     hSx[N] = Sx;
     hRx[N] = Rx;
@@ -1445,6 +1475,7 @@ void CustomController::mpcVariableInit()
         hCx[ii] = C1x;
         hCy[ii] = C1y;
     }
+
     hDx[N] = DNx;
     hDy[N] = DNy;
     hCx[N] = CNx;
@@ -1529,9 +1560,9 @@ void CustomController::momentumControl(RobotData &Robot)
 
     I.setIdentity();
     alpha.setIdentity();
-    alpha = 0.01 * alpha;
-    alpha(3, 3) = 0.0005;
-    alpha(4, 4) = 0.0005;
+    alpha = 0.05 * alpha;
+    alpha(3, 3) = 0.001;
+    alpha(4, 4) = 0.001;
 
     Ag_temp.resize(3, 5);
     Ag_temp.block<3, 3>(0, 0) = Ag_waist;
@@ -1568,15 +1599,15 @@ void CustomController::momentumControl(RobotData &Robot)
 
     for (int i = 0; i < variable_size; i++)
     {
-        lb(i) = -5.0;
-        ub(i) = 5.0;
+        lb(i) = -3.0;
+        ub(i) = 3.0;
     }
 
-    lb(3) = -3.0;
-    lb(4) = -3.0;
+    lb(3) = -1.0;
+    lb(4) = -1.0;
 
-    ub(3) = 3.0;
-    ub(4) = 3.0;
+    ub(3) = 1.0;
+    ub(4) = 1.0;
 
     QP_m.EnableEqualityCondition(0.005);
     QP_m.UpdateMinProblem(H, g);
@@ -1611,13 +1642,14 @@ void CustomController::zmpCalc(RobotData &Robot)
         pelv_lp(i) = DyrosMath::lowPassFilter(rd_.link_[Pelvis].xipos(i), pelv_lp_prev(i), 1 / wk_Hz, 1 / (2 * 3.14 * 32));
 
     for (int i = 0; i < 3; i++)
-        ZMP_FT_l(i) = DyrosMath::lowPassFilter(ZMP_FT(i), ZMP_FT_prev(i), 1 / wk_Hz, 1 / (2 * 3.14 * 5));
+        ZMP_FT_l(i) = DyrosMath::lowPassFilter(ZMP_FT(i), ZMP_FT_prev(i), 1 / wk_Hz, 1 / (2 * 3.14 * 3));
 
     for (int i = 0; i < 6; i++)
     {
         Fr_l(i) = DyrosMath::lowPassFilter(Fr(i), Fr_prev(i), 1 / wk_Hz, 1 / (2 * 3.14 * 6));
         Fl_l(i) = DyrosMath::lowPassFilter(Fl(i), Fl_prev(i), 1 / wk_Hz, 1 / (2 * 3.14 * 6));
     }
+
     Fr_prev = Fr_l;
     Fl_prev = Fl_l;
     ZMP_FT_prev = ZMP_FT_l;
@@ -1664,7 +1696,7 @@ void CustomController::zmpControl(RobotData &Robot)
             {
                 xi = pl(0);
                 yi = pl(1);
-            } 
+            }
             else if (yi < pr(1))
             {
                 xi = pr(0);
@@ -1691,6 +1723,7 @@ void CustomController::zmpControl(RobotData &Robot)
             {
                 alpha = 0;
             }
+
             desired_ankle_torque = -DyrosMath::skew(pl_temp) * Fl_l.segment<3>(0) - DyrosMath::skew(pr_temp) * Fr_l.segment<3>(0);
         }
         else if (contactMode == 2)
@@ -1714,21 +1747,208 @@ void CustomController::zmpControl(RobotData &Robot)
             desired_ankle_torque = -DyrosMath::skew(pr_temp) * Fr_l.segment<3>(0);
         }
 
-        for(int i = 0; i < 2; i++)
+        for (int i = 0; i < 2; i++)
         {
-            if(desired_ankle_torque(i) > 90)
+            if (desired_ankle_torque(i) > 100)
             {
-                desired_ankle_torque(i) = 90;
+                desired_ankle_torque(i) = 100;
             }
 
-            if(desired_ankle_torque(i) < -90)
+            if (desired_ankle_torque(i) < -100)
             {
-                desired_ankle_torque(i) = -90;
+                desired_ankle_torque(i) = -100;
             }
         }
 
-        LT = (1 - alpha) * desired_ankle_torque.segment<2>(0);
-        RT = (alpha)*desired_ankle_torque.segment<2>(0);
+        LT(0) = (1 - alpha) * desired_ankle_torque(0);
+        RT(0) = (alpha)*desired_ankle_torque(0);
+
+        LT(1) = (1 - alpha) * desired_ankle_torque(1);
+        RT(1) = (alpha)*desired_ankle_torque(1);
+
+        dspForceControl(Robot, alpha);
+
+        double arp_l, ark_l, app_l, apk_l, arp_r, ark_r, app_r, apk_r;
+
+        /* if (phaseChange2 == true && phaseChange3 == false)
+        {
+            if (foot_step(current_step_num, 6) == 1)
+            {
+                arp_l = DyrosMath::cubic(walking_tick, double2Single_pre1, double2Single1, arp_d, arp_s, 0, 0);
+                ark_l = DyrosMath::cubic(walking_tick, double2Single_pre1, double2Single1, ark_d, ark_s, 0, 0);
+                app_l = DyrosMath::cubic(walking_tick, double2Single_pre1, double2Single1, app_d, app_s, 0, 0);
+                apk_l = DyrosMath::cubic(walking_tick, double2Single_pre1, double2Single1, apk_d, apk_s, 0, 0);
+                arp_r = DyrosMath::cubic(walking_tick, double2Single_pre1, double2Single1, arp_d, 0.0, 0, 0);
+                ark_r = DyrosMath::cubic(walking_tick, double2Single_pre1, double2Single1, ark_d, 0.0, 0, 0);
+                app_r = DyrosMath::cubic(walking_tick, double2Single_pre1, double2Single1, app_d, 0.0, 0, 0);
+                apk_r = DyrosMath::cubic(walking_tick, double2Single_pre1, double2Single1, apk_d, 0.0, 0, 0);
+            }
+            else
+            {
+                arp_r = DyrosMath::cubic(walking_tick, double2Single_pre1, double2Single1, arp_d, arp_s, 0, 0);
+                ark_r = DyrosMath::cubic(walking_tick, double2Single_pre1, double2Single1, ark_d, ark_s, 0, 0);
+                app_r = DyrosMath::cubic(walking_tick, double2Single_pre1, double2Single1, app_d, app_s, 0, 0);
+                apk_r = DyrosMath::cubic(walking_tick, double2Single_pre1, double2Single1, apk_d, apk_s, 0, 0);
+                arp_l = DyrosMath::cubic(walking_tick, double2Single_pre1, double2Single1, arp_d, 0.0, 0, 0);
+                ark_l = DyrosMath::cubic(walking_tick, double2Single_pre1, double2Single1, ark_d, 0.0, 0, 0);
+                app_l = DyrosMath::cubic(walking_tick, double2Single_pre1, double2Single1, app_d, 0.0, 0, 0);
+                apk_l = DyrosMath::cubic(walking_tick, double2Single_pre1, double2Single1, apk_d, 0.0, 0, 0);
+            }
+        }
+        else if (phaseChange2 == false && phaseChange3 == true)
+        {
+            if (contactMode == 2)
+            {
+                arp_l = DyrosMath::cubic(walking_tick, single2Double_pre1, single2Double1, arp_s, arp_d, 0, 0);
+                ark_l = DyrosMath::cubic(walking_tick, single2Double_pre1, single2Double1, ark_s, ark_d, 0, 0);
+                app_l = DyrosMath::cubic(walking_tick, single2Double_pre1, single2Double1, app_s, app_d, 0, 0);
+                apk_l = DyrosMath::cubic(walking_tick, single2Double_pre1, single2Double1, apk_s, apk_d, 0, 0);
+                arp_r = DyrosMath::cubic(walking_tick, single2Double_pre1, single2Double1, 0.0, arp_d, 0, 0);
+                ark_r = DyrosMath::cubic(walking_tick, single2Double_pre1, single2Double1, 0.0, ark_d, 0, 0);
+                app_r = DyrosMath::cubic(walking_tick, single2Double_pre1, single2Double1, 0.0, app_d, 0, 0);
+                apk_r = DyrosMath::cubic(walking_tick, single2Double_pre1, single2Double1, 0.0, apk_d, 0, 0);
+            }
+            else
+            {
+                arp_r = DyrosMath::cubic(walking_tick, single2Double_pre1, single2Double1, arp_s, arp_d, 0, 0);
+                ark_r = DyrosMath::cubic(walking_tick, single2Double_pre1, single2Double1, ark_s, ark_d, 0, 0);
+                app_r = DyrosMath::cubic(walking_tick, single2Double_pre1, single2Double1, app_s, app_d, 0, 0);
+                apk_r = DyrosMath::cubic(walking_tick, single2Double_pre1, single2Double1, apk_s, apk_d, 0, 0);
+                arp_l = DyrosMath::cubic(walking_tick, single2Double_pre1, single2Double1, 0.0, arp_d, 0, 0);
+                ark_l = DyrosMath::cubic(walking_tick, single2Double_pre1, single2Double1, 0.0, ark_d, 0, 0);
+                app_l = DyrosMath::cubic(walking_tick, single2Double_pre1, single2Double1, 0.0, app_d, 0, 0);
+                apk_l = DyrosMath::cubic(walking_tick, single2Double_pre1, single2Double1, 0.0, apk_d, 0, 0);
+            }
+        }
+        else
+        {
+            if (contactMode == 1)
+            {
+                arp_l = arp_d;
+                ark_l = ark_d;
+                app_l = app_d;
+                apk_l = apk_d;
+
+                arp_r = arp_d;
+                ark_r = ark_d;
+                app_r = app_d;
+                apk_r = apk_d;
+            }
+            else if (contactMode == 2)
+            {
+                arp_l = arp_s;
+                ark_l = ark_s;
+                app_l = app_s;
+                apk_l = apk_s;
+
+                arp_r = 0.0;
+                ark_r = 0.0;
+                app_r = 0.0;
+                apk_r = 0.0;
+            }
+            else
+            {
+                arp_l = 0.0;
+                ark_l = 0.0;
+                app_l = 0.0;
+                apk_l = 0.0;
+
+                arp_r = arp_s;
+                ark_r = ark_s;
+                app_r = app_s;
+                apk_r = apk_s;
+            }
+        } */
+
+        if (phaseChange2 == true && phaseChange3 == false)
+        {
+            if (foot_step(current_step_num, 6) == 1)
+            {
+                arp_l = DyrosMath::cubic(walking_tick, double2Single_pre1, double2Single1, arp_d, arp_s, 0, 0);
+                ark_l = DyrosMath::cubic(walking_tick, double2Single_pre1, double2Single1, ark_d, ark_s, 0, 0);
+                app_l = DyrosMath::cubic(walking_tick, double2Single_pre1, double2Single1, app_d, app_s, 0, 0);
+                apk_l = DyrosMath::cubic(walking_tick, double2Single_pre1, double2Single1, apk_d, apk_s, 0, 0);
+                arp_r = DyrosMath::cubic(walking_tick, double2Single_pre1, double2Single1, arp_d, arp_s, 0, 0);
+                ark_r = DyrosMath::cubic(walking_tick, double2Single_pre1, double2Single1, ark_d, ark_s, 0, 0);
+                app_r = DyrosMath::cubic(walking_tick, double2Single_pre1, double2Single1, app_d, app_s, 0, 0);
+                apk_r = DyrosMath::cubic(walking_tick, double2Single_pre1, double2Single1, apk_d, apk_s, 0, 0);
+            }
+            else
+            {
+                arp_r = DyrosMath::cubic(walking_tick, double2Single_pre1, double2Single1, arp_d, arp_s, 0, 0);
+                ark_r = DyrosMath::cubic(walking_tick, double2Single_pre1, double2Single1, ark_d, ark_s, 0, 0);
+                app_r = DyrosMath::cubic(walking_tick, double2Single_pre1, double2Single1, app_d, app_s, 0, 0);
+                apk_r = DyrosMath::cubic(walking_tick, double2Single_pre1, double2Single1, apk_d, apk_s, 0, 0);
+                arp_l = DyrosMath::cubic(walking_tick, double2Single_pre1, double2Single1, arp_d, arp_s, 0, 0);
+                ark_l = DyrosMath::cubic(walking_tick, double2Single_pre1, double2Single1, ark_d, ark_s, 0, 0);
+                app_l = DyrosMath::cubic(walking_tick, double2Single_pre1, double2Single1, app_d, app_s, 0, 0);
+                apk_l = DyrosMath::cubic(walking_tick, double2Single_pre1, double2Single1, apk_d, apk_s, 0, 0);
+            }
+        }
+        else if (phaseChange2 == false && phaseChange3 == true)
+        {
+            if (contactMode == 2)
+            {
+                arp_l = DyrosMath::cubic(walking_tick, single2Double_pre1, single2Double1, arp_s, arp_d, 0, 0);
+                ark_l = DyrosMath::cubic(walking_tick, single2Double_pre1, single2Double1, ark_s, ark_d, 0, 0);
+                app_l = DyrosMath::cubic(walking_tick, single2Double_pre1, single2Double1, app_s, app_d, 0, 0);
+                apk_l = DyrosMath::cubic(walking_tick, single2Double_pre1, single2Double1, apk_s, apk_d, 0, 0);
+                arp_r = DyrosMath::cubic(walking_tick, single2Double_pre1, single2Double1, arp_s, arp_d, 0, 0);
+                ark_r = DyrosMath::cubic(walking_tick, single2Double_pre1, single2Double1, ark_s, ark_d, 0, 0);
+                app_r = DyrosMath::cubic(walking_tick, single2Double_pre1, single2Double1, app_s, app_d, 0, 0);
+                apk_r = DyrosMath::cubic(walking_tick, single2Double_pre1, single2Double1, apk_s, apk_d, 0, 0);
+            }
+            else
+            {
+                arp_r = DyrosMath::cubic(walking_tick, single2Double_pre1, single2Double1, arp_s, arp_d, 0, 0);
+                ark_r = DyrosMath::cubic(walking_tick, single2Double_pre1, single2Double1, ark_s, ark_d, 0, 0);
+                app_r = DyrosMath::cubic(walking_tick, single2Double_pre1, single2Double1, app_s, app_d, 0, 0);
+                apk_r = DyrosMath::cubic(walking_tick, single2Double_pre1, single2Double1, apk_s, apk_d, 0, 0);
+                arp_l = DyrosMath::cubic(walking_tick, single2Double_pre1, single2Double1, arp_s, arp_d, 0, 0);
+                ark_l = DyrosMath::cubic(walking_tick, single2Double_pre1, single2Double1, ark_s, ark_d, 0, 0);
+                app_l = DyrosMath::cubic(walking_tick, single2Double_pre1, single2Double1, app_s, app_d, 0, 0);
+                apk_l = DyrosMath::cubic(walking_tick, single2Double_pre1, single2Double1, apk_s, apk_d, 0, 0);
+            }
+        }
+        else
+        {
+            if (contactMode == 1)
+            {
+                arp_l = arp_d;
+                ark_l = ark_d;
+                app_l = app_d;
+                apk_l = apk_d;
+
+                arp_r = arp_d;
+                ark_r = ark_d;
+                app_r = app_d;
+                apk_r = apk_d;
+            }
+            else if (contactMode == 2)
+            {
+                arp_l = arp_s;
+                ark_l = ark_s;
+                app_l = app_s;
+                apk_l = apk_s;
+
+                arp_r = arp_s;
+                ark_r = ark_s;
+                app_r = app_s;
+                apk_r = apk_s;
+            }
+            else
+            {
+                arp_l = arp_s;
+                ark_l = ark_s;
+                app_l = app_s;
+                apk_l = apk_s;
+
+                arp_r = arp_s;
+                ark_r = ark_s;
+                app_r = app_s;
+                apk_r = apk_s;
+            }
+        }
 
         if (walking_tick == 2)
         {
@@ -1750,27 +1970,88 @@ void CustomController::zmpControl(RobotData &Robot)
             control_input.setZero();
         }
 
-        control_input(0) = apk / 1000.0 * (LT(1) - Fl_l(4)) + (1 - app / 1000.0) * control_input(0); //pitch
-        control_input(1) = -ark / 1000.0 * (LT(0) - Fl_l(3)) + (1 - arp / 1000.0) * control_input(1); //roll
-
-        control_input(2) = apk / 1000.0 * (RT(1) - Fr_l(4)) + (1 - app / 1000.0) * control_input(2);
-        control_input(3) = -ark / 1000.0 * (RT(0) - Fr_l(3)) + (1 - arp / 1000.0) * control_input(3);
+        control_input(0) = apk_l / 1000.0 * (LT(1) - Fl_l(4)) + (1 - app_l / 1000.0) * control_input(0); //pitch
+        control_input(1) = ark_l / 1000.0 * (LT(0) - Fl_l(3)) + (1 - arp_l / 1000.0) * control_input(1); //roll
+        control_input(2) = apk_r / 1000.0 * (RT(1) - Fr_l(4)) + (1 - app_r / 1000.0) * control_input(2);
+        control_input(3) = ark_r / 1000.0 * (RT(0) - Fr_l(3)) + (1 - arp_r / 1000.0) * control_input(3);
 
         for (int i = 0; i < 4; i++)
         {
-            if (control_input(i) > 0.15)
+            if (control_input(i) > 0.08)
             {
-                control_input(i) = 0.15;
+                control_input(i) = 0.08;
             }
 
-            if (control_input(i) < -0.15)
+            if (control_input(i) < -0.08)
             {
-                control_input(i) = -0.15;
+                control_input(i) = -0.08;
             }
         }
-        
-       // file[0] << pr(0) << "\t" << pl(0) << "\t" << zmp_mpcx << "\t" <<ZMP_FT_prev(0)<<"\t"<< com_refx(0) << "\t" << rd_.link_[Pelvis].xipos(0) << std::endl;
-        file[0] << zmp_mpcx << "\t"<<ZMP_FT_l(0)<<"\t"<< zmp_mpcy << "\t" << ZMP_FT_l(1) <<"\t" << alpha << "\t" << LT(1) << "\t" << Fl_l(4) <<  "\t" << LT(0) << "\t" << Fl_l(3) << std::endl;
+
+        // file[0] << com_sup(0)<<"\t" << comR_sup(0) <<"\t"<< com_sup(1)<<"\t" << comR_sup(1) <<"\t"<<com_mpcx <<"\t"<<rd_.link_[COM_id].xpos(0)<< "\t"<<com_mpcy <<"\t"<<rd_.link_[COM_id].xpos(1)<<std::endl;
+        // file[0] << com_support_current_(0) << "\t" << pelvR_sup(0) <<"\t" << com_support_current_(1) << "\t" << pelvR_sup(1) <<std::endl;
+        file[0] << F_diff(2) << "\t" << F_diff_m(2) << "\t" << contactMode << "\t" << control_input(0) << "\t" << arp_l << "\t" << control_input(1) << "\t" << LT(1) << "\t" << Fl_l(4) << "\t" << RT(1) << "\t" << Fr_l(4) << "\t" << LT(0) << "\t" << Fl_l(3) << "\t" << RT(0) << "\t" << Fr_l(3) << "\t" << zmp_mpcx + 0.02 << "\t" << ZMP_FT_l(0) << "\t" << zmp_mpcy << "\t" << ZMP_FT_l(1) << "\t" << com_mpcx << "\t" << rd_.link_[COM_id].xpos(0) << "\t" << com_mpcy << "\t" << rd_.link_[COM_id].xpos(1) << std::endl;
+        //    file[0]<<contactMode<<"\t"<< control_input(0)<<"\t"<<control_input(1)<<"\t"<<LT(0)<<"\t"<<Fl_l(3)<<"\t"<<LT(1)<<"\t"<<Fl_l(4)<<"\t"<< zmp_mpcx + 0.02<< "\t" << ZMP_FT_l(0) << "\t" <<pl(1) <<"\t"<<yi<<"\t"<< zmp_mpcy << "\t" << ZMP_FT_l(1) << "\t" << com_mpcx << "\t" <<rd_.link_[Pelvis].xipos(0)<< "\t" << PELV_trajectory_float_c.translation()(0) << "\t" << com_mpcy << "\t" <<rd_.link_[Pelvis].xipos(1)<<"\t"<< PELV_trajectory_float_c.translation()(1) << std::endl;
+    }
+}
+
+void CustomController::dspForceControl(RobotData &Robot, double alpha)
+{
+    RF_d.setZero();
+    LF_d.setZero();
+    RF_d(2) = -1 * alpha * Robot.total_mass_ * GRAVITY;
+    LF_d(2) = -1 * (1 - alpha) * Robot.total_mass_ * GRAVITY;
+
+    double Kfx, Tfx, Kfy, Tfy, Kfz, Tfz;
+
+    if (phaseChange2 == true && phaseChange3 == false)
+    {
+        Kfx = DyrosMath::cubic(walking_tick, double2Single_pre1, double2Single1, K_fx, 0.0, 0, 0);
+        Tfx = DyrosMath::cubic(walking_tick, double2Single_pre1, double2Single1, T_fx, 0.0, 0, 0);
+        Kfy = DyrosMath::cubic(walking_tick, double2Single_pre1, double2Single1, K_fy, 0.0, 0, 0);
+        Tfy = DyrosMath::cubic(walking_tick, double2Single_pre1, double2Single1, T_fy, 0.0, 0, 0);
+        Kfz = DyrosMath::cubic(walking_tick, double2Single_pre1, double2Single1, K_fz, 0.0, 0, 0);
+        Tfz = DyrosMath::cubic(walking_tick, double2Single_pre1, double2Single1, T_fz, 0.0, 0, 0);
+    }
+    else
+    {
+        if (contactMode == 1)
+        {
+            Kfx = K_fx;
+            Tfx = T_fx;
+            Kfy = K_fy;
+            Tfy = T_fy;
+            Kfz = K_fz;
+            Tfz = T_fz;
+        }
+
+        if (walking_tick >= single2Double1 && walking_tick < single2Double1 + 0.05 * wk_Hz)
+        {
+            Kfx = DyrosMath::cubic(walking_tick, single2Double1, single2Double1 + 0.05 * wk_Hz, 0.0, K_fx, 0, 0);
+            Tfx = DyrosMath::cubic(walking_tick, single2Double1, single2Double1 + 0.05 * wk_Hz, 0.0, T_fx, 0, 0);
+            Kfy = DyrosMath::cubic(walking_tick, single2Double1, single2Double1 + 0.05 * wk_Hz, 0.0, K_fy, 0, 0);
+            Tfy = DyrosMath::cubic(walking_tick, single2Double1, single2Double1 + 0.05 * wk_Hz, 0.0, T_fy, 0, 0);
+            Kfz = DyrosMath::cubic(walking_tick, single2Double1, single2Double1 + 0.05 * wk_Hz, 0.0, K_fz, 0, 0);
+            Tfz = DyrosMath::cubic(walking_tick, single2Double1, single2Double1 + 0.05 * wk_Hz, 0.0, T_fz, 0, 0);
+        }
+    }
+
+    F_diff = LF_d - RF_d;
+    F_diff_m = Fl_l.segment<3>(0) - Fr_l.segment<3>(0);
+    z_ctrl(0) = K_fx / wk_Hz * (F_diff(0) - F_diff_m(0)) + (1 - 1 / (T_fx * wk_Hz)) * z_ctrl(0);
+    z_ctrl(1) = K_fy / wk_Hz * (F_diff(1) - F_diff_m(1)) + (1 - 1 / (T_fy * wk_Hz)) * z_ctrl(1);
+    z_ctrl(2) = K_fz / wk_Hz * (F_diff(2) - F_diff_m(2)) + (1 - 1 / (T_fz * wk_Hz)) * z_ctrl(2);
+
+    for (int i = 0; i < 3; i++)
+    {
+        if (z_ctrl(i) > 0.01)
+        {
+            z_ctrl(i) = 0.01;
+        }
+        else if (z_ctrl(i) < -0.01)
+        {
+            z_ctrl(i) = -0.01;
+        }
     }
 }
 
