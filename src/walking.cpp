@@ -2161,9 +2161,8 @@ void WalkingController::setIKparam(RobotData &Robot)
     {
         RF_trajectory_float.linear() = RF_float_init.linear();
         LF_trajectory_float.linear() = LF_float_init.linear();
-
-        RF_trajectory_float.linear() = RF_trajectory_float.linear() * DyrosMath::rotateWithY(control_input(2)) * DyrosMath::rotateWithX(-control_input(3));
-        LF_trajectory_float.linear() = LF_trajectory_float.linear() * DyrosMath::rotateWithY(control_input(0)) * DyrosMath::rotateWithX(-control_input(1));
+        RF_trajectory_float.linear() = RF_trajectory_float.linear() * DyrosMath::rotateWithY(control_input(2)) * DyrosMath::rotateWithX(control_input(3));
+        LF_trajectory_float.linear() = LF_trajectory_float.linear() * DyrosMath::rotateWithY(control_input(0)) * DyrosMath::rotateWithX(control_input(1));
     }
 
     RF_trajectory_float.translation()(0) = RFx_trajectory_float(walking_tick);
@@ -2184,8 +2183,8 @@ void WalkingController::setIKparam(RobotData &Robot)
 
     if (Robot.ankleHybrid == true)
     {
-        RF_trajectory_float.translation()(2) = RF_trajectory_float.translation()(2) - 0.4 * z_ctrl(2);
-        LF_trajectory_float.translation()(2) = LF_trajectory_float.translation()(2) + 0.4 * z_ctrl(2);
+        RF_trajectory_float.translation()(2) = RF_trajectory_float.translation()(2) - 0.5 * z_ctrl(2);
+        LF_trajectory_float.translation()(2) = LF_trajectory_float.translation()(2) + 0.5 * z_ctrl(2);
     }
 }
 

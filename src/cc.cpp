@@ -583,7 +583,9 @@ void CustomController::computeFast()
 
                 //   file[1] << PELV_trajectory_float.translation()(0) << "\t" << rd_.link_[Pelvis].xipos(0) << "\t" << PELV_trajectory_float.translation()(1) << "\t" << rd_.link_[Pelvis].xipos(1) << "\t" << zmp_mpcx << "\t" << ZMP_FT_l(0) << "\t" << zmp_mpcy << "\t" << ZMP_FT_l(1) << "\t" << mom_mpcx << "\t" << H_leg_data(1) << "\t" << mom_mpcy << "\t" << H_leg_data(0) << std::endl;
 
-                //file[0] << rd_.q_virtual_(0) << "\t"<< rd_.q_virtual_(1) << "\t"<< rd_.q_virtual_(2) << "\t"<< rd_.q_virtual_(3) << "\t"<< rd_.q_virtual_(4) << "\t"<< rd_.q_virtual_(5) << "\t"<< rd_.q_virtual_(6) << "\t"<< rd_.q_virtual_(7) << "\t"<< rd_.q_virtual_(8) << "\t"<< rd_.q_virtual_(9) << "\t"<< rd_.q_virtual_(10) << "\t"<< rd_.q_virtual_(11) << "\t"<< rd_.q_virtual_(39) << std::endl;
+              
+             //   file[0] <<rd_.q_desired(0) << "\t" << rd_.q_(0) <<"\t"<<rd_.q_desired(1) << "\t" << rd_.q_(1) <<"\t"<<rd_.q_desired(2) << "\t" << rd_.q_(2) <<"\t"<<rd_.q_desired(3) << "\t" << rd_.q_(3) <<"\t"<<rd_.q_desired(4) << "\t" << rd_.q_(4) <<"\t"<<rd_.q_desired(5) << "\t" << rd_.q_(5) <<std::endl;
+               // ile[0] << rd_.q_virtual_(0) << "\t"<< rd_.q_virtual_(1) << "\t"<< rd_.q_virtual_(2) << "\t"<< rd_.q_virtual_(3) << "\t"<< rd_.q_virtual_(4) << "\t"<< rd_.q_virtual_(5) << "\t"<< rd_.q_virtual_(6) << "\t"<< rd_.q_virtual_(7) << "\t"<< rd_.q_virtual_(8) << "\t"<< rd_.q_virtual_(9) << "\t"<< rd_.q_virtual_(10) << "\t"<< rd_.q_virtual_(11) << "\t"<< rd_.q_virtual_(39) << std::endl;
                 //file[0] << RT_mu(0)<< "\t" << Fr_l(3) <<"\t"<< RT_mu(1)<< "\t" << Fr_l(4) <<"\t"<< LT_mu(0)<< "\t" << Fl_l(3) <<"\t"<< LT_mu(1)<< "\t" << Fl_l(4) <<"\t" <<zmp_mpcx <<"\t"<<ZMP_FT_l(0)<<"\t" <<zmp_mpcy <<"\t"<<ZMP_FT_l(1)<<std::endl;
                 //file[0] << control_input(0) << "\t" << control_input(1) << "\t" << control_input(2) << "\t" << control_input(3) << "\t" << zmp_mpcx << "\t" << ZMP_FT_l(0) << "\t" << zmp_mpcy << "\t" << ZMP_FT_l(1) << "\t"<<pr(0)<<"\t" << pl(0)<<std::endl;
 
@@ -1654,7 +1656,7 @@ void CustomController::zmpCalc(RobotData &Robot)
         pelv_lp(i) = DyrosMath::lowPassFilter(rd_.link_[Pelvis].xipos(i), pelv_lp_prev(i), 1 / wk_Hz, 1 / (2 * 3.14 * 32));
 
     for (int i = 0; i < 3; i++)
-        ZMP_FT_l(i) = DyrosMath::lowPassFilter(ZMP_FT(i), ZMP_FT_prev(i), 1 / wk_Hz, 1 / (2 * 3.14 * 3));
+        ZMP_FT_l(i) = DyrosMath::lowPassFilter(ZMP_FT(i), ZMP_FT_prev(i), 1 / wk_Hz, 1 / (2 * 3.14 * 5));
 
     for (int i = 0; i < 6; i++)
     {
@@ -2000,10 +2002,7 @@ void CustomController::zmpControl(RobotData &Robot)
             }
         }
 
-        // file[0] << com_sup(0)<<"\t" << comR_sup(0) <<"\t"<< com_sup(1)<<"\t" << comR_sup(1) <<"\t"<<com_mpcx <<"\t"<<rd_.link_[COM_id].xpos(0)<< "\t"<<com_mpcy <<"\t"<<rd_.link_[COM_id].xpos(1)<<std::endl;
-        // file[0] << com_support_current_(0) << "\t" << pelvR_sup(0) <<"\t" << com_support_current_(1) << "\t" << pelvR_sup(1) <<std::endl;
-        //file[0] << F_diff(2) << "\t" << F_diff_m(2) << "\t" << contactMode << "\t" << control_input(0) << "\t" << arp_l << "\t" << control_input(1) << "\t" << LT(1) << "\t" << Fl_l(4) << "\t" << RT(1) << "\t" << Fr_l(4) << "\t" << LT(0) << "\t" << Fl_l(3) << "\t" << RT(0) << "\t" << Fr_l(3) << "\t" << zmp_mpcx + 0.02 << "\t" << ZMP_FT_l(0) << "\t" << zmp_mpcy << "\t" << ZMP_FT_l(1) << "\t" << com_mpcx << "\t" << rd_.link_[COM_id].xpos(0) << "\t" << com_mpcy << "\t" << rd_.link_[COM_id].xpos(1) << std::endl;
-        //    file[0]<<contactMode<<"\t"<< control_input(0)<<"\t"<<control_input(1)<<"\t"<<LT(0)<<"\t"<<Fl_l(3)<<"\t"<<LT(1)<<"\t"<<Fl_l(4)<<"\t"<< zmp_mpcx + 0.02<< "\t" << ZMP_FT_l(0) << "\t" <<pl(1) <<"\t"<<yi<<"\t"<< zmp_mpcy << "\t" << ZMP_FT_l(1) << "\t" << com_mpcx << "\t" <<rd_.link_[Pelvis].xipos(0)<< "\t" << PELV_trajectory_float_c.translation()(0) << "\t" << com_mpcy << "\t" <<rd_.link_[Pelvis].xipos(1)<<"\t"<< PELV_trajectory_float_c.translation()(1) << std::endl;
+        file[0] << F_diff(2) << "\t" << F_diff_m(2) << "\t" << contactMode << "\t" << control_input(1) << "\t" << LT(0) <<"\t"<< Fl_l(3) << "\t" << control_input(3) << "\t" << RT(0)<<"\t"<<Fr_l(3) << std::endl;
     }
 }
 
