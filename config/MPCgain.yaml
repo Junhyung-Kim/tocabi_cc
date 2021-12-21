@@ -56,8 +56,11 @@ ark_s : 0.004
 app_s : 60
 apk_s : 0.004
 
-pelv_xp : 0.24
+pelv_xp : 0.9
 pelv_yp : 2.8
+
+zmp_xp : 0.05
+zmp_yp : 0.24
 
 K_fx : 0.0005
 T_fx : 30

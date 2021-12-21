@@ -2184,8 +2184,8 @@ void WalkingController::setIKparam(RobotData &Robot)
 
     if (Robot.ankleHybrid == true)
     {
-        RF_trajectory_float.translation()(2) = RF_trajectory_float.translation()(2) - 0.35 * z_ctrl(2);
-        LF_trajectory_float.translation()(2) = LF_trajectory_float.translation()(2) + 0.35 * z_ctrl(2);
+        RF_trajectory_float.translation()(2) = RF_trajectory_float.translation()(2) - 0.4 * z_ctrl(2);
+        LF_trajectory_float.translation()(2) = LF_trajectory_float.translation()(2) + 0.4 * z_ctrl(2);
     }
 }
 
@@ -2349,10 +2349,53 @@ void WalkingController::supportToFloatPattern(RobotData &Robot)
 }
 
 void WalkingController::comController(RobotData &Robot)
-{
-    PELV_trajectory_float_c.translation()(0) = PELV_trajectory_float.translation()(0);//Robot.link_[Pelvis].xipos(0) + pelv_xp*(PELV_trajectory_float.translation()(0) - Robot.link_[COM_id].xpos(0));
-    PELV_trajectory_float_c.translation()(1) = Robot.link_[Pelvis].xipos(1) + pelv_yp*(PELV_trajectory_float.translation()(1) - Robot.link_[COM_id].xpos(1)) - pelv_xp *(zmp_mpcy - ZMP_FT_l(1));
+{ 
+    /*double com_mass = Robot.total_mass_;
+    Eigen::Vector3d com_xpos_temp;
+    Eigen::Vector4d com_xpos, com_traj_temp, com_xpos_sup, com_traj_pelv, com_traj_sup;
+    Eigen::Isometry3d sup_trans, supf;
+    com_xpos_temp.setZero();
+    for (int i = 0; i < LINK_NUMBER; i++)
+        com_xpos_temp += Robot.link_local[i].xipos * Robot.link_local[i].mass / com_mass;
+
+    com_xpos.segment<3>(0) = com_xpos_temp;
+    com_xpos(3) = 1.0; 
+
+    if (foot_step(current_step_num, 6) == 0)
+    {   
+        supf.linear() = Robot.link_local[Right_Foot].rotm;
+        supf.translation() = Robot.link_local[Right_Foot].xpos;
+    }
+    else
+    {
+        supf.linear() = Robot.link_local[Left_Foot].rotm;
+        supf.translation() = Robot.link_local[Left_Foot].xpos;
+    }
+
+    com_xpos_sup = supf.inverse() * com_xpos;
+    com_traj_temp.setZero();
+    com_traj_temp(0) = PELV_trajectory_float.translation()(0);
+    com_traj_temp(1) = PELV_trajectory_float.translation()(1);
+    com_traj_temp(2) = PELV_trajectory_float.translation()(2);
+    com_traj_temp(3) = 1.0;
+    com_traj_pelv = PELV_float_current.inverse() * com_traj_temp;
+    com_traj_sup = supf.inverse() * com_traj_pelv;*/
+
+    if(walking_tick == 0)
+    {
+        com_offset = PELV_trajectory_float.translation()(0) - Robot.link_[Pelvis].xipos(0);
+    }
+
+    if(walking_tick > 900)
+    {
+        PELV_trajectory_float_c.translation()(0) = PELV_trajectory_float.translation()(0) - com_offset  + pelv_xp*(PELV_trajectory_float.translation()(0) - Robot.link_[COM_id].xpos(0)) - zmp_xp *(zmp_mpcx - ZMP_FT_l(0));    
+    }
+    else
+    {
+        PELV_trajectory_float_c.translation()(0) = PELV_trajectory_float.translation()(0) - com_offset  + pelv_xp*(PELV_trajectory_float.translation()(0) - Robot.link_[COM_id].xpos(0));
+    }
+
+    PELV_trajectory_float_c.translation()(1) = Robot.link_[Pelvis].xipos(1) + pelv_yp*(PELV_trajectory_float.translation()(1) - Robot.link_[COM_id].xpos(1)) - zmp_yp *(zmp_mpcy - ZMP_FT_l(1));
     PELV_trajectory_float_c.translation()(2) = PELV_trajectory_float.translation()(2);
- 
     PELV_trajectory_float_c.linear() = PELV_float_init.linear();
 }
