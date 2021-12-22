@@ -569,12 +569,9 @@ void CustomController::computeFast()
                 {
                     walking_tick++;
                 }
-                file[1]<< rd_.link_[COM_id].xpos(0) << "\t" << com_mpcx <<"\t"<<ZMP_FT_l(0)<<"\t"<<zmp_mpcx << "\t"<< rd_.link_[COM_id].xpos(1) << "\t" << com_mpcy <<"\t"<<ZMP_FT_l(1)<<"\t"<<zmp_mpcy << "\t" << H_leg_data(0) << "\t" <<mom_mpcy<<"\t"<< H_leg_data(1) <<"\t"<<mom_mpcx<<"\t" << H_leg_data(2) << std::endl; 
-                // file[1]<<PELV_trajectory_float.translation()(0) <<"\t"<<PELV_trajectory_float_c.translation()(0)<<"\t"<<rd_.link_[Pelvis].xipos(0) << "\t" << rd_.link_[COM_id].xpos(0) << "\t" << com_mpcx <<"\t"<<ZMP_FT_l(0)<<"\t"<<zmp_mpcx<<"\t"<<rd_.link_[Right_Foot].xpos(0)<<std::endl;
-           
-              //  file[1] << rd_.link_[COM_id].xpos(0) - 0.0145 << "\t" << com_mpcx <<"\t"<<PELV_trajectory_float_c.translation()(0)<<"\t"<< rd_.link_[COM_id].xpos(1) << "\t" << com_mpcy << "\t" << zmp_mpcy << "\t" << ZMP_FT_l(1)<<"\t"<<z_ctrl(2)<< std::endl;
-              //  file[1] << rd_.link_[Pelvis].xipos(1)<<"\t"<< rd_.link_[Pelvis].v(1)<<"\t"<< PELV_trajectory_float.translation()(1) <<std::endl; 
-                /*   if (rd_.tc_.MPC == true)
+
+                file[1]<< rd_.link_[COM_id].xpos(0) << "\t" << com_mpcx <<"\t"<<ZMP_FT_l(0)<<"\t"<<zmp_mpcx << "\t"<< rd_.link_[COM_id].xpos(1) << "\t" << com_mpcy <<"\t"<<ZMP_FT_l(1)<<"\t"<<zmp_mpcy << "\t" << H_leg_data(0) << "\t" <<mom_mpcy<<"\t"<< H_leg_data(1) <<"\t"<<mom_mpcx<< std::endl; 
+               /*   if (rd_.tc_.MPC == true)
                     file[1] << PELV_trajectory_float.translation()(0) <<"\t"<< PELV_trajectory_float_c.translation()(0) << "\t" << rd_.link_[COM_id].xpos(0) << "\t" <<com_mpcx<<"\t"<< PELV_trajectory_float.translation()(1)<<"\t"<< PELV_trajectory_float_c.translation()(1) << "\t" << rd_.link_[COM_id].xpos(1) << "\t"<<com_mpcy<<"\t" <<rd_.link_[Pelvis].xipos(1)<<std::endl;
                 else*/
                 //                    file[1] << xy_vib_est(0) <<"\t"<<uy_vib<< "\t"<<com_mpcy <<"\t" <<PELV_trajectory_float.translation()(1)<<"\t"<< rd_.link_[COM_id].xpos(1) << "\t"<< xy_vib_est(1) <<"\t"<< rd_.link_[COM_id].v(1) << "\t"<<yy_vib(0) <<"\t" << yy_vibm(0)<< "\t"<<yy_vib(1) <<"\t" << yy_vibm(1)<< std::endl;//"\t"<< xy_vib_est(0) << "\t" << rd_.link_[Pelvis].xpos(1) << "\t"<< xy_vib_est(1) << "\t" << rd_.link_[Pelvis].v(1) << std::endl;
@@ -929,8 +926,8 @@ void CustomController::jointVelocityEstimate()
     A_dt = I - dt * A_dt;
 
     double L, L1;
-    L = 0.004;
-    L1 = 0.004;
+    L = 0.0025;
+    L1 = 0.0025;
 
     if (velEst == false)
     {
@@ -1613,15 +1610,15 @@ void CustomController::momentumControl(RobotData &Robot)
 
     for (int i = 0; i < variable_size; i++)
     {
-        lb(i) = -3.0;
-        ub(i) = 3.0;
+        lb(i) = -1.0;
+        ub(i) = 1.0;
     }
 
-    lb(3) = -1.0;
-    lb(4) = -1.0;
+    lb(3) = -2.0;
+    lb(4) = -2.0;
 
-    ub(3) = 1.0;
-    ub(4) = 1.0;
+    ub(3) = 2.0;
+    ub(4) = 2.0;
 
     QP_m.EnableEqualityCondition(0.005);
     QP_m.UpdateMinProblem(H, g);
@@ -1660,8 +1657,8 @@ void CustomController::zmpCalc(RobotData &Robot)
 
     for (int i = 0; i < 6; i++)
     {
-        Fr_l(i) = DyrosMath::lowPassFilter(Fr(i), Fr_prev(i), 1 / wk_Hz, 1 / (2 * 3.14 * 6));
-        Fl_l(i) = DyrosMath::lowPassFilter(Fl(i), Fl_prev(i), 1 / wk_Hz, 1 / (2 * 3.14 * 6));
+        Fr_l(i) = DyrosMath::lowPassFilter(Fr(i), Fr_prev(i), 1 / wk_Hz, 1 / (2 * 3.14 * 4));
+        Fl_l(i) = DyrosMath::lowPassFilter(Fl(i), Fl_prev(i), 1 / wk_Hz, 1 / (2 * 3.14 * 4));
     }
 
     Fr_prev = Fr_l;
@@ -1763,14 +1760,14 @@ void CustomController::zmpControl(RobotData &Robot)
 
         for (int i = 0; i < 2; i++)
         {
-            if (desired_ankle_torque(i) > 100)
+            if (desired_ankle_torque(i) > 130)
             {
-                desired_ankle_torque(i) = 100;
+                desired_ankle_torque(i) = 130;
             }
 
-            if (desired_ankle_torque(i) < -100)
+            if (desired_ankle_torque(i) < -130)
             {
-                desired_ankle_torque(i) = -100;
+                desired_ankle_torque(i) = -130;
             }
         }
 

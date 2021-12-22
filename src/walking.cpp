@@ -1434,11 +1434,11 @@ void WalkingController::mpcStateContraint(RobotData &Robot)
         int j = (i - t_temp) / t_total;
         if (i < t_temp + t_total + t_double1 + t_rest_temp + t_rest_init || (i >= t_temp + 2 * t_total - t_rest_last - t_double2 - t_imp - t_rest_temp && i <= t_temp + t_total * 2))
         {
-            yL[i][0] = -0.150;
-            yU[i][0] = 0.150;
+            yL[i][0] = -0.145;
+            yU[i][0] = 0.145;
 
-            yL[i][2] = -0.150;
-            yU[i][2] = 0.150;
+            yL[i][2] = -0.145;
+            yU[i][2] = 0.145;
 
             if (i < t_temp + t_total + t_double1 + t_rest_temp)
             {
@@ -1462,10 +1462,10 @@ void WalkingController::mpcStateContraint(RobotData &Robot)
             if (foot_step(1, 6) == 1)
             {
                 yL[i][0] = 0.040;
-                yU[i][0] = 0.150;
+                yU[i][0] = 0.145;
 
                 yL[i][2] = 0.040;
-                yU[i][2] = 0.150;
+                yU[i][2] = 0.145;
 
                 xL[i][0] = RFx_float_init.translation()(0) - 0.10;
                 xU[i][0] = RFx_float_init.translation()(0) + 0.10;
@@ -1475,10 +1475,10 @@ void WalkingController::mpcStateContraint(RobotData &Robot)
             }
             else
             {
-                yL[i][0] = -0.150;
+                yL[i][0] = -0.145;
                 yU[i][0] = -0.040;
 
-                yL[i][2] = -0.150;
+                yL[i][2] = -0.145;
                 yU[i][2] = -0.040;
 
                 xL[i][0] = RFx_float_init.translation()(0) - 0.10;
@@ -1492,11 +1492,11 @@ void WalkingController::mpcStateContraint(RobotData &Robot)
         {
             if (i <= t_start_real + t_total * j + t_double1 + t_rest_temp && i >= t_start + t_total * (j)-1)
             {
-                yL[i][0] = -0.150;
-                yU[i][0] = 0.150;
+                yL[i][0] = -0.145;
+                yU[i][0] = 0.145;
 
-                yL[i][2] = -0.150;
-                yU[i][2] = 0.150;
+                yL[i][2] = -0.145;
+                yU[i][2] = 0.145;
 
                 xL[i][0] = foot_step(j - 1, 0) - 0.10;
                 xU[i][0] = foot_step(j - 1, 0) + 0.10;
@@ -1509,10 +1509,10 @@ void WalkingController::mpcStateContraint(RobotData &Robot)
                 if (foot_step(j, 6) == 1)
                 {
                     yL[i][0] = 0.040;
-                    yU[i][0] = 0.150;
+                    yU[i][0] = 0.145;
 
                     yL[i][2] = 0.040;
-                    yU[i][2] = 0.150;
+                    yU[i][2] = 0.145;
 
                     xL[i][0] = foot_step(j - 1, 0) - 0.10;
                     xU[i][0] = foot_step(j - 1, 0) + 0.10;
@@ -1522,10 +1522,10 @@ void WalkingController::mpcStateContraint(RobotData &Robot)
                 }
                 else
                 {
-                    yL[i][0] = -0.150;
+                    yL[i][0] = -0.145;
                     yU[i][0] = -0.040;
 
-                    yL[i][2] = -0.150;
+                    yL[i][2] = -0.145;
                     yU[i][2] = -0.040;
 
                     xL[i][0] = foot_step(j - 1, 0) - 0.10;
@@ -1537,11 +1537,11 @@ void WalkingController::mpcStateContraint(RobotData &Robot)
             }
             else
             {
-                yL[i][0] = -0.150;
-                yU[i][0] = 0.150;
+                yL[i][0] = -0.145;
+                yU[i][0] = 0.145;
 
-                yL[i][2] = -0.150;
-                yU[i][2] = 0.150;
+                yL[i][2] = -0.145;
+                yU[i][2] = 0.145;
 
                 xL[i][0] = foot_step(j - 1, 0) - 0.10;
                 xU[i][0] = foot_step(j, 0) + 0.10;
@@ -1552,11 +1552,11 @@ void WalkingController::mpcStateContraint(RobotData &Robot)
         }
         else
         {
-            yL[i][0] = -0.150;
-            yU[i][0] = 0.150;
+            yL[i][0] = -0.145;
+            yU[i][0] = 0.145;
 
-            yL[i][2] = -0.150;
-            yU[i][2] = 0.150;
+            yL[i][2] = -0.145;
+            yU[i][2] = 0.145;
 
             xL[i][0] = foot_step(j - 1, 0) - 0.10;
             xU[i][0] = foot_step(j - 1, 0) + 0.10;
@@ -2183,8 +2183,8 @@ void WalkingController::setIKparam(RobotData &Robot)
 
     if (Robot.ankleHybrid == true)
     {
-        RF_trajectory_float.translation()(2) = RF_trajectory_float.translation()(2) - 0.5 * z_ctrl(2);
-        LF_trajectory_float.translation()(2) = LF_trajectory_float.translation()(2) + 0.5 * z_ctrl(2);
+        RF_trajectory_float.translation()(2) = RF_trajectory_float.translation()(2) - 0.4 * z_ctrl(2);
+        LF_trajectory_float.translation()(2) = LF_trajectory_float.translation()(2) + 0.6 * z_ctrl(2);
     }
 }
 
