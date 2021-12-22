@@ -47,20 +47,20 @@ zlNy : 0
 zuNy : 0
 
 arp_d : 40
-ark_d : 0.01
+ark_d : 0.02
 app_d : 40
 apk_d : 0.06
 
 arp_s : 60
-ark_s : 0.01
+ark_s : 0.02
 app_s : 60
 apk_s : 0.06
 
 pelv_xp : 0.95
-pelv_yp : 2.5
+pelv_yp : 2.4
 
 zmp_xp : 0.1
-zmp_yp : 0.15
+zmp_yp : 0.1
 
 K_fx : 0.0005
 T_fx : 30
