@@ -2183,8 +2183,8 @@ void WalkingController::setIKparam(RobotData &Robot)
 
     if (Robot.ankleHybrid == true)
     {
-        RF_trajectory_float.translation()(2) = RF_trajectory_float.translation()(2) - 0.4 * z_ctrl(2);
-        LF_trajectory_float.translation()(2) = LF_trajectory_float.translation()(2) + 0.6 * z_ctrl(2);
+        RF_trajectory_float.translation()(2) = RF_trajectory_float.translation()(2) - com_gain1 * z_ctrl(2);
+        LF_trajectory_float.translation()(2) = LF_trajectory_float.translation()(2) + com_gain1 * z_ctrl(2);
     }
 }
 

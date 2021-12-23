@@ -94,6 +94,8 @@ CustomController::CustomController(RobotData &rd) : rd_(rd) //, wbc_(dc.wbc_)
     nh.getParam("/tocabi_controller/pelv_xp", pelv_xp);
     nh.getParam("/tocabi_controller/pelv_yp", pelv_yp);
 
+    nh.getParam("/tocabi_controller/com_gain", com_gain1);
+
     nh.getParam("/tocabi_controller/zmp_xp", zmp_xp);
     nh.getParam("/tocabi_controller/zmp_yp", zmp_yp);
 
@@ -926,8 +928,8 @@ void CustomController::jointVelocityEstimate()
     A_dt = I - dt * A_dt;
 
     double L, L1;
-    L = 0.0025;
-    L1 = 0.0025;
+    L = 0.003;
+    L1 = 0.003;
 
     if (velEst == false)
     {
@@ -1291,9 +1293,9 @@ void CustomController::mpcVariableInit()
         zl0y[ii] = zl0x_mpc;
         zu0y[ii] = zu0x_mpc;
         idxs0[ii] = nu[0] + nx[0] + ii;
-        d_ls0x[ii] = 0.00; //-1.0;
+        d_ls0x[ii] = 0.00;
         d_us0x[ii] = 0.00;
-        d_ls0y[ii] = 0.00; //-1.0;
+        d_ls0y[ii] = 0.00;
         d_us0y[ii] = 0.00;
     }
 
@@ -1723,7 +1725,7 @@ void CustomController::zmpControl(RobotData &Robot)
             pl_temp(2) = 0.0;
 
             Lz = sqrt((pr(0) - pl(0)) * (pr(0) - pl(0)) + (pr(1) - pl(1)) * (pr(1) - pl(1)));
-            Lz1 = sqrt((zmp_mpcx - pl(0)) * (zmp_mpcx - pl(0)) + (zmp_mpcy - pl(1)) * (zmp_mpcy - pl(1)));
+            Lz1 = sqrt((zmp_mpcx - xi) * (zmp_mpcx - xi) + (zmp_mpcy - yi) * (zmp_mpcy - yi));
             alpha = Lz1 / Lz;
 
             if (alpha > 1)
@@ -1760,14 +1762,14 @@ void CustomController::zmpControl(RobotData &Robot)
 
         for (int i = 0; i < 2; i++)
         {
-            if (desired_ankle_torque(i) > 130)
+            if (desired_ankle_torque(i) > 160)
             {
-                desired_ankle_torque(i) = 130;
+                desired_ankle_torque(i) = 160;
             }
 
-            if (desired_ankle_torque(i) < -130)
+            if (desired_ankle_torque(i) < -160)
             {
-                desired_ankle_torque(i) = -130;
+                desired_ankle_torque(i) = -160;
             }
         }
 

@@ -246,7 +246,7 @@ public:
     Eigen::VectorXd zmp_refy_mu;
     Eigen::VectorXd b_offset;
 
-    double pelv_xp, pelv_yp, zmp_xp, zmp_yp, com_offset;
+    double pelv_xp, pelv_yp, zmp_xp, zmp_yp, com_offset, com_gain1;
 
     Eigen::Vector3d ZMP_FT, ZMP_FT_l, ZMP_FT_prev, ZMP_FT_mu, ZMP_FT_l_mu;
     Eigen::Vector4d com_sup;
