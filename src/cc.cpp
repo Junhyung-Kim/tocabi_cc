@@ -1725,7 +1725,7 @@ void CustomController::zmpControl(RobotData &Robot)
             pl_temp(2) = 0.0;
 
             Lz = sqrt((pr(0) - pl(0)) * (pr(0) - pl(0)) + (pr(1) - pl(1)) * (pr(1) - pl(1)));
-            Lz1 = sqrt((zmp_mpcx - xi) * (zmp_mpcx - xi) + (zmp_mpcy - yi) * (zmp_mpcy - yi));
+            Lz1 = sqrt((xi - pl(0)) * (xi - pl(0)) + (yi - pl(1)) * (yi - pl(1)));
             alpha = Lz1 / Lz;
 
             if (alpha > 1)
