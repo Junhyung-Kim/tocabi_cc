@@ -46,23 +46,23 @@ ZuNy : 1000.0
 zlNy : 0
 zuNy : 0
 
-arp_d : 60
-ark_d : 0.01
+arp_d : 15
+ark_d : 0.035
 app_d : 40
-apk_d : 0.07
+apk_d : 0.06
 
-arp_s : 60
-ark_s : 0.01
+arp_s : 20
+ark_s : 0.04
 app_s : 60
-apk_s : 0.07
+apk_s : 0.06
 
-com_gain : 0.005
+com_gain : 0.3
 
-pelv_xp : 0.95
-pelv_yp : 2.8
+pelv_xp : 0.96
+pelv_yp : 3.9
 
-zmp_xp : 0.10
-zmp_yp : 0.25
+zmp_xp : 0.15
+zmp_yp : 0.10
 
 K_fx : 0.0005
 T_fx : 30

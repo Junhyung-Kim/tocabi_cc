@@ -87,6 +87,10 @@ public:
     Eigen::VectorQd TorqueGrav;
     double rate;
 
+    Eigen::Vector3d F_ref;
+    Eigen::Vector3d F_cur;
+    Eigen::Vector3d F_err;
+
     std::atomic<double> com_mpcx;
     std::atomic<double> com_mpcy;
 
