@@ -222,6 +222,7 @@ public:
     Eigen::Vector2d zmpl, zmpr;
 
     Eigen::Vector4d control_input;
+    Eigen::Vector2d posture_input;
 
     Eigen::Vector3d com_support_current_;
 
@@ -252,13 +253,15 @@ public:
     Eigen::Vector4d com_sup;
     Eigen::Vector4d comR_sup;
     Eigen::Vector4d pelvR_sup;
+    Eigen::Vector4d RF_sup;    
+    Eigen::Vector4d LF_sup;
     
     Eigen::Vector3d pelvR_sup1;
     Eigen::Vector4d pelvPR_sup;
     Eigen::Vector4d SUP_foot;
 
     //Ankle Controller
-    double arp_d, ark_d, app_d, apk_d, arp_s, ark_s, app_s, apk_s, mobgain1, mobgain2, mobgain3, mobgain4, mobgain5, mobgain6;
+    double arp_dl, ark_dl, app_dl, apk_dl, arp_sl, ark_sl, app_sl, apk_sl, arp_dr, ark_dr, app_dr, apk_dr, arp_sr, ark_sr, app_sr, apk_sr, mobgain1, mobgain2, mobgain3, mobgain4, mobgain5, mobgain6, kc_r, tc_r, kc_p, tc_p;
     std::vector<double> mobgain;
     Eigen::VectorQd torque_est;
     int ft_ok;
@@ -304,6 +307,12 @@ public:
     Eigen::Vector2d yx_vib;
     Eigen::Vector2d yy_vib;
     Eigen::Vector2d yy_vibm;
+
+    std::atomic<double> com_mpcx;
+    std::atomic<double> com_mpcy;
+
+    std::atomic<double> mom_mpcx;
+    std::atomic<double> mom_mpcy;
 
     std::atomic<double> zmp_mpcx;
     std::atomic<double> zmp_mpcy;

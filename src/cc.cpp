@@ -81,15 +81,30 @@ CustomController::CustomController(RobotData &rd) : rd_(rd) //, wbc_(dc.wbc_)
     nh.getParam("/tocabi_controller/zlNy", zlNy_mpc);
     nh.getParam("/tocabi_controller/zuNy", zuNy_mpc);
 
-    nh.getParam("/tocabi_controller/arp_d", arp_d);
-    nh.getParam("/tocabi_controller/ark_d", ark_d);
-    nh.getParam("/tocabi_controller/app_d", app_d);
-    nh.getParam("/tocabi_controller/apk_d", apk_d);
+    nh.getParam("/tocabi_controller/arp_dl", arp_dl);
+    nh.getParam("/tocabi_controller/ark_dl", ark_dl);
+    nh.getParam("/tocabi_controller/app_dl", app_dl);
+    nh.getParam("/tocabi_controller/apk_dl", apk_dl);
 
-    nh.getParam("/tocabi_controller/arp_s", arp_s);
-    nh.getParam("/tocabi_controller/ark_s", ark_s);
-    nh.getParam("/tocabi_controller/app_s", app_s);
-    nh.getParam("/tocabi_controller/apk_s", apk_s);
+    nh.getParam("/tocabi_controller/kc_r", kc_r);
+    nh.getParam("/tocabi_controller/tc_r", tc_r);
+    nh.getParam("/tocabi_controller/kc_p", kc_p);
+    nh.getParam("/tocabi_controller/tc_p", tc_p);
+
+    nh.getParam("/tocabi_controller/arp_sl", arp_sl);
+    nh.getParam("/tocabi_controller/ark_sl", ark_sl);
+    nh.getParam("/tocabi_controller/app_sl", app_sl);
+    nh.getParam("/tocabi_controller/apk_sl", apk_sl);
+
+    nh.getParam("/tocabi_controller/arp_dr", arp_dr);
+    nh.getParam("/tocabi_controller/ark_dr", ark_dr);
+    nh.getParam("/tocabi_controller/app_dr", app_dr);
+    nh.getParam("/tocabi_controller/apk_dr", apk_dr);
+
+    nh.getParam("/tocabi_controller/arp_sr", arp_sr);
+    nh.getParam("/tocabi_controller/ark_sr", ark_sr);
+    nh.getParam("/tocabi_controller/app_sr", app_sr);
+    nh.getParam("/tocabi_controller/apk_sr", apk_sr);
 
     nh.getParam("/tocabi_controller/pelv_xp", pelv_xp);
     nh.getParam("/tocabi_controller/pelv_yp", pelv_yp);
@@ -138,6 +153,7 @@ CustomController::CustomController(RobotData &rd) : rd_(rd) //, wbc_(dc.wbc_)
     ROS_INFO("MPCZl1y");
     std::cout << Zl1y_mpc << ", " << Zu1y_mpc << ", " << zl1y_mpc << ", " << zu1y_mpc << std::endl;
 
+    std::cout << "Robot total mass" << rd_.total_mass_ << std::endl;
     ControlVal_.setZero();
     pinocchio::urdf::buildModel("/home/jhk/catkin_ws/src/dyros_tocabi_v2/tocabi_description/robots/dyros_tocabi_with_redhands.urdf", model);
     pinocchio::Data data(model);
@@ -571,8 +587,9 @@ void CustomController::computeFast()
                 {
                     walking_tick++;
                 }
-
-                file[1] << rd_.link_[COM_id].xpos(0) << "\t" << com_mpcx << "\t" << ZMP_FT_l(0) << "\t" << zmp_mpcx << "\t" << rd_.link_[COM_id].xpos(1) << "\t" << com_mpcy << "\t" << ZMP_FT_l(1) << "\t" << zmp_mpcy << "\t" << H_leg_data(0) << "\t" << mom_mpcy << "\t" << H_leg_data(1) << "\t" << mom_mpcx << "\t" << control_input(0) << "\t" << control_input(1) << std::endl;
+                //  file[1] << PELV_trajectory_float_c.translation()(0) << "\t" << PELV_trajectory_float_c.translation()(1) << "\t" << PELV_trajectory_float_c.translation()(2) << "\t" << RF_trajectory_float.translation()(0)<< "\t" << RF_trajectory_float.translation()(1)<< "\t" << RF_trajectory_float.translation()(2)<<std::endl;
+                if (walking_tick % 5 == 0)
+                    file[1] << PELV_trajectory_float_c.translation()(1) << "\t" << rd_.link_[COM_id].xpos(0) << "\t" << com_mpcx << "\t" << ZMP_FT_l(0) << "\t" << zmp_mpcx << "\t" << rd_.link_[COM_id].xpos(1) << "\t" << com_mpcy << "\t" << ZMP_FT_l(1) << "\t" << zmp_mpcy << "\t" << rd_.link_[COM_id].xpos(2) << "\t" << H_leg_data(0) << "\t" << mom_mpcy << "\t" << H_leg_data(1) << "\t" << mom_mpcx << "\t" << control_input(0) << "\t" << control_input(1) << "\t" << F_err(0) << "\t" << F_err(1) << std::endl;
                 /*   if (rd_.tc_.MPC == true)
                     file[1] << PELV_trajectory_float.translation()(0) <<"\t"<< PELV_trajectory_float_c.translation()(0) << "\t" << rd_.link_[COM_id].xpos(0) << "\t" <<com_mpcx<<"\t"<< PELV_trajectory_float.translation()(1)<<"\t"<< PELV_trajectory_float_c.translation()(1) << "\t" << rd_.link_[COM_id].xpos(1) << "\t"<<com_mpcy<<"\t" <<rd_.link_[Pelvis].xipos(1)<<std::endl;
                 else*/
@@ -582,7 +599,7 @@ void CustomController::computeFast()
 
                 //   file[1] << PELV_trajectory_float.translation()(0) << "\t" << rd_.link_[Pelvis].xipos(0) << "\t" << PELV_trajectory_float.translation()(1) << "\t" << rd_.link_[Pelvis].xipos(1) << "\t" << zmp_mpcx << "\t" << ZMP_FT_l(0) << "\t" << zmp_mpcy << "\t" << ZMP_FT_l(1) << "\t" << mom_mpcx << "\t" << H_leg_data(1) << "\t" << mom_mpcy << "\t" << H_leg_data(0) << std::endl;
 
-                //   file[0] <<rd_.q_desired(0) << "\t" << rd_.q_(0) <<"\t"<<rd_.q_desired(1) << "\t" << rd_.q_(1) <<"\t"<<rd_.q_desired(2) << "\t" << rd_.q_(2) <<"\t"<<rd_.q_desired(3) << "\t" << rd_.q_(3) <<"\t"<<rd_.q_desired(4) << "\t" << rd_.q_(4) <<"\t"<<rd_.q_desired(5) << "\t" << rd_.q_(5) <<std::endl;
+                //                   file[0] <<desired_leg_q_temp(0) << "\t" << rd_.q_(0) <<"\t"<<desired_leg_q_temp(1) << "\t" << rd_.q_(1) <<"\t"<<desired_leg_q_temp(2) << "\t" << rd_.q_(2) <<"\t"<<desired_leg_q_temp(3) << "\t" << rd_.q_(3) <<"\t"<<desired_leg_q_temp(4) << "\t" << rd_.q_(4) <<"\t"<<desired_leg_q_temp(5) << "\t" << rd_.q_(5) <<std::endl;
                 // ile[0] << rd_.q_virtual_(0) << "\t"<< rd_.q_virtual_(1) << "\t"<< rd_.q_virtual_(2) << "\t"<< rd_.q_virtual_(3) << "\t"<< rd_.q_virtual_(4) << "\t"<< rd_.q_virtual_(5) << "\t"<< rd_.q_virtual_(6) << "\t"<< rd_.q_virtual_(7) << "\t"<< rd_.q_virtual_(8) << "\t"<< rd_.q_virtual_(9) << "\t"<< rd_.q_virtual_(10) << "\t"<< rd_.q_virtual_(11) << "\t"<< rd_.q_virtual_(39) << std::endl;
                 //file[0] << RT_mu(0)<< "\t" << Fr_l(3) <<"\t"<< RT_mu(1)<< "\t" << Fr_l(4) <<"\t"<< LT_mu(0)<< "\t" << Fl_l(3) <<"\t"<< LT_mu(1)<< "\t" << Fl_l(4) <<"\t" <<zmp_mpcx <<"\t"<<ZMP_FT_l(0)<<"\t" <<zmp_mpcy <<"\t"<<ZMP_FT_l(1)<<std::endl;
                 //file[0] << control_input(0) << "\t" << control_input(1) << "\t" << control_input(2) << "\t" << control_input(3) << "\t" << zmp_mpcx << "\t" << ZMP_FT_l(0) << "\t" << zmp_mpcy << "\t" << ZMP_FT_l(1) << "\t"<<pr(0)<<"\t" << pl(0)<<std::endl;
@@ -1779,9 +1796,9 @@ void CustomController::zmpControl(RobotData &Robot)
             }
         }
 
-        if(contactMode == 1)
+        if (contactMode == 1)
         {
-            if(desired_ankle_torque(0) > 0)
+            if (desired_ankle_torque(0) > 0)
             {
                 LT(0) = desired_ankle_torque(0);
                 RT(0) = 0.0;
@@ -1809,180 +1826,127 @@ void CustomController::zmpControl(RobotData &Robot)
         {
             if (foot_step(current_step_num, 6) == 1)
             {
-                arp_l = DyrosMath::cubic(walking_tick, double2Single_pre1, double2Single1, arp_d, arp_s, 0, 0);
-                ark_l = DyrosMath::cubic(walking_tick, double2Single_pre1, double2Single1, ark_d, ark_s, 0, 0);
-                app_l = DyrosMath::cubic(walking_tick, double2Single_pre1, double2Single1, app_d, app_s, 0, 0);
-                apk_l = DyrosMath::cubic(walking_tick, double2Single_pre1, double2Single1, apk_d, apk_s, 0, 0);
-                arp_r = DyrosMath::cubic(walking_tick, double2Single_pre1, double2Single1, arp_d, 0.0, 0, 0);
-                ark_r = DyrosMath::cubic(walking_tick, double2Single_pre1, double2Single1, ark_d, 0.0, 0, 0);
-                app_r = DyrosMath::cubic(walking_tick, double2Single_pre1, double2Single1, app_d, 0.0, 0, 0);
-                apk_r = DyrosMath::cubic(walking_tick, double2Single_pre1, double2Single1, apk_d, 0.0, 0, 0);
+                arp_l = DyrosMath::cubic(walking_tick, double2Single_pre1, double2Single1, arp_dl, arp_sl, 0, 0);
+                ark_l = DyrosMath::cubic(walking_tick, double2Single_pre1, double2Single1, ark_dl, ark_sl, 0, 0);
+                app_l = DyrosMath::cubic(walking_tick, double2Single_pre1, double2Single1, app_dl, app_sl, 0, 0);
+                apk_l = DyrosMath::cubic(walking_tick, double2Single_pre1, double2Single1, apk_dl, apk_sl, 0, 0);
+                arp_r = DyrosMath::cubic(walking_tick, double2Single_pre1, double2Single1, arp_dl, arp_sl, 0, 0);
+                ark_r = DyrosMath::cubic(walking_tick, double2Single_pre1, double2Single1, ark_dl, ark_sl, 0, 0);
+                app_r = DyrosMath::cubic(walking_tick, double2Single_pre1, double2Single1, app_dl, app_sl, 0, 0);
+                apk_r = DyrosMath::cubic(walking_tick, double2Single_pre1, double2Single1, apk_dl, apk_sl, 0, 0);
             }
             else
             {
-                arp_r = DyrosMath::cubic(walking_tick, double2Single_pre1, double2Single1, arp_d, arp_s, 0, 0);
-                ark_r = DyrosMath::cubic(walking_tick, double2Single_pre1, double2Single1, ark_d, ark_s, 0, 0);
-                app_r = DyrosMath::cubic(walking_tick, double2Single_pre1, double2Single1, app_d, app_s, 0, 0);
-                apk_r = DyrosMath::cubic(walking_tick, double2Single_pre1, double2Single1, apk_d, apk_s, 0, 0);
-                arp_l = DyrosMath::cubic(walking_tick, double2Single_pre1, double2Single1, arp_d, 0.0, 0, 0);
-                ark_l = DyrosMath::cubic(walking_tick, double2Single_pre1, double2Single1, ark_d, 0.0, 0, 0);
-                app_l = DyrosMath::cubic(walking_tick, double2Single_pre1, double2Single1, app_d, 0.0, 0, 0);
-                apk_l = DyrosMath::cubic(walking_tick, double2Single_pre1, double2Single1, apk_d, 0.0, 0, 0);
+                arp_r = DyrosMath::cubic(walking_tick, double2Single_pre1, double2Single1, arp_dl, arp_sl, 0, 0);
+                ark_r = DyrosMath::cubic(walking_tick, double2Single_pre1, double2Single1, ark_dl, ark_sl, 0, 0);
+                app_r = DyrosMath::cubic(walking_tick, double2Single_pre1, double2Single1, app_dl, app_sl, 0, 0);
+                apk_r = DyrosMath::cubic(walking_tick, double2Single_pre1, double2Single1, apk_dl, apk_sl, 0, 0);
+                arp_l = DyrosMath::cubic(walking_tick, double2Single_pre1, double2Single1, arp_dl, arp_sl, 0, 0);
+                ark_l = DyrosMath::cubic(walking_tick, double2Single_pre1, double2Single1, ark_dl, ark_sl, 0, 0);
+                app_l = DyrosMath::cubic(walking_tick, double2Single_pre1, double2Single1, app_dl, app_sl, 0, 0);
+                apk_l = DyrosMath::cubic(walking_tick, double2Single_pre1, double2Single1, apk_dl, apk_sl, 0, 0);
             }
         }
         else if (phaseChange2 == false && phaseChange3 == true)
         {
             if (contactMode == 2)
             {
-                arp_l = DyrosMath::cubic(walking_tick, single2Double_pre1, single2Double1, arp_s, arp_d, 0, 0);
-                ark_l = DyrosMath::cubic(walking_tick, single2Double_pre1, single2Double1, ark_s, ark_d, 0, 0);
-                app_l = DyrosMath::cubic(walking_tick, single2Double_pre1, single2Double1, app_s, app_d, 0, 0);
-                apk_l = DyrosMath::cubic(walking_tick, single2Double_pre1, single2Double1, apk_s, apk_d, 0, 0);
-                arp_r = DyrosMath::cubic(walking_tick, single2Double_pre1, single2Double1, 0.0, arp_d, 0, 0);
-                ark_r = DyrosMath::cubic(walking_tick, single2Double_pre1, single2Double1, 0.0, ark_d, 0, 0);
-                app_r = DyrosMath::cubic(walking_tick, single2Double_pre1, single2Double1, 0.0, app_d, 0, 0);
-                apk_r = DyrosMath::cubic(walking_tick, single2Double_pre1, single2Double1, 0.0, apk_d, 0, 0);
+                arp_l = DyrosMath::cubic(walking_tick, single2Double_pre1, single2Double1, arp_sl, arp_dl, 0, 0);
+                ark_l = DyrosMath::cubic(walking_tick, single2Double_pre1, single2Double1, ark_sl, ark_dl, 0, 0);
+                app_l = DyrosMath::cubic(walking_tick, single2Double_pre1, single2Double1, app_sl, app_dl, 0, 0);
+                apk_l = DyrosMath::cubic(walking_tick, single2Double_pre1, single2Double1, apk_sl, apk_dl, 0, 0);
+                arp_r = DyrosMath::cubic(walking_tick, single2Double_pre1, single2Double1, arp_sl, arp_dl, 0, 0);
+                ark_r = DyrosMath::cubic(walking_tick, single2Double_pre1, single2Double1, ark_sl, ark_dl, 0, 0);
+                app_r = DyrosMath::cubic(walking_tick, single2Double_pre1, single2Double1, app_sl, app_dl, 0, 0);
+                apk_r = DyrosMath::cubic(walking_tick, single2Double_pre1, single2Double1, apk_sl, apk_dl, 0, 0);
             }
             else
             {
-                arp_r = DyrosMath::cubic(walking_tick, single2Double_pre1, single2Double1, arp_s, arp_d, 0, 0);
-                ark_r = DyrosMath::cubic(walking_tick, single2Double_pre1, single2Double1, ark_s, ark_d, 0, 0);
-                app_r = DyrosMath::cubic(walking_tick, single2Double_pre1, single2Double1, app_s, app_d, 0, 0);
-                apk_r = DyrosMath::cubic(walking_tick, single2Double_pre1, single2Double1, apk_s, apk_d, 0, 0);
-                arp_l = DyrosMath::cubic(walking_tick, single2Double_pre1, single2Double1, 0.0, arp_d, 0, 0);
-                ark_l = DyrosMath::cubic(walking_tick, single2Double_pre1, single2Double1, 0.0, ark_d, 0, 0);
-                app_l = DyrosMath::cubic(walking_tick, single2Double_pre1, single2Double1, 0.0, app_d, 0, 0);
-                apk_l = DyrosMath::cubic(walking_tick, single2Double_pre1, single2Double1, 0.0, apk_d, 0, 0);
+                arp_r = DyrosMath::cubic(walking_tick, single2Double_pre1, single2Double1, arp_sl, arp_dl, 0, 0);
+                ark_r = DyrosMath::cubic(walking_tick, single2Double_pre1, single2Double1, ark_sl, ark_dl, 0, 0);
+                app_r = DyrosMath::cubic(walking_tick, single2Double_pre1, single2Double1, app_sl, app_dl, 0, 0);
+                apk_r = DyrosMath::cubic(walking_tick, single2Double_pre1, single2Double1, apk_sl, apk_dl, 0, 0);
+                arp_l = DyrosMath::cubic(walking_tick, single2Double_pre1, single2Double1, arp_sl, arp_dl, 0, 0);
+                ark_l = DyrosMath::cubic(walking_tick, single2Double_pre1, single2Double1, ark_sl, ark_dl, 0, 0);
+                app_l = DyrosMath::cubic(walking_tick, single2Double_pre1, single2Double1, app_sl, app_dl, 0, 0);
+                apk_l = DyrosMath::cubic(walking_tick, single2Double_pre1, single2Double1, apk_sl, apk_dl, 0, 0);
             }
         }
         else
         {
             if (contactMode == 1)
             {
-                arp_l = arp_d;
-                ark_l = ark_d;
-                app_l = app_d;
-                apk_l = apk_d;
+                arp_l = arp_dl;
+                ark_l = ark_dl;
+                app_l = app_dl;
+                apk_l = apk_dl;
 
-                arp_r = arp_d;
-                ark_r = ark_d;
-                app_r = app_d;
-                apk_r = apk_d;
+                arp_r = arp_dl;
+                ark_r = ark_dl;
+                app_r = app_dl;
+                apk_r = apk_dl;
             }
             else if (contactMode == 2)
             {
-                arp_l = arp_s;
-                ark_l = ark_s;
-                app_l = app_s;
-                apk_l = apk_s;
+                arp_l = arp_sl;
+                ark_l = ark_sl;
+                app_l = app_sl;
+                apk_l = apk_sl;
 
-                arp_r = 0.0;
-                ark_r = 0.0;
-                app_r = 0.0;
-                apk_r = 0.0;
+                arp_r = arp_sl;
+                ark_r = ark_sl;
+                app_r = app_sl;
+                apk_r = apk_sl;
             }
             else
             {
-                arp_l = 0.0;
-                ark_l = 0.0;
-                app_l = 0.0;
-                apk_l = 0.0;
+                arp_l = arp_sl;
+                ark_l = ark_sl;
+                app_l = app_sl;
+                apk_l = apk_sl;
 
-                arp_r = arp_s;
-                ark_r = ark_s;
-                app_r = app_s;
-                apk_r = apk_s;
+                arp_r = arp_sl;
+                ark_r = ark_sl;
+                app_r = app_sl;
+                apk_r = apk_sl;
             }
-        } */
+        }*/
 
-        if (phaseChange2 == true && phaseChange3 == false)
+        if (contactMode == 1)
         {
-            if (foot_step(current_step_num, 6) == 1)
-            {
-                arp_l = DyrosMath::cubic(walking_tick, double2Single_pre1, double2Single1, arp_d, arp_s, 0, 0);
-                ark_l = DyrosMath::cubic(walking_tick, double2Single_pre1, double2Single1, ark_d, ark_s, 0, 0);
-                app_l = DyrosMath::cubic(walking_tick, double2Single_pre1, double2Single1, app_d, app_s, 0, 0);
-                apk_l = DyrosMath::cubic(walking_tick, double2Single_pre1, double2Single1, apk_d, apk_s, 0, 0);
-                arp_r = DyrosMath::cubic(walking_tick, double2Single_pre1, double2Single1, arp_d, arp_s, 0, 0);
-                ark_r = DyrosMath::cubic(walking_tick, double2Single_pre1, double2Single1, ark_d, ark_s, 0, 0);
-                app_r = DyrosMath::cubic(walking_tick, double2Single_pre1, double2Single1, app_d, app_s, 0, 0);
-                apk_r = DyrosMath::cubic(walking_tick, double2Single_pre1, double2Single1, apk_d, apk_s, 0, 0);
-            }
-            else
-            {
-                arp_r = DyrosMath::cubic(walking_tick, double2Single_pre1, double2Single1, arp_d, arp_s, 0, 0);
-                ark_r = DyrosMath::cubic(walking_tick, double2Single_pre1, double2Single1, ark_d, ark_s, 0, 0);
-                app_r = DyrosMath::cubic(walking_tick, double2Single_pre1, double2Single1, app_d, app_s, 0, 0);
-                apk_r = DyrosMath::cubic(walking_tick, double2Single_pre1, double2Single1, apk_d, apk_s, 0, 0);
-                arp_l = DyrosMath::cubic(walking_tick, double2Single_pre1, double2Single1, arp_d, arp_s, 0, 0);
-                ark_l = DyrosMath::cubic(walking_tick, double2Single_pre1, double2Single1, ark_d, ark_s, 0, 0);
-                app_l = DyrosMath::cubic(walking_tick, double2Single_pre1, double2Single1, app_d, app_s, 0, 0);
-                apk_l = DyrosMath::cubic(walking_tick, double2Single_pre1, double2Single1, apk_d, apk_s, 0, 0);
-            }
+            arp_l = arp_dl;
+            ark_l = ark_dl;
+            app_l = app_dl;
+            apk_l = apk_dl;
+
+            arp_r = arp_dr;
+            ark_r = ark_dr;
+            app_r = app_dr;
+            apk_r = apk_dr;
         }
-        else if (phaseChange2 == false && phaseChange3 == true)
+        else if (contactMode == 2)
         {
-            if (contactMode == 2)
-            {
-                arp_l = DyrosMath::cubic(walking_tick, single2Double_pre1, single2Double1, arp_s, arp_d, 0, 0);
-                ark_l = DyrosMath::cubic(walking_tick, single2Double_pre1, single2Double1, ark_s, ark_d, 0, 0);
-                app_l = DyrosMath::cubic(walking_tick, single2Double_pre1, single2Double1, app_s, app_d, 0, 0);
-                apk_l = DyrosMath::cubic(walking_tick, single2Double_pre1, single2Double1, apk_s, apk_d, 0, 0);
-                arp_r = DyrosMath::cubic(walking_tick, single2Double_pre1, single2Double1, arp_s, arp_d, 0, 0);
-                ark_r = DyrosMath::cubic(walking_tick, single2Double_pre1, single2Double1, ark_s, ark_d, 0, 0);
-                app_r = DyrosMath::cubic(walking_tick, single2Double_pre1, single2Double1, app_s, app_d, 0, 0);
-                apk_r = DyrosMath::cubic(walking_tick, single2Double_pre1, single2Double1, apk_s, apk_d, 0, 0);
-            }
-            else
-            {
-                arp_r = DyrosMath::cubic(walking_tick, single2Double_pre1, single2Double1, arp_s, arp_d, 0, 0);
-                ark_r = DyrosMath::cubic(walking_tick, single2Double_pre1, single2Double1, ark_s, ark_d, 0, 0);
-                app_r = DyrosMath::cubic(walking_tick, single2Double_pre1, single2Double1, app_s, app_d, 0, 0);
-                apk_r = DyrosMath::cubic(walking_tick, single2Double_pre1, single2Double1, apk_s, apk_d, 0, 0);
-                arp_l = DyrosMath::cubic(walking_tick, single2Double_pre1, single2Double1, arp_s, arp_d, 0, 0);
-                ark_l = DyrosMath::cubic(walking_tick, single2Double_pre1, single2Double1, ark_s, ark_d, 0, 0);
-                app_l = DyrosMath::cubic(walking_tick, single2Double_pre1, single2Double1, app_s, app_d, 0, 0);
-                apk_l = DyrosMath::cubic(walking_tick, single2Double_pre1, single2Double1, apk_s, apk_d, 0, 0);
-            }
+            arp_l = arp_sl;
+            ark_l = ark_sl;
+            app_l = app_sl;
+            apk_l = apk_sl;
+
+            arp_r = arp_sr;
+            ark_r = ark_sr;
+            app_r = app_sr;
+            apk_r = apk_sr;
         }
         else
         {
-            if (contactMode == 1)
-            {
-                arp_l = arp_d;
-                ark_l = ark_d;
-                app_l = app_d;
-                apk_l = apk_d;
+            arp_l = arp_sl;
+            ark_l = ark_sl;
+            app_l = app_sl;
+            apk_l = apk_sl;
 
-                arp_r = arp_d;
-                ark_r = ark_d;
-                app_r = app_d;
-                apk_r = apk_d;
-            }
-            else if (contactMode == 2)
-            {
-                arp_l = arp_s;
-                ark_l = ark_s;
-                app_l = app_s;
-                apk_l = apk_s;
-
-                arp_r = arp_s;
-                ark_r = ark_s;
-                app_r = app_s;
-                apk_r = apk_s;
-            }
-            else
-            {
-                arp_l = arp_s;
-                ark_l = ark_s;
-                app_l = app_s;
-                apk_l = apk_s;
-
-                arp_r = arp_s;
-                ark_r = ark_s;
-                app_r = app_s;
-                apk_r = apk_s;
-            }
+            arp_r = arp_sr;
+            ark_r = ark_sr;
+            app_r = app_sr;
+            apk_r = apk_sr;
         }
 
         if (walking_tick == 2)
@@ -2010,20 +1974,36 @@ void CustomController::zmpControl(RobotData &Robot)
         control_input(2) = apk_r / 1000.0 * (RT(1) - Fr_l(4)) + (1 - app_r / 1000.0) * control_input(2);
         control_input(3) = ark_r / 1000.0 * (RT(0) - Fr_l(3)) + (1 - arp_r / 1000.0) * control_input(3);
 
+        posture_input(0) = kc_r / 1000.0 * (-Robot.roll) + (1 - tc_r / 1000.0) * posture_input(0);  //pitch
+        posture_input(1) = kc_p / 1000.0 * (-Robot.pitch) + (1 - tc_p / 1000.0) * posture_input(1); //roll
+
         for (int i = 0; i < 4; i++)
         {
-            if (control_input(i) > 0.12)
+            if (control_input(i) > 0.06)
             {
-                control_input(i) = 0.12;
+                control_input(i) = 0.06;
             }
 
-            if (control_input(i) < -0.12)
+            if (control_input(i) < -0.06)
             {
-                control_input(i) = -0.12;
+                control_input(i) = -0.06;
             }
         }
 
-        file[0] << F_diff(2) << "\t" << F_diff_m(2) << "\t" << contactMode << "\t" << control_input(1) << "\t" << LT(0) << "\t" << Fl_l(3) << "\t" << control_input(3) << "\t" << RT(0) << "\t" << Fr_l(3) << std::endl;
+        for (int i = 0; i < 2; i++)
+        {
+            if (posture_input(i) > 0.1)
+            {
+                posture_input(i) = 0.1;
+            }
+
+            if (posture_input(i) < -0.1)
+            {
+                posture_input(i) = -0.1;
+            }
+        }
+        file[0] << posture_input(0) << "\t" << posture_input(1) << "\t" << Robot.roll << "\t" << Robot.pitch << std::endl;
+        //    file[0] << F_diff(2) << "\t" << F_diff_m(2) << "\t" << contactMode << "\t" << control_input(1) << "\t" << LT(0) << "\t" << Fl_l(3) << "\t" << control_input(3) << "\t" << RT(0) << "\t" << Fr_l(3) << std::endl;
     }
 }
 
@@ -2076,13 +2056,13 @@ void CustomController::dspForceControl(RobotData &Robot, double alpha)
 
     for (int i = 0; i < 3; i++)
     {
-        if (z_ctrl(i) > 0.01)
+        if (z_ctrl(i) > 0.02)
         {
-            z_ctrl(i) = 0.01;
+            z_ctrl(i) = 0.02;
         }
-        else if (z_ctrl(i) < -0.01)
+        else if (z_ctrl(i) < -0.02)
         {
-            z_ctrl(i) = -0.01;
+            z_ctrl(i) = -0.02;
         }
     }
 }

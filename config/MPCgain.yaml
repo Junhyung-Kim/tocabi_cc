@@ -46,32 +46,48 @@ ZuNy : 1000.0
 zlNy : 0
 zuNy : 0
 
-arp_d : 15
-ark_d : 0.035
-app_d : 40
-apk_d : 0.06
+kc_r : 1.5
+tc_r : 10
 
-arp_s : 20
-ark_s : 0.04
-app_s : 60
-apk_s : 0.06
+kc_p : 1.5
+tc_p : 10
 
-com_gain : 0.3
+arp_dl : 20
+ark_dl : 0.01
+app_dl : 20
+apk_dl : 0.02
 
-pelv_xp : 0.96
-pelv_yp : 3.9
+arp_sl : 20
+ark_sl : 0.01
+app_sl : 50
+apk_sl : 0.02
 
-zmp_xp : 0.15
-zmp_yp : 0.10
+arp_dr : 20
+ark_dr : 0.01
+app_dr : 20
+apk_dr : 0.02
 
-K_fx : 0.0005
-T_fx : 30
+arp_sr : 20
+ark_sr : 0.01
+app_sr : 50
+apk_sr : 0.02
 
-K_fy : 0.0005 
-T_fy : 30
+com_gain : 0.5
+
+pelv_xp : -2.4
+pelv_yp : -2.4
+
+zmp_xp : 0.05
+zmp_yp : 0.05
+
+K_fx : 0.0001
+T_fx : 3.0
+
+K_fy : 0.0001 
+T_fy : 3.0
 
 K_fz : 0.0001
-T_fz : 50
+T_fz : 3.0
 
 mobgain1 : 40
 mobgain2 : 40
