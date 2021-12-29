@@ -281,32 +281,10 @@ public:
     double dobGain;
 
     //vibrationcontrol
-    Eigen::Matrix2d Ax_vib;
-    Eigen::Vector2d Bx_vib;
-    Eigen::MatrixXd Cx_vib;
-    
-    Eigen::Vector3d Dx_vib;
-    Eigen::Vector2d kx_vib;
-    Eigen::Vector2d cx_vib;
-    Eigen::Vector2d xx_vib;
-    Eigen::Vector2d xx_vib_est;
-    Eigen::Vector2d final_posx;
-
-    Eigen::Matrix2d Ay_vib;
-    Eigen::Vector2d By_vib;
-    Eigen::MatrixXd Cy_vib;
-    Eigen::Vector3d Dy_vib;
-    Eigen::Vector2d ky_vib;
-    Eigen::Vector2d cy_vib;
-    Eigen::Vector2d xy_vib;
-    Eigen::Vector2d xy_vib_est;
-    Eigen::Vector2d final_posy;
-    Eigen::MatrixXd L1, L2;
-
-    Eigen::Vector2d yx_vibm;
-    Eigen::Vector2d yx_vib;
-    Eigen::Vector2d yy_vib;
-    Eigen::Vector2d yy_vibm;
+    Eigen::Vector2d x_est;
+    Eigen::Isometry3d SF_float;
+    double u;
+    Eigen::Vector4d u_1;
 
     std::atomic<double> com_mpcx;
     std::atomic<double> com_mpcy;

@@ -9,13 +9,13 @@ Rx2 : 5.0
 
 Zl0x : 3000.0
 Zu0x : 2000.0
-zl0x : 3000.0
-zu0x : 2000.0
+zl0x : 0.0
+zu0x : 0.0
 
 Zl1x : 3000.0
 Zu1x : 2000.0
-zl1x : 3000.0
-zu1x : 2000.0
+zl1x : 0.0
+zu1x : 0.0
 
 ZlNx : 1000.0
 ZuNx : 1000.0
@@ -24,11 +24,11 @@ zuNx : 0
 
 Qy1 : 0.0
 Qy2 : 0.0
-Qy3 : 2500000
+Qy3 : 3500000
 Qy4 : 0.0
 Qy5 : 0.0
 
-Ry1 : 8000.0
+Ry1 : 10.0
 Ry2 : 0.0
 
 Zl0y : 600.0
@@ -46,39 +46,38 @@ ZuNy : 1000.0
 zlNy : 0
 zuNy : 0
 
-kc_r : 1.5
+kc_r : 80
 tc_r : 10
 
-kc_p : 1.5
+kc_p : 50
 tc_p : 10
 
 arp_dl : 20
-ark_dl : 0.01
+ark_dl : 0.03
 app_dl : 20
-apk_dl : 0.02
+apk_dl : 0.06
 
 arp_sl : 20
-ark_sl : 0.01
+ark_sl : 0.04
 app_sl : 50
-apk_sl : 0.02
+apk_sl : 0.06
 
 arp_dr : 20
-ark_dr : 0.01
+ark_dr : 0.03
 app_dr : 20
-apk_dr : 0.02
+apk_dr : 0.06
 
 arp_sr : 20
-ark_sr : 0.01
+ark_sr : 0.04
 app_sr : 50
-apk_sr : 0.02
+apk_sr : 0.06
 
-com_gain : 0.5
+com_gain : 0.3
 
-pelv_xp : -2.4
-pelv_yp : -2.4
-
-zmp_xp : 0.05
-zmp_yp : 0.05
+pelv_xp : -0.6
+pelv_yp : -5.5
+zmp_xp : 0.0
+zmp_yp : 0.0
 
 K_fx : 0.0001
 T_fx : 3.0
@@ -97,7 +96,3 @@ mobgain5 : 40
 mobgain6 : 40
 
 ft : 0
-
-
-
-
