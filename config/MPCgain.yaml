@@ -53,29 +53,29 @@ kc_p : 50
 tc_p : 10
 
 arp_dl : 20
-ark_dl : 0.03
+ark_dl : 0.04
 app_dl : 20
 apk_dl : 0.06
 
 arp_sl : 20
-ark_sl : 0.04
+ark_sl : 0.06
 app_sl : 50
 apk_sl : 0.06
 
 arp_dr : 20
-ark_dr : 0.03
+ark_dr : 0.04
 app_dr : 20
 apk_dr : 0.06
 
 arp_sr : 20
-ark_sr : 0.04
+ark_sr : 0.06
 app_sr : 50
 apk_sr : 0.06
 
 com_gain : 0.3
 
-pelv_xp : -0.6
-pelv_yp : -4.7
+pelv_xp : -0.7
+pelv_yp : -5.2
 zmp_xp : 0.0
 zmp_yp : 0.0
 
