@@ -160,7 +160,7 @@ public:
     //momentumControl
     CQuadraticProgram QP_m;
     Eigen::VectorXd q_dm;
-    Eigen::Vector5d q_w;
+    Eigen::Vector7d q_w;
 
     //WholebodyController &wbc_;
     //TaskCommand tc;

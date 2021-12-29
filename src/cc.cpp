@@ -534,12 +534,14 @@ void CustomController::computeFast()
                 {
                     if (rd_.tc_.mom == true)
                     {
-                       /* rd_.q_desired(12) = rd_.q_desired(12) + q_dm(0) / wk_Hz;
+                        rd_.q_desired(12) = rd_.q_desired(12) + q_dm(0) / wk_Hz;
                         rd_.q_desired(13) = rd_.q_desired(13) + q_dm(1) / wk_Hz;
                         rd_.q_desired(14) = rd_.q_desired(14) + q_dm(2) / wk_Hz;
                         rd_.q_desired(16) = rd_.q_desired(16) + q_dm(3) / wk_Hz;
-                        rd_.q_desired(26) = rd_.q_desired(26) + q_dm(4) / wk_Hz;
-                    */}
+                        rd_.q_desired(17) = rd_.q_desired(17) + q_dm(4) / wk_Hz;
+                        rd_.q_desired(26) = rd_.q_desired(26) + q_dm(5) / wk_Hz;
+                        rd_.q_desired(27) = rd_.q_desired(27) + q_dm(6) / wk_Hz;
+                    }
                 }
                 cc_mutex.unlock();
 
@@ -1545,8 +1547,8 @@ void CustomController::momentumControl(RobotData &Robot)
 {
     int variable_size, constraint_size;
 
-    variable_size = 5;
-    constraint_size = 5;
+    variable_size = 7;
+    constraint_size = 7;
 
     if (walking_tick == 0)
         QP_m.InitializeProblemSize(variable_size, constraint_size);
@@ -1562,8 +1564,6 @@ void CustomController::momentumControl(RobotData &Robot)
     lbA.setZero(constraint_size);
     ubA.setZero(constraint_size);
 
-    Eigen::Vector3d q_waistd;
-    Eigen::Vector8d q_rarmd, q_larmd;
     Eigen::Vector3d H_leg_ref;
 
     H_leg.setZero();
@@ -1594,20 +1594,22 @@ void CustomController::momentumControl(RobotData &Robot)
     F_err = F_cur - F_ref;
 
     Eigen::MatrixXd Ag_temp;
-    Eigen::Matrix5d I;
-    Eigen::Matrix5d alpha;
-    Eigen::Vector5d qd_prev;
+    Eigen::Matrix7d I;
+    Eigen::Matrix7d alpha;
+    Eigen::Vector7d qd_prev;
 
     I.setIdentity();
     alpha.setIdentity();
     alpha = 0.05 * alpha;
     alpha(3, 3) = 0.001;
     alpha(4, 4) = 0.001;
+    alpha(5, 5) = 0.001;
+    alpha(6, 6) = 0.001;
 
-    Ag_temp.resize(3, 5);
+    Ag_temp.resize(3, variable_size);
     Ag_temp.block<3, 3>(0, 0) = Ag_waist;
-    Ag_temp.block<3, 1>(0, 3) = Ag_armL.block<3, 1>(0, 1);
-    Ag_temp.block<3, 1>(0, 4) = Ag_armR.block<3, 1>(0, 1);
+    Ag_temp.block<3, 2>(0, 3) = Ag_armL.block<3, 2>(0, 2);
+    Ag_temp.block<3, 2>(0, 5) = Ag_armR.block<3, 2>(0, 2);
 
     if (walking_tick == 0)
     {
@@ -1619,7 +1621,9 @@ void CustomController::momentumControl(RobotData &Robot)
     q_w(2) = Robot.q_desired(14);
 
     q_w(3) = Robot.q_desired(16);
-    q_w(4) = Robot.q_desired(26);
+    q_w(4) = Robot.q_desired(17);
+    q_w(5) = Robot.q_desired(26);
+    q_w(6) = Robot.q_desired(27);
 
     H = Ag_temp.transpose() * Ag_temp + alpha * I;
     g = 2 * Ag_temp.transpose() * H_leg; // - 2*alpha*qd_prev;
@@ -1634,8 +1638,12 @@ void CustomController::momentumControl(RobotData &Robot)
 
     lbA(3) = (-0.6 - q_w(3)) * wk_Hz;
     ubA(3) = (1.2 - q_w(3)) * wk_Hz;
-    lbA(4) = (-1.2 - q_w(4)) * wk_Hz;
-    ubA(4) = (0.6 - q_w(4)) * wk_Hz;
+    lbA(4) = (1.2 - q_w(4)) * wk_Hz;
+    ubA(4) = (1.8 - q_w(4)) * wk_Hz;
+    lbA(5) = (-1.2 - q_w(5)) * wk_Hz;
+    ubA(5) = (0.6 - q_w(5)) * wk_Hz;
+    lbA(6) = (-1.8 - q_w(6)) * wk_Hz;
+    ubA(6) = (-1.2 - q_w(6)) * wk_Hz;
 
     for (int i = 0; i < variable_size; i++)
     {
@@ -1648,6 +1656,13 @@ void CustomController::momentumControl(RobotData &Robot)
 
     ub(3) = 2.0;
     ub(4) = 2.0;
+
+
+    lb(5) = -2.0;
+    lb(6) = -2.0;
+
+    ub(5) = 2.0;
+    ub(6) = 2.0;
 
     QP_m.EnableEqualityCondition(0.005);
     QP_m.UpdateMinProblem(H, g);
