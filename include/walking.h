@@ -225,7 +225,7 @@ public:
     Eigen::Vector2d posture_input;
 
     Eigen::Vector3d com_support_current_;
-
+    Eigen::Vector4d ZMP_ref, ZMP_real, ZMP_sup, ZMP_r_sup;
     //////Capture Point//////
     Eigen::VectorXd capturePoint_ox;
     Eigen::VectorXd capturePoint_oy;
@@ -289,11 +289,26 @@ public:
     std::atomic<double> com_mpcx;
     std::atomic<double> com_mpcy;
 
+    std::atomic<double> com_mpcdx;
+    std::atomic<double> com_mpcdy;
+
+    std::atomic<double> cp_mpcx;
+    std::atomic<double> cp_mpcy;
+
+    std::atomic<double> cp_meax;
+    std::atomic<double> cp_meay;
+
+    std::atomic<double> cp_errx;
+    std::atomic<double> cp_erry;
+
     std::atomic<double> mom_mpcx;
     std::atomic<double> mom_mpcy;
 
     std::atomic<double> zmp_mpcx;
     std::atomic<double> zmp_mpcy;
+
+    std::atomic<double> zmp_delx;
+    std::atomic<double> zmp_dely;
 
     double ux_vib;
     double uy_vib;

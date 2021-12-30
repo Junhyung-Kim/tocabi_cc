@@ -24,11 +24,11 @@ zuNx : 0
 
 Qy1 : 0.0
 Qy2 : 0.0
-Qy3 : 3500000
+Qy3 : 6500000
 Qy4 : 0.0
 Qy5 : 0.0
 
-Ry1 : 10.0
+Ry1 : 0.0
 Ry2 : 0.0
 
 Zl0y : 600.0
@@ -52,30 +52,30 @@ tc_r : 10
 kc_p : 50
 tc_p : 10
 
-arp_dl : 20
-ark_dl : 0.04
-app_dl : 20
-apk_dl : 0.06
+arp_dl : 30
+ark_dl : 0.03
+app_dl : 30
+apk_dl : 0.03
 
-arp_sl : 20
-ark_sl : 0.06
+arp_sl : 30
+ark_sl : 0.03
 app_sl : 50
-apk_sl : 0.06
+apk_sl : 0.05
 
-arp_dr : 20
-ark_dr : 0.04
-app_dr : 20
-apk_dr : 0.06
+arp_dr : 30
+ark_dr : 0.03
+app_dr : 30
+apk_dr : 0.03
 
-arp_sr : 20
-ark_sr : 0.06
+arp_sr : 30
+ark_sr : 0.03
 app_sr : 50
-apk_sr : 0.06
+apk_sr : 0.05
 
-com_gain : 0.3
+com_gain : 0.5
 
 pelv_xp : -0.7
-pelv_yp : -5.2
+pelv_yp : -3.6
 zmp_xp : 0.0
 zmp_yp : 0.0
 

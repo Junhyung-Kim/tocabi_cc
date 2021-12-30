@@ -494,6 +494,18 @@ void CustomController::computeFast()
 
                 if (rd_.tc_.MPC == true)
                 {
+                    cp_mpcx = com_mpcx + com_mpcdx / lipm_w;
+                    cp_mpcy = com_mpcy + com_mpcdy / lipm_w;
+
+                    cp_meax = rd_.link_[COM_id].xpos(0) + rd_.link_[COM_id].v(0) / lipm_w;
+                    cp_meay = rd_.link_[COM_id].xpos(1) + rd_.link_[COM_id].v(1) / lipm_w;
+
+                    cp_errx = cp_meax - cp_mpcx;
+                    cp_erry = cp_meay - cp_mpcy;
+
+                    zmp_delx = 1.2 * cp_errx;
+                    zmp_dely = 1.2 * cp_erry;
+
                     if (walking_tick > 500)
                     {
                         PELV_trajectory_float.translation()(0) = com_mpcx;
@@ -583,7 +595,7 @@ void CustomController::computeFast()
 
                 walking_init_tick++;
 
-             /*   if(walking_init_tick >= 100 && walking_init_tick < 500)
+                /*   if(walking_init_tick >= 100 && walking_init_tick < 500)
                 {
                     rd_.mujoco_dist = true;
                 }
@@ -594,8 +606,8 @@ void CustomController::computeFast()
             */
                 //  file[1] << PELV_trajectory_float_c.translation()(0) << "\t" << PELV_trajectory_float_c.translation()(1) << "\t" << PELV_trajectory_float_c.translation()(2) << "\t" << RF_trajectory_float.translation()(0)<< "\t" << RF_trajectory_float.translation()(1)<< "\t" << RF_trajectory_float.translation()(2)<<std::endl;
                 if (walking_tick % 5 == 0)
-                    file[1] << PELV_trajectory_float_c.translation()(1) << "\t" << rd_.link_[COM_id].xpos(0) << "\t" << com_mpcx << "\t" << ZMP_FT_l(0) << "\t" << zmp_mpcx << "\t" << rd_.link_[COM_id].v(1)<< "\t" << rd_.link_[COM_id].xpos(1) << "\t" << com_mpcy << "\t" << ZMP_FT_l(1) << "\t" << zmp_mpcy << "\t" << rd_.link_[COM_id].xpos(2) << "\t" << H_leg_data(0) << "\t" << mom_mpcy << "\t" << H_leg_data(1) << "\t" << mom_mpcx << "\t" << control_input(0) << "\t" << control_input(1) << "\t" << F_err(0) << "\t" << F_err(1) << std::endl;
-                
+                    file[1] << PELV_trajectory_float_c.translation()(1) << "\t" << rd_.link_[COM_id].xpos(0) << "\t" << com_mpcx << "\t" << ZMP_FT_l(0) << "\t" << zmp_mpcx << "\t" << rd_.link_[COM_id].v(1) << "\t" << rd_.link_[COM_id].xpos(1) << "\t" << com_mpcy << "\t" << ZMP_FT_l(1) << "\t" << ZMP_FT(1) << "\t" << zmp_mpcy << "\t" << rd_.link_[COM_id].xpos(2) << "\t" << H_leg_data(0) << "\t" << mom_mpcy << "\t" << H_leg_data(1) << "\t" << mom_mpcx << "\t" << control_input(0) << "\t" << control_input(1) << "\t" << F_err(0) << "\t" << F_err(1) << "\t" << PELV_trajectory_float_c.translation()(1) << "\t" << com_sup(1) << "\t" << cp_mpcx << "\t" << cp_mpcy << std::endl;
+
                 /*   if (rd_.tc_.MPC == true)
                     file[1] << PELV_trajectory_float.translation()(0) <<"\t"<< PELV_trajectory_float_c.translation()(0) << "\t" << rd_.link_[COM_id].xpos(0) << "\t" <<com_mpcx<<"\t"<< PELV_trajectory_float.translation()(1)<<"\t"<< PELV_trajectory_float_c.translation()(1) << "\t" << rd_.link_[COM_id].xpos(1) << "\t"<<com_mpcy<<"\t" <<rd_.link_[Pelvis].xipos(1)<<std::endl;
                 else*/
@@ -605,9 +617,9 @@ void CustomController::computeFast()
 
                 //   file[1] << PELV_trajectory_float.translation()(0) << "\t" << rd_.link_[Pelvis].xipos(0) << "\t" << PELV_trajectory_float.translation()(1) << "\t" << rd_.link_[Pelvis].xipos(1) << "\t" << zmp_mpcx << "\t" << ZMP_FT_l(0) << "\t" << zmp_mpcy << "\t" << ZMP_FT_l(1) << "\t" << mom_mpcx << "\t" << H_leg_data(1) << "\t" << mom_mpcy << "\t" << H_leg_data(0) << std::endl;
 
-                //                   file[0] <<desired_leg_q_temp(0) << "\t" << rd_.q_(0) <<"\t"<<desired_leg_q_temp(1) << "\t" << rd_.q_(1) <<"\t"<<desired_leg_q_temp(2) << "\t" << rd_.q_(2) <<"\t"<<desired_leg_q_temp(3) << "\t" << rd_.q_(3) <<"\t"<<desired_leg_q_temp(4) << "\t" << rd_.q_(4) <<"\t"<<desired_leg_q_temp(5) << "\t" << rd_.q_(5) <<std::endl;
-                // ile[0] << rd_.q_virtual_(0) << "\t"<< rd_.q_virtual_(1) << "\t"<< rd_.q_virtual_(2) << "\t"<< rd_.q_virtual_(3) << "\t"<< rd_.q_virtual_(4) << "\t"<< rd_.q_virtual_(5) << "\t"<< rd_.q_virtual_(6) << "\t"<< rd_.q_virtual_(7) << "\t"<< rd_.q_virtual_(8) << "\t"<< rd_.q_virtual_(9) << "\t"<< rd_.q_virtual_(10) << "\t"<< rd_.q_virtual_(11) << "\t"<< rd_.q_virtual_(39) << std::endl;
-                //file[0] << RT_mu(0)<< "\t" << Fr_l(3) <<"\t"<< RT_mu(1)<< "\t" << Fr_l(4) <<"\t"<< LT_mu(0)<< "\t" << Fl_l(3) <<"\t"<< LT_mu(1)<< "\t" << Fl_l(4) <<"\t" <<zmp_mpcx <<"\t"<<ZMP_FT_l(0)<<"\t" <<zmp_mpcy <<"\t"<<ZMP_FT_l(1)<<std::endl;
+                //              file[0] <<desired_leg_q_temp(0) << "\t" << rd_.q_(0) <<"\t"<<desired_leg_q_temp(1) << "\t" << rd_.q_(1) <<"\t"<<desired_leg_q_temp(2) << "\t" << rd_.q_(2) <<"\t"<<desired_leg_q_temp(3) << "\t" << rd_.q_(3) <<"\t"<<desired_leg_q_temp(4) << "\t" << rd_.q_(4) <<"\t"<<desired_leg_q_temp(5) << "\t" << rd_.q_(5) <<std::endl;
+                // file[0] << rd_.q_virtual_(0) << "\t"<< rd_.q_virtual_(1) << "\t"<< rd_.q_virtual_(2) << "\t"<< rd_.q_virtual_(3) << "\t"<< rd_.q_virtual_(4) << "\t"<< rd_.q_virtual_(5) << "\t"<< rd_.q_virtual_(6) << "\t"<< rd_.q_virtual_(7) << "\t"<< rd_.q_virtual_(8) << "\t"<< rd_.q_virtual_(9) << "\t"<< rd_.q_virtual_(10) << "\t"<< rd_.q_virtual_(11) << "\t"<< rd_.q_virtual_(39) << std::endl;
+                file[0] << RT_mu(0) << "\t" << Fr_l(3) << "\t" << RT_mu(1) << "\t" << Fr_l(4) << "\t" << LT_mu(0) << "\t" << Fl_l(3) << "\t" << LT_mu(1) << "\t" << Fl_l(4) << "\t" << zmp_mpcx << "\t" << ZMP_FT_l(0) << "\t" << zmp_mpcy << "\t" << ZMP_FT_l(1) << std::endl;
                 //file[0] << control_input(0) << "\t" << control_input(1) << "\t" << control_input(2) << "\t" << control_input(3) << "\t" << zmp_mpcx << "\t" << ZMP_FT_l(0) << "\t" << zmp_mpcy << "\t" << ZMP_FT_l(1) << "\t"<<pr(0)<<"\t" << pl(0)<<std::endl;
 
                 //  file[1] << rd_.link_[Pelvis].xipos(0) << "\t"<< rd_.link_[Pelvis].xipos(1) << "\t"<< rd_.link_[Pelvis].v(0) << "\t"<< rd_.link_[Pelvis].v(1) << "\t" <<  ZMP_FT_l(0) << "\t" <<ZMP_FT_l(1) << "\t" << com_mpcx/*COM_float_current.translation()(0)*/<<"\t" << com_mpcy/*COM_float_current.translation()(1)*/<<"\t"<< COM_float_current.translation()(2)<<"\t"<<rd_.total_mass_ << "\t" << std::endl;
@@ -801,11 +813,14 @@ void CustomController::computePlanner()
                     com_mpcx = x11x[0];
                     com_mpcy = x11y[0];
 
+                    com_mpcdx = x11x[1];
+                    com_mpcdy = x11y[1];
+
                     zmp_mpcx = x11x[2];
                     zmp_mpcy = x11y[2];
 
-                    mom_mpcx = 1.1*x11x[4];
-                    mom_mpcy = 1.1*x11y[4];
+                    mom_mpcx = 1.1 * x11x[4];
+                    mom_mpcy = 1.3 * x11y[4];
 
                     auto t5 = std::chrono::steady_clock::now();
                     auto d1 = std::chrono::duration_cast<std::chrono::microseconds>(t5 - t4).count();
@@ -1657,7 +1672,6 @@ void CustomController::momentumControl(RobotData &Robot)
     ub(3) = 2.0;
     ub(4) = 2.0;
 
-
     lb(5) = -2.0;
     lb(6) = -2.0;
 
@@ -1697,7 +1711,7 @@ void CustomController::zmpCalc(RobotData &Robot)
         pelv_lp(i) = DyrosMath::lowPassFilter(rd_.link_[Pelvis].xipos(i), pelv_lp_prev(i), 1 / wk_Hz, 1 / (2 * 3.14 * 32));
 
     for (int i = 0; i < 3; i++)
-        ZMP_FT_l(i) = DyrosMath::lowPassFilter(ZMP_FT(i), ZMP_FT_prev(i), 1 / wk_Hz, 1 / (2 * 3.14 * 5));
+        ZMP_FT_l(i) = DyrosMath::lowPassFilter(ZMP_FT(i), ZMP_FT_prev(i), 1 / wk_Hz, 1 / (2 * 3.14 * 3));
 
     for (int i = 0; i < 6; i++)
     {
@@ -1738,12 +1752,12 @@ void CustomController::zmpControl(RobotData &Robot)
         Eigen::Vector3d desired_ankle_torque, pr_temp, pl_temp;
 
         int k;
-
+        zmp_delx = 0.0;
         if (contactMode == 1)
         {
             A = (pr(1) - pl(1)) / (pr(0) - pl(0));
             B = pl(1) - A * pl(0);
-            C = zmp_mpcx / A + zmp_mpcy;
+            C = (zmp_mpcx + zmp_delx) / A + (zmp_mpcy + zmp_dely);
             xi = (C - B) / (A + 1 / A);
             yi = A * xi + B;
 
@@ -1758,12 +1772,12 @@ void CustomController::zmpControl(RobotData &Robot)
                 yi = pr(1);
             }
 
-            pl_temp(0) = pl(0) - zmp_mpcx; //zmp_refx(walking_tick);
-            pl_temp(1) = pl(1) - zmp_mpcy; //zmp_refy(walking_tick);
+            pl_temp(0) = pl(0) - (zmp_mpcx + zmp_delx); //zmp_refx(walking_tick);
+            pl_temp(1) = pl(1) - (zmp_mpcy + zmp_dely); //zmp_refy(walking_tick);
             pl_temp(2) = 0.0;
 
-            pr_temp(0) = pr(0) - zmp_mpcx; //zmp_refx(walking_tick);
-            pr_temp(1) = pr(1) - zmp_mpcy; //zmp_refy(walking_tick);
+            pr_temp(0) = pr(0) - (zmp_mpcx + zmp_delx); //zmp_refx(walking_tick);
+            pr_temp(1) = pr(1) - (zmp_mpcy + zmp_dely); //zmp_refy(walking_tick);
             pl_temp(2) = 0.0;
 
             Lz = sqrt((pr(0) - pl(0)) * (pr(0) - pl(0)) + (pr(1) - pl(1)) * (pr(1) - pl(1)));
@@ -1785,8 +1799,8 @@ void CustomController::zmpControl(RobotData &Robot)
         {
             alpha = 0.0;
 
-            pl_temp(0) = pl(0) - zmp_mpcx;
-            pl_temp(1) = pl(1) - zmp_mpcy;
+            pl_temp(0) = pl(0) - (zmp_mpcx + zmp_delx);
+            pl_temp(1) = pl(1) - (zmp_mpcy + zmp_dely);
             pl_temp(2) = 0.0;
 
             desired_ankle_torque = -DyrosMath::skew(pl_temp) * Fl_l.segment<3>(0);
@@ -1795,8 +1809,8 @@ void CustomController::zmpControl(RobotData &Robot)
         {
             alpha = 1.0;
 
-            pr_temp(0) = pr(0) - zmp_mpcx;
-            pr_temp(1) = pr(1) - zmp_mpcy;
+            pr_temp(0) = pr(0) - (zmp_mpcx + zmp_delx);
+            pr_temp(1) = pr(1) - (zmp_mpcy + zmp_dely);
             pr_temp(2) = 0.0;
 
             desired_ankle_torque = -DyrosMath::skew(pr_temp) * Fr_l.segment<3>(0);
@@ -1815,7 +1829,7 @@ void CustomController::zmpControl(RobotData &Robot)
             }
         }
 
-        if (contactMode == 1)
+        /* if (contactMode == 1)
         {
             if (desired_ankle_torque(0) > 0)
             {
@@ -1832,7 +1846,9 @@ void CustomController::zmpControl(RobotData &Robot)
         {
             LT(0) = (1 - alpha) * desired_ankle_torque(0);
             RT(0) = (alpha)*desired_ankle_torque(0);
-        }
+        }*/
+        LT(0) = (1 - alpha) * desired_ankle_torque(0);
+        RT(0) = (alpha)*desired_ankle_torque(0);
 
         LT(1) = (1 - alpha) * desired_ankle_torque(1);
         RT(1) = (alpha)*desired_ankle_torque(1);
@@ -1998,28 +2014,58 @@ void CustomController::zmpControl(RobotData &Robot)
 
         for (int i = 0; i < 4; i++)
         {
-            if(i == 1 || i == 3)
+            if (contactMode == 1)
             {
-                if (control_input(i) > 0.03)
+                if (i == 1 || i == 3)
                 {
-                    control_input(i) = 0.03;
-                }
+                    if (control_input(i) > 0.02)
+                    {
+                        control_input(i) = 0.02;
+                    }
 
-                if (control_input(i) < -0.03)
+                    if (control_input(i) < -0.02)
+                    {
+                        control_input(i) = -0.02;
+                    }
+                }
+                else
                 {
-                    control_input(i) = -0.03;
+                    if (control_input(i) > 0.08)
+                    {
+                        control_input(i) = 0.08;
+                    }
+
+                    if (control_input(i) < -0.08)
+                    {
+                        control_input(i) = -0.08;
+                    }
                 }
             }
             else
             {
-                if (control_input(i) > 0.08)
+                if (i == 1 || i == 3)
                 {
-                    control_input(i) = 0.08;
-                }
+                    if (control_input(i) > 0.04)
+                    {
+                        control_input(i) = 0.04;
+                    }
 
-                if (control_input(i) < -0.08)
+                    if (control_input(i) < -0.04)
+                    {
+                        control_input(i) = -0.04;
+                    }
+                }
+                else
                 {
-                    control_input(i) = -0.08;
+                    if (control_input(i) > 0.08)
+                    {
+                        control_input(i) = 0.08;
+                    }
+
+                    if (control_input(i) < -0.08)
+                    {
+                        control_input(i) = -0.08;
+                    }
                 }
             }
         }
@@ -2036,7 +2082,7 @@ void CustomController::zmpControl(RobotData &Robot)
                 posture_input(i) = -0.1;
             }
         }
-        file[0] << posture_input(0) << "\t" << posture_input(1) << "\t" << Robot.roll << "\t" << Robot.pitch << std::endl;
+        // file[0] << posture_input(0) << "\t" << posture_input(1) << "\t" << Robot.roll << "\t" << Robot.pitch << std::endl;
         //    file[0] << F_diff(2) << "\t" << F_diff_m(2) << "\t" << contactMode << "\t" << control_input(1) << "\t" << LT(0) << "\t" << Fl_l(3) << "\t" << control_input(3) << "\t" << RT(0) << "\t" << Fr_l(3) << std::endl;
     }
 }

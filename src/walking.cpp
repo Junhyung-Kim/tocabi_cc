@@ -1591,7 +1591,7 @@ void WalkingController::mpcStateContraint(RobotData &Robot)
 
         if (i < t_temp)
         {
-            zmpy[i][2] = -Qy3_mpc * COM_float_init.translation()(1);
+            zmpy[i][2] = -Qy3_mpc * zmp_refy(i);
             zmpx[i][2] = -Qx3_mpc * zmp_refx(i); //COM_float_init.translation()(0);
         }
         else
@@ -1923,9 +1923,9 @@ void WalkingController::inverseKinematicsdob(RobotData &Robot)
     dob_hat = 0.3 * dob_hat + 0.7 * dob_hat_prev;
 
     double defaultGain = 0.0;
-    double compliantGain = 3.5;
+    double compliantGain = 2.5;
     double rejectionGain = -20.0; //-3.5;
-    double rejectionGainSim[12] = {-9.0, -9.0, -9.0, -9.0, -17.0, -17.0, -9.0, -9.0, -9.0, -9.0, -17.0, -17.0};
+    double rejectionGainSim[12] = {-9.0, -9.0, -9.0, -9.0, -15.0, -15.0, -9.0, -9.0, -9.0, -9.0, -15.0, -15.0};
     double rejectionGainReal[12] = {-3.0, -3.0, -3.0, -3.0, -3.0, -3.0, -3.0, -3.0, -3.0, -3.0, -3.0, -3.0};
     double rejectionGain_[12];
     double compliantTick = 0.04 * wk_Hz;
@@ -2363,8 +2363,8 @@ void WalkingController::comController(RobotData &Robot)
 
     double d;
     double K, D, dt;
-    K = 2251.8;
-    D = 254;
+    K = 2219;
+    D = 10;
     dt = 0.001;
 
     Ke(0) = 0.1961;
@@ -2405,7 +2405,8 @@ void WalkingController::comController(RobotData &Robot)
         u = u + com_mpcy;
     }
 
-    x_est = (A*dt+I)*x_est + B*dt * u + Ke * dt *(ZMP_FT_l(1) - zmp_mpcy - (C*x_est)(0) - D*u);
+    x_est = (A*dt+I)*x_est + B*dt * u + Ke * dt *(ZMP_FT_l(1)-(zmp_mpcy + zmp_dely) - (C*x_est)(0) - D*u);
+    
     u = (-K1*x_est)(0);
 
     u_1(0) = com_mpcx;
@@ -2413,17 +2414,28 @@ void WalkingController::comController(RobotData &Robot)
     u_1(1) = u;
 
     u_1  = SF_float.inverse() * u_1;
+    
+    ZMP_ref.setZero();
+    ZMP_real.setZero();
+    ZMP_ref(3) = 1.0;
+    ZMP_real(3) = 1.0;
+    ZMP_ref(0) = zmp_mpcx;
+    ZMP_ref(1) = zmp_mpcy;
+    ZMP_real(0) = ZMP_FT_l(0);
+    ZMP_real(1) = ZMP_FT_l(1);
+    ZMP_sup  = SF_float.inverse() * ZMP_ref;
+    ZMP_r_sup = SF_float.inverse() * ZMP_real;
 
-    if(walking_tick > 900)
+    if(walking_tick > 300)
     { 
-        PELV_trajectory_float_c.translation()(0) = com_sup(0) - com_offset + pelv_xp*(comR_sup(0)  - com_sup(0)) - zmp_xp *(zmp_mpcx - ZMP_FT_l(0));    
+        PELV_trajectory_float_c.translation()(0) = com_sup(0) - com_offset + pelv_xp*(comR_sup(0)  - com_sup(0)) - zmp_xp *(ZMP_sup(0) - ZMP_r_sup(0));    
     }
     else
     {
         PELV_trajectory_float_c.translation()(0) = com_sup(0) - com_offset + pelv_xp*(comR_sup(0)- com_sup(0));
     }
 
-    PELV_trajectory_float_c.translation()(1) = pelvR_sup(1) + pelv_yp*(comR_sup(1) - com_sup(1)) - zmp_yp *(zmp_mpcy - ZMP_FT_l(1));
+    PELV_trajectory_float_c.translation()(1) = pelvR_sup(1) + pelv_yp*(comR_sup(1) - com_sup(1)) - zmp_yp *(ZMP_sup(1) - ZMP_r_sup(1));
     PELV_trajectory_float_c.translation()(2) = com_sup(2);   
     PELV_trajectory_float_c.linear() = PELV_float_init.linear();
 
