@@ -820,7 +820,7 @@ void CustomController::computePlanner()
                     zmp_mpcy = x11y[2];
 
                     mom_mpcx = 1.1 * x11x[4];
-                    mom_mpcy = 1.3 * x11y[4];
+                    mom_mpcy = 1.1 * x11y[4];
 
                     auto t5 = std::chrono::steady_clock::now();
                     auto d1 = std::chrono::duration_cast<std::chrono::microseconds>(t5 - t4).count();
@@ -1041,7 +1041,7 @@ void CustomController::flyWheelModel(double Ts, int nx, int nu, double *Ax, doub
     Bx[2] = 1.00 * Ts;
     Bx[9] = 1.00 * Ts;
 
-    By[6] = -1.0 / (total_mass * zc) * Ts;
+    By[6] = 1.0 / (total_mass * zc) * Ts;
     By[2] = 1.00 * Ts;
     By[9] = 1.00 * Ts;
 }
