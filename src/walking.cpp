@@ -1563,8 +1563,8 @@ void WalkingController::mpcStateContraint(RobotData &Robot)
             xU[i][2] = foot_step(j - 1, 0) + 0.10;
         }
 
-        yL[i][1] = -0.3;
-        yU[i][1] = 0.3;
+        yL[i][1] = -5.0;
+        yU[i][1] = 5.0;
         yL[i][3] = -10;
         yU[i][3] = 10;
         yL[i][4] = -10;
@@ -2184,29 +2184,16 @@ void WalkingController::walkingInitialize(RobotData &Robot)
 
 void WalkingController::supportToFloatPattern(RobotData &Robot)
 {
-    Eigen::Isometry3d SFR_float, SPR_float, PSR_float, SW_SUP;
+    Eigen::Isometry3d SFR_float, SPR_float, PSR_float, SW_SUP, SFf;
     Eigen::Vector4d com_float, comR_float, pelvR_float, pelvSR_float ,RF_float, LF_float;
+    Eigen::Vector3d SFe;
+
+    SFe = DyrosMath::rot2Euler(SUF_float_current.linear());
+    SFf.translation() = SUF_float_current.translation();
+    SFf.linear() = DyrosMath::rotateWithZ(SFe(2));
 
     if (current_step_num >= 1)
     {
-        SF_float.setIdentity();
-        SF_float.translation()(0) = foot_step(current_step_num - 1, 0);
-        SF_float.translation()(1) = foot_step(current_step_num - 1, 1);
-        SF_float.translation()(2) = RF_float_init.translation()(2);
-
-        SFR_float.linear() = SUF_float_current.linear();
-        SFR_float.translation()(0) = SUF_float_current.translation()(0);
-        SFR_float.translation()(1) = SUF_float_current.translation()(1);
-        SFR_float.translation()(2) = SUF_float_current.translation()(2);
-
-        Eigen::Vector4d SUF_float_temp;
-        SUF_float_temp(3) = 1.0;
-        SUF_float_temp.segment<3>(0) = SUF_float_current.translation();
-        SPR_float.linear() = PELV_float_current.linear().inverse() * SUF_float_current.linear();
-        SPR_float.translation() = PELV_float_current.inverse() * SUF_float_current.translation();
-
-        PSR_float = SPR_float.inverse();
-
         if (Robot.tc_.MPC == false)
         {
             if (walking_tick >= t_total + t_last - 4 && current_step_num == total_step_num)
@@ -2241,66 +2228,43 @@ void WalkingController::supportToFloatPattern(RobotData &Robot)
 
         comR_float(0) = COM_float_current.translation()(0);
         comR_float(1) = COM_float_current.translation()(1);
-        comR_float(2) = COM_float_init.translation()(2);
+        comR_float(2) = COM_float_current.translation()(2);
         comR_float(3) = 1.0;
 
         pelvR_float(0) = PELV_float_current.translation()(0);
         pelvR_float(1) = PELV_float_current.translation()(1);
-        pelvR_float(2) = PELV_float_init.translation()(2);
+        pelvR_float(2) = PELV_float_current.translation()(2);
         pelvR_float(3) = 1.0;
 
         pelvSR_float.segment<3>(0) = PSR_float.translation();
         pelvSR_float(3) = 1.0;
 
-        com_sup = SF_float.inverse() * com_float;
-        comR_sup = SF_float.inverse() * comR_float;
-        RF_sup = SF_float.inverse() * RF_float;
-        LF_sup = SF_float.inverse() * LF_float;
-        pelvR_sup = SF_float.inverse() * pelvR_float;
-        pelvPR_sup.segment<3>(0) = pelvSR_float.segment<3>(0);
-        pelvPR_sup(0) -= SUP_foot(0);
+        com_sup = DyrosMath::inverseIsometry3d(SFf) * com_float;
+        comR_sup = DyrosMath::inverseIsometry3d(SFf) * comR_float;
+        RF_sup = DyrosMath::inverseIsometry3d(SFf) * RF_float;
+        LF_sup = DyrosMath::inverseIsometry3d(SFf) * LF_float;
+        pelvR_sup = DyrosMath::inverseIsometry3d(SFf) * pelvR_float;
     }
     else
     {
-        SF_float.setIdentity();
-        SF_float.translation()(0) = foot_step(current_step_num, 0);
-        SF_float.translation()(1) = foot_step(current_step_num + 1, 1);
-        SF_float.translation()(2) = RF_float_init.translation()(2);
-
-        SFR_float.linear() = SUF_float_current.linear();
-        SFR_float.translation()(0) = SUF_float_current.translation()(0);
-        SFR_float.translation()(1) = SUF_float_current.translation()(1);
-        SFR_float.translation()(2) = SUF_float_current.translation()(2);
-
-        Eigen::Vector4d SUF_float_temp;
-        SUF_float_temp(3) = 1.0;
-        SUF_float_temp.segment<3>(0) = SUF_float_current.translation();
-        SPR_float.linear() = PELV_float_current.linear().inverse() * SUF_float_current.linear();
-        SPR_float.translation() = PELV_float_current.inverse() * SUF_float_current.translation();
-
-        PSR_float = SPR_float.inverse();
         if (Robot.tc_.MPC == false)
         {
-            com_float(0) = com_refx(walking_tick);
-            com_float(1) = com_refy(walking_tick);
+            if (walking_tick >= t_total + t_last - 4 && current_step_num == total_step_num)
+            {
+                com_float(0) = com_refx(t_total + t_last - 4);
+                com_float(1) = com_refy(t_total + t_last - 4);
+            }
+            else
+            {
+                com_float(0) = com_refx(walking_tick);
+                com_float(1) = com_refy(walking_tick);
+            }
         }
         else
         {
             com_float(0) = com_mpcx;
             com_float(1) = com_mpcy;
         }
-        com_float(2) = PELV_float_init.translation()(2);
-        com_float(3) = 1.0;
-
-        comR_float(0) = COM_float_current.translation()(0);
-        comR_float(1) = COM_float_current.translation()(1);
-        comR_float(2) = PELV_float_init.translation()(2);
-        comR_float(3) = 1.0;
-
-        pelvR_float(0) = PELV_float_current.translation()(0);
-        pelvR_float(1) = PELV_float_current.translation()(1);
-        pelvR_float(2) = PELV_float_init.translation()(2);
-        pelvR_float(3) = 1.0;
 
         RF_float(0) = RF_trajectory_float.translation()(0);
         RF_float(1) = RF_trajectory_float.translation()(1);
@@ -2312,47 +2276,29 @@ void WalkingController::supportToFloatPattern(RobotData &Robot)
         LF_float(2) = LF_trajectory_float.translation()(2);
         LF_float(3) = 1.0;
 
+        com_float(2) = PELV_float_init.translation()(2);
+        com_float(3) = 1.0;
+
+        comR_float(0) = COM_float_current.translation()(0);
+        comR_float(1) = COM_float_current.translation()(1);
+        comR_float(2) = COM_float_current.translation()(2);
+        comR_float(3) = 1.0;
+
+        pelvR_float(0) = PELV_float_current.translation()(0);
+        pelvR_float(1) = PELV_float_current.translation()(1);
+        pelvR_float(2) = PELV_float_current.translation()(2);
+        pelvR_float(3) = 1.0;
+
         pelvSR_float.segment<3>(0) = PSR_float.translation();
         pelvSR_float(3) = 1.0;
 
-        com_sup = SF_float.inverse() * com_float;
-        comR_sup = SF_float.inverse() * comR_float;
-        pelvR_sup = SF_float.inverse() * pelvR_float;
-        RF_sup = SF_float.inverse() * RF_float;
-        LF_sup = SF_float.inverse() * LF_float;
-        pelvPR_sup.segment<3>(0) = pelvSR_float.segment<3>(0);
+        com_sup = DyrosMath::inverseIsometry3d(SFf) * com_float;
+        comR_sup = DyrosMath::inverseIsometry3d(SFf) * comR_float;
+        RF_sup = DyrosMath::inverseIsometry3d(SFf) * RF_float;
+        LF_sup = DyrosMath::inverseIsometry3d(SFf) * LF_float;
+        pelvR_sup = DyrosMath::inverseIsometry3d(SFf) * pelvR_float;
     }
-
-    if (walking_tick == t_last && current_step_num > 1)
-    {
-        Eigen::Isometry3d SUF_float_temp;
-        Eigen::Vector4d SW_SUP_temp;
-        SW_SUP_temp(3) = 1.0;
-        SW_SUP_temp.segment<3>(0) = SWF_float_current.translation();
-
-        SUF_float_temp.linear().setIdentity();
-        SUF_float_temp.translation() = SUF_float_current.translation();
-
-        SW_SUP.linear() = SUF_float_current.linear() * SWF_float_current.linear();
-        SW_SUP.translation() = (SUF_float_temp.inverse() * SW_SUP_temp).segment<3>(0);
-
-        SUP_foot(0) = SUP_foot(0) + (foot_step(current_step_num - 1, 0) - foot_step(current_step_num - 2, 0)) - SW_SUP.translation()(0);
-    }
-    else if (walking_tick == t_last && current_step_num == 1)
-    {
-        Eigen::Isometry3d SUF_float_temp;
-        Eigen::Vector4d SW_SUP_temp;
-        SW_SUP_temp(3) = 1.0;
-        SW_SUP_temp.segment<3>(0) = SWF_float_current.translation();
-
-        SUF_float_temp.linear().setIdentity();
-        SUF_float_temp.translation() = SUF_float_current.translation();
-
-        SW_SUP.linear() = SUF_float_current.linear() * SWF_float_current.linear();
-        SW_SUP.translation() = (SUF_float_temp.inverse() * SW_SUP_temp).segment<3>(0);
-
-        SUP_foot(0) = SUP_foot(0) + foot_step(current_step_num - 1, 0) - SW_SUP.translation()(0);
-    }
+    SF_float = SFf;
 }
 
 void WalkingController::comController(RobotData &Robot)
@@ -2423,8 +2369,8 @@ void WalkingController::comController(RobotData &Robot)
     ZMP_ref(1) = zmp_mpcy;
     ZMP_real(0) = ZMP_FT_l(0);
     ZMP_real(1) = ZMP_FT_l(1);
-    ZMP_sup  = SF_float.inverse() * ZMP_ref;
-    ZMP_r_sup = SF_float.inverse() * ZMP_real;
+    ZMP_sup  = DyrosMath::inverseIsometry3d(SF_float) * ZMP_ref;
+    ZMP_r_sup = DyrosMath::inverseIsometry3d(SF_float) * ZMP_real;
 
     if(walking_tick > 300)
     { 
@@ -2436,7 +2382,7 @@ void WalkingController::comController(RobotData &Robot)
     }
 
     PELV_trajectory_float_c.translation()(1) = pelvR_sup(1) + pelv_yp*(comR_sup(1) - com_sup(1)) - zmp_yp *(ZMP_sup(1) - ZMP_r_sup(1));
-    PELV_trajectory_float_c.translation()(2) = com_sup(2);   
+    PELV_trajectory_float_c.translation()(2) = 0.69;   
     PELV_trajectory_float_c.linear() = PELV_float_init.linear();
 
     RF_trajectory_float.translation()(0) = RF_sup(0);
@@ -2451,8 +2397,8 @@ void WalkingController::comController(RobotData &Robot)
     {    
         RF_trajectory_float.linear() = RF_float_init.linear();
         LF_trajectory_float.linear() = LF_float_init.linear();
-        RF_trajectory_float.linear() = RF_trajectory_float.linear() * DyrosMath::rotateWithY(control_input(2)) * DyrosMath::rotateWithX(-control_input(3));
-        LF_trajectory_float.linear() = LF_trajectory_float.linear() * DyrosMath::rotateWithY(control_input(0)) * DyrosMath::rotateWithX(-control_input(1));
+        RF_trajectory_float.linear() = RF_trajectory_float.linear() * DyrosMath::rotateWithY(control_input(2));// * DyrosMath::rotateWithX(-control_input(3));
+        LF_trajectory_float.linear() = LF_trajectory_float.linear() * DyrosMath::rotateWithY(control_input(0));// * DyrosMath::rotateWithX(-control_input(1));
  
         RF_trajectory_float.translation()(2) = RF_trajectory_float.translation()(2) - com_gain1 * z_ctrl(2);
         LF_trajectory_float.translation()(2) = LF_trajectory_float.translation()(2) + com_gain1 * z_ctrl(2);

@@ -266,6 +266,8 @@ public:
     Eigen::VectorQd torque_est;
     int ft_ok;
 
+    double pelv_tmp;
+
     //MPC variable
     double **softBoundx, **softBoundy, *softBoundx1, *softBoundy1, *softBoundx2, *softBoundy2, **softCx, **softCy, **xL, **xU, **yL, **yU, **zmpx, **zmpy;
     double **softCx_s, **softCy_s, **softBoundx_s, **softBoundy_s, **softCx_s1, **softCy_s1, **softBoundx_s1, **softBoundy_s1, **zmpx_s, **zmpy_s, **xL_s, **xU_s, **yL_s, **yU_s, **zmpx_s1, **zmpy_s1, **xL_s1, **xU_s1, **yL_s1, **yU_s1;

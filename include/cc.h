@@ -162,6 +162,9 @@ public:
     Eigen::VectorXd q_dm;
     Eigen::Vector7d q_w;
 
+    Eigen::Vector12d tau_z;
+    Eigen::Vector12d tau_z_m;
+
     //WholebodyController &wbc_;
     //TaskCommand tc;
 
