@@ -552,14 +552,14 @@ void CustomController::computeFast()
                 {
                     if (rd_.tc_.mom == true)
                     {
-                        rd_.q_desired(12) = rd_.q_desired(12) + q_dm(0) / wk_Hz;
+                     /*   rd_.q_desired(12) = rd_.q_desired(12) + q_dm(0) / wk_Hz;
                         rd_.q_desired(13) = rd_.q_desired(13) + q_dm(1) / wk_Hz;
                         rd_.q_desired(14) = rd_.q_desired(14) + q_dm(2) / wk_Hz;
                         rd_.q_desired(16) = rd_.q_desired(16) + q_dm(3) / wk_Hz;
                         rd_.q_desired(17) = rd_.q_desired(17) + q_dm(4) / wk_Hz;
                         rd_.q_desired(26) = rd_.q_desired(26) + q_dm(5) / wk_Hz;
                         rd_.q_desired(27) = rd_.q_desired(27) + q_dm(6) / wk_Hz;
-                    }
+                    */}
                 }
                 cc_mutex.unlock();
 
@@ -1045,7 +1045,7 @@ void CustomController::flyWheelModel(double Ts, int nx, int nu, double *Ax, doub
         By[ii] = 0.0;
     }
 
-    Bx[6] = 1.0 / (total_mass * zc) * Ts;
+    Bx[6] = -1.0 / (total_mass * zc) * Ts;
     Bx[2] = 1.00 * Ts;
     Bx[9] = 1.00 * Ts;
 

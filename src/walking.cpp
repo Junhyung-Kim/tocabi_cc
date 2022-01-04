@@ -1349,8 +1349,8 @@ void WalkingController::mpcSoftVariable(RobotData &Robot)
         softBoundy1[i] = RF_mass/ 2.1 * RFvz_trajectory_float(i) + LF_mass/ 2.1 * LFvz_trajectory_float(i);
         softBoundy2[i] = -RF_mass/ 2.1 * (RFz_trajectory_float(i) - COM_float_init.translation()(2)) - LF_mass/ 2.1 * (LFz_trajectory_float(i) - COM_float_init.translation()(2));
 
-        softCx[i][0] = -softBoundy1[i];
-        softCx[i][1] = -softBoundy2[i];
+        softCx[i][0] = softBoundy1[i];
+        softCx[i][1] = softBoundy2[i];
         softCx[i][2] = 0.0;
         softCx[i][3] = 0.0;
         softCx[i][4] = 1.0;
@@ -1570,8 +1570,8 @@ void WalkingController::mpcStateContraint(RobotData &Robot)
         yL[i][4] = -10;
         yU[i][4] = 10;
 
-        xL[i][1] = -0.1;
-        xU[i][1] = 0.4;
+        xL[i][1] = -1.0;
+        xU[i][1] = 1.0;
         xL[i][3] = -10;
         xU[i][3] = 10;
         xL[i][4] = -10;
