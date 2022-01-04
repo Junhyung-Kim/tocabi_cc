@@ -1570,8 +1570,8 @@ void WalkingController::mpcStateContraint(RobotData &Robot)
         yL[i][4] = -10;
         yU[i][4] = 10;
 
-        xL[i][1] = -0.1;
-        xU[i][1] = 0.4;
+        xL[i][1] = -1.0;
+        xU[i][1] = 1.0;
         xL[i][3] = -10;
         xU[i][3] = 10;
         xL[i][4] = -10;

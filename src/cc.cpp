@@ -871,7 +871,9 @@ void CustomController::mpc_variablex()
     {
         if (mpc_cycle > 630)
         {
-            //x11x[0] = pelv_lp_mu(0);//rd_.link_[Pelvis].xipos(0);
+            x11x[0] = rd_.link_[COM_id].xpos(0);
+            x11x[1] = rd_.link_[COM_id].v(0);//rd_.link_[Pelvis].xipos(0);
+            x11x[2] = ZMP_FT_l_mu(0);//rd_.link_[COM_id].v(0);//rd_.link_[Pelvis].xipos(0);
         }
 
         hd_lbxx[0] = x11x;
@@ -1400,9 +1402,9 @@ void CustomController::mpcVariableInit()
     }
 
     //INPUT CONSTRAINT
-    d_lbu0x[0] = -0.3;
+    d_lbu0x[0] = -1.0;
     d_lbu0x[1] = -10;
-    d_ubu0x[0] = 0.3;
+    d_ubu0x[0] = 1.0;
     d_ubu0x[1] = 10;
 
     d_lbu0y[0] = -3.2;
@@ -1410,9 +1412,9 @@ void CustomController::mpcVariableInit()
     d_ubu0y[0] = 3.2;
     d_ubu0y[1] = 15;
 
-    d_lbu1x[0] = -0.3;
+    d_lbu1x[0] = -1.0;
     d_lbu1x[1] = -10;
-    d_ubu1x[0] = 0.3;
+    d_ubu1x[0] = 1.0;
     d_ubu1x[1] = 10;
 
     d_lbu1y[0] = -3.2;
@@ -2040,14 +2042,14 @@ void CustomController::zmpControl(RobotData &Robot)
                 }
                 else
                 {
-                    if (control_input(i) > 0.08)
+                    if (control_input(i) > 0.1)
                     {
-                        control_input(i) = 0.08;
+                        control_input(i) = 0.1;
                     }
 
-                    if (control_input(i) < -0.08)
+                    if (control_input(i) < -0.1)
                     {
-                        control_input(i) = -0.08;
+                        control_input(i) = -0.1;
                     }
                 }
             }
@@ -2067,14 +2069,14 @@ void CustomController::zmpControl(RobotData &Robot)
                 }
                 else
                 {
-                    if (control_input(i) > 0.08)
+                    if (control_input(i) > 0.1)
                     {
-                        control_input(i) = 0.08;
+                        control_input(i) = 0.1;
                     }
 
-                    if (control_input(i) < -0.08)
+                    if (control_input(i) < -0.1)
                     {
-                        control_input(i) = -0.08;
+                        control_input(i) = -0.1;
                     }
                 }
             }
