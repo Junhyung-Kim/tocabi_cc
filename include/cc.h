@@ -71,6 +71,7 @@ public:
     Eigen::MatrixQQd Cor_;
     Eigen::MatrixQQd M_;
     Eigen::VectorQd G_;
+    Eigen::VectorVQd q_dot_virtual_lpf_;
 
     Eigen::MatrixXd Cor_1;
     Eigen::MatrixVQVQd M_1;

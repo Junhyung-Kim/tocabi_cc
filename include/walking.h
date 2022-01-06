@@ -194,17 +194,17 @@ public:
     Eigen::VectorXd LFvz_trajectory_float_mu;
     Eigen::VectorXd RFvz_trajectory_float_mu;
 
-    Eigen::Matrix6Qd Ag_;
-    Eigen::Matrix3x12d Ag_leg;
-    Eigen::Matrix3x8d Ag_armR;
-    Eigen::Matrix3x8d Ag_armL;
-    Eigen::Matrix3x3d Ag_waist;
-    Eigen::Matrix3x12d Agl_leg;
-    Eigen::Matrix3x8d Agl_armR;
-    Eigen::Matrix3x8d Agl_armL;
-    Eigen::Matrix3x3d Agl_waist;
+    Eigen::Matrix6Vd Ag_;
+    Eigen::Matrix6d Ag_v;
+    Eigen::Matrix6x12d Ag_leg;
+    Eigen::Matrix6x8d Ag_armR;
+    Eigen::Matrix6x8d Ag_armL;
+    Eigen::Matrix6x3d Ag_waist;
     Eigen::Vector3d H_leg;
-    Eigen::Vector3d H_leg_data;
+    Eigen::Vector2d Hl_leg;
+    Eigen::Vector6d H_data;
+    Eigen::Vector3d WH_data;
+    double lmom;
 
     Eigen::Isometry3d LF_trajectory_float;
     Eigen::Isometry3d RF_trajectory_float;
@@ -312,6 +312,7 @@ public:
     std::atomic<double> zmp_delx;
     std::atomic<double> zmp_dely;
 
+    std::atomic<double> H_pitch;
     double ux_vib;
     double uy_vib;
 

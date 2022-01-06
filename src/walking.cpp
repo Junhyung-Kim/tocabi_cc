@@ -86,14 +86,11 @@ void WalkingController::getRobotState(RobotData &rd)
     LF_support_current = DyrosMath::multiplyIsometry3d(PELV_support_current, LF_float_current);
     COM_support_current = DyrosMath::multiplyIsometry3d(PELV_support_current, COM_float_current);
 
-    Agl_leg = Ag_.block(0, 0, 3, 12);
-    Agl_armR = Ag_.block(0, 25, 3, 8);
-    Agl_armL = Ag_.block(0, 15, 3, 8);
-    Agl_waist = Ag_.block(0, 12, 3, 3);
-    Ag_leg = Ag_.block(3, 0, 3, 12);
-    Ag_armR = Ag_.block(3, 25, 3, 8);
-    Ag_armL = Ag_.block(3, 15, 3, 8);
-    Ag_waist = Ag_.block(3, 12, 3, 3);
+    Ag_leg = Ag_.block(0, 6, 6, 12);
+    Ag_armR = Ag_.block(0, 31, 6, 8);
+    Ag_armL = Ag_.block(0, 21, 6, 8);
+    Ag_waist = Ag_.block(0, 18, 6, 3);
+    Ag_v= Ag_.block(0, 0, 6, 6);
 
     calcRobotState(rd);
 }
@@ -552,7 +549,7 @@ void WalkingController::setCpPosition()
     {
         capturePoint_offsety(i) = 0.00;
         capturePoint_offsety(i) = 0.01;
-        capturePoint_offsetx(i) = 0.04;
+        capturePoint_offsetx(i) = 0.06;
     }
 
     if (com_control == 0)

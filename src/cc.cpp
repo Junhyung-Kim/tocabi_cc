@@ -130,6 +130,8 @@ CustomController::CustomController(RobotData &rd) : rd_(rd) //, wbc_(dc.wbc_)
     nh.getParam("/tocabi_controller/K_fz", K_fz);
     nh.getParam("/tocabi_controller/T_fz", T_fz);
 
+    nh.getParam("/tocabi_controller/lmom", lmom);
+
     mobgain.push_back(mobgain1);
     mobgain.push_back(mobgain2);
     mobgain.push_back(mobgain3);
@@ -248,7 +250,7 @@ void CustomController::computeSlow()
             }
 
             //Pinocchio model
-            CMM = pinocchio::computeCentroidalMap(model, model_data, rd_.q_);
+           // CMM = pinocchio::computeCentroidalMap(model, model_data, rd_.q_);
             pinocchio::crba(model, model_data, rd_.q_);
             pinocchio::computeCoriolisMatrix(model, model_data, rd_.q_, rd_.q_dot_);
             pinocchio::rnea(model, model_data, rd_.q_, qdot_, qddot_);
@@ -257,24 +259,29 @@ void CustomController::computeSlow()
             G_ = model_data.tau;
             M_ = model_data.M;
             M_.triangularView<Eigen::StrictlyLower>() = model_data.M.transpose().triangularView<Eigen::StrictlyLower>();
-
-            jointVelocityEstimate();
-            velEst_f = true;
+            
             for (int i = 0; i < 6; i++)
-            {
+            {   
                 q_1(i) = rd_.q_virtual_(i);
-                qdot_1(i) = rd_.q_dot_virtual_(i);
-                qddot_1(i) = rd_.q_ddot_virtual_(i);
+            /*    qdot_1(i) = rd_.q_dot_virtual_(i);
+                qddot_1(i) = rd_.q_ddot_virtual_(i);*/
             }
-
-            q_1(6) = rd_.q_virtual_(39);
+            
+            q_1(6) = rd_.q_virtual_(MODEL_DOF_VIRTUAL);
 
             for (int i = 0; i < MODEL_DOF; i++)
             {
                 q_1(i + 7) = rd_.q_virtual_(i + 6);
-                qdot_1(i + 6) = rd_.q_dot_virtual_(i + 6);
-                qddot_1(i + 6) = rd_.q_ddot_virtual_(i + 6);
+              /*  qdot_1(i + 6) = rd_.q_dot_virtual_(i + 6);
+                qddot_1(i + 6) = rd_.q_ddot_virtual_(i + 6);*/
             }
+
+            q_dot_virtual_lpf_ = DyrosMath::lpf(rd_.q_dot_virtual_, q_dot_virtual_lpf_, 2000, 3);
+            CMM = pinocchio::computeCentroidalMap(model1, model_data1, q_1);
+
+            jointVelocityEstimate();
+            velEst_f = true;
+
             /*
             pinocchio::crba(model1, model_data1, q_1);
             pinocchio::computeCoriolisMatrix(model1, model_data1, q_1, qdot_1);
@@ -524,8 +531,7 @@ void CustomController::computeFast()
                 zmpCalc(rd_);
                 zmpControl(rd_);
 
-                if (rd_.tc_.mom == true)
-                    momentumControl(rd_);
+                momentumControl(rd_);
 
                 cc_mutex.lock();
                 RT_mu = RT_l;
@@ -612,7 +618,7 @@ void CustomController::computeFast()
             */
                 //  file[1] << PELV_trajectory_float_c.translation()(0) << "\t" << PELV_trajectory_float_c.translation()(1) << "\t" << PELV_trajectory_float_c.translation()(2) << "\t" << RF_trajectory_float.translation()(0)<< "\t" << RF_trajectory_float.translation()(1)<< "\t" << RF_trajectory_float.translation()(2)<<std::endl;
                 //if (walking_tick % 5 == 0)
-                    file[1] << contactMode << "\t" << LF_trajectory_float.translation()(2) << "\t" << rd_.link_[COM_id].xpos(0) << "\t" << com_mpcx << "\t" << ZMP_FT_l(0) << "\t" << zmp_mpcx << "\t" << rd_.link_[COM_id].v(1) << "\t" << rd_.link_[COM_id].xpos(1) << "\t" << com_mpcy << "\t" << ZMP_FT_l(1) << "\t" << ZMP_FT(1) << "\t" << zmp_mpcy << "\t" << rd_.link_[COM_id].xpos(2) << "\t" << H_leg_data(0) << "\t" << mom_mpcy << "\t" << H_leg_data(1) << "\t" << mom_mpcx << "\t" << control_input(0) << "\t" << control_input(1) <<"\t" <<comR_sup(0)<< "\t" << com_sup(0)  <<"\t" <<comR_sup(1)<< "\t" << com_sup(1) <<"\t" << ZMP_r_sup(0) <<"\t" <<  ZMP_sup(0) <<"\t" << ZMP_r_sup(1) <<"\t" <<  ZMP_sup(1)<< std::endl;
+                    file[1] << contactMode << "\t" << LF_trajectory_float.translation()(2) << "\t" << rd_.link_[COM_id].xpos(0) << "\t" << com_mpcx << "\t" << ZMP_FT_l(0) << "\t" << zmp_mpcx << "\t" << rd_.link_[COM_id].v(1) << "\t" << rd_.link_[COM_id].xpos(1) << "\t" << com_mpcy << "\t" << ZMP_FT_l(1) << "\t" << ZMP_FT(1) << "\t" << zmp_mpcy << "\t" << rd_.link_[COM_id].xpos(2) << "\t" << H_data(0) << "\t" << mom_mpcy << "\t" << H_data(1) << "\t" << mom_mpcx << "\t" << control_input(0) << "\t" << control_input(1) <<"\t" <<comR_sup(0)<< "\t" << com_sup(0)  <<"\t" <<comR_sup(1)<< "\t" << com_sup(1) <<"\t" << ZMP_r_sup(0) <<"\t" <<  ZMP_sup(0) <<"\t" << ZMP_r_sup(1) <<"\t" <<  ZMP_sup(1)<< std::endl;
 
                 /*   if (rd_.tc_.MPC == true)
                     file[1] << PELV_trajectory_float.translation()(0) <<"\t"<< PELV_trajectory_float_c.translation()(0) << "\t" << rd_.link_[COM_id].xpos(0) << "\t" <<com_mpcx<<"\t"<< PELV_trajectory_float.translation()(1)<<"\t"<< PELV_trajectory_float_c.translation()(1) << "\t" << rd_.link_[COM_id].xpos(1) << "\t"<<com_mpcy<<"\t" <<rd_.link_[Pelvis].xipos(1)<<std::endl;
@@ -621,7 +627,7 @@ void CustomController::computeFast()
 
                 //     file[1] << rd_.link_[Pelvis].xipos(0) << "\t"<< rd_.link_[Pelvis].xipos(1) << "\t"<< rd_.link_[Pelvis].v(0) << "\t"<< rd_.link_[Pelvis].v(1) << "\t" <<  ZMP_FT_l(0) << "\t" <<ZMP_FT_l(1) << "\t" << com_refx(walking_tick)<<"\t" << com_refy(walking_tick)<<"\t"<< PELV_float_init.translation()(2)<<"\t"<<rd_.total_mass_ << "\t" << std::endl;
 
-                //   file[1] << PELV_trajectory_float.translation()(0) << "\t" << rd_.link_[Pelvis].xipos(0) << "\t" << PELV_trajectory_float.translation()(1) << "\t" << rd_.link_[Pelvis].xipos(1) << "\t" << zmp_mpcx << "\t" << ZMP_FT_l(0) << "\t" << zmp_mpcy << "\t" << ZMP_FT_l(1) << "\t" << mom_mpcx << "\t" << H_leg_data(1) << "\t" << mom_mpcy << "\t" << H_leg_data(0) << std::endl;
+                //   file[1] << PELV_trajectory_float.translation()(0) << "\t" << rd_.link_[Pelvis].xipos(0) << "\t" << PELV_trajectory_float.translation()(1) << "\t" << rd_.link_[Pelvis].xipos(1) << "\t" << zmp_mpcx << "\t" << ZMP_FT_l(0) << "\t" << zmp_mpcy << "\t" << ZMP_FT_l(1) << "\t" << mom_mpcx << "\t" << H_data(1) << "\t" << mom_mpcy << "\t" << H_data(0) << std::endl;
 
                 //              file[0] <<desired_leg_q_temp(0) << "\t" << rd_.q_(0) <<"\t"<<desired_leg_q_temp(1) << "\t" << rd_.q_(1) <<"\t"<<desired_leg_q_temp(2) << "\t" << rd_.q_(2) <<"\t"<<desired_leg_q_temp(3) << "\t" << rd_.q_(3) <<"\t"<<desired_leg_q_temp(4) << "\t" << rd_.q_(4) <<"\t"<<desired_leg_q_temp(5) << "\t" << rd_.q_(5) <<std::endl;
                 // file[0] << rd_.q_virtual_(0) << "\t"<< rd_.q_virtual_(1) << "\t"<< rd_.q_virtual_(2) << "\t"<< rd_.q_virtual_(3) << "\t"<< rd_.q_virtual_(4) << "\t"<< rd_.q_virtual_(5) << "\t"<< rd_.q_virtual_(6) << "\t"<< rd_.q_virtual_(7) << "\t"<< rd_.q_virtual_(8) << "\t"<< rd_.q_virtual_(9) << "\t"<< rd_.q_virtual_(10) << "\t"<< rd_.q_virtual_(11) << "\t"<< rd_.q_virtual_(39) << std::endl;
@@ -1587,36 +1593,51 @@ void CustomController::momentumControl(RobotData &Robot)
     lbA.setZero(constraint_size);
     ubA.setZero(constraint_size);
 
-    Eigen::Vector3d H_leg_ref;
+    Eigen::Vector6d H_leg_ref;
 
     H_leg.setZero();
     H_leg_ref.setZero();
-
+    
     if (Robot.tc_.MPC == true)
     {
-        H_leg_ref(0) = mom_mpcy;
-        H_leg_ref(1) = mom_mpcx;
+        H_leg_ref(3) = mom_mpcy;
+        H_leg_ref(4) = mom_mpcx;
 
-        H_leg = Ag_leg * q_dot_est_mu.head(12) + Ag_waist * q_dot_est_mu.segment(12, 3) + Ag_armL * q_dot_est_mu.segment(15, 8) + Ag_armR * q_dot_est_mu.segment(25, 8);
-        H_leg_data = H_leg;
+        H_leg_ref(0) = rd_.total_mass_ * com_mpcdx;
+        H_leg_ref(1) = rd_.total_mass_ * com_mpcdy;
 
-        H_leg(0) = H_leg(0) - H_leg_ref(0);
-        H_leg(1) = H_leg(1) - H_leg_ref(1);
+        Eigen::Vector6d H_leg_t;
+        H_leg_t = Ag_leg * q_dot_est_mu.head(12) + Ag_waist * q_dot_est_mu.segment(12, 3) + Ag_armL * q_dot_est_mu.segment(15, 8) + Ag_armR * q_dot_est_mu.segment(25, 8);
+        Eigen::Vector6d h_temp;
+        h_temp = Ag_v * q_dot_virtual_lpf_.segment<6>(0);
+
+        H_data.segment<2>(0) = H_leg_t.segment<2>(0) + h_temp.segment<2>(0);
+        H_data.segment<3>(3) = H_leg_t.segment<3>(3);// + h_temp.segment<3>(3); 
+        
+        H_pitch = H_data(4);
+
+        Hl_leg(0) = H_leg_t(0) - H_leg_ref(0);
+        Hl_leg(1) = H_leg_t(1) - H_leg_ref(1);
+
+        H_leg(0) = H_leg_t(3) - H_leg_ref(3);
+        H_leg(1) = H_leg_t(4) - H_leg_ref(4);
+        H_leg(2) = H_leg_t(5);
     }
     else
     {
-        H_leg = Ag_leg * q_dot_est_mu.head(12) + Ag_waist * q_dot_est_mu.segment(12, 3) + Ag_armL * q_dot_est_mu.segment(15, 8) + Ag_armR * q_dot_est_mu.segment(25, 8);
+   // H_leg = Ag_leg * q_dot_est_mu.head(12) + Ag_waist * q_dot_est_mu.segment(12, 3) + Ag_armL * q_dot_est_mu.segment(15, 8) + Ag_armR * q_dot_est_mu.segment(25, 8);
     }
 
     F_ref(0) = lipm_w * lipm_w * Robot.total_mass_ * (com_mpcx - zmp_mpcx) + mom_mpcy / zc;
     F_ref(1) = lipm_w * lipm_w * Robot.total_mass_ * (com_mpcy - zmp_mpcy) - mom_mpcx / zc;
 
-    F_cur(0) = lipm_w * lipm_w * Robot.total_mass_ * (Robot.link_[COM_id].xpos(0) - ZMP_FT_l(0)) + H_leg_data(1) / zc;
-    F_cur(1) = lipm_w * lipm_w * Robot.total_mass_ * (Robot.link_[COM_id].xpos(1) - ZMP_FT_l(1)) - H_leg_data(0) / zc;
+    F_cur(0) = lipm_w * lipm_w * Robot.total_mass_ * (Robot.link_[COM_id].xpos(0) - ZMP_FT_l(0)) + H_data(1) / zc;
+    F_cur(1) = lipm_w * lipm_w * Robot.total_mass_ * (Robot.link_[COM_id].xpos(1) - ZMP_FT_l(1)) - H_data(0) / zc;
 
     F_err = F_cur - F_ref;
 
     Eigen::MatrixXd Ag_temp;
+    Eigen::MatrixXd Agl_temp;
     Eigen::Matrix7d I;
     Eigen::Matrix7d alpha;
     Eigen::Vector7d qd_prev;
@@ -1630,9 +1651,14 @@ void CustomController::momentumControl(RobotData &Robot)
     alpha(6, 6) = 0.001;
 
     Ag_temp.resize(3, variable_size);
-    Ag_temp.block<3, 3>(0, 0) = Ag_waist;
-    Ag_temp.block<3, 2>(0, 3) = Ag_armL.block<3, 2>(0, 2);
-    Ag_temp.block<3, 2>(0, 5) = Ag_armR.block<3, 2>(0, 2);
+    Agl_temp.resize(2, variable_size);
+    Agl_temp.block<2, 3>(0, 0).setZero() = Ag_waist.block<2, 3>(0, 0);
+    Agl_temp.block<2, 2>(0, 3).setZero() = Ag_armL.block<2, 2>(0, 2);
+    Agl_temp.block<2, 2>(0, 5).setZero() = Ag_armR.block<2, 2>(0, 2);
+
+    Ag_temp.block<3, 3>(0, 0) = Ag_waist.block<3, 3>(3, 0);
+    Ag_temp.block<3, 2>(0, 3) = Ag_armL.block<3, 2>(3, 2);
+    Ag_temp.block<3, 2>(0, 5) = Ag_armR.block<3, 2>(3, 2);
 
     if (walking_tick == 0)
     {
@@ -1648,8 +1674,8 @@ void CustomController::momentumControl(RobotData &Robot)
     q_w(5) = Robot.q_desired(26);
     q_w(6) = Robot.q_desired(27);
 
-    H = Ag_temp.transpose() * Ag_temp + alpha * I;
-    g = 2 * Ag_temp.transpose() * H_leg; // - 2*alpha*qd_prev;
+    H = Ag_temp.transpose() * Ag_temp + alpha * I + lmom * Agl_temp.transpose() * Agl_temp;
+    g = 2 * Ag_temp.transpose() * H_leg + lmom * 2 * Agl_temp.transpose() * Hl_leg; // - 2*alpha*qd_prev;
 
     A.setIdentity();
 
@@ -1674,25 +1700,28 @@ void CustomController::momentumControl(RobotData &Robot)
         ub(i) = 1.0;
     }
 
-    lb(3) = -2.0;
-    lb(4) = -2.0;
+    lb(3) = -1.0;
+    lb(4) = -1.0;
 
-    ub(3) = 2.0;
-    ub(4) = 2.0;
+    ub(3) = 1.0;
+    ub(4) = 1.0;
 
-    lb(5) = -2.0;
-    lb(6) = -2.0;
+    lb(5) = -1.0;
+    lb(6) = -1.0;
 
-    ub(5) = 2.0;
-    ub(6) = 2.0;
+    ub(5) = 1.0;
+    ub(6) = 1.0;
 
-    QP_m.EnableEqualityCondition(0.005);
-    QP_m.UpdateMinProblem(H, g);
-    QP_m.UpdateSubjectToAx(A, lbA, ubA);
-    QP_m.UpdateSubjectToX(lb, ub);
+    if (rd_.tc_.mom == true && walking_tick > 1000)
+    {
+        QP_m.EnableEqualityCondition(0.005);
+        QP_m.UpdateMinProblem(H, g);
+        QP_m.UpdateSubjectToAx(A, lbA, ubA);
+        QP_m.UpdateSubjectToX(lb, ub);
 
-    q_dm = QP_m.SolveQPoases(100);
-    qd_prev = q_dm;
+        q_dm = QP_m.SolveQPoases(100);
+        qd_prev = q_dm;
+    }
 }
 
 void CustomController::zmpCalc(RobotData &Robot)
