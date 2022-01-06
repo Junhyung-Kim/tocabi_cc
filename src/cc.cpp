@@ -618,7 +618,8 @@ void CustomController::computeFast()
             */
                 //  file[1] << PELV_trajectory_float_c.translation()(0) << "\t" << PELV_trajectory_float_c.translation()(1) << "\t" << PELV_trajectory_float_c.translation()(2) << "\t" << RF_trajectory_float.translation()(0)<< "\t" << RF_trajectory_float.translation()(1)<< "\t" << RF_trajectory_float.translation()(2)<<std::endl;
                 //if (walking_tick % 5 == 0)
-                    file[1] << walking_tick << "\t"<< mpc_cycle << "\t" << zmp_refx(walking_tick) << "\t" << rd_.link_[Right_Foot].xipos(0)<< "\t" << rd_.link_[Left_Foot].xipos(0)<<"\t" << rd_.link_[COM_id].xpos(0) << "\t" << com_mpcx << "\t" << ZMP_FT_l(0) << "\t" << zmp_mpcx << "\t" <<xL[walking_tick][0]<<"\t" << xU[walking_tick][0] <<"\t"<< rd_.link_[COM_id].v(1) << "\t" << rd_.link_[COM_id].xpos(1) << "\t" << com_mpcy << "\t" << ZMP_FT_l(1) << "\t" << ZMP_FT(1) << "\t" << zmp_mpcy << "\t" << rd_.link_[COM_id].xpos(2) << "\t" << H_data(3) << "\t" << mom_mpcy << "\t" << H_data(4) << "\t" << mom_mpcx << "\t" << control_input(0) << "\t" << control_input(1) <<std::endl;
+                   // file[1] << walking_tick << "\t"<< mpc_cycle << "\t" << zmp_refx(walking_tick) << "\t" << rd_.link_[Right_Foot].xipos(0)<< "\t" << rd_.link_[Left_Foot].xipos(0)<<"\t" << rd_.link_[COM_id].xpos(0) << "\t" << com_mpcx << "\t" << ZMP_FT_l(0) << "\t" << zmp_mpcx << "\t" <<xL[walking_tick][0]<<"\t" << xU[walking_tick][0] <<"\t"<< rd_.link_[COM_id].v(1) << "\t" << rd_.link_[COM_id].xpos(1) << "\t" << com_mpcy << "\t" << ZMP_FT_l(1) << "\t" << ZMP_FT(1) << "\t" << zmp_mpcy << "\t" << rd_.link_[COM_id].xpos(2) << "\t" << H_data(3) << "\t" << mom_mpcy << "\t" << H_data(4) << "\t" << mom_mpcx << "\t" << control_input(0) << "\t" << control_input(1) <<std::endl;
+ file[1] << walking_tick << "\t"<< mpc_cycle << "\t" << zmp_refy(walking_tick) << "\t" << rd_.link_[Right_Foot].xipos(1)<< "\t" << rd_.link_[Left_Foot].xipos(1)<<"\t" << rd_.link_[COM_id].xpos(1) << "\t" << com_mpcy << "\t" << ZMP_FT_l(1) << "\t" << zmp_mpcy << "\t" <<yL[walking_tick][0]<<"\t" << yU[walking_tick][0] <<"\t"<< rd_.link_[COM_id].v(1) << "\t" << rd_.link_[COM_id].xpos(1) << "\t" << com_mpcy << "\t" << ZMP_FT_l(1) << "\t" << ZMP_FT(1) << "\t" << zmp_mpcy << "\t" << rd_.link_[COM_id].xpos(2) << "\t" << H_data(3) << "\t" << mom_mpcy << "\t" << H_data(4) << "\t" << mom_mpcx << "\t" << control_input(0) << "\t" << control_input(1) <<std::endl;
 
                 /*   if (rd_.tc_.MPC == true)
                     file[1] << PELV_trajectory_float.translation()(0) <<"\t"<< PELV_trajectory_float_c.translation()(0) << "\t" << rd_.link_[COM_id].xpos(0) << "\t" <<com_mpcx<<"\t"<< PELV_trajectory_float.translation()(1)<<"\t"<< PELV_trajectory_float_c.translation()(1) << "\t" << rd_.link_[COM_id].xpos(1) << "\t"<<com_mpcy<<"\t" <<rd_.link_[Pelvis].xipos(1)<<std::endl;
@@ -880,8 +881,8 @@ void CustomController::mpc_variablex()
             x11x[0] = rd_.link_[COM_id].xpos(0);
             x11x[1] = rd_.link_[COM_id].v(0);//rd_.link_[Pelvis].xipos(0);
             x11x[2] = ZMP_FT_l_mu(0);//rd_.link_[COM_id].v(0);//rd_.link_[Pelvis].xipos(0);
+          //  x11x[4] = H_pitch;
         }
-        //x11x[4] = H_pitch;
         hd_lbxx[0] = x11x;
         hd_ubxx[0] = x11x;
     }
@@ -895,7 +896,6 @@ void CustomController::mpc_variabley()
 {
     std::copy(yL_mu + mpc_cycle, yL_mu + N + 1 + mpc_cycle, hd_lbxy);
     std::copy(yU_mu + mpc_cycle, yU_mu + N + 1 + mpc_cycle, hd_ubxy);
-    debug_temp += x11y[1] * 0.005;
 
     if (mpc_cycle == 0)
     {
@@ -915,10 +915,10 @@ void CustomController::mpc_variabley()
     }
     else
     {
-        if (mpc_cycle > 630)
+        if (mpc_cycle > 630 && mpc_cycle % 3 == 0)
         {
-            //  x11y[0] = rd_.link_[Pelvis].xipos(1);
-            //      x11y[1] = rd_.link_[Pelvis].v(1);
+            //x11y[0] = rd_.link_[COM_id].xpos(1);
+            //x11y[1] = rd_.link_[Pelvis].v(1);
             //    x11y[2] = ZMP_FT(1);
         }
         hd_lbxy[0] = x11y;
