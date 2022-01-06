@@ -556,7 +556,7 @@ void CustomController::computeFast()
                 }
                 else
                 {
-                    if (rd_.tc_.mom == true)
+                    if (rd_.tc_.mom == true && walking_tick > 1000)
                     {
                         rd_.q_desired(12) = rd_.q_desired(12) + q_dm(0) / wk_Hz;
                         rd_.q_desired(13) = rd_.q_desired(13) + q_dm(1) / wk_Hz;
@@ -618,7 +618,7 @@ void CustomController::computeFast()
             */
                 //  file[1] << PELV_trajectory_float_c.translation()(0) << "\t" << PELV_trajectory_float_c.translation()(1) << "\t" << PELV_trajectory_float_c.translation()(2) << "\t" << RF_trajectory_float.translation()(0)<< "\t" << RF_trajectory_float.translation()(1)<< "\t" << RF_trajectory_float.translation()(2)<<std::endl;
                 //if (walking_tick % 5 == 0)
-                    file[1] << contactMode << "\t" << LF_trajectory_float.translation()(2) << "\t" << rd_.link_[COM_id].xpos(0) << "\t" << com_mpcx << "\t" << ZMP_FT_l(0) << "\t" << zmp_mpcx << "\t" << rd_.link_[COM_id].v(1) << "\t" << rd_.link_[COM_id].xpos(1) << "\t" << com_mpcy << "\t" << ZMP_FT_l(1) << "\t" << ZMP_FT(1) << "\t" << zmp_mpcy << "\t" << rd_.link_[COM_id].xpos(2) << "\t" << H_data(0) << "\t" << mom_mpcy << "\t" << H_data(1) << "\t" << mom_mpcx << "\t" << control_input(0) << "\t" << control_input(1) <<"\t" <<comR_sup(0)<< "\t" << com_sup(0)  <<"\t" <<comR_sup(1)<< "\t" << com_sup(1) <<"\t" << ZMP_r_sup(0) <<"\t" <<  ZMP_sup(0) <<"\t" << ZMP_r_sup(1) <<"\t" <<  ZMP_sup(1)<< std::endl;
+                    file[1] << walking_tick << "\t"<< mpc_cycle << "\t" << zmp_refx(walking_tick) << "\t" << rd_.link_[Right_Foot].xipos(0)<< "\t" << rd_.link_[Left_Foot].xipos(0)<<"\t" << rd_.link_[COM_id].xpos(0) << "\t" << com_mpcx << "\t" << ZMP_FT_l(0) << "\t" << zmp_mpcx << "\t" <<xL[walking_tick][0]<<"\t" << xU[walking_tick][0] <<"\t"<< rd_.link_[COM_id].v(1) << "\t" << rd_.link_[COM_id].xpos(1) << "\t" << com_mpcy << "\t" << ZMP_FT_l(1) << "\t" << ZMP_FT(1) << "\t" << zmp_mpcy << "\t" << rd_.link_[COM_id].xpos(2) << "\t" << H_data(3) << "\t" << mom_mpcy << "\t" << H_data(4) << "\t" << mom_mpcx << "\t" << control_input(0) << "\t" << control_input(1) <<std::endl;
 
                 /*   if (rd_.tc_.MPC == true)
                     file[1] << PELV_trajectory_float.translation()(0) <<"\t"<< PELV_trajectory_float_c.translation()(0) << "\t" << rd_.link_[COM_id].xpos(0) << "\t" <<com_mpcx<<"\t"<< PELV_trajectory_float.translation()(1)<<"\t"<< PELV_trajectory_float_c.translation()(1) << "\t" << rd_.link_[COM_id].xpos(1) << "\t"<<com_mpcy<<"\t" <<rd_.link_[Pelvis].xipos(1)<<std::endl;
@@ -631,7 +631,7 @@ void CustomController::computeFast()
 
                 //              file[0] <<desired_leg_q_temp(0) << "\t" << rd_.q_(0) <<"\t"<<desired_leg_q_temp(1) << "\t" << rd_.q_(1) <<"\t"<<desired_leg_q_temp(2) << "\t" << rd_.q_(2) <<"\t"<<desired_leg_q_temp(3) << "\t" << rd_.q_(3) <<"\t"<<desired_leg_q_temp(4) << "\t" << rd_.q_(4) <<"\t"<<desired_leg_q_temp(5) << "\t" << rd_.q_(5) <<std::endl;
                 // file[0] << rd_.q_virtual_(0) << "\t"<< rd_.q_virtual_(1) << "\t"<< rd_.q_virtual_(2) << "\t"<< rd_.q_virtual_(3) << "\t"<< rd_.q_virtual_(4) << "\t"<< rd_.q_virtual_(5) << "\t"<< rd_.q_virtual_(6) << "\t"<< rd_.q_virtual_(7) << "\t"<< rd_.q_virtual_(8) << "\t"<< rd_.q_virtual_(9) << "\t"<< rd_.q_virtual_(10) << "\t"<< rd_.q_virtual_(11) << "\t"<< rd_.q_virtual_(39) << std::endl;
-                file[0] << RT_mu(0) << "\t" << Fr_l(3) << "\t" << RT_mu(1) << "\t" << Fr_l(4) << "\t" << LT_mu(0) << "\t" << Fl_l(3) << "\t" << LT_mu(1) << "\t" << Fl_l(4) << "\t" << zmp_mpcx << "\t" << ZMP_FT_l(0) << "\t" << zmp_mpcy << "\t" << ZMP_FT_l(1) << std::endl;
+   //             file[0] << RT_mu(0) << "\t" << Fr_l(3) << "\t" << RT_mu(1) << "\t" << Fr_l(4) << "\t" << LT_mu(0) << "\t" << Fl_l(3) << "\t" << LT_mu(1) << "\t" << Fl_l(4) << "\t" << zmp_mpcx << "\t" << ZMP_FT_l(0) << "\t" << zmp_mpcy << "\t" << ZMP_FT_l(1) << std::endl;
                 //file[0] << control_input(0) << "\t" << control_input(1) << "\t" << control_input(2) << "\t" << control_input(3) << "\t" << zmp_mpcx << "\t" << ZMP_FT_l(0) << "\t" << zmp_mpcy << "\t" << ZMP_FT_l(1) << "\t"<<pr(0)<<"\t" << pl(0)<<std::endl;
 
                 //  file[1] << rd_.link_[Pelvis].xipos(0) << "\t"<< rd_.link_[Pelvis].xipos(1) << "\t"<< rd_.link_[Pelvis].v(0) << "\t"<< rd_.link_[Pelvis].v(1) << "\t" <<  ZMP_FT_l(0) << "\t" <<ZMP_FT_l(1) << "\t" << com_mpcx/*COM_float_current.translation()(0)*/<<"\t" << com_mpcy/*COM_float_current.translation()(1)*/<<"\t"<< COM_float_current.translation()(2)<<"\t"<<rd_.total_mass_ << "\t" << std::endl;
@@ -875,13 +875,13 @@ void CustomController::mpc_variablex()
     }
     else
     {
-        if (mpc_cycle > 630)
+        if (mpc_cycle > 610 && mpc_cycle % 3 == 0)
         {
             x11x[0] = rd_.link_[COM_id].xpos(0);
             x11x[1] = rd_.link_[COM_id].v(0);//rd_.link_[Pelvis].xipos(0);
             x11x[2] = ZMP_FT_l_mu(0);//rd_.link_[COM_id].v(0);//rd_.link_[Pelvis].xipos(0);
         }
-
+        //x11x[4] = H_pitch;
         hd_lbxx[0] = x11x;
         hd_ubxx[0] = x11x;
     }
@@ -1051,7 +1051,7 @@ void CustomController::flyWheelModel(double Ts, int nx, int nu, double *Ax, doub
         By[ii] = 0.0;
     }
 
-    Bx[6] = 1.0 / (total_mass * zc) * Ts;
+    Bx[6] = -1.0 / (total_mass * zc) * Ts;
     Bx[2] = 1.00 * Ts;
     Bx[9] = 1.00 * Ts;
 
@@ -1612,7 +1612,7 @@ void CustomController::momentumControl(RobotData &Robot)
         h_temp = Ag_v * q_dot_virtual_lpf_.segment<6>(0);
 
         H_data.segment<2>(0) = H_leg_t.segment<2>(0) + h_temp.segment<2>(0);
-        H_data.segment<3>(3) = H_leg_t.segment<3>(3);// + h_temp.segment<3>(3); 
+        H_data.segment<3>(3) = H_leg_t.segment<3>(3) + h_temp.segment<3>(3); 
         
         H_pitch = H_data(4);
 
