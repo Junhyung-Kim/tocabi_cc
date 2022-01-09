@@ -513,6 +513,9 @@ void CustomController::computeFast()
                     zmp_delx = 1.2 * cp_errx;
                     zmp_dely = 1.4 * cp_erry;
 
+                    zmp_delx = 0.0;
+                    zmp_dely = 0.0;
+
                     if (walking_tick > 500)
                     {
                         PELV_trajectory_float.translation()(0) = com_mpcx;
@@ -543,8 +546,8 @@ void CustomController::computeFast()
                 }
                 if(rd_.ankleHybrid == true)
                 {
-                    rd_.q_desired(5) = rd_.q_desired(5) + control_input(1);
-                    rd_.q_desired(11) = rd_.q_desired(11) + control_input(3);
+                    rd_.q_desired(5) = rd_.q_desired(5);// + control_input(1);
+                    rd_.q_desired(11) = rd_.q_desired(11);// + control_input(3);
                 }
                 
                 if (walking_tick == 0)
@@ -571,7 +574,7 @@ void CustomController::computeFast()
 
                 if (rd_.tc_.MPC == true)
                 {
-                    if (walking_tick % 5 == 0)
+                    if (walking_tick % mpct == 0)
                     {
                         int mpc_temp;
                         if (walking_tick == 0)
@@ -618,8 +621,8 @@ void CustomController::computeFast()
             */
                 //  file[1] << PELV_trajectory_float_c.translation()(0) << "\t" << PELV_trajectory_float_c.translation()(1) << "\t" << PELV_trajectory_float_c.translation()(2) << "\t" << RF_trajectory_float.translation()(0)<< "\t" << RF_trajectory_float.translation()(1)<< "\t" << RF_trajectory_float.translation()(2)<<std::endl;
                 //if (walking_tick % 5 == 0)
-        //        file[1] << walking_tick << "\t"<< mpc_cycle << "\t" << zmp_refx(walking_tick) << "\t" << rd_.link_[Right_Foot].xipos(0)<< "\t" << rd_.link_[Left_Foot].xipos(0)<<"\t" << rd_.link_[COM_id].xpos(0) << "\t" << com_mpcx << "\t" << ZMP_FT_l(0) << "\t" << zmp_mpcx << "\t" <<xL[walking_tick][0]<<"\t" << xU[walking_tick][0] <<"\t"<< rd_.link_[COM_id].v(1) << "\t" << rd_.link_[COM_id].xpos(1) << "\t" << com_mpcy << "\t" << ZMP_FT_l(1) << "\t" << ZMP_FT(1) << "\t" << zmp_mpcy << "\t" << rd_.link_[COM_id].xpos(2) << "\t" << H_data(3) << "\t" << mom_mpcy << "\t" << H_data(4) << "\t" << mom_mpcx << "\t" << control_input(0) << "\t" << control_input(1) <<std::endl;
- file[1] << walking_tick << "\t"<< mpc_cycle << "\t" << zmp_refy(walking_tick) << "\t" << rd_.link_[Right_Foot].xipos(1)<< "\t" << rd_.link_[Left_Foot].xipos(1)<<"\t" << rd_.link_[COM_id].xpos(1) << "\t" << com_mpcy << "\t" << ZMP_FT_l(1) << "\t" << zmp_mpcy << "\t" <<yL[walking_tick][2]<<"\t" << yU[walking_tick][2] <<"\t"<< rd_.link_[COM_id].v(1) << "\t" << rd_.link_[COM_id].xpos(1) << "\t" << com_mpcy << "\t" << ZMP_FT_l(1) << "\t" << ZMP_FT(1) << "\t" << zmp_mpcy << "\t" << com_mpcdy << "\t" <<rd_.link_[COM_id].v(1) << "\t"<< H_data(3) << "\t" << mom_mpcy  <<std::endl;
+           //     file[1] << walking_tick << "\t"<< mpc_cycle << "\t" << zmp_refx(walking_tick) <<"\t" << rd_.link_[COM_id].xpos(0) << "\t" << com_mpcx << "\t" << ZMP_FT_l(0) << "\t" << zmp_mpcx << "\t" <<xL[walking_tick][0]<<"\t" << xU[walking_tick][0] <<"\t"<< rd_.link_[COM_id].v(1) << "\t" << rd_.link_[COM_id].xpos(1) << "\t" <<hpipm_statusy<<"\t" << com_mpcy << "\t" << ZMP_FT_l(1) << "\t" << ZMP_FT(1) << "\t" << zmp_mpcy << "\t" << rd_.link_[COM_id].xpos(2) << "\t" << H_data(3) << "\t" << mom_mpcy << "\t" << H_data(4) << "\t" << mom_mpcx << "\t" << control_input(0) << "\t" << control_input(1) <<std::endl;
+ file[1] << walking_tick << "\t"<< mpc_cycle << "\t" <<hpipm_statusy<<"\t"<< zmp_refy(walking_tick) <<"\t" << rd_.link_[COM_id].xpos(1) << "\t" << com_mpcy << "\t" << ZMP_FT_l(1) << "\t" << zmp_mpcy << "\t" <<yL[walking_tick][2]<<"\t" << yU[walking_tick][2] <<"\t"<< rd_.link_[COM_id].v(1) << "\t" << rd_.link_[COM_id].xpos(1) << "\t" << com_mpcy << "\t" << ZMP_FT_l(1) << "\t" << ZMP_FT(1) << "\t" << zmp_mpcy << "\t" << com_mpcdy << "\t" <<rd_.link_[COM_id].v(1) << "\t"<< H_data(3) << "\t" << mom_mpcy  <<std::endl;
  
   // << rd_.link_[COM_id].xpos(2) << "\t" << H_data(3) << "\t" << mom_mpcy << "\t" << H_data(4) << "\t" << mom_mpcx << "\t" << control_input(0) << "\t" << control_input(1) <<std::endl;
 
@@ -685,15 +688,14 @@ void CustomController::computePlanner()
                     mu0 = 2.0;
 
                 //solver Setup
-                int iter_max = 25;
+                int iter_max = 27;
                 double alpha_min = 1e-2;
-                double tol_stat = 1e-1;
-                double tol_eq = 2e-2;
-                double tol_ineq = 5e-3;
-                double tol_comp = 1e-1;
-                double reg_prim = 1e-1;
+                double tol_stat = 1e-2;
+                double tol_eq = 1e-2;
+                double tol_ineq = 1e-2;
+                double tol_comp = 1e-2;
+                double reg_prim = 1e-2;
                 int warm_start = 0;
-                int pred_corr = 0;
                 int ric_alg = 0;
                 enum hpipm_mode mode = SPEED_ABS;
 
@@ -762,7 +764,7 @@ void CustomController::computePlanner()
                 /************************************************
                 *********box & general constraints**************
                 ************************************************/
-                if (walking_tick % 5 == 0)
+                if (walking_tick % mpct == 0)
                 {
                     auto t4 = std::chrono::steady_clock::now();
                     walking_tick_prev = walking_tick;
@@ -880,10 +882,10 @@ void CustomController::mpc_variablex()
     {
         if (mpc_cycle > 610)// && mpc_cycle % 5 == 0)
         {
-           x11x[0] = rd_.link_[COM_id].xpos(0);
-           x11x[1] = rd_.link_[COM_id].v(0);
-           x11x[2] = ZMP_FT_l_mu(0);
-          //  x11x[4] = H_pitch;
+         //  x11x[0] = rd_.link_[COM_id].xpos(0);
+          // x11x[1] = rd_.link_[COM_id].v(0);
+          // x11x[2] = ZMP_FT_l_mu(0);
+        //   x11x[4] = H_pitch;
         }
         hd_lbxx[0] = x11x;
         hd_ubxx[0] = x11x;
@@ -921,7 +923,8 @@ void CustomController::mpc_variabley()
         {
             x11y[0] = rd_.link_[COM_id].xpos(1);
             x11y[1] = rd_.link_[COM_id].v(1);
-            //x11y[2] = ZMP_FT_l_mu(1);
+            x11y[2] = ZMP_FT_l_mu(1);
+            x11y[4] = H_roll;
         }
         hd_lbxy[0] = x11y;
         hd_ubxy[0] = x11y;
@@ -1616,6 +1619,7 @@ void CustomController::momentumControl(RobotData &Robot)
         H_data.segment<2>(0) = H_leg_t.segment<2>(0) + h_temp.segment<2>(0);
         H_data.segment<3>(3) = H_leg_t.segment<3>(3) + h_temp.segment<3>(3); 
         
+        H_roll = H_data(3);
         H_pitch = H_data(4);
 
         Hl_leg(0) = H_leg_t(0) - H_leg_ref(0);
@@ -2061,26 +2065,26 @@ void CustomController::zmpControl(RobotData &Robot)
             {
                 if (i == 1 || i == 3)
                 {
-                    if (control_input(i) > 0.5)
+                    if (control_input(i) > 0.2)
                     {
-                        control_input(i) = 0.5;
+                        control_input(i) = 0.2;
                     }
 
-                    if (control_input(i) < -0.5)
+                    if (control_input(i) < -0.2)
                     {
-                        control_input(i) = -0.5;
+                        control_input(i) = -0.2;
                     }
                 }
                 else
                 {
-                    if (control_input(i) > 0.1)
+                    if (control_input(i) > 0.2)
                     {
-                        control_input(i) = 0.1;
+                        control_input(i) = 0.2;
                     }
 
-                    if (control_input(i) < -0.1)
+                    if (control_input(i) < -0.2)
                     {
-                        control_input(i) = -0.1;
+                        control_input(i) = -0.2;
                     }
                 }
             }
@@ -2088,26 +2092,26 @@ void CustomController::zmpControl(RobotData &Robot)
             {
                 if (i == 1 || i == 3)
                 {
-                    if (control_input(i) > 0.5)
+                    if (control_input(i) > 0.2)
                     {
-                        control_input(i) = 0.5;
+                        control_input(i) = 0.2;
                     }
 
-                    if (control_input(i) < -0.5)
+                    if (control_input(i) < -0.2)
                     {
-                        control_input(i) = -0.5;
+                        control_input(i) = -0.2;
                     }
                 }
                 else
                 {
-                    if (control_input(i) > 0.1)
+                    if (control_input(i) > 0.2)
                     {
-                        control_input(i) = 0.1;
+                        control_input(i) = 0.2;
                     }
 
-                    if (control_input(i) < -0.1)
+                    if (control_input(i) < -0.2)
                     {
-                        control_input(i) = -0.1;
+                        control_input(i) = -0.2;
                     }
                 }
             }

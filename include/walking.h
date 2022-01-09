@@ -312,7 +312,9 @@ public:
     std::atomic<double> zmp_delx;
     std::atomic<double> zmp_dely;
 
+    std::atomic<double> H_roll;
     std::atomic<double> H_pitch;
+
     double ux_vib;
     double uy_vib;
 
