@@ -105,7 +105,11 @@ public:
     bool debug = false;
 
     int cycle = 0;
-    double Ts = 0.005;
+    double Ts = 0.01;
+
+    bool mpcxsol = true;
+    bool mpcysol = true;
+
     int nx_;
     int nu_;
     double timeHorizon = 1.0;

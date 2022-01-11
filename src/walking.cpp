@@ -549,7 +549,7 @@ void WalkingController::setCpPosition()
     {
         capturePoint_offsety(i) = 0.00;
         capturePoint_offsety(i) = 0.02;
-        capturePoint_offsetx(i) = 0.045;
+        capturePoint_offsetx(i) = 0.015;
     }
 
     if (com_control == 0)
@@ -2371,11 +2371,11 @@ void WalkingController::comController(RobotData &Robot)
 
     if(walking_tick > 300)
     { 
-        PELV_trajectory_float_c.translation()(0) = com_sup(0) - com_offset + pelv_xp*(comR_sup(0)  - com_sup(0)) - zmp_xp *(ZMP_sup(0) - ZMP_r_sup(0));    
+        PELV_trajectory_float_c.translation()(0) = com_sup(0) - com_offset  + pelv_xp*(comR_sup(0)  - com_sup(0)) - zmp_xp *(ZMP_sup(0) - ZMP_r_sup(0));    
     }
     else
     {
-        PELV_trajectory_float_c.translation()(0) = com_sup(0) - com_offset + pelv_xp*(comR_sup(0)- com_sup(0));
+        PELV_trajectory_float_c.translation()(0) = com_sup(0) - com_offset  + pelv_xp*(comR_sup(0)- com_sup(0));
     }
 
     PELV_trajectory_float_c.translation()(1) = pelvR_sup(1) + pelv_yp*(comR_sup(1) - com_sup(1)) - zmp_yp *(ZMP_sup(1) - ZMP_r_sup(1));
