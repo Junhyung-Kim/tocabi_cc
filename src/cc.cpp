@@ -622,27 +622,10 @@ void CustomController::computeFast()
                 //  file[1] << PELV_trajectory_float_c.translation()(0) << "\t" << PELV_trajectory_float_c.translation()(1) << "\t" << PELV_trajectory_float_c.translation()(2) << "\t" << RF_trajectory_float.translation()(0)<< "\t" << RF_trajectory_float.translation()(1)<< "\t" << RF_trajectory_float.translation()(2)<<std::endl;
                 //if (walking_tick % 5 == 0)
            //     file[1] << walking_tick << "\t"<< mpc_cycle << "\t" << zmp_refx(walking_tick) <<"\t" << rd_.link_[COM_id].xpos(0) << "\t" << com_mpcx << "\t" << ZMP_FT_l(0) << "\t" << zmp_mpcx << "\t" <<xL[walking_tick][0]<<"\t" << xU[walking_tick][0] <<"\t"<< rd_.link_[COM_id].v(1) << "\t" << rd_.link_[COM_id].xpos(1) << "\t" <<hpipm_statusy<<"\t" << com_mpcy << "\t" << ZMP_FT_l(1) << "\t" << ZMP_FT(1) << "\t" << zmp_mpcy << "\t" << rd_.link_[COM_id].xpos(2) << "\t" << H_data(3) << "\t" << mom_mpcy << "\t" << H_data(4) << "\t" << mom_mpcx << "\t" << control_input(0) << "\t" << control_input(1) <<std::endl;
- file[1] << walking_tick << "\t"<< mpc_cycle << "\t" << mpc_cycle_prev << "\t" <<hpipm_statusy<<"\t"<< zmp_refy(walking_tick) <<"\t" << rd_.link_[COM_id].xpos(1) << "\t" << com_mpcy << "\t" << ZMP_FT_l(1) << "\t" << zmp_mpcy << "\t" <<yL[walking_tick][2]<<"\t" << yU[walking_tick][2] <<"\t"<< rd_.link_[COM_id].v(1) << "\t" << rd_.link_[COM_id].xpos(1) << "\t" << com_mpcy << "\t" << ZMP_FT_l(1) << "\t" << ZMP_FT(1) << "\t" << zmp_mpcy << "\t" << com_mpcdy << "\t" <<rd_.link_[COM_id].v(1) << "\t"<< H_data(3) << "\t" << mom_mpcy  <<std::endl;
- file[0] << walking_tick << "\t"<< mpc_cycle << "\t" <<hpipm_statusx<<"\t"<< zmp_refx(walking_tick) <<"\t" << rd_.link_[COM_id].xpos(0) << "\t" << com_mpcx << "\t" << ZMP_FT_l(0) << "\t" << zmp_mpcx << "\t" <<xL[walking_tick][2]<<"\t" << xU[walking_tick][2] <<"\t"<< rd_.link_[COM_id].v(0) << "\t" << rd_.link_[COM_id].xpos(0) << "\t" << com_mpcx << "\t" << ZMP_FT_l(0) << "\t" << ZMP_FT(1) << "\t" << zmp_mpcy << "\t" << com_mpcdy << "\t" <<rd_.link_[COM_id].v(1) << "\t"<< H_data(4) << "\t" << mom_mpcx  <<std::endl;
+ file[1] << walking_tick << "\t"<< mpc_cycle << "\t" << mpc_cycle_prev << "\t" <<hpipm_statusy<<"\t"<< zmp_refy(walking_tick) <<"\t" << rd_.link_[COM_id].xpos(1) << "\t" << com_mpcy << "\t" << ZMP_FT_l(1) << "\t" << zmp_mpcy << "\t" <<yL[walking_tick][2]<<"\t" << yU[walking_tick][2] <<"\t"<< rd_.link_[COM_id].v(1) << "\t" << rd_.link_[COM_id].xpos(1) << "\t" << com_mpcy << "\t" << ZMP_FT_l(1) << "\t" << ZMP_FT(1) << "\t" << zmp_mpcy << "\t" << com_mpcdy << "\t" <<rd_.link_[COM_id].v(1) << "\t"<< H_roll << "\t" << mom_mpcy  <<std::endl;
+ file[0] << walking_tick << "\t"<< mpc_cycle << "\t" <<hpipm_statusx<<"\t"<< zmp_refx(walking_tick) <<"\t" << rd_.link_[COM_id].xpos(0) << "\t" << com_mpcx << "\t" << ZMP_FT_l(0) << "\t" << zmp_mpcx << "\t" <<xL[walking_tick][2]<<"\t" << xU[walking_tick][2] <<"\t"<< rd_.link_[COM_id].v(0) << "\t" << rd_.link_[COM_id].xpos(0) << "\t" << com_mpcx << "\t" << ZMP_FT_l(0) << "\t" << ZMP_FT(1) << "\t" << zmp_mpcy << "\t" << com_mpcdy << "\t" <<rd_.link_[COM_id].v(1) << "\t"<< H_pitch << "\t" << mom_mpcx  << "\t" << F_err(0) << "\t" << F_err(1)<<std::endl;
  
-  // << rd_.link_[COM_id].xpos(2) << "\t" << H_data(3) << "\t" << mom_mpcy << "\t" << H_data(4) << "\t" << mom_mpcx << "\t" << control_input(0) << "\t" << control_input(1) <<std::endl;
-
-                /*   if (rd_.tc_.MPC == true)
-                    file[1] << PELV_trajectory_float.translation()(0) <<"\t"<< PELV_trajectory_float_c.translation()(0) << "\t" << rd_.link_[COM_id].xpos(0) << "\t" <<com_mpcx<<"\t"<< PELV_trajectory_float.translation()(1)<<"\t"<< PELV_trajectory_float_c.translation()(1) << "\t" << rd_.link_[COM_id].xpos(1) << "\t"<<com_mpcy<<"\t" <<rd_.link_[Pelvis].xipos(1)<<std::endl;
-                else*/
-                //                    file[1] << xy_vib_est(0) <<"\t"<<uy_vib<< "\t"<<com_mpcy <<"\t" <<PELV_trajectory_float.translation()(1)<<"\t"<< rd_.link_[COM_id].xpos(1) << "\t"<< xy_vib_est(1) <<"\t"<< rd_.link_[COM_id].v(1) << "\t"<<yy_vib(0) <<"\t" << yy_vibm(0)<< "\t"<<yy_vib(1) <<"\t" << yy_vibm(1)<< std::endl;//"\t"<< xy_vib_est(0) << "\t" << rd_.link_[Pelvis].xpos(1) << "\t"<< xy_vib_est(1) << "\t" << rd_.link_[Pelvis].v(1) << std::endl;
-
-                //     file[1] << rd_.link_[Pelvis].xipos(0) << "\t"<< rd_.link_[Pelvis].xipos(1) << "\t"<< rd_.link_[Pelvis].v(0) << "\t"<< rd_.link_[Pelvis].v(1) << "\t" <<  ZMP_FT_l(0) << "\t" <<ZMP_FT_l(1) << "\t" << com_refx(walking_tick)<<"\t" << com_refy(walking_tick)<<"\t"<< PELV_float_init.translation()(2)<<"\t"<<rd_.total_mass_ << "\t" << std::endl;
-
-                //   file[1] << PELV_trajectory_float.translation()(0) << "\t" << rd_.link_[Pelvis].xipos(0) << "\t" << PELV_trajectory_float.translation()(1) << "\t" << rd_.link_[Pelvis].xipos(1) << "\t" << zmp_mpcx << "\t" << ZMP_FT_l(0) << "\t" << zmp_mpcy << "\t" << ZMP_FT_l(1) << "\t" << mom_mpcx << "\t" << H_data(1) << "\t" << mom_mpcy << "\t" << H_data(0) << std::endl;
-
-                //              file[0] <<desired_leg_q_temp(0) << "\t" << rd_.q_(0) <<"\t"<<desired_leg_q_temp(1) << "\t" << rd_.q_(1) <<"\t"<<desired_leg_q_temp(2) << "\t" << rd_.q_(2) <<"\t"<<desired_leg_q_temp(3) << "\t" << rd_.q_(3) <<"\t"<<desired_leg_q_temp(4) << "\t" << rd_.q_(4) <<"\t"<<desired_leg_q_temp(5) << "\t" << rd_.q_(5) <<std::endl;
-                // file[0] << rd_.q_virtual_(0) << "\t"<< rd_.q_virtual_(1) << "\t"<< rd_.q_virtual_(2) << "\t"<< rd_.q_virtual_(3) << "\t"<< rd_.q_virtual_(4) << "\t"<< rd_.q_virtual_(5) << "\t"<< rd_.q_virtual_(6) << "\t"<< rd_.q_virtual_(7) << "\t"<< rd_.q_virtual_(8) << "\t"<< rd_.q_virtual_(9) << "\t"<< rd_.q_virtual_(10) << "\t"<< rd_.q_virtual_(11) << "\t"<< rd_.q_virtual_(39) << std::endl;
-   //             file[0] << RT_mu(0) << "\t" << Fr_l(3) << "\t" << RT_mu(1) << "\t" << Fr_l(4) << "\t" << LT_mu(0) << "\t" << Fl_l(3) << "\t" << LT_mu(1) << "\t" << Fl_l(4) << "\t" << zmp_mpcx << "\t" << ZMP_FT_l(0) << "\t" << zmp_mpcy << "\t" << ZMP_FT_l(1) << std::endl;
-                //file[0] << control_input(0) << "\t" << control_input(1) << "\t" << control_input(2) << "\t" << control_input(3) << "\t" << zmp_mpcx << "\t" << ZMP_FT_l(0) << "\t" << zmp_mpcy << "\t" << ZMP_FT_l(1) << "\t"<<pr(0)<<"\t" << pl(0)<<std::endl;
-
-                //  file[1] << rd_.link_[Pelvis].xipos(0) << "\t"<< rd_.link_[Pelvis].xipos(1) << "\t"<< rd_.link_[Pelvis].v(0) << "\t"<< rd_.link_[Pelvis].v(1) << "\t" <<  ZMP_FT_l(0) << "\t" <<ZMP_FT_l(1) << "\t" << com_mpcx/*COM_float_current.translation()(0)*/<<"\t" << com_mpcy/*COM_float_current.translation()(1)*/<<"\t"<< COM_float_current.translation()(2)<<"\t"<<rd_.total_mass_ << "\t" << std::endl;
-            }
+           }
         }
         else if (rd_.tc_.walking_enable == 3.0)
         {
@@ -689,13 +672,14 @@ void CustomController::computePlanner()
                     mu0 = 2.0;
 
                 //solver Setup
-                int iter_max = 100;
+                int iter_max = 200;
                 double alpha_min = 8e-3;
-                double tol_stat = 8e-3;
-                double tol_eq = 0.01;//8e-3;
-                double tol_ineq = 0.01;//8e-3;
-                double tol_comp = 8e-3;
-                double reg_prim = 8e-3;
+                double tol_stat = 1e+2;
+                double tol_eq = 8e-3;
+                double tol_ineq = 8e-3;
+                double tol_comp = 8e-2;
+                double reg_prim = 8e-2;
+                int split_step = 0;
                 int warm_start = 0;
                 int ric_alg = 0;
                 enum hpipm_mode mode = SPEED_ABS;
@@ -716,6 +700,8 @@ void CustomController::computePlanner()
                 d_ocp_qp_ipm_arg_set_reg_prim(&reg_prim, &argx);
                 d_ocp_qp_ipm_arg_set_warm_start(&warm_start, &argx);
                 d_ocp_qp_ipm_arg_set_ric_alg(&ric_alg, &argx);
+                d_ocp_qp_ipm_arg_set_split_step(&split_step, &argx);
+                argx.abs_form = 1.0;
 
                 d_ocp_qp_dim_set_all(nx, nu, nbx, nbu, ng, nsbx, nsbu, nsg, &dimx);
                 qp_sizex = d_ocp_qp_memsize(&dimx);
@@ -732,6 +718,7 @@ void CustomController::computePlanner()
                 else
                     mu0 = 2.0;
 
+                tol_stat = 1e+60;
                 dim_sizey = d_ocp_qp_dim_memsize(N);
                 dim_memy = malloc(dim_sizey);
                 d_ocp_qp_dim_create(N, &dimy, dim_memy);
@@ -748,6 +735,8 @@ void CustomController::computePlanner()
                 d_ocp_qp_ipm_arg_set_reg_prim(&reg_prim, &argy);
                 d_ocp_qp_ipm_arg_set_warm_start(&warm_start, &argy);
                 d_ocp_qp_ipm_arg_set_ric_alg(&ric_alg, &argy);
+                d_ocp_qp_ipm_arg_set_split_step(&split_step, &argy);
+                argy.abs_form = 1.0;
 
                 d_ocp_qp_dim_set_all(nx, nu, nbx, nbu, ng, nsbx, nsbu, nsg, &dimy);
                 qp_sizey = d_ocp_qp_memsize(&dimy);
@@ -842,7 +831,7 @@ void CustomController::computePlanner()
                     zmp_mpcx = x11x[2];
                     zmp_mpcy = x11y[2];
 
-                    mom_mpcx = x11x[4];
+                    mom_mpcx = -1*(softCx_s[mpc_cycle][0] * x11x[0] + softCx_s[mpc_cycle][1] * x11x[1] - softBoundx_s[mpc_cycle][0]);//x11x[4];
                     mom_mpcy = x11y[4];
 
                     auto t5 = std::chrono::steady_clock::now();
@@ -887,16 +876,11 @@ void CustomController::mpc_variablex()
     }
     else
     {
-        if (mpc_cycle > 300 && phaseChange != phaseChange1)
-        {
-           x11x[0] = rd_.link_[COM_id].xpos(0);
-           x11x[1] = rd_.link_[COM_id].v(0);
-           x11x[2] = ZMP_FT_l_mu(0);
-           x11x[4] = H_pitch;
-        }
-        else if (mpc_cycle > 300)
-        {
-            x11x[4] = H_pitch;
+        if (mpc_cycle > 300)
+        {   
+            x11x[0] = rd_.link_[COM_id].xpos(0);
+            x11x[1] = rd_.link_[COM_id].v(0);
+            x11x[2] = ZMP_FT_l_mu(0);
         }
         hd_lbxx[0] = x11x;
         hd_ubxx[0] = x11x;
@@ -935,7 +919,7 @@ void CustomController::mpc_variabley()
             x11y[0] = rd_.link_[COM_id].xpos(1);
             x11y[1] = rd_.link_[COM_id].v(1);
             x11y[2] = ZMP_FT_l_mu(1);
-            x11y[4] = H_roll;
+            //x11y[4] = H_roll;
         }
         hd_lbxy[0] = x11y;
         hd_ubxy[0] = x11y;
@@ -1628,16 +1612,16 @@ void CustomController::momentumControl(RobotData &Robot)
         h_temp = Ag_v * q_dot_virtual_lpf_.segment<6>(0);
 
         H_data.segment<2>(0) = H_leg_1.segment<2>(0);// + h_temp.segment<2>(0);
-        H_data.segment<3>(3) = H_leg_1.segment<3>(3);// + h_temp.segment<3>(3); 
+        H_data.segment<3>(3) = H_leg_1.segment<3>(3) + h_temp.segment<3>(3); 
         
         H_roll = H_leg_1(3);
         H_pitch = H_leg_1(4);
 
-        Hl_leg(0) = H_leg_1(0) - H_leg_ref(0);
-        Hl_leg(1) = H_leg_1(1) - H_leg_ref(1);
+        Hl_leg(0) = H_roll - H_leg_ref(0);
+        Hl_leg(1) = H_pitch - H_leg_ref(1);
 
-        H_leg(0) = H_leg_1(3) - H_leg_ref(3);
-        H_leg(1) = H_leg_1(4) - H_leg_ref(4);
+        H_leg(0) = H_roll - H_leg_ref(3);
+        H_leg(1) = H_pitch - H_leg_ref(4);
         H_leg(2) = H_leg_1(5);
     }
     else
@@ -1645,11 +1629,11 @@ void CustomController::momentumControl(RobotData &Robot)
    // H_leg = Ag_leg * q_dot_est_mu.head(12) + Ag_waist * q_dot_est_mu.segment(12, 3) + Ag_armL * q_dot_est_mu.segment(15, 8) + Ag_armR * q_dot_est_mu.segment(25, 8);
     }
 
-    F_ref(0) = lipm_w * lipm_w * Robot.total_mass_ * (com_mpcx - zmp_mpcx) + mom_mpcy / zc;
-    F_ref(1) = lipm_w * lipm_w * Robot.total_mass_ * (com_mpcy - zmp_mpcy) - mom_mpcx / zc;
+    F_ref(0) = lipm_w * lipm_w * Robot.total_mass_ * (com_mpcx - zmp_mpcx) - mom_mpcy / zc;
+    F_ref(1) = lipm_w * lipm_w * Robot.total_mass_ * (com_mpcy - zmp_mpcy) + mom_mpcx / zc;
 
-    F_cur(0) = lipm_w * lipm_w * Robot.total_mass_ * (Robot.link_[COM_id].xpos(0) - ZMP_FT_l(0)) + H_data(1) / zc;
-    F_cur(1) = lipm_w * lipm_w * Robot.total_mass_ * (Robot.link_[COM_id].xpos(1) - ZMP_FT_l(1)) - H_data(0) / zc;
+    F_cur(0) = lipm_w * lipm_w * Robot.total_mass_ * (Robot.link_[COM_id].xpos(0) - ZMP_FT(0)) - H_pitch / zc;
+    F_cur(1) = lipm_w * lipm_w * Robot.total_mass_ * (Robot.link_[COM_id].xpos(1) - ZMP_FT(1)) + H_roll / zc;
 
     F_err = F_cur - F_ref;
 
