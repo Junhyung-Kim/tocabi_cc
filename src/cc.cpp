@@ -832,7 +832,7 @@ void CustomController::computePlanner()
                     zmp_mpcy = x11y[2];
 
                     mom_mpcx = -1*(softCx_s[mpc_cycle][0] * x11x[0] + softCx_s[mpc_cycle][1] * x11x[1] - softBoundx_s[mpc_cycle][0]);//x11x[4];
-                    mom_mpcy = x11y[4];
+                    mom_mpcy = -1*(softCy_s[mpc_cycle][0] * x11x[0] + softCy_s[mpc_cycle][1] * x11y[1] - softBoundy_s[mpc_cycle][0]);//x11y[4];
 
                     auto t5 = std::chrono::steady_clock::now();
                     auto d1 = std::chrono::duration_cast<std::chrono::microseconds>(t5 - t4).count();
