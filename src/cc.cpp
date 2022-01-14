@@ -673,7 +673,7 @@ void CustomController::computePlanner()
                     mu0 = 2.0;
 
                 //solver Setup
-                int iter_max = 200;
+                int iter_max = 300;
                 double alpha_min = 8e-3;
                 double tol_stat = 1e+2;
                 double tol_eq = 8e-3;
@@ -683,7 +683,7 @@ void CustomController::computePlanner()
                 int split_step = 0;
                 int warm_start = 0;
                 int ric_alg = 0;
-                enum hpipm_mode mode = ROBUST;
+                enum hpipm_mode mode = BALANCE;
 
                 dim_sizex = d_ocp_qp_dim_memsize(N);
                 dim_memx = malloc(dim_sizex);
@@ -692,8 +692,8 @@ void CustomController::computePlanner()
                 ipm_arg_memx = malloc(ipm_arg_sizex);
                 d_ocp_qp_ipm_arg_create(&dimx, &argx, ipm_arg_memx);
                 d_ocp_qp_ipm_arg_set_default(mode, &argx);
-                d_ocp_qp_ipm_arg_set_mu0(&mu0, &argx);
-            /*    d_ocp_qp_ipm_arg_set_iter_max(&iter_max, &argx);
+            /*    d_ocp_qp_ipm_arg_set_mu0(&mu0, &argx);
+                d_ocp_qp_ipm_arg_set_iter_max(&iter_max, &argx);
                 d_ocp_qp_ipm_arg_set_tol_stat(&tol_stat, &argx);
                 d_ocp_qp_ipm_arg_set_tol_eq(&tol_eq, &argx);
                 d_ocp_qp_ipm_arg_set_tol_ineq(&tol_ineq, &argx);
@@ -719,8 +719,8 @@ void CustomController::computePlanner()
                 else
                     mu0 = 2.0;
                 
-                mode = SPEED_ABS;
-                tol_stat = 1e+60;
+                //mode = SPEED_ABS;
+                //tol_stat = 1e+60;
                 dim_sizey = d_ocp_qp_dim_memsize(N);
                 dim_memy = malloc(dim_sizey);
                 d_ocp_qp_dim_create(N, &dimy, dim_memy);
@@ -728,7 +728,7 @@ void CustomController::computePlanner()
                 ipm_arg_memy = malloc(ipm_arg_sizey);
                 d_ocp_qp_ipm_arg_create(&dimy, &argy, ipm_arg_memy);
                 d_ocp_qp_ipm_arg_set_default(mode, &argy);
-                d_ocp_qp_ipm_arg_set_mu0(&mu0, &argy);
+             /*   d_ocp_qp_ipm_arg_set_mu0(&mu0, &argy);
                 d_ocp_qp_ipm_arg_set_iter_max(&iter_max, &argy);
                 d_ocp_qp_ipm_arg_set_tol_stat(&tol_stat, &argy);
                 d_ocp_qp_ipm_arg_set_tol_eq(&tol_eq, &argy);
@@ -739,7 +739,7 @@ void CustomController::computePlanner()
                 d_ocp_qp_ipm_arg_set_ric_alg(&ric_alg, &argy);
                 d_ocp_qp_ipm_arg_set_split_step(&split_step, &argy);
                 argy.abs_form = 1.0;
-
+                */
                 d_ocp_qp_dim_set_all(nx, nu, nbx, nbu, ng, nsbx, nsbu, nsg, &dimy);
                 qp_sizey = d_ocp_qp_memsize(&dimy);
                 qp_memy = malloc(qp_sizey);
@@ -888,7 +888,7 @@ void CustomController::mpc_variablex()
             }
             
             if(mpc_cycle > 362)
-                x11x[4] = H_pitch;
+               x11x[4] = H_pitch;
         }
         hd_lbxx[0] = x11x;
         hd_ubxx[0] = x11x;

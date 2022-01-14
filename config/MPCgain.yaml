@@ -7,18 +7,18 @@ Qx5 : 0.0
 Rx1 : 3000.0
 Rx2 : 100.0
 
-Zl0x : 500.0
-Zu0x : 500.0
+Zl0x : 0.0
+Zu0x : 0.0
 zl0x : 0.0
 zu0x : 0.0
 
-Zl1x : 500.0
-Zu1x : 500.0
+Zl1x : 0.0
+Zu1x : 0.0
 zl1x : 0.0
 zu1x : 0.0
 
-ZlNx : 500.0
-ZuNx : 500.0
+ZlNx : 0.0
+ZuNx : 0.0
 zlNx : 0
 zuNx : 0
 
@@ -31,20 +31,20 @@ Qy4 : 0.0
 Qy5 : 0.0
 
 Ry1 : 10000.0
-Ry2 : 1.0
+Ry2 : 5.0
 
-Zl0y : 500.0
-Zu0y : 500.0
+Zl0y : 0.0
+Zu0y : 0.0
 zl0y : 0.0
 zu0y : 0.0
 
-Zl1y : 500.0
-Zu1y : 500.0
+Zl1y : 0.0
+Zu1y : 0.0
 zl1y : 0.0
 zu1y : 0.0
 
-ZlNy : 500.0
-ZuNy : 500.0
+ZlNy : 0.0
+ZuNy : 0.0
 zlNy : 0
 zuNy : 0
 
