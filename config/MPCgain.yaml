@@ -76,7 +76,7 @@ apk_sr : 0.06
 
 com_gain : 0.5
 
-pelv_xp : -0.8
+pelv_xp : -0.4
 pelv_yp : -0.6
 zmp_xp : 0.0
 zmp_yp : 0.0
