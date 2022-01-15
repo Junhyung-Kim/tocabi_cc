@@ -674,12 +674,12 @@ void CustomController::computePlanner()
 
                 //solver Setup
                 int iter_max = 100;
-                double alpha_min = 8e-3;
-                double tol_stat = 8e-3;
+                double alpha_min = 0.01;
+                double tol_stat = 0.01;
                 double tol_eq = 0.01;//8e-3;
                 double tol_ineq = 0.01;//8e-3;
-                double tol_comp = 8e-3;
-                double reg_prim = 8e-3;
+                double tol_comp = 0.01;
+                double reg_prim = 0.01;
                 int warm_start = 0;
                 int ric_alg = 0;
                 enum hpipm_mode mode = BALANCE;
@@ -700,8 +700,8 @@ void CustomController::computePlanner()
                 d_ocp_qp_ipm_arg_set_reg_prim(&reg_prim, &argx);
                 d_ocp_qp_ipm_arg_set_warm_start(&warm_start, &argx);
                 d_ocp_qp_ipm_arg_set_ric_alg(&ric_alg, &argx);
-                d_ocp_qp_ipm_arg_set_split_step(&split_step, &argx);
-             */  argx.abs_form = 1.0;
+                d_ocp_qp_ipm_arg_set_split_step(&split_step, &argx);*/  
+                argx.abs_form = 1.0;
 
                 d_ocp_qp_dim_set_all(nx, nu, nbx, nbu, ng, nsbx, nsbu, nsg, &dimx);
                 qp_sizex = d_ocp_qp_memsize(&dimx);
@@ -720,6 +720,16 @@ void CustomController::computePlanner()
                 
                 //mode = SPEED_ABS;
                 //tol_stat = 1e+60;
+
+                iter_max = 100;
+                alpha_min = 1;
+                tol_stat = 0.01;
+                tol_eq =  0.01;
+                tol_ineq = 0.01;
+                tol_comp = 0.01;
+                reg_prim = 0.01;
+                warm_start = 0;
+                ric_alg = 0;
     
                 dim_sizey = d_ocp_qp_dim_memsize(N);
                 dim_memy = malloc(dim_sizey);
@@ -830,7 +840,8 @@ void CustomController::computePlanner()
                         mom_mpcx = x11x[4];//-1.2*(softCx_s[mpc_cycle][0] * x11x[0] + softCx_s[mpc_cycle][1] * x11x[1] - softBoundx_s[mpc_cycle][0]);//x11x[4];
                     else
                         mom_mpcx = (0.05*(softCx_s[mpc_cycle][0] * x11x[0] + softCx_s[mpc_cycle][1] * x11x[1] - softBoundx_s[mpc_cycle][0]) + 0.95*H_pitch) ;//x11x[4]; 
-                    
+                        
+
                     com_mpcy = x11y[0];
                     com_mpcdy = x11y[1];
                     zmp_mpcy = x11y[2];
@@ -881,15 +892,16 @@ void CustomController::mpc_variablex()
     {
         if (mpc_cycle > 300)
         {   
-            if(hpipm_statusx == 0)
+            if(hpipm_statusx == 0 && mpct1 < 5)
             {
                 x11x[0] = rd_.link_[COM_id].xpos(0);
                 x11x[1] = rd_.link_[COM_id].v(0);
                 x11x[2] = ZMP_FT_l_mu(0);
             }
-            
+        
             if(mpc_cycle > 362)
-               x11x[4] = H_pitch;
+                x11x[4] = H_pitch;
+            
         }
         hd_lbxx[0] = x11x;
         hd_ubxx[0] = x11x;
@@ -977,6 +989,14 @@ void CustomController::walking_y()
     d_ocp_qp_ipm_solve(&qpy, &qp_soly, &argy, &workspacey);
     d_ocp_qp_ipm_get_status(&workspacey, &hpipm_statusy);
     d_ocp_qp_sol_get_x(1, &qp_soly, x11y);
+    if(hpipm_statusy != 0)
+    {
+        mpct2 = mpct2 +1;
+    }
+    else
+    {
+        mpct2 = 1;
+    }
 }
 
 void CustomController::copyRobotData(RobotData &rd_l)

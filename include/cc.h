@@ -162,6 +162,7 @@ public:
     int hpipm_statusy; // 0 normal; 1 max iter
     int nx_max;
     int mpct1;
+    int mpct2;
     std::atomic<int> mpc_cycle = 0;
     std::atomic<int> mpc_cycle_prev = 0;
 
