@@ -828,7 +828,10 @@ void CustomController::computePlanner()
                     com_mpcx = x11x[0];
                     com_mpcdx = x11x[1];
                     zmp_mpcx = x11x[2];
-                    mom_mpcx = x11x[4];//-1.2*(softCx_s[mpc_cycle][0] * x11x[0] + softCx_s[mpc_cycle][1] * x11x[1] - softBoundx_s[mpc_cycle][0]);//x11x[4];
+                    if(hpipm_statusx == 0)
+                        mom_mpcx = x11x[4];//-1.2*(softCx_s[mpc_cycle][0] * x11x[0] + softCx_s[mpc_cycle][1] * x11x[1] - softBoundx_s[mpc_cycle][0]);//x11x[4];
+                    else
+                        mom_mpcx = (0.05*(softCx_s[mpc_cycle][0] * x11x[0] + softCx_s[mpc_cycle][1] * x11x[1] - softBoundx_s[mpc_cycle][0]) + 0.95*H_pitch) ;//x11x[4]; 
                     
                     com_mpcy = x11y[0];
                     com_mpcdy = x11y[1];
