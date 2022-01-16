@@ -143,7 +143,9 @@ public:
     void *ipm_arg_memy;
     void *dim_memy;
     void *ipm_memy;
+    double temp111;
     Eigen::MatrixXd x11x_temp;
+    Eigen::MatrixXd x11y_temp;
 
     struct d_ocp_qp_ipm_arg argx;
     struct d_ocp_qp_sol qp_solx;
@@ -161,8 +163,10 @@ public:
     int hpipm_statusx; // 0 normal; 1 max iter
     int hpipm_statusy; // 0 normal; 1 max iter
     int nx_max;
-    int mpct1;
-    int mpct2;
+    int mpct1 = 1;
+    int mpct1_prev = 1;
+    int mpct2 = 1;
+    int mpct2_prev = 1;
     std::atomic<int> mpc_cycle = 0;
     std::atomic<int> mpc_cycle_prev = 0;
 
