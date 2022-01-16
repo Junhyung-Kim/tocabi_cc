@@ -845,7 +845,10 @@ void CustomController::computePlanner()
                     com_mpcy = x11y[0];
                     com_mpcdy = x11y[1];
                     zmp_mpcy = x11y[2];
-                    mom_mpcy = x11y[4];
+                    if(mpct2 >= 3)
+                        mom_mpcy = (0.05*(softCy_s[mpc_cycle][0] * x11y[0] + softCy_s[mpc_cycle][1] * x11y[1] - softBoundy_s[mpc_cycle][0]) + 0.95*H_roll) ;//x11x[4]; 
+                    else
+                        mom_mpcy = x11y[4];
 
                     
                     auto t5 = std::chrono::steady_clock::now();
@@ -900,8 +903,7 @@ void CustomController::mpc_variablex()
             }
         
             if(mpc_cycle > 362)
-                x11x[4] = H_pitch;
-            
+                x11x[4] = H_pitch;   
         }
         hd_lbxx[0] = x11x;
         hd_ubxx[0] = x11x;
@@ -940,7 +942,9 @@ void CustomController::mpc_variabley()
             x11y[0] = rd_.link_[COM_id].xpos(1);
             x11y[1] = rd_.link_[COM_id].v(1);
             x11y[2] = ZMP_FT_l_mu(1);
-            x11y[4] = H_roll;
+            
+            if(mpct2 > 3)
+                x11y[4] = H_roll;
         }
         hd_lbxy[0] = x11y;
         hd_ubxy[0] = x11y;
