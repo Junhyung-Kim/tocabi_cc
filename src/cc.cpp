@@ -132,6 +132,8 @@ CustomController::CustomController(RobotData &rd) : rd_(rd) //, wbc_(dc.wbc_)
 
     nh.getParam("/tocabi_controller/lmom", lmom);
 
+    nh.getParam("/tocabi_controller/dist", dist);
+
     mobgain.push_back(mobgain1);
     mobgain.push_back(mobgain2);
     mobgain.push_back(mobgain3);
@@ -611,7 +613,7 @@ void CustomController::computeFast()
                     walking_tick++;
                 }
 
-        /*        if(walking_tick >= 4150 && walking_tick < 4230)
+                if(walking_tick >= 4351 && walking_tick < 4400 && dist == 1)
                 {
                     rd_.mujoco_dist = true;
                 }
@@ -620,11 +622,11 @@ void CustomController::computeFast()
                     rd_.mujoco_dist = false;
                 }
             
-            */
+            
                 //  file[1] << PELV_trajectory_float_c.translation()(0) << "\t" << PELV_trajectory_float_c.translation()(1) << "\t" << PELV_trajectory_float_c.translation()(2) << "\t" << RF_trajectory_float.translation()(0)<< "\t" << RF_trajectory_float.translation()(1)<< "\t" << RF_trajectory_float.translation()(2)<<std::endl;
                 //if (walking_tick % 5 == 0)
            //     file[1] << walking_tick << "\t"<< mpc_cycle << "\t" << zmp_refx(walking_tick) <<"\t" << rd_.link_[COM_id].xpos(0) << "\t" << com_mpcx << "\t" << ZMP_FT_l(0) << "\t" << zmp_mpcx << "\t" <<xL[walking_tick][0]<<"\t" << xU[walking_tick][0] <<"\t"<< rd_.link_[COM_id].v(1) << "\t" << rd_.link_[COM_id].xpos(1) << "\t" <<hpipm_statusy<<"\t" << com_mpcy << "\t" << ZMP_FT_l(1) << "\t" << ZMP_FT(1) << "\t" << zmp_mpcy << "\t" << rd_.link_[COM_id].xpos(2) << "\t" << H_data(3) << "\t" << mom_mpcy << "\t" << H_data(4) << "\t" << mom_mpcx << "\t" << control_input(0) << "\t" << control_input(1) <<std::endl;
- file[1] << walking_tick << "\t"<< mpc_cycle << "\t" << mpc_cycle_prev << "\t" <<hpipm_statusy<<"\t"<< zmp_refy(walking_tick) <<"\t" << rd_.link_[COM_id].xpos(1) << "\t" << com_mpcy << "\t" << ZMP_FT_l(1) << "\t" << zmp_mpcy << "\t" <<yL[walking_tick][2]<<"\t" << yU[walking_tick][2] <<"\t"<< rd_.link_[COM_id].v(1) << "\t" << rd_.link_[COM_id].xpos(1) << "\t" << com_mpcy << "\t" << ZMP_FT_l(1) << "\t" << ZMP_FT(1) << "\t" << zmp_mpcy << "\t" << com_mpcdy << "\t" <<rd_.link_[COM_id].v(1) << "\t"<< H_roll << "\t" << mom_mpcy  <<"\t"<<temp111<<std::endl;
+ file[1] << walking_tick << "\t"<< mpc_cycle << "\t" << mpc_cycle_prev << "\t" <<hpipm_statusy<<"\t"<< zmp_refy(walking_tick) <<"\t" << rd_.link_[COM_id].xpos(1) << "\t" << com_mpcy << "\t" << ZMP_FT_l(1) << "\t" << zmp_mpcy << "\t" <<yL[walking_tick][2]<<"\t" << yU[walking_tick][2] <<"\t"<< rd_.link_[COM_id].v(1) << "\t" << rd_.link_[COM_id].xpos(1) << "\t" << com_mpcy << "\t" << ZMP_FT_l(1) << "\t" << ZMP_FT(1) << "\t" << zmp_mpcy << "\t" << com_mpcdy << "\t" <<rd_.link_[COM_id].v(1) << "\t"<< H_roll << "\t" << mom_mpcy  <<std::endl;
  file[0] << walking_tick << "\t"<< mpc_cycle << "\t" <<mpct1<<"\t"<<hpipm_statusx<<"\t"<< zmp_refx(walking_tick) <<"\t" << rd_.link_[COM_id].xpos(0) << "\t" << com_mpcx << "\t" << ZMP_FT_l(0) << "\t" << zmp_mpcx << "\t" <<xL[walking_tick][2]<<"\t" << xU[walking_tick][2] <<"\t"<< rd_.link_[COM_id].v(0) << "\t" << rd_.link_[COM_id].xpos(0) << "\t" << com_mpcx << "\t" << ZMP_FT_l(0) << "\t" << ZMP_FT(1) << "\t" << zmp_mpcy << "\t" << com_mpcdy << "\t" <<rd_.link_[COM_id].v(1) << "\t"<< H_pitch << "\t" << mom_mpcx  << "\t" << H_leg(0) << "\t" << H_leg(1)<< "\t" << F_err(0)<<"\t"<<F_err(1)<<std::endl;
  
            }
@@ -719,12 +721,12 @@ void CustomController::computePlanner()
                 else
                     mu0 = 2.0;
                 
-                //mode = SPEED_ABS;
+                mode = SPEED_ABS;
                 //tol_stat = 1e+60;
 
                 iter_max = 80;
                 alpha_min = 1;
-                tol_stat = 0.01;
+                tol_stat = 0.005;
                 tol_eq =  0.01;
                 tol_ineq = 0.01;
                 tol_comp = 0.01;
@@ -852,7 +854,7 @@ void CustomController::computePlanner()
                     else
                         mom_mpcy = x11y[4];
 
-                    temp111 = x11y[4];
+                   // temp111 = x11y[4];
                     
                     auto t5 = std::chrono::steady_clock::now();
                     auto d1 = std::chrono::duration_cast<std::chrono::microseconds>(t5 - t4).count();
@@ -2153,14 +2155,14 @@ void CustomController::zmpControl(RobotData &Robot)
             {
                 if (i == 1 || i == 3)
                 {
-                    if (control_input(i) > 0.10)
+                    if (control_input(i) > 0.05)
                     {
-                        control_input(i) = 0.10;
+                        control_input(i) = 0.05;
                     }
 
-                    if (control_input(i) < -0.10)
+                    if (control_input(i) < -0.05)
                     {
-                        control_input(i) = -0.10;
+                        control_input(i) = -0.05;
                     }
                 }
                 else
@@ -2180,14 +2182,14 @@ void CustomController::zmpControl(RobotData &Robot)
             {
                 if (i == 1 || i == 3)
                 {
-                    if (control_input(i) > 0.10)
+                    if (control_input(i) > 0.05)
                     {
-                        control_input(i) = 0.10;
+                        control_input(i) = 0.05;
                     }
 
-                    if (control_input(i) < -0.10)
+                    if (control_input(i) < -0.05)
                     {
-                        control_input(i) = -0.10;
+                        control_input(i) = -0.05;
                     }
                 }
                 else

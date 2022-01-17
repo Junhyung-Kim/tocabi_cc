@@ -143,9 +143,11 @@ public:
     void *ipm_arg_memy;
     void *dim_memy;
     void *ipm_memy;
-    double temp111;
+    //double temp111;
     Eigen::MatrixXd x11x_temp;
     Eigen::MatrixXd x11y_temp;
+
+    int dist;
 
     struct d_ocp_qp_ipm_arg argx;
     struct d_ocp_qp_sol qp_solx;
