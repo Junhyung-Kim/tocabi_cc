@@ -176,6 +176,7 @@ public:
     CQuadraticProgram QP_m;
     Eigen::VectorXd q_dm;
     Eigen::Vector7d q_w;
+    Eigen::Vector2d F_err_l;
 
     Eigen::Vector12d tau_z;
     Eigen::Vector12d tau_z_m;

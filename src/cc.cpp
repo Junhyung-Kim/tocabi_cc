@@ -630,7 +630,7 @@ void CustomController::computeFast()
             if(walking_tick != walking_tick_prev)
             {
                 file[1] << walking_tick << "\t"<< mpc_cycle << "\t" << mpc_cycle_prev << "\t" <<hpipm_statusy<<"\t"<< zmp_refy(walking_tick) <<"\t" << rd_.link_[COM_id].xpos(1) << "\t" << com_mpcy << "\t" << ZMP_FT_l(1) << "\t" << zmp_mpcy << "\t" <<yL[walking_tick][2]<<"\t" << yU[walking_tick][2] <<"\t"<< rd_.link_[COM_id].v(1) << "\t" << rd_.link_[COM_id].xpos(1) << "\t" << com_mpcy << "\t" << ZMP_FT_l(1) << "\t" << ZMP_FT(1) << "\t" << zmp_mpcy << "\t" << com_mpcdy << "\t" <<rd_.link_[COM_id].v(1) << "\t"<< H_roll << "\t" << mom_mpcy  <<std::endl;
-                file[0] << walking_tick << "\t"<< mpc_cycle << "\t" <<mpct1<<"\t"<<hpipm_statusx<<"\t"<< zmp_refx(walking_tick) <<"\t" << rd_.link_[COM_id].xpos(0) << "\t" << com_mpcx << "\t" << ZMP_FT_l(0) << "\t" << zmp_mpcx << "\t" <<xL[walking_tick][2]<<"\t" << xU[walking_tick][2] <<"\t"<< rd_.link_[COM_id].v(0) << "\t" << rd_.link_[COM_id].xpos(0) << "\t" << com_mpcx << "\t" << ZMP_FT_l(0) << "\t" << ZMP_FT(1) << "\t" << zmp_mpcy << "\t" << com_mpcdy << "\t" <<rd_.link_[COM_id].v(1) << "\t"<< H_pitch << "\t" << mom_mpcx  << "\t" << H_leg(0) << "\t" << H_leg(1)<< "\t" << F_err(0)<<"\t"<<F_err(1)<<std::endl;
+                file[0] << walking_tick << "\t"<< mpc_cycle << "\t" <<mpct1<<"\t"<<hpipm_statusx<<"\t"<< zmp_refx(walking_tick) <<"\t" << rd_.link_[COM_id].xpos(0) << "\t" << com_mpcx << "\t" << ZMP_FT_l(0) << "\t" << zmp_mpcx << "\t" <<xL[walking_tick][2]<<"\t" << xU[walking_tick][2] <<"\t"<< rd_.link_[COM_id].v(0) << "\t" << rd_.link_[COM_id].xpos(0) << "\t" << com_mpcx << "\t" << ZMP_FT_l(0) << "\t" << ZMP_FT(1) << "\t" << zmp_mpcy << "\t" << com_mpcdy << "\t" <<rd_.link_[COM_id].v(1) << "\t"<< H_pitch << "\t" << mom_mpcx  << "\t" << H_leg(0) << "\t" << H_leg(1)<< "\t" << F_err_l(0)<<"\t"<<F_err_l(1)<<"\t"<<mot_mpcx << "\t"<<mot_mpcy<<std::endl;
             } 
            }
         }
@@ -837,6 +837,13 @@ void CustomController::computePlanner()
                         }
                     }
 
+                    if(mpc_cycle != 0)
+                    {
+                        mom_mpcx_prev = mom_mpcx;
+                        mom_mpcy_prev = mom_mpcy;
+                    }
+
+
                     auto t6 = std::chrono::steady_clock::now();
 
                     com_mpcx = x11x[0];
@@ -857,7 +864,16 @@ void CustomController::computePlanner()
                     else
                         mom_mpcy = x11y[4];
 
-                    
+
+                    if(mpc_cycle == 0)
+                    {
+                        mom_mpcx_prev = mom_mpcx;
+                        mom_mpcy_prev = mom_mpcy;
+                    }
+
+                    mot_mpcx = (mom_mpcx - mom_mpcx_prev)/Ts;
+                    mot_mpcy = (mom_mpcy - mom_mpcy_prev)/Ts;
+
                     auto t5 = std::chrono::steady_clock::now();
                     auto d1 = std::chrono::duration_cast<std::chrono::microseconds>(t5 - t4).count();
 
@@ -1737,6 +1753,15 @@ void CustomController::momentumControl(RobotData &Robot)
     F_cur(1) = lipm_w * lipm_w * Robot.total_mass_ * (Robot.link_[COM_id].xpos(1) - ZMP_FT(1)) + H_roll / zc;
 
     F_err = F_cur - F_ref;
+    if(walking_tick == 0)
+    {
+        F_err_l = F_err.segment<2>(0);
+    }
+
+    for(int i = 0; i < 2; i ++)
+    {
+        F_err_l(i) = DyrosMath::lowPassFilter(F_err(i),F_err_l(i),1 / wk_Hz, 1 / (2 * 3.14 * 3));
+    }
 
     Eigen::MatrixXd Ag_temp;
     Eigen::MatrixXd Agl_temp;
