@@ -2102,8 +2102,8 @@ void WalkingController::setWalkingParameter()
     t_temp = 4.0 * wk_Hz;*/
     t_rest_init = 0.1 * wk_Hz;
     t_rest_last = 0.1 * wk_Hz;
-    t_double1 = 0.1 * wk_Hz;
-    t_double2 = 0.1 * wk_Hz;
+    t_double1 = 0.10 * wk_Hz;
+    t_double2 = 0.10 * wk_Hz;
     t_total = 1.0 * wk_Hz;
 
     t_temp = 2.0 * wk_Hz;
