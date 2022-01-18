@@ -613,9 +613,18 @@ void CustomController::computeFast()
                     walking_tick++;
                 }
 
-                if(walking_tick >= 4351 && walking_tick < 4420 && dist == 1)
+                /*if(walking_tick >= 4351 && walking_tick < 4420 && dist == 1)
                 {
                     rd_.mujoco_dist = true;
+                }
+                else
+                {
+                    rd_.mujoco_dist = false;
+                }*/
+
+                                if(walking_tick >= 4205 && walking_tick < 4255 && dist == 1)
+                {
+                    rd_.mujoco_dist  = true;
                 }
                 else
                 {
