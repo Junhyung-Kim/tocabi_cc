@@ -201,6 +201,7 @@ public:
     Eigen::Matrix6x8d Ag_armL;
     Eigen::Matrix6x3d Ag_waist;
     Eigen::Vector3d H_leg;
+    Eigen::Vector3d H_leg1;
     Eigen::Vector2d Hl_leg;
     Eigen::Vector6d H_data;
     Eigen::Vector3d WH_data;
