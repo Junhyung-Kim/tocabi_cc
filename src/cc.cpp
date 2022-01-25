@@ -622,7 +622,8 @@ void CustomController::computeFast()
                     rd_.mujoco_dist = false;
                 }*/
 
-                                if(walking_tick >= 4205 && walking_tick < 4255 && dist == 1)
+                
+                if(walking_tick >= 4205 && walking_tick < 4255 && dist == 1)
                 {
                     rd_.mujoco_dist  = true;
                 }
@@ -1911,7 +1912,7 @@ void CustomController::zmpCalc(RobotData &Robot)
 
 void CustomController::zmpControl(RobotData &Robot)
 {
-    if (walking_tick > 1 && mpc_cycle >= 1)
+    if (walking_tick > 1 && (mpc_cycle >= 1|| rd_.tc_.MPC == false))
     {
         pr(2) = 0.0;
         pl(2) = 0.0;
@@ -1920,6 +1921,20 @@ void CustomController::zmpControl(RobotData &Robot)
         {
             pr(i) = Robot.ee_[1].xpos_contact(i);
             pl(i) = Robot.ee_[0].xpos_contact(i);
+        }
+
+        if(rd_.tc_.MPC == false)
+        {
+            if (walking_tick >= t_total + t_last - 4 && current_step_num == total_step_num)
+            {
+                zmp_mpcx = zmp_refx(t_total + t_last - 4);
+                zmp_mpcy = zmp_refy(t_total + t_last - 4);
+            }
+            else
+            {
+                zmp_mpcx = zmp_refx(walking_tick);
+                zmp_mpcy = zmp_refy(walking_tick);
+            }
         }
 
         double A, B, C, xi, yi, alpha, Lz, Lz1;
