@@ -267,6 +267,7 @@ public:
     int ft_ok;
 
     double pelv_tmp;
+    int openloop;
 
     //MPC variable
     double **softBoundx, **softBoundy, *softBoundx1, *softBoundy1, *softBoundx2, *softBoundy2, **softCx, **softCy, **xL, **xU, **yL, **yU, **zmpx, **zmpy;

@@ -26,6 +26,11 @@ pinocchio::Data model_data1;
 
 CustomController::CustomController(RobotData &rd) : rd_(rd) //, wbc_(dc.wbc_)
 {
+
+    mpc_cycle = 0;
+    mpc_cycle_prev = 0;
+    walking_init_tick = 0;
+
     for (int i = 0; i < 2; i++)
     {
         file[i].open(FILE_NAMES[i].c_str(), std::ios_base::out);
@@ -33,6 +38,9 @@ CustomController::CustomController(RobotData &rd) : rd_(rd) //, wbc_(dc.wbc_)
 
     rd_.mujoco_dist = false;
     ros::NodeHandle nh;
+
+    nh.getParam("/tocabi_controller/openloop", openloop);
+
     nh.getParam("/tocabi_controller/Qx1", Qx1_mpc);
     nh.getParam("/tocabi_controller/Qx2", Qx2_mpc);
     nh.getParam("/tocabi_controller/Qx3", Qx3_mpc);
@@ -612,7 +620,7 @@ void CustomController::computeFast()
                 {
                     walking_tick++;
                 }
-
+                
                 /*if(walking_tick >= 4351 && walking_tick < 4420 && dist == 1)
                 {
                     rd_.mujoco_dist = true;
@@ -640,6 +648,7 @@ void CustomController::computeFast()
             if(walking_tick != walking_tick_prev)
             {
                 file[1] << walking_tick << "\t"<< mpc_cycle << "\t" << mpc_cycle_prev << "\t" <<hpipm_statusy<<"\t"<< zmp_refy(walking_tick) <<"\t" << rd_.link_[COM_id].xpos(1) << "\t" << com_mpcy << "\t" << ZMP_FT_l(1) << "\t" << zmp_mpcy << "\t" <<yL[walking_tick][2]<<"\t" << yU[walking_tick][2] <<"\t"<< rd_.link_[COM_id].v(1) << "\t" << rd_.link_[COM_id].xpos(1) << "\t" << com_mpcy << "\t" << ZMP_FT_l(1) << "\t" << ZMP_FT(1) << "\t" << zmp_mpcy << "\t" << com_mpcdy << "\t" <<rd_.link_[COM_id].v(1) << "\t"<< H_roll << "\t" << mom_mpcy  <<std::endl;
+             
                 file[0] << walking_tick << "\t"<< mpc_cycle << "\t" <<mpct1<<"\t"<<hpipm_statusx<<"\t"<< zmp_refx(walking_tick) <<"\t" << rd_.link_[COM_id].xpos(0) << "\t" << com_mpcx << "\t" << ZMP_FT_l(0) << "\t" << zmp_mpcx << "\t" <<xL[walking_tick][2]<<"\t" << xU[walking_tick][2] <<"\t"<< rd_.link_[COM_id].v(0) << "\t" << rd_.link_[COM_id].xpos(0) << "\t" << com_mpcx << "\t" << ZMP_FT_l(0) << "\t" << ZMP_FT(1) << "\t" << zmp_mpcy << "\t" << com_mpcdy << "\t" <<rd_.link_[COM_id].v(1) << "\t"<< H_pitch << "\t" << mom_mpcx  << "\t" << H_leg(0) << "\t" << H_leg(1)<< "\t" << F_err_l(0)<<"\t"<<F_err_l(1)<<"\t"<<mot_mpcx << "\t"<<mot_mpcy<<std::endl;
             } 
            }
@@ -648,22 +657,45 @@ void CustomController::computeFast()
         {
             wk_Hz = 1000;
             wk_dt = 1 / wk_Hz;
-            setInitPose(rd_, desired_init_q);
+          //  setInitPose(rd_, desired_init_q);
+
+            if (walking_init_tick == 0)
+            {
+                Eigen::VectorQd q_temp;
+                q_temp << 0.0, 0.1, -0.45, 1.0, -0.55, -0.1, 0.0, 0.1, -0.45, 1.0, -0.55, -0.1, 0.0, 0.0, 0.0, 0.2, 0.5, 1.5, -1.27, -1, 0, -1, 0, 0, 0, -0.2, -0.5, -1.5, 1.27, 1.0, 0, 1.0, 0;
+                //q_temp = rd_.q_;
+                //q_temp.setZero();
+                //q_target = Robot.q_;
+                q_target = q_temp;
+                q_init = rd_.q_;
+               // walkingInitialize(rd_);
+
+               std::cout << q_target << std::endl;
+            }
+
+            for (int i = 0; i < MODEL_DOF; i++)
+            {
+                desired_init_q(i) = DyrosMath::QuinticSpline(walking_init_tick, 0.0, 3.0 * wk_Hz, q_init(i), 0.0, 0.0, q_target(i), 0.0, 0.0)(0);
+            }
 
             cc_mutex.lock();
             for (int i = 0; i < 12; i++)
             {
-                rd_.q_desired(i) = desired_leg_q(i);
+                rd_.q_desired(i) = desired_init_q(i);
             }
             if (walking_tick == 0)
             {
                 for (int i = 12; i < MODEL_DOF; i++)
                 {
-                    rd_.q_desired(i) = desired_init_q(i);
+                    rd_.q_desired(i) = rd_.q_(i);
                 }
             }
             cc_mutex.unlock();
 
+            walking_init_tick++;
+            
+            file[0]<<walking_init_tick<<"\t"<< desired_init_q(0) << "\t" << rd_.q_(0) << "\t"<< desired_init_q(1) << "\t" << rd_.q_(1) << "\t"<< desired_init_q(2) << "\t" << rd_.q_(2) << "\t"<< desired_init_q(3) << "\t" << rd_.q_(3) << "\t"<< desired_init_q(4) << "\t" << rd_.q_(4) << "\t"<< desired_init_q(5) << "\t" << rd_.q_(5) <<  std::endl;
+              
             //file[1] << rd_.link_[COM_id].xpos(0) << "\t" << rd_.link_[COM_id].xpos(1) << "\t" << rd_.link_[COM_id].v(0) << "\t" << rd_.link_[COM_id].v(1) << "\t" << ZMP_FT_l(0) << "\t" << ZMP_FT_l(1) << "\t" << COM_float_current.translation()(0) << "\t" << COM_float_current.translation()(1) << "\t" << COM_float_current.translation()(2) << "\t" << rd_.total_mass_ << "\t" << std::endl;
         }
     }
