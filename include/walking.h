@@ -20,6 +20,7 @@ public:
     const int Head = 33;
     const int COM_id = 34;
     int mpct = 10;
+    int N1; 
 
     const int LEFT = 0;
     const int RIGHT = 1;
@@ -267,7 +268,7 @@ public:
     int ft_ok;
 
     double pelv_tmp;
-    int openloop;
+    int openloop, pelvon, global_;
 
     //MPC variable
     double **softBoundx, **softBoundy, *softBoundx1, *softBoundy1, *softBoundx2, *softBoundy2, **softCx, **softCy, **xL, **xU, **yL, **yU, **zmpx, **zmpy;

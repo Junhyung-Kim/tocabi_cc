@@ -1,19 +1,19 @@
-Qx1 : 0.0
-Qx2 : 0.0
+Qx1 : 0.01
+Qx2 : 0.01
 Qx3 : 3500000
-Qx4 : 0.0
-Qx5 : 0.0
+Qx4 : 0.01
+Qx5 : 0.01
 
 Rx1 : 8000.0
-Rx2 : 0.0
+Rx2 : 5.0
 
-Zl0x : 500.0
-Zu0x : 500.0
+Zl0x : 50.0
+Zu0x : 50.0
 zl0x : 0.0
 zu0x : 0.0
 
-Zl1x : 500.0
-Zu1x : 500.0
+Zl1x : 50.0
+Zu1x : 50.0
 zl1x : 0.0
 zu1x : 0.0
 
@@ -24,22 +24,22 @@ zuNx : 0
 
 lmom : 0
 
-Qy1 : 0.0
-Qy2 : 10.0
-Qy3 : 6500000
-Qy4 : 0.0
-Qy5 : 0.0
+Qy1 : 0.01
+Qy2 : 0.01
+Qy3 : 3500000
+Qy4 : 0.01
+Qy5 : 0.01
 
-Ry1 : 10000.0
-Ry2 : 5.0
+Ry1 : 8000.0
+Ry2 : 3.0
 
-Zl0y : 0.0
-Zu0y : 0.0
+Zl0y : 50.0
+Zu0y : 50.0
 zl0y : 0.0
 zu0y : 0.0
 
-Zl1y : 0.0
-Zu1y : 0.0
+Zl1y : 50.0
+Zu1y : 50.0
 zl1y : 0.0
 zu1y : 0.0
 
@@ -55,29 +55,29 @@ kc_p : 50
 tc_p : 10
 
 arp_dl : 30
-ark_dl : 0.02
+ark_dl : 0.04
 app_dl : 20
-apk_dl : 0.04
+apk_dl : 0.05
 
 arp_sl : 40
-ark_sl : 0.05
+ark_sl : 0.04
 app_sl : 30
-apk_sl : 0.04
+apk_sl : 0.05
 
 arp_dr : 30
-ark_dr : 0.05
+ark_dr : 0.04
 app_dr : 20
-apk_dr : 0.04
+apk_dr : 0.05
 
 arp_sr : 40
-ark_sr : 0.05
+ark_sr : 0.04
 app_sr : 30
-apk_sr : 0.04
+apk_sr : 0.05
 
 com_gain : 0.5
 
-pelv_xp : -0.4
-pelv_yp : -0.8
+pelv_xp : -0.5
+pelv_yp : -1.3
 zmp_xp : 0.0
 zmp_yp : 0.0
 
@@ -101,3 +101,5 @@ ft : 0
 dist : 0
 
 openloop : 1
+global_ : 1
+pelvon : 1
