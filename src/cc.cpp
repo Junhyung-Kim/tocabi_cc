@@ -623,16 +623,16 @@ void CustomController::computeFast()
                     walking_tick++;
                 }
                 
-                /*if(walking_tick >= 4351 && walking_tick < 4420 && dist == 1)
+                if(walking_tick >= 4351 && walking_tick < 4420 && dist == 1)
                 {
                     rd_.mujoco_dist = true;
                 }
                 else
                 {
                     rd_.mujoco_dist = false;
-                }*/
+                }
 
-                
+                /*
                 if(walking_tick >= 4205 && walking_tick < 4255 && dist == 1)
                 {
                     rd_.mujoco_dist  = true;
@@ -640,7 +640,7 @@ void CustomController::computeFast()
                 else
                 {
                     rd_.mujoco_dist = false;
-                }
+                }*/
             
             
                 //  file[1] << PELV_trajectory_float_c.translation()(0) << "\t" << PELV_trajectory_float_c.translation()(1) << "\t" << PELV_trajectory_float_c.translation()(2) << "\t" << RF_trajectory_float.translation()(0)<< "\t" << RF_trajectory_float.translation()(1)<< "\t" << RF_trajectory_float.translation()(2)<<std::endl;
@@ -774,7 +774,7 @@ void CustomController::computePlanner()
                 iter_max = 80;
                 alpha_min = 1;
                 tol_stat = 0.005;
-                tol_eq =  0.01;
+                tol_eq =  0.05;
                 tol_ineq = 0.01;
                 tol_comp = 0.01;
                 reg_prim = 0.01;
@@ -809,7 +809,6 @@ void CustomController::computePlanner()
                 d_ocp_qp_ipm_ws_create(&dimy, &argy, &workspacey, ipm_memy);
 
                 d_ocp_qp_sol_create(&dimx, &qp_solx, qp_sol_memx);
-                //d_ocp_qp_sol_create(&dimx, &qp_solx_temp, qp_sol_memx);
                 d_ocp_qp_sol_create(&dimy, &qp_soly, qp_sol_memy);
                 std::cout << "MPC INIT" << std::endl;
                 mpc_on = true;

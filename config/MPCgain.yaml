@@ -24,14 +24,14 @@ zuNx : 0
 
 lmom : 0
 
-Qy1 : 0.01
-Qy2 : 0.01
+Qy1 : 0.001
+Qy2 : 0.001
 Qy3 : 3500000
 Qy4 : 0.01
 Qy5 : 0.01
 
 Ry1 : 8000.0
-Ry2 : 3.0
+Ry2 : 10.0
 
 Zl0y : 50.0
 Zu0y : 50.0
@@ -98,7 +98,7 @@ mobgain5 : 40
 mobgain6 : 40
 
 ft : 0
-dist : 0
+dist : 1
 
 openloop : 1
 global_ : 1
