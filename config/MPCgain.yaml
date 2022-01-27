@@ -98,7 +98,7 @@ mobgain5 : 40
 mobgain6 : 40
 
 ft : 0
-dist : 1
+dist : 0
 
 openloop : 1
 global_ : 1
