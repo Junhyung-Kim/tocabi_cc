@@ -19,9 +19,9 @@ void WalkingController::walkingCompute(RobotData &rd)
     supportToFloatPattern(rd);
     comController(rd);
 
-   // if (rd.tc_.MPC == true)
-        inverseKinematics(rd, PELV_trajectory_float_c, LF_trajectory_float, RF_trajectory_float, desired_leg_q);
-   // else
+    // if (rd.tc_.MPC == true)
+    inverseKinematics(rd, PELV_trajectory_float_c, LF_trajectory_float, RF_trajectory_float, desired_leg_q);
+    // else
     //    inverseKinematics(rd, PELV_trajectory_float, LF_trajectory_float, RF_trajectory_float, desired_leg_q);
 
     desired_leg_q_temp = desired_leg_q;
@@ -48,6 +48,20 @@ void WalkingController::getRobotState(RobotData &rd)
 
     PELV_float_current.translation() = rd.link_[Pelvis].xipos;
     PELV_float_current.linear() = rd.link_[Pelvis].rotm;
+
+    Eigen::Vector3d pelv_rpy_cur_;
+    pelv_rpy_cur_ = DyrosMath::rot2Euler(PELV_float_current.linear());
+
+    pelv_yaw.setIdentity();
+    pelv_yaw.translation().setZero();
+    pelv_yaw.linear() = /*PELV_float_init.linear();*/DyrosMath::rotateWithZ(pelv_rpy_cur_(2));
+
+    COM_float_current = pelv_yaw.inverse() * COM_float_current;
+    PELV_float_current = pelv_yaw.inverse() * PELV_float_current;
+    RF_float_current = pelv_yaw.inverse() * RF_float_current;
+    LF_float_current = pelv_yaw.inverse() * LF_float_current;
+    //SUF_float_current = pelv_yaw.inverse() * SUF_float_current;
+    //SWF_float_current = pelv_yaw.inverse() * SWF_float_current;
 
     if (foot_step(current_step_num, 6) == 0)
     {
@@ -90,7 +104,7 @@ void WalkingController::getRobotState(RobotData &rd)
     Ag_armR = Ag_.block(0, 31, 6, 8);
     Ag_armL = Ag_.block(0, 21, 6, 8);
     Ag_waist = Ag_.block(0, 18, 6, 3);
-    Ag_v= Ag_.block(0, 0, 6, 6);
+    Ag_v = Ag_.block(0, 0, 6, 6);
 
     calcRobotState(rd);
 }
@@ -131,6 +145,20 @@ void WalkingController::getRobotInitState(RobotData &rd)
 
         HRR_float_init.translation() = rd.link_[10].xpos;
         HRR_float_init.linear() = rd.link_[10].rotm;
+      Eigen::Vector3d pelv_rpy_init_;
+        pelv_rpy_init_ = DyrosMath::rot2Euler(PELV_float_init.linear());
+
+        pelv_yaw.setIdentity();
+        pelv_yaw.translation().setZero();
+  //      pelv_yaw.translation() = PELV_float_init.translation();
+        pelv_yaw.linear() = /*PELV_float_init.linear();*/DyrosMath::rotateWithZ(pelv_rpy_init_(2));
+
+        RF_float_init = pelv_yaw.inverse() * RF_float_init;
+        LF_float_init = pelv_yaw.inverse() * LF_float_init;
+        PELV_float_init = pelv_yaw.inverse() * PELV_float_init;
+        COM_float_init = pelv_yaw.inverse() * COM_float_init;
+        HLR_float_init = pelv_yaw.inverse() * HLR_float_init;
+        HRR_float_init = pelv_yaw.inverse() * HRR_float_init;
 
         Eigen::Isometry3d temp;
         temp.linear() = PELV_float_init.linear();
@@ -523,7 +551,7 @@ void WalkingController::calcRobotState(RobotData &rd)
 {
 }
 
-void WalkingController::setCpPosition()
+void WalkingController::setCpPosition(RobotData &rd)
 {
     capturePoint_ox.resize(total_step_num + 3);
     capturePoint_oy.resize(total_step_num + 3);
@@ -547,9 +575,15 @@ void WalkingController::setCpPosition()
 
     for (int i = 0; i < total_step_num + 3; i++)
     {
-        capturePoint_offsety(i) = 0.00;
-        capturePoint_offsety(i) = 0.01;
-        capturePoint_offsetx(i) = 0.015;
+        if(rd.tc_.MPC == false)
+        {
+            capturePoint_offsety(i) = 0.03;
+        }
+        else
+        {
+            capturePoint_offsety(i) = 0.00;
+        }
+        capturePoint_offsetx(i) = 0.03;
     }
 
     if (com_control == 0)
@@ -1338,13 +1372,13 @@ void WalkingController::mpcSoftVariable(RobotData &Robot)
 
     for (int i = 0; i < t_total * (total_step_num + 1) + t_temp - 1; i++)
     {
-        softBoundx[i][0] = RF_mass/ 2.1 * (-(RFz_trajectory_float(i) - COM_float_init.translation()(2)) * RFvy_trajectory_float(i) - RFy_trajectory_float(i) * RFvz_trajectory_float(i)) + LF_mass/ 2.1 * (-(LFz_trajectory_float(i) - COM_float_init.translation()(2)) * LFvy_trajectory_float(i) - LFy_trajectory_float(i) * LFvz_trajectory_float(i));
-        softBoundx1[i] = -RF_mass/ 2.1 * RFvz_trajectory_float(i) - LF_mass/ 2.1 * LFvz_trajectory_float(i);
-        softBoundx2[i] = RF_mass/ 2.1 * (RFz_trajectory_float(i) - COM_float_init.translation()(2)) + LF_mass/ 2.1 * (LFz_trajectory_float(i) - COM_float_init.translation()(2));
-        
-        softBoundy[i][0] = RF_mass/ 2.1 * ((RFz_trajectory_float(i) - COM_float_init.translation()(2)) * RFvx_trajectory_float(i) - (-RFx_trajectory_float(i)) * RFvz_trajectory_float(i)) + LF_mass/ 2.1 * ((LFz_trajectory_float(i) - COM_float_init.translation()(2)) * LFvx_trajectory_float(i) - (-LFx_trajectory_float(i)) * LFvz_trajectory_float(i));
-        softBoundy1[i] = RF_mass/ 2.1 * RFvz_trajectory_float(i) + LF_mass/ 2.1 * LFvz_trajectory_float(i);
-        softBoundy2[i] = -RF_mass/ 2.1 * (RFz_trajectory_float(i) - COM_float_init.translation()(2)) - LF_mass/ 2.1 * (LFz_trajectory_float(i) - COM_float_init.translation()(2));
+        softBoundx[i][0] = RF_mass / 2.1 * (-(RFz_trajectory_float(i) - COM_float_init.translation()(2)) * RFvy_trajectory_float(i) - RFy_trajectory_float(i) * RFvz_trajectory_float(i)) + LF_mass / 2.1 * (-(LFz_trajectory_float(i) - COM_float_init.translation()(2)) * LFvy_trajectory_float(i) - LFy_trajectory_float(i) * LFvz_trajectory_float(i));
+        softBoundx1[i] = -RF_mass / 2.1 * RFvz_trajectory_float(i) - LF_mass / 2.1 * LFvz_trajectory_float(i);
+        softBoundx2[i] = RF_mass / 2.1 * (RFz_trajectory_float(i) - COM_float_init.translation()(2)) + LF_mass / 2.1 * (LFz_trajectory_float(i) - COM_float_init.translation()(2));
+
+        softBoundy[i][0] = RF_mass / 2.1 * ((RFz_trajectory_float(i) - COM_float_init.translation()(2)) * RFvx_trajectory_float(i) - (-RFx_trajectory_float(i)) * RFvz_trajectory_float(i)) + LF_mass / 2.1 * ((LFz_trajectory_float(i) - COM_float_init.translation()(2)) * LFvx_trajectory_float(i) - (-LFx_trajectory_float(i)) * LFvz_trajectory_float(i));
+        softBoundy1[i] = RF_mass / 2.1 * RFvz_trajectory_float(i) + LF_mass / 2.1 * LFvz_trajectory_float(i);
+        softBoundy2[i] = -RF_mass / 2.1 * (RFz_trajectory_float(i) - COM_float_init.translation()(2)) - LF_mass / 2.1 * (LFz_trajectory_float(i) - COM_float_init.translation()(2));
 
         softCx[i][0] = -softBoundy1[i];
         softCx[i][1] = -softBoundy2[i];
@@ -1643,8 +1677,8 @@ void WalkingController::mpcStateContraint(RobotData &Robot)
 
             if (j != 0)
             {
-              //  yL[i][0] = com_refy(i);
-              //  yU[i][0] = com_refy(i);
+                //  yL[i][0] = com_refy(i);
+                //  yU[i][0] = com_refy(i);
             }
         }
 
@@ -1661,7 +1695,7 @@ void WalkingController::mpcStateContraint(RobotData &Robot)
             xL[i][4] = 0.0;
             xU[i][4] = 0.0;
         }
-     /*   else if (i == t_temp + t_total * j + t_total/2 && j != 1)
+        /*   else if (i == t_temp + t_total * j + t_total/2 && j != 1)
         {
             if (j != 0)
             {
@@ -1931,12 +1965,12 @@ void WalkingController::inverseKinematicsdob(RobotData &Robot)
     dob_hat = 0.3 * dob_hat + 0.7 * dob_hat_prev;
 
     double defaultGain = 0.0;
-    double compliantGain = 2.5;
+    double compliantGain = dob_gain;
     double rejectionGain = -20.0; //-3.5;
-    double rejectionGainSim[12] = {-9.0, -9.0, -9.0, -9.0, -15.0, -15.0, -9.0, -9.0, -9.0, -9.0, -15.0, -15.0};
-    double rejectionGainReal[12] = {-3.0, -3.0, -3.0, -3.0, -3.0, -3.0, -3.0, -3.0, -3.0, -3.0, -3.0, -3.0};
+    double rejectionGainSim[12] = {dobrgain1, dobrgain2, dobrgain3, dobrgain4, dobrgain5, dobrgain6, dobrgain1, dobrgain2, dobrgain3, dobrgain4, dobrgain5, dobrgain6};//{-3.0, -3.0, -3.0, -3.0, -3.0, -3.0, -3.0, -3.0, -3.0, -3.0, -3.0, -3.0};//-9.0, -9.0, -9.0, -9.0, -15.0, -15.0, -9.0, -9.0, -9.0, -9.0, -15.0, -15.0};
+    double rejectionGainReal[12] = {dobrgain1, dobrgain2, dobrgain3, dobrgain4, dobrgain5, dobrgain6, dobrgain1, dobrgain2, dobrgain3, dobrgain4, dobrgain5, dobrgain6};
     double rejectionGain_[12];
-    double compliantTick = 0.04 * wk_Hz;
+    double compliantTick = 0.15 * wk_Hz;
 
     memcpy(rejectionGain_, rejectionGainSim, sizeof(rejectionGainSim));
 
@@ -2193,7 +2227,7 @@ void WalkingController::walkingInitialize(RobotData &Robot)
 void WalkingController::supportToFloatPattern(RobotData &Robot)
 {
     Eigen::Isometry3d SFR_float, SPR_float, PSR_float, SW_SUP, SFf;
-    Eigen::Vector4d com_float, comR_float, pelvR_float, pelvSR_float ,RF_float, LF_float;
+    Eigen::Vector4d pelvR_float, pelvSR_float, RF_float, LF_float;
     Eigen::Vector3d SFe;
 
     SFe = DyrosMath::rot2Euler(SUF_float_current.linear());
@@ -2246,6 +2280,7 @@ void WalkingController::supportToFloatPattern(RobotData &Robot)
 
         pelvSR_float.segment<3>(0) = PSR_float.translation();
         pelvSR_float(3) = 1.0;
+        com_float = pelv_yaw.inverse() * com_float;
 
         com_sup = DyrosMath::inverseIsometry3d(SFf) * com_float;
         comR_sup = DyrosMath::inverseIsometry3d(SFf) * comR_float;
@@ -2299,7 +2334,8 @@ void WalkingController::supportToFloatPattern(RobotData &Robot)
 
         pelvSR_float.segment<3>(0) = PSR_float.translation();
         pelvSR_float(3) = 1.0;
-
+        com_float = pelv_yaw.inverse() * com_float;
+        
         com_sup = DyrosMath::inverseIsometry3d(SFf) * com_float;
         comR_sup = DyrosMath::inverseIsometry3d(SFf) * comR_float;
         RF_sup = DyrosMath::inverseIsometry3d(SFf) * RF_float;
@@ -2310,7 +2346,7 @@ void WalkingController::supportToFloatPattern(RobotData &Robot)
 }
 
 void WalkingController::comController(RobotData &Robot)
-{ 
+{
     Eigen::Matrix2d A, I;
     Eigen::Vector2d B, Ke;
     Eigen::MatrixXd C, K1;
@@ -2323,52 +2359,59 @@ void WalkingController::comController(RobotData &Robot)
 
     Ke(0) = 0.1961;
     Ke(1) = 3.9901;
-    
+
     I.setIdentity();
 
-    A(0,0) = 0.0;
-    A(0,1) = 1.0;
-    A(1,0) = GRAVITY/0.7 -K/(94*0.7*0.7);
-    A(1,1) = -D/(94*0.7*0.7);
-    
+    A(0, 0) = 0.0;
+    A(0, 1) = 1.0;
+    A(1, 0) = GRAVITY / 0.7 - K / (94 * 0.7 * 0.7);
+    A(1, 1) = -D / (94 * 0.7 * 0.7);
+
     B(0) = 0.0;
-    B(1) = K/(94*0.7*0.7*0.7);
+    B(1) = K / (94 * 0.7 * 0.7 * 0.7);
 
-    C.resize(1,2);
-    K1.resize(1,2);
+    C.resize(1, 2);
+    K1.resize(1, 2);
 
-    K1(0,0) = -0.3457;
-    K1(0,1) = 0.0165;
+    K1(0, 0) = -0.3457;
+    K1(0, 1) = 0.0165;
 
-    C(0,0) = K/(94*GRAVITY);
-    C(0,1) = D/(94*GRAVITY);
-    d = -K/(94*GRAVITY*0.7);
+    C(0, 0) = K / (94 * GRAVITY);
+    C(0, 1) = D / (94 * GRAVITY);
+    d = -K / (94 * GRAVITY * 0.7);
 
     u_1.setZero();
     u_1(3) = 1.0;
 
-    if(walking_tick == 0)
+    if (walking_tick == 0)
     {
-        com_offset = com_mpcx - Robot.link_[Pelvis].xipos(0);
+        if(Robot.tc_.MPC == false)
+        {
+            com_offset = com_mpcx - Robot.link_[Pelvis].xipos(0);
+        }
+        else
+        {
+            com_offset = com_refx(walking_tick) - Robot.link_[Pelvis].xipos(0);
+        }
         x_est(0) = Robot.link_[COM_id].xpos(1);
         x_est(1) = 0.0;
-        u  = com_mpcy;
+        u = com_mpcy;
     }
     else
     {
         u = u + com_mpcy;
     }
 
-    x_est = (A*dt+I)*x_est + B*dt * u + Ke * dt *(ZMP_FT_l(1)-(zmp_mpcy + zmp_dely) - (C*x_est)(0) - D*u);
-    
-    u = (-K1*x_est)(0);
+    x_est = (A * dt + I) * x_est + B * dt * u + Ke * dt * (ZMP_FT_l(1) - (zmp_mpcy + zmp_dely) - (C * x_est)(0) - D * u);
+
+    u = (-K1 * x_est)(0);
 
     u_1(0) = com_mpcx;
     u_1(2) = PELV_float_init.translation()(2);
     u_1(1) = u;
 
-    u_1  = SF_float.inverse() * u_1;
-    
+    u_1 = SF_float.inverse() * u_1;
+
     ZMP_ref.setZero();
     ZMP_real.setZero();
     ZMP_ref(3) = 1.0;
@@ -2377,119 +2420,85 @@ void WalkingController::comController(RobotData &Robot)
     ZMP_ref(1) = zmp_mpcy;
     ZMP_real(0) = ZMP_FT_l(0);
     ZMP_real(1) = ZMP_FT_l(1);
-    ZMP_sup  = DyrosMath::inverseIsometry3d(SF_float) * ZMP_ref;
+    ZMP_sup = DyrosMath::inverseIsometry3d(SF_float) * ZMP_ref;
     ZMP_r_sup = DyrosMath::inverseIsometry3d(SF_float) * ZMP_real;
 
-    if(openloop == 1)
+    if(debug1 == false)
     {
-        if(Robot.tc_.MPC == false)
-        {
-            if(walking_tick > 300)
-            { 
-                PELV_trajectory_float_c.translation()(0) = com_sup(0) /*- com_offset*/  + pelv_xp*(pelvR_sup(0)  - com_sup(0)) - zmp_xp *(ZMP_sup(0) - ZMP_r_sup(0));    
-            }
-            else
-            {
-                PELV_trajectory_float_c.translation()(0) = com_sup(0) /*- com_offset*/  + pelv_xp*(pelvR_sup(0)- com_sup(0));
-            }
-        }
-        else
-        {
-            if(pelvon ==1)
-            {
-                if(walking_tick > 300)
-                { 
-                    PELV_trajectory_float_c.translation()(0) = com_sup(0) - com_offset  + pelv_xp*(comR_sup(0)  - com_sup(0)) - zmp_xp *(ZMP_sup(0) - ZMP_r_sup(0));    
-                }
-                else
-                {
-                    PELV_trajectory_float_c.translation()(0) = com_sup(0) - com_offset  + pelv_xp*(comR_sup(0)- com_sup(0));
-                }
-            }
-            else
-            {
-                if(global_ == 1)
-                {
-                    if(walking_tick > 300)
-                    { 
-                        PELV_trajectory_float_c.translation()(0) = pelvR_sup(0)  + pelv_xp*(comR_sup(0)  - com_sup(0)) - zmp_xp *(ZMP_sup(0) - ZMP_r_sup(0));    
-                    }
-                    else
-                    {
-                        PELV_trajectory_float_c.translation()(0) = pelvR_sup(0)  + pelv_xp*(comR_sup(0)- com_sup(0));
-                    }
-                }
-                else
-                {
-                    if(walking_tick > 300)
-                    { 
-                        PELV_trajectory_float_c.translation()(0) = Robot.link_[Pelvis].xipos(0)  + pelv_xp*(Robot.link_[COM_id].xpos(0) - com_mpcx) - zmp_xp *(ZMP_sup(0) - ZMP_r_sup(0));    
-                    }
-                    else
-                    {
-                        PELV_trajectory_float_c.translation()(0) = Robot.link_[Pelvis].xipos(0)   + pelv_xp*(Robot.link_[COM_id].xpos(0) - com_mpcx);
-                    }
-                }
-            }
-        }
-
-        if(global_ == 1)
-        {
-            PELV_trajectory_float_c.translation()(1) = pelvR_sup(1) + pelv_yp*(comR_sup(1) - com_sup(1)) - zmp_yp *(ZMP_sup(1) - ZMP_r_sup(1));
-            PELV_trajectory_float_c.translation()(2) = 0.69;   
-            PELV_trajectory_float_c.linear() = PELV_float_init.linear();
-
-            RF_trajectory_float.translation()(0) = RF_sup(0);
-            RF_trajectory_float.translation()(1) = RF_sup(1);
-            RF_trajectory_float.translation()(2) = RF_sup(2);
-
-            LF_trajectory_float.translation()(0) = LF_sup(0);
-            LF_trajectory_float.translation()(1) = LF_sup(1);
-            LF_trajectory_float.translation()(2) = LF_sup(2);
-        }
-        else
-        {
-            PELV_trajectory_float_c.translation()(1) = Robot.link_[Pelvis].xipos(1) + pelv_yp*(Robot.link_[COM_id].xpos(1) - com_mpcy) - zmp_yp *(ZMP_sup(1) - ZMP_r_sup(1));
-            PELV_trajectory_float_c.translation()(2) = PELV_float_init.translation()(2);   
-            PELV_trajectory_float_c.linear() = PELV_float_init.linear();
-
-            RF_trajectory_float.translation()(0) = RFx_trajectory_float(walking_tick);
-            RF_trajectory_float.translation()(1) = RFy_trajectory_float(walking_tick);
-            RF_trajectory_float.translation()(2) = RFz_trajectory_float(walking_tick);
-
-            LF_trajectory_float.translation()(0) = LFx_trajectory_float(walking_tick);
-            LF_trajectory_float.translation()(1) = LFy_trajectory_float(walking_tick);
-            LF_trajectory_float.translation()(2) = LFz_trajectory_float(walking_tick);
-        }
+        pelv_init_sup = pelvR_sup(2);
+        debug1 = true;
     }
-    else
+    
+    if(Robot.tc_.MPC == false)
     {
-        PELV_trajectory_float_c.translation()(0) = com_refx(walking_tick);
-        PELV_trajectory_float_c.translation()(1) = com_refy(walking_tick);
-        PELV_trajectory_float_c.translation()(2) = PELV_float_init.translation()(2);
+        PELV_trajectory_float_c.translation()(0) =  pelvR_sup(0) + pelv_xp*(pelvR_sup(0) - com_sup(0));//(PELV_float_current.translation()(0) - com_refx(walking_tick));   
+        PELV_trajectory_float_c.translation()(1) =  pelvR_sup(1) + pelv_yp*(pelvR_sup(1) - com_sup(1));//COM_float_current.translation()(1) - com_refy(walking_tick));
+       // PELV_trajectory_float_c.translation()(0) =  pelvR_sup(0) + pelv_xp*(comR_sup(0) - com_sup(0));//(PELV_float_current.translation()(0) - com_refx(walking_tick));
+       
+        PELV_trajectory_float_c.translation()(2) = pelv_init_sup;//PELV_float_init.translation()(2);
+        PELV_trajectory_float_c.linear() = PELV_float_init.linear();
+        
+        RF_trajectory_float.translation()(0) = RF_sup(0);//RFx_trajectory_float(walking_tick);
+        RF_trajectory_float.translation()(1) = RF_sup(1);//RFy_trajectory_float(walking_tick);
+        RF_trajectory_float.translation()(2) = RF_sup(2);//RFz_trajectory_float(walking_tick);
 
-        RF_trajectory_float.translation()(0) = RFx_trajectory_float(walking_tick);
-        RF_trajectory_float.translation()(1) = RFy_trajectory_float(walking_tick);
+        LF_trajectory_float.translation()(0) = LF_sup(0);//LFx_trajectory_float(walking_tick);
+        LF_trajectory_float.translation()(1) = LF_sup(1);//LFy_trajectory_float(walking_tick);
+        LF_trajectory_float.translation()(2) = LF_sup(2);//LFz_trajectory_float(walking_tick);
+
+        RF_trajectory_float.linear() = RF_float_init.linear();
+        LF_trajectory_float.linear() = LF_float_init.linear(); 
+   
+    /*    PELV_trajectory_float_c.translation()(0) = com_refx(walking_tick) - com_offset + pelv_xp*(comR_sup(0) - com_sup(0));//(PELV_float_current.translation()(0) - com_refx(walking_tick));  
+        PELV_trajectory_float_c.translation()(1) = com_refy(walking_tick) + pelv_yp*(comR_sup(1) - com_sup(1));//COM_float_current.translation()(1) - com_refy(walking_tick));
+       
+        PELV_trajectory_float_c.translation()(2) = PELV_float_init.translation()(2);
+        PELV_trajectory_float_c.linear() = PELV_float_init.linear();
+        
+        RF_trajectory_float.translation()(0) = RFx_trajectory_float(walking_tick);// - 0.9*(Robot.link_[Right_Foot].xpos(0) - RFx_trajectory_float(walking_tick));
+        RF_trajectory_float.translation()(1) = RFy_trajectory_float(walking_tick);// - 0.7*(Robot.link_[Right_Foot].xpos(1) - RFy_trajectory_float(walking_tick));
         RF_trajectory_float.translation()(2) = RFz_trajectory_float(walking_tick);
 
-        LF_trajectory_float.translation()(0) = LFx_trajectory_float(walking_tick);
-        LF_trajectory_float.translation()(1) = LFy_trajectory_float(walking_tick);
+        LF_trajectory_float.translation()(0) = LFx_trajectory_float(walking_tick);// - 0.9*(Robot.link_[Left_Foot].xpos(0) - LFx_trajectory_float(walking_tick));
+        LF_trajectory_float.translation()(1) = LFy_trajectory_float(walking_tick);// - 0.7*(Robot.link_[Left_Foot].xpos(1) - LFy_trajectory_float(walking_tick));
         LF_trajectory_float.translation()(2) = LFz_trajectory_float(walking_tick);
 
         RF_trajectory_float.linear() = RF_float_init.linear();
-        LF_trajectory_float.linear() = LF_float_init.linear();
+        LF_trajectory_float.linear() = LF_float_init.linear();*/
     }
-   
-    if(Robot.ankleHybrid == true)
-    {    
+    else
+    {
+        if (walking_tick > 300)
+        {
+            PELV_trajectory_float_c.translation()(0) = com_sup(0) - com_offset + pelv_xp * (comR_sup(0) - com_sup(0)) - zmp_xp * (ZMP_sup(0) - ZMP_r_sup(0));
+        }
+        else
+        {
+            PELV_trajectory_float_c.translation()(0) = com_sup(0) - com_offset + pelv_xp * (comR_sup(0) - com_sup(0));
+        }
+
+        PELV_trajectory_float_c.translation()(1) = pelvR_sup(1) + pelv_yp * (comR_sup(1) - com_sup(1)) - zmp_yp * (ZMP_sup(1) - ZMP_r_sup(1));
+        PELV_trajectory_float_c.translation()(2) = 0.69;
+        PELV_trajectory_float_c.linear() = PELV_float_init.linear();
+
+        RF_trajectory_float.translation()(0) = RF_sup(0);
+        RF_trajectory_float.translation()(1) = RF_sup(1);
+        RF_trajectory_float.translation()(2) = RF_sup(2);
+
+        LF_trajectory_float.translation()(0) = LF_sup(0);
+        LF_trajectory_float.translation()(1) = LF_sup(1);
+        LF_trajectory_float.translation()(2) = LF_sup(2);
+    }
+
+    if (Robot.ankleHybrid == true)
+    {
         RF_trajectory_float.linear() = RF_float_init.linear();
         LF_trajectory_float.linear() = LF_float_init.linear();
         RF_trajectory_float.linear() = RF_trajectory_float.linear() * DyrosMath::rotateWithY(control_input(2)) * DyrosMath::rotateWithX(control_input(3));
         LF_trajectory_float.linear() = LF_trajectory_float.linear() * DyrosMath::rotateWithY(control_input(0)) * DyrosMath::rotateWithX(control_input(1));
- 
+
         RF_trajectory_float.translation()(2) = RF_trajectory_float.translation()(2) - com_gain1 * z_ctrl(2);
         LF_trajectory_float.translation()(2) = LF_trajectory_float.translation()(2) + com_gain1 * z_ctrl(2);
         PELV_trajectory_float_c.linear() = PELV_float_init.linear() * DyrosMath::rotateWithY(posture_input(1)) * DyrosMath::rotateWithX(posture_input(0));
     }
-
 }

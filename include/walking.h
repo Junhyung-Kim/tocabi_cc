@@ -91,13 +91,19 @@ public:
     Eigen::Vector2d RT, LT, RT_prev, LT_prev, RT_l, LT_l, RT_mu, LT_mu;
     Eigen::Vector3d RF_d, LF_d, z_ctrl;
     double K_fx, T_fx, K_fy, T_fy, K_fz, T_fz;
+    Eigen::Isometry3d pelv_yaw;
+    double pelv_init_sup;
+    bool debug1 = false;
 
     //mutex
     std::mutex cc_mutex;
     std::mutex cc_mutex1;
 
     //walkingInit
-    Eigen::VectorQd q_target, q_init;
+    Eigen::VectorQd q_target, q_init; Eigen::Vector4d com_float, comR_float;
+    double aaa1111;
+
+    std::atomic<int> mpc_cycle;
 
     //walking
     void walkingCompute(RobotData &rd);
@@ -107,7 +113,7 @@ public:
     void footStepTotal();
     void getRobotState(RobotData &rd);
     void calcRobotState(RobotData &rd);
-    void setCpPosition();
+    void setCpPosition(RobotData &rd);
     void cpReferencePatternGeneration();
     void cptoComTrajectory();
     void setFootTrajectory();
@@ -262,13 +268,11 @@ public:
     Eigen::Vector4d SUP_foot;
 
     //Ankle Controller
-    double arp_dl, ark_dl, app_dl, apk_dl, arp_sl, ark_sl, app_sl, apk_sl, arp_dr, ark_dr, app_dr, apk_dr, arp_sr, ark_sr, app_sr, apk_sr, mobgain1, mobgain2, mobgain3, mobgain4, mobgain5, mobgain6, kc_r, tc_r, kc_p, tc_p;
-    std::vector<double> mobgain;
+    double arp_dl, ark_dl, app_dl, apk_dl, arp_sl, ark_sl, app_sl, apk_sl, arp_dr, ark_dr, app_dr, apk_dr, arp_sr, ark_sr, app_sr, apk_sr, dobrgain1, dobrgain2, dobrgain3, dobrgain4, dobrgain5, dobrgain6, kc_r, tc_r, kc_p, tc_p;    std::vector<double> mobgain;
     Eigen::VectorQd torque_est;
     int ft_ok;
 
     double pelv_tmp;
-    int openloop, pelvon, global_;
 
     //MPC variable
     double **softBoundx, **softBoundy, *softBoundx1, *softBoundy1, *softBoundx2, *softBoundy2, **softCx, **softCy, **xL, **xU, **yL, **yU, **zmpx, **zmpy;
@@ -328,6 +332,6 @@ public:
 
     double m;
     bool vib_est = false;
-
+    double dob_gain;
 private:
 };

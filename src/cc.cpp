@@ -39,10 +39,6 @@ CustomController::CustomController(RobotData &rd) : rd_(rd) //, wbc_(dc.wbc_)
     rd_.mujoco_dist = false;
     ros::NodeHandle nh;
 
-    nh.getParam("/tocabi_controller/openloop", openloop);
-    nh.getParam("/tocabi_controller/pelvon", pelvon);
-    nh.getParam("/tocabi_controller/global_", global_);
-
     nh.getParam("/tocabi_controller/Qx1", Qx1_mpc);
     nh.getParam("/tocabi_controller/Qx2", Qx2_mpc);
     nh.getParam("/tocabi_controller/Qx3", Qx3_mpc);
@@ -124,13 +120,14 @@ CustomController::CustomController(RobotData &rd) : rd_(rd) //, wbc_(dc.wbc_)
     nh.getParam("/tocabi_controller/zmp_xp", zmp_xp);
     nh.getParam("/tocabi_controller/zmp_yp", zmp_yp);
 
-    nh.getParam("/tocabi_controller/mobgain1", mobgain1);
-    nh.getParam("/tocabi_controller/mobgain2", mobgain2);
-    nh.getParam("/tocabi_controller/mobgain3", mobgain3);
-    nh.getParam("/tocabi_controller/mobgain4", mobgain4);
-    nh.getParam("/tocabi_controller/mobgain5", mobgain5);
-    nh.getParam("/tocabi_controller/mobgain6", mobgain6);
+    nh.getParam("/tocabi_controller/dobrgain1", dobrgain1);
+    nh.getParam("/tocabi_controller/dobrgain2", dobrgain2);
+    nh.getParam("/tocabi_controller/dobrgain3", dobrgain3);
+    nh.getParam("/tocabi_controller/dobrgain4", dobrgain4);
+    nh.getParam("/tocabi_controller/dobrgain5", dobrgain5);
+    nh.getParam("/tocabi_controller/dobrgain6", dobrgain6);
 
+    
     nh.getParam("/tocabi_controller/K_fx", K_fx);
     nh.getParam("/tocabi_controller/T_fx", T_fx);
 
@@ -144,15 +141,15 @@ CustomController::CustomController(RobotData &rd) : rd_(rd) //, wbc_(dc.wbc_)
 
     nh.getParam("/tocabi_controller/dist", dist);
 
-    mobgain.push_back(mobgain1);
-    mobgain.push_back(mobgain2);
-    mobgain.push_back(mobgain3);
-    mobgain.push_back(mobgain4);
-    mobgain.push_back(mobgain5);
-    mobgain.push_back(mobgain6);
+    mobgain.push_back(dobrgain1);
+    mobgain.push_back(dobrgain2);
+    mobgain.push_back(dobrgain3);
+    mobgain.push_back(dobrgain4);
+    mobgain.push_back(dobrgain5);
+    mobgain.push_back(dobrgain6);
 
     nh.getParam("/tocabi_controller/ft", ft_ok);
-
+    nh.getParam("/tocabi_controller/dob_gain", dob_gain);
     x11x_temp.resize(5,100);
     x11y_temp.resize(5,100);
 
@@ -169,6 +166,11 @@ CustomController::CustomController(RobotData &rd) : rd_(rd) //, wbc_(dc.wbc_)
     std::cout << Ry1_mpc << ", " << Ry2_mpc << std::endl;
     ROS_INFO("MPCZl1y");
     std::cout << Zl1y_mpc << ", " << Zu1y_mpc << ", " << zl1y_mpc << ", " << zu1y_mpc << std::endl;
+    ROS_INFO("dob");
+    std::cout << dob_gain << std::endl;
+
+    ROS_INFO("dobr");
+    std::cout << dobrgain1 <<" ," << dobrgain2 <<" ," << dobrgain3 <<" ," << dobrgain4 <<" ," << dobrgain5 <<" ," << dobrgain6 << std::endl;
 
     std::cout << "Robot total mass" << rd_.total_mass_ << std::endl;
     ControlVal_.setZero();
@@ -396,6 +398,12 @@ void CustomController::computeSlow()
         {
             WBC::SetContact(rd_, 1, 1);
             rd_.torque_desired_walk = WBC::ContactForceRedistributionTorque(rd_, WBC::GravityCompensationTorque(rd_));
+            
+            if(walking_init_tick == 0)
+            {
+                rd_.q_desired = rd_.q_;
+            }
+            
             for (int i = 0; i < MODEL_DOF; i++)
             {
                 rd_.torque_desired[i] = rd_.pos_kp_v[i] * (rd_.q_desired[i] - rd_.q_[i]) + rd_.pos_kv_v[i] * (-rd_.q_dot_[i]) + rd_.torque_desired_walk[i];
@@ -455,7 +463,7 @@ void CustomController::computeFast()
                 footStepGenerator(rd_);
                 saveFootTrajectory();
 
-                setCpPosition();
+                setCpPosition(rd_);
                 cpReferencePatternGeneration();
                 cptoComTrajectory();
 
@@ -567,6 +575,7 @@ void CustomController::computeFast()
                 
                 if (walking_tick == 0)
                 {
+                    desired_init_q = rd_.q_;
                     for (int i = 12; i < MODEL_DOF; i++)
                     {
                         rd_.q_desired(i) = desired_init_q(i);
@@ -631,7 +640,17 @@ void CustomController::computeFast()
                 {
                     rd_.mujoco_dist = false;
                 }
+                if(rd_.tc_.MPC == false)
+                {
+                    if(walking_tick < (t_total * (total_step_num + 1) + t_temp - 1))
+                    {
 
+                    }
+                    else
+                    {
+                        walking_tick = (t_total * (total_step_num + 1) + t_temp - 2);
+                    }
+                }
                 /*
                 if(walking_tick >= 4205 && walking_tick < 4255 && dist == 1)
                 {
@@ -649,9 +668,19 @@ void CustomController::computeFast()
 
             if(walking_tick != walking_tick_prev)
             {
-                file[1] << walking_tick << "\t"<< mpc_cycle << "\t" << mpc_cycle_prev << "\t" <<hpipm_statusy<<"\t"<< zmp_refy(walking_tick) <<"\t" << rd_.link_[COM_id].xpos(1) << "\t" << com_mpcy << "\t" << ZMP_FT_l(1) << "\t" << zmp_mpcy << "\t" <<yL[walking_tick][0]<<"\t" << yU[walking_tick][0] <<"\t"<< rd_.link_[COM_id].v(1) << "\t" << rd_.link_[COM_id].xpos(1) << "\t" << com_mpcy << "\t" << ZMP_FT_l(1) << "\t" << ZMP_FT(1) << "\t" << zmp_mpcy << "\t" << com_mpcdy << "\t" <<rd_.link_[COM_id].v(1) << "\t"<< H_roll << "\t" << mom_mpcy  <<std::endl;
-             
-                file[0] << walking_tick << "\t"<< mpc_cycle << "\t" <<mpct1<<"\t"<<hpipm_statusx<<"\t"<< zmp_refx(walking_tick) <<"\t" << rd_.link_[COM_id].xpos(0) << "\t" << com_mpcx << "\t" << ZMP_FT_l(0) << "\t" << zmp_mpcx << "\t" <<xL[walking_tick][0]<<"\t" << xU[walking_tick][0] <<"\t"<< rd_.link_[COM_id].v(0) << "\t" << rd_.link_[COM_id].xpos(0) << "\t" << com_mpcx << "\t" << ZMP_FT_l(0) << "\t" << ZMP_FT(1) << "\t" << zmp_mpcy << "\t" << com_mpcdy << "\t" <<rd_.link_[COM_id].v(1) << "\t"<< H_pitch << "\t" << mom_mpcx  << std::endl;//"\t" << H_leg(0) << "\t" << H_leg(1)<< "\t" << F_err_l(0)<<"\t"<<F_err_l(1)<<"\t"<<mot_mpcx << "\t"<<mot_mpcy<<std::endl;
+                walking_tick_prev = walking_tick;
+                if(rd_.tc_.MPC == true)
+                {
+                    file[1] << walking_tick << "\t"<< mpc_cycle << "\t" << mpc_cycle_prev << "\t" <<hpipm_statusy<<"\t"<< zmp_refy(walking_tick) <<"\t" << rd_.link_[COM_id].xpos(1) << "\t" << com_mpcy << "\t" << ZMP_FT_l(1) << "\t" << zmp_mpcy << "\t" <<yL[walking_tick][0]<<"\t" << yU[walking_tick][0] <<"\t"<< rd_.link_[COM_id].v(1) << "\t" << rd_.link_[COM_id].xpos(1) << "\t" << com_mpcy << "\t" << ZMP_FT_l(1) << "\t" << ZMP_FT(1) << "\t" << zmp_mpcy << "\t" << com_mpcdy << "\t" <<rd_.link_[COM_id].v(1) << "\t"<< H_roll << "\t" << mom_mpcy  <<std::endl;
+                    //file[0] << walking_tick << "\t"<< mpc_cycle << "\t" <<mpct1<<"\t"<<hpipm_statusx<<"\t"<< zmp_refx(walking_tick) <<"\t" << rd_.link_[COM_id].xpos(0) << "\t" << com_mpcx << "\t" << ZMP_FT_l(0) << "\t" << zmp_mpcx << "\t" <<xL[walking_tick][0]<<"\t" << xU[walking_tick][0] <<"\t"<< rd_.link_[COM_id].v(0) << "\t" << rd_.link_[COM_id].xpos(0) << "\t" << com_mpcx << "\t" << ZMP_FT_l(0) << "\t" << ZMP_FT(1) << "\t" << zmp_mpcy << "\t" << com_mpcdy << "\t" <<rd_.link_[COM_id].v(1) << "\t"<< H_pitch << "\t" << mom_mpcx <<"\t"<<rd_.link_[Right_Foot].xpos(0)  <<"\t"<<rd_.link_[Left_Foot].xpos(0) << "\t"<< RFx_trajectory_float(walking_tick)<< "\t"<< LFx_trajectory_float(walking_tick) <<  std::endl;//"\t" << H_leg(0) << "\t" << H_leg(1)<< "\t" << F_err_l(0)<<"\t"<<F_err_l(1)<<"\t"<<mot_mpcx << "\t"<<mot_mpcy<<std::endl;
+                    file[0] <<hpipm_statusx<<"\t"<<PELV_trajectory_float_c.translation()(0) <<"\t" << rd_.link_[COM_id].xpos(0) << "\t" << com_mpcx << "\t" << ZMP_FT_l(0) << "\t" << zmp_mpcx << "\t" <<xL[walking_tick][0]<<"\t" << xU[walking_tick][0] <<"\t"<< rd_.link_[COM_id].v(0) << "\t" << rd_.link_[COM_id].xpos(0) << "\t" << com_mpcx << "\t" << ZMP_FT_l(0) << "\t" << ZMP_FT(1) << "\t" << zmp_mpcy << "\t" << com_mpcdy << "\t" <<rd_.link_[COM_id].v(1) << "\t"<< H_pitch << "\t" << mom_mpcx <<"\t"<<rd_.link_[Right_Foot].xpos(0)  <<"\t"<<rd_.link_[Left_Foot].xpos(0) << "\t"<< RFx_trajectory_float(walking_tick)<< "\t"<< LFx_trajectory_float(walking_tick) <<  std::endl;//"\t" << H_leg(0) << "\t" << H_leg(1)<< "\t" << F_err_l(0)<<"\t"<<F_err_l(1)<<"\t"<<mot_mpcx << "\t"<<mot_mpcy<<std::endl;
+                
+                }
+                else
+                {
+                    file[1]<<-aaa1111<<"\t"<<COM_float_current.translation()(0)<<"\t"<<com_float(0) <<"\t" << comR_float(0)  <<"\t"<<com_sup(0)<<"\t"<<comR_sup(0)<<std::endl;
+                    file[0] <<walking_tick<< "\t"<<PELV_trajectory_float_c.translation()(1) <<"\t"<<rd_.link_[Pelvis].xipos(1)  <<"\t"<<rd_.link_[COM_id].xpos(1)<<"\t"<<rd_.link_[Right_Foot].xpos(1)  <<"\t"<<rd_.link_[Left_Foot].xpos(1) << "\t"<< RFy_trajectory_float(walking_tick)<< "\t"<< LFy_trajectory_float(walking_tick) <<"\t"<<com_refx(walking_tick) <<"\t"<<rd_.link_[COM_id].xpos(0) <<"\t"<<com_refy(walking_tick) <<"\t"<< ZMP_FT_l(0)<<"\t"<<ZMP_FT_l(1)<<  std::endl;
+                }   
             } 
            }
         }
@@ -664,8 +693,12 @@ void CustomController::computeFast()
             if (walking_init_tick == 0)
             {
                 Eigen::VectorQd q_temp;
-                q_temp << 0.0, 0.1, -0.45, 1.0, -0.55, -0.1, 0.0, 0.1, -0.45, 1.0, -0.55, -0.1, 0.0, 0.0, 0.0, 0.2, 0.5, 1.5, -1.27, -1, 0, -1, 0, 0, 0, -0.2, -0.5, -1.5, 1.27, 1.0, 0, 1.0, 0;
-                //q_temp = rd_.q_;
+                q_temp << 0.0, 0.0, -0.55, 1.26, -0.71, 0.0, 
+								0.0, 0.0, -0.55, 1.26, -0.71, 0.0,
+								0.0, 0.0, 0.0,
+								0.2, 0.6, 1.5, -1.47, -1.0, 0.0, -1.0, 0.0, 
+                                0.0, 0.0, 
+								-0.2, -0.6, -1.5, 1.47, 1.0, 0.0, 1.0, 0.0;                //q_temp = rd_.q_;
                 //q_temp.setZero();
                 //q_target = Robot.q_;
                 q_target = q_temp;
@@ -681,11 +714,11 @@ void CustomController::computeFast()
             }
 
             cc_mutex.lock();
-            for (int i = 0; i < 12; i++)
+            for (int i = 0; i < MODEL_DOF; i++)
             {
                 rd_.q_desired(i) = desired_init_q(i);
             }
-            if (walking_tick == 0)
+            if (walking_init_tick == 0)
             {
                 for (int i = 12; i < MODEL_DOF; i++)
                 {
@@ -696,8 +729,7 @@ void CustomController::computeFast()
 
             walking_init_tick++;
             
-            file[0]<<walking_init_tick<<"\t"<< desired_init_q(0) << "\t" << rd_.q_(0) << "\t"<< desired_init_q(1) << "\t" << rd_.q_(1) << "\t"<< desired_init_q(2) << "\t" << rd_.q_(2) << "\t"<< desired_init_q(3) << "\t" << rd_.q_(3) << "\t"<< desired_init_q(4) << "\t" << rd_.q_(4) << "\t"<< desired_init_q(5) << "\t" << rd_.q_(5) <<  std::endl;
-              
+                
             //file[1] << rd_.link_[COM_id].xpos(0) << "\t" << rd_.link_[COM_id].xpos(1) << "\t" << rd_.link_[COM_id].v(0) << "\t" << rd_.link_[COM_id].v(1) << "\t" << ZMP_FT_l(0) << "\t" << ZMP_FT_l(1) << "\t" << COM_float_current.translation()(0) << "\t" << COM_float_current.translation()(1) << "\t" << COM_float_current.translation()(2) << "\t" << rd_.total_mass_ << "\t" << std::endl;
         }
     }
