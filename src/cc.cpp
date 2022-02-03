@@ -1,7 +1,9 @@
 #include "pinocchio/parsers/urdf.hpp"
+#include "pinocchio/parsers/sample-models.hpp"
 #include "pinocchio/algorithm/joint-configuration.hpp"
 #include "pinocchio/algorithm/kinematics.hpp"
 #include "pinocchio/algorithm/jacobian.hpp"
+//#include "pinocchio/multibody/frame.hpp"
 #include "pinocchio/multibody/model.hpp"
 #include "pinocchio/algorithm/model.hpp"
 #include "pinocchio/algorithm/crba.hpp"
@@ -14,8 +16,8 @@
 #include "wholebody_functions.h"
 #include "cc.h"
 
-using namespace TOCABI;
 using namespace pinocchio;
+using namespace TOCABI;
 using std::shared_ptr;
 
 pinocchio::Model model;
@@ -26,7 +28,6 @@ pinocchio::Data model_data1;
 
 CustomController::CustomController(RobotData &rd) : rd_(rd) //, wbc_(dc.wbc_)
 {
-
     mpc_cycle = 0;
     mpc_cycle_prev = 0;
     walking_init_tick = 0;
@@ -174,8 +175,18 @@ CustomController::CustomController(RobotData &rd) : rd_(rd) //, wbc_(dc.wbc_)
 
     std::cout << "Robot total mass" << rd_.total_mass_ << std::endl;
     ControlVal_.setZero();
-    pinocchio::urdf::buildModel("/home/jhk/catkin_ws/src/dyros_tocabi_v2/tocabi_description/robots/dyros_tocabi_with_redhands.urdf", model);
-    pinocchio::Data data(model);
+    
+    //ROS_INFO("aaa");
+ 
+  // pinocchio::buildModels::manipulator(model);
+   // const std::string urdf_name = std::string("/home/dyros/pinocchio/models/baxter_simple.urdf");
+    //catkin_ws/src/dyros_tocabi_v2/tocabi_description/robots/dyros_tocabi.urdf");
+    //model = pinocchio::urdf::buildModel(urdf_name, model, true);
+  
+   // ROS_INFO("ssssaa");
+
+   // pinocchio::urdf::buildModel("/home/dyros/catkin_ws/src/dyros_tocabi_v2/tocabi_description/robots/dyros_tocabi.urdf", model);
+/*    pinocchio::Data data(model);
     model_data = data;
     q_ = randomConfiguration(model);
     qdot = Eigen::VectorXd::Zero(model.nv);
@@ -185,7 +196,7 @@ CustomController::CustomController(RobotData &rd) : rd_(rd) //, wbc_(dc.wbc_)
 
     pinocchio::JointModelFreeFlyer root_joint;
     pinocchio::Model model2;
-    pinocchio::urdf::buildModel("/home/jhk/catkin_ws/src/dyros_tocabi_v2/tocabi_description/robots/dyros_tocabi_with_redhands.urdf", root_joint, model2);
+    pinocchio::urdf::buildModel("/home/dyros/catkin_ws/src/dyros_tocabi_v2/tocabi_description/robots/dyros_tocabi_with_redhands.urdf", root_joint, model2);
     pinocchio::Data data1(model2);
 
     model1 = model2;
@@ -197,11 +208,10 @@ CustomController::CustomController(RobotData &rd) : rd_(rd) //, wbc_(dc.wbc_)
     qddot1 = Eigen::VectorXd::Zero(model1.nv);
     qdot_1 = Eigen::VectorXd::Zero(model1.nv);
     qddot_1 = Eigen::VectorXd::Zero(model1.nv);
-
+*/
     mpc_on = false;
     wlk_on = false;
     velEst_f = false;
-
     mpcVariableInit();
     std::cout << "Custom Controller Init" << std::endl;
 }
@@ -268,7 +278,7 @@ void CustomController::computeSlow()
 
             //Pinocchio model
            // CMM = pinocchio::computeCentroidalMap(model, model_data, rd_.q_);
-            pinocchio::crba(model, model_data, rd_.q_);
+       /*     pinocchio::crba(model, model_data, rd_.q_);
             pinocchio::computeCoriolisMatrix(model, model_data, rd_.q_, rd_.q_dot_);
             pinocchio::rnea(model, model_data, rd_.q_, qdot_, qddot_);
 
@@ -282,7 +292,7 @@ void CustomController::computeSlow()
                 q_1(i) = rd_.q_virtual_(i);
             /*    qdot_1(i) = rd_.q_dot_virtual_(i);
                 qddot_1(i) = rd_.q_ddot_virtual_(i);*/
-            }
+        /*    }
             
             q_1(6) = rd_.q_virtual_(MODEL_DOF_VIRTUAL);
 
@@ -291,12 +301,12 @@ void CustomController::computeSlow()
                 q_1(i + 7) = rd_.q_virtual_(i + 6);
               /*  qdot_1(i + 6) = rd_.q_dot_virtual_(i + 6);
                 qddot_1(i + 6) = rd_.q_ddot_virtual_(i + 6);*/
-            }
+    /*        }
 
             q_dot_virtual_lpf_ = DyrosMath::lpf(rd_.q_dot_virtual_, q_dot_virtual_lpf_, 2000, 3);
             CMM = pinocchio::computeCentroidalMap(model1, model_data1, q_1);
 
-            jointVelocityEstimate();
+            jointVelocityEstimate();*/
             velEst_f = true;
 
             /*
@@ -406,8 +416,9 @@ void CustomController::computeSlow()
             
             for (int i = 0; i < MODEL_DOF; i++)
             {
-                rd_.torque_desired[i] = rd_.pos_kp_v[i] * (rd_.q_desired[i] - rd_.q_[i]) + rd_.pos_kv_v[i] * (-rd_.q_dot_[i]) + rd_.torque_desired_walk[i];
+                rd_.torque_desired[i] = rd_.pos_kp_v[i] * (rd_.q_desired[i] - rd_.q_[i]) + rd_.pos_kv_v[i] * (-rd_.q_dot_[i]);// + rd_.torque_desired_walk[i];
             }
+                //     file[0] <<walking_tick<< "\t"<<rd_.q_desired(20) <<"\t"<<rd_.q_(20)<< "\t"<<rd_.q_desired(21) <<"\t"<<rd_.q_(21)<< "\t"<<rd_.q_desired(22) <<"\t"<<rd_.q_(22)<< "\t"<<rd_.q_desired(23) <<"\t"<<rd_.q_(23)<< "\t"<<rd_.q_desired(4) <<"\t"<<rd_.q_(4)<< "\t"<<rd_.q_desired(5) <<"\t"<<rd_.q_(5)<<std::endl;
         }
     }
 }
@@ -469,7 +480,7 @@ void CustomController::computeFast()
 
                 mpcSoftVariable(rd_);
                 mpcStateContraint(rd_);
-
+   
                 cc_mutex.lock();
                 foot_step_mu = foot_step;
                 LFvx_trajectory_float_mu = LFvx_trajectory_float;
@@ -513,7 +524,6 @@ void CustomController::computeFast()
                 yU1_mu = yU_s;
 
                 cc_mutex.unlock();
-
                 wlk_on = true;
             }
 
@@ -555,7 +565,7 @@ void CustomController::computeFast()
                 walkingCompute(rd_);
 
                 zmpCalc(rd_);
-                zmpControl(rd_);
+               // zmpControl(rd_);
 
                 momentumControl(rd_);
 
@@ -606,6 +616,7 @@ void CustomController::computeFast()
                             walking_tick++;
                             mpc_temp = mpc_cycle;
                             mpc_cycle_prev = mpc_temp;
+                            
                         }
                         else
                         {
@@ -666,8 +677,9 @@ void CustomController::computeFast()
                 //if (walking_tick % 5 == 0)
            //     file[1] << walking_tick << "\t"<< mpc_cycle << "\t" << zmp_refx(walking_tick) <<"\t" << rd_.link_[COM_id].xpos(0) << "\t" << com_mpcx << "\t" << ZMP_FT_l(0) << "\t" << zmp_mpcx << "\t" <<xL[walking_tick][0]<<"\t" << xU[walking_tick][0] <<"\t"<< rd_.link_[COM_id].v(1) << "\t" << rd_.link_[COM_id].xpos(1) << "\t" <<hpipm_statusy<<"\t" << com_mpcy << "\t" << ZMP_FT_l(1) << "\t" << ZMP_FT(1) << "\t" << zmp_mpcy << "\t" << rd_.link_[COM_id].xpos(2) << "\t" << H_data(3) << "\t" << mom_mpcy << "\t" << H_data(4) << "\t" << mom_mpcx << "\t" << control_input(0) << "\t" << control_input(1) <<std::endl;
 
-            if(walking_tick != walking_tick_prev)
-            {
+           // if(walking_tick != walking_tick_prev)
+           // {
+               
                 walking_tick_prev = walking_tick;
                 if(rd_.tc_.MPC == true)
                 {
@@ -679,9 +691,9 @@ void CustomController::computeFast()
                 else
                 {
                     file[1]<<-aaa1111<<"\t"<<COM_float_current.translation()(0)<<"\t"<<com_float(0) <<"\t" << comR_float(0)  <<"\t"<<com_sup(0)<<"\t"<<comR_sup(0)<<std::endl;
-                    file[0] <<walking_tick<< "\t"<<PELV_trajectory_float_c.translation()(1) <<"\t"<<rd_.link_[Pelvis].xipos(1)  <<"\t"<<rd_.link_[COM_id].xpos(1)<<"\t"<<rd_.link_[Right_Foot].xpos(1)  <<"\t"<<rd_.link_[Left_Foot].xpos(1) << "\t"<< RFy_trajectory_float(walking_tick)<< "\t"<< LFy_trajectory_float(walking_tick) <<"\t"<<com_refx(walking_tick) <<"\t"<<rd_.link_[COM_id].xpos(0) <<"\t"<<com_refy(walking_tick) <<"\t"<< ZMP_FT_l(0)<<"\t"<<ZMP_FT_l(1)<<  std::endl;
+                    file[0] <<com_refx(walking_tick) <<"\t"<<rd_.link_[COM_id].xpos(0) <<"\t"<<com_refy(walking_tick)<<"\t"<<rd_.link_[COM_id].xpos(1)  <<"\t"<< ZMP_FT_l(0)<<"\t"<<ZMP_FT_l(1)<<  std::endl;
                 }   
-            } 
+          //  } 
            }
         }
         else if (rd_.tc_.walking_enable == 3.0)
@@ -726,10 +738,10 @@ void CustomController::computeFast()
                 }
             }
             cc_mutex.unlock();
-
+       
             walking_init_tick++;
             
-                
+                file[1] << rd_.link_[Pelvis].xipos(0)<<"\t" << rd_.link_[Right_Foot].xpos(1) << "\t"<< rd_.link_[Left_Foot].xpos(1) << std::endl; 
             //file[1] << rd_.link_[COM_id].xpos(0) << "\t" << rd_.link_[COM_id].xpos(1) << "\t" << rd_.link_[COM_id].v(0) << "\t" << rd_.link_[COM_id].v(1) << "\t" << ZMP_FT_l(0) << "\t" << ZMP_FT_l(1) << "\t" << COM_float_current.translation()(0) << "\t" << COM_float_current.translation()(1) << "\t" << COM_float_current.translation()(2) << "\t" << rd_.total_mass_ << "\t" << std::endl;
         }
     }
