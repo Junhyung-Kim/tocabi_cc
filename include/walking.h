@@ -332,6 +332,7 @@ public:
 
     double m;
     bool vib_est = false;
+    bool sim_mode;
     double dob_gain;
 private:
 };

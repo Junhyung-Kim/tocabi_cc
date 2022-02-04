@@ -76,8 +76,8 @@ apk_sr : 0.05
 
 com_gain : 0.5
 
-pelv_xp : -0.5
-pelv_yp : -0.8
+pelv_xp : -0.3
+pelv_yp : -0.6
 zmp_xp : 0.0
 zmp_yp : 0.0
 
@@ -90,15 +90,15 @@ T_fy : 3.0
 K_fz : 0.0001
 T_fz : 3.0
 
-dobrgain1 : -2
-dobrgain2 : -2
-dobrgain3 : -2
-dobrgain4 : -2
-dobrgain5 : -2
-dobrgain6 : -2
+dobrgain1 : -0.0
+dobrgain2 : -0.0
+dobrgain3 : -0.0
+dobrgain4 : -0.0
+dobrgain5 : -0.0
+dobrgain6 : -0.0
 
 ft : 0
 dist : 0
 
 sim_mode : false
-dob_gain : 2.5
+dob_gain : 2.7

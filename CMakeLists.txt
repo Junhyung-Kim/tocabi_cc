@@ -23,9 +23,7 @@ else()
 endif()
 
 find_package(catkin REQUIRED
-  roscpp
   std_msgs 
-  message_generation
   tocabi_lib
   tocabi_msgs
   eigen_conversions
@@ -49,9 +47,7 @@ catkin_package(
 include_directories(
     include
     ${catkin_INCLUDE_DIRS}
-    -lboost_system 
-    -lpinocchio
-    -lurdfdom_model
+
 )
 
 add_library(${PROJECT_NAME}

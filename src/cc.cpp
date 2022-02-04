@@ -142,6 +142,8 @@ CustomController::CustomController(RobotData &rd) : rd_(rd) //, wbc_(dc.wbc_)
 
     nh.getParam("/tocabi_controller/dist", dist);
 
+    nh.getParam("/tocabi_controller/sim_mode", sim_mode);
+
     mobgain.push_back(dobrgain1);
     mobgain.push_back(dobrgain2);
     mobgain.push_back(dobrgain3);
@@ -176,15 +178,14 @@ CustomController::CustomController(RobotData &rd) : rd_(rd) //, wbc_(dc.wbc_)
     std::cout << "Robot total mass" << rd_.total_mass_ << std::endl;
     ControlVal_.setZero();
     
-    //ROS_INFO("aaa");
+    ROS_INFO("aaa");
  
-  // pinocchio::buildModels::manipulator(model);
-   // const std::string urdf_name = std::string("/home/dyros/pinocchio/models/baxter_simple.urdf");
-    //catkin_ws/src/dyros_tocabi_v2/tocabi_description/robots/dyros_tocabi.urdf");
-    //model = pinocchio::urdf::buildModel(urdf_name, model, true);
+  //  const std::string urdf_name = std::string("/home/dyros/pinocchio/models/baxter_simple.urdf");
+   // model = pinocchio::urdf::buildModel(urdf_name, model, true);
   
-   // ROS_INFO("ssssaa");
+    ROS_INFO("ssssaa");
 
+  // pinocchio::buildModels::manipulator(model);
    // pinocchio::urdf::buildModel("/home/dyros/catkin_ws/src/dyros_tocabi_v2/tocabi_description/robots/dyros_tocabi.urdf", model);
 /*    pinocchio::Data data(model);
     model_data = data;
@@ -350,7 +351,7 @@ void CustomController::computeSlow()
                     WBC::SetContact(rd_, rd_.ee_[0].contact, rd_.ee_[1].contact);
                     TorqueGrav = WBC::GravityCompensationTorque(rd_);
 
-                    if (rd_.sim_mode == false)
+                    if (sim_mode == false)
                     {
                         TorqueGrav(1) = 1.2 * TorqueGrav(1);
                         TorqueGrav(7) = 1.2 * TorqueGrav(7);
@@ -677,23 +678,17 @@ void CustomController::computeFast()
                 //if (walking_tick % 5 == 0)
            //     file[1] << walking_tick << "\t"<< mpc_cycle << "\t" << zmp_refx(walking_tick) <<"\t" << rd_.link_[COM_id].xpos(0) << "\t" << com_mpcx << "\t" << ZMP_FT_l(0) << "\t" << zmp_mpcx << "\t" <<xL[walking_tick][0]<<"\t" << xU[walking_tick][0] <<"\t"<< rd_.link_[COM_id].v(1) << "\t" << rd_.link_[COM_id].xpos(1) << "\t" <<hpipm_statusy<<"\t" << com_mpcy << "\t" << ZMP_FT_l(1) << "\t" << ZMP_FT(1) << "\t" << zmp_mpcy << "\t" << rd_.link_[COM_id].xpos(2) << "\t" << H_data(3) << "\t" << mom_mpcy << "\t" << H_data(4) << "\t" << mom_mpcx << "\t" << control_input(0) << "\t" << control_input(1) <<std::endl;
 
-           // if(walking_tick != walking_tick_prev)
-           // {
-               
                 walking_tick_prev = walking_tick;
                 if(rd_.tc_.MPC == true)
                 {
                     file[1] << walking_tick << "\t"<< mpc_cycle << "\t" << mpc_cycle_prev << "\t" <<hpipm_statusy<<"\t"<< zmp_refy(walking_tick) <<"\t" << rd_.link_[COM_id].xpos(1) << "\t" << com_mpcy << "\t" << ZMP_FT_l(1) << "\t" << zmp_mpcy << "\t" <<yL[walking_tick][0]<<"\t" << yU[walking_tick][0] <<"\t"<< rd_.link_[COM_id].v(1) << "\t" << rd_.link_[COM_id].xpos(1) << "\t" << com_mpcy << "\t" << ZMP_FT_l(1) << "\t" << ZMP_FT(1) << "\t" << zmp_mpcy << "\t" << com_mpcdy << "\t" <<rd_.link_[COM_id].v(1) << "\t"<< H_roll << "\t" << mom_mpcy  <<std::endl;
-                    //file[0] << walking_tick << "\t"<< mpc_cycle << "\t" <<mpct1<<"\t"<<hpipm_statusx<<"\t"<< zmp_refx(walking_tick) <<"\t" << rd_.link_[COM_id].xpos(0) << "\t" << com_mpcx << "\t" << ZMP_FT_l(0) << "\t" << zmp_mpcx << "\t" <<xL[walking_tick][0]<<"\t" << xU[walking_tick][0] <<"\t"<< rd_.link_[COM_id].v(0) << "\t" << rd_.link_[COM_id].xpos(0) << "\t" << com_mpcx << "\t" << ZMP_FT_l(0) << "\t" << ZMP_FT(1) << "\t" << zmp_mpcy << "\t" << com_mpcdy << "\t" <<rd_.link_[COM_id].v(1) << "\t"<< H_pitch << "\t" << mom_mpcx <<"\t"<<rd_.link_[Right_Foot].xpos(0)  <<"\t"<<rd_.link_[Left_Foot].xpos(0) << "\t"<< RFx_trajectory_float(walking_tick)<< "\t"<< LFx_trajectory_float(walking_tick) <<  std::endl;//"\t" << H_leg(0) << "\t" << H_leg(1)<< "\t" << F_err_l(0)<<"\t"<<F_err_l(1)<<"\t"<<mot_mpcx << "\t"<<mot_mpcy<<std::endl;
                     file[0] <<hpipm_statusx<<"\t"<<PELV_trajectory_float_c.translation()(0) <<"\t" << rd_.link_[COM_id].xpos(0) << "\t" << com_mpcx << "\t" << ZMP_FT_l(0) << "\t" << zmp_mpcx << "\t" <<xL[walking_tick][0]<<"\t" << xU[walking_tick][0] <<"\t"<< rd_.link_[COM_id].v(0) << "\t" << rd_.link_[COM_id].xpos(0) << "\t" << com_mpcx << "\t" << ZMP_FT_l(0) << "\t" << ZMP_FT(1) << "\t" << zmp_mpcy << "\t" << com_mpcdy << "\t" <<rd_.link_[COM_id].v(1) << "\t"<< H_pitch << "\t" << mom_mpcx <<"\t"<<rd_.link_[Right_Foot].xpos(0)  <<"\t"<<rd_.link_[Left_Foot].xpos(0) << "\t"<< RFx_trajectory_float(walking_tick)<< "\t"<< LFx_trajectory_float(walking_tick) <<  std::endl;//"\t" << H_leg(0) << "\t" << H_leg(1)<< "\t" << F_err_l(0)<<"\t"<<F_err_l(1)<<"\t"<<mot_mpcx << "\t"<<mot_mpcy<<std::endl;
-                
                 }
                 else
                 {
-                    file[1]<<-aaa1111<<"\t"<<COM_float_current.translation()(0)<<"\t"<<com_float(0) <<"\t" << comR_float(0)  <<"\t"<<com_sup(0)<<"\t"<<comR_sup(0)<<std::endl;
-                    file[0] <<com_refx(walking_tick) <<"\t"<<rd_.link_[COM_id].xpos(0) <<"\t"<<com_refy(walking_tick)<<"\t"<<rd_.link_[COM_id].xpos(1)  <<"\t"<< ZMP_FT_l(0)<<"\t"<<ZMP_FT_l(1)<<  std::endl;
-                }   
-          //  } 
+                    file[1] <<COM_float_current.translation()(0)<<"\t"<<com_float(0) <<"\t" << comR_float(0)  <<"\t"<<com_sup(1)<<"\t"<<comR_sup(1)<<std::endl;
+                    file[0] <<com_refx(walking_tick) <<"\t"<<rd_.link_[Pelvis].xpos(0) <<"\t"<< pelvR_sup(1)  <<"\t"<<com_sup(1)<<"\t"<<com_refy(walking_tick)<<"\t"<<rd_.link_[Pelvis].xpos(1)  <<"\t"<< rd_.link_[Right_Foot].xpos(0)<<"\t"<< rd_.link_[Right_Foot].xpos(1)<<"\t"<< rd_.link_[Right_Foot].xpos(2)<<"\t"<< rd_.link_[Left_Foot].xpos(0)<<"\t"<< rd_.link_[Left_Foot].xpos(1)<<"\t"<< rd_.link_[Left_Foot].xpos(2) << "\t"<<rd_.q_desired(0) <<"\t"<<rd_.q_(0)<< "\t"<<rd_.q_desired(1) <<"\t"<<rd_.q_(1)<< "\t"<<rd_.q_desired(2) <<"\t"<<rd_.q_(2)<< "\t"<<rd_.q_desired(3) <<"\t"<<rd_.q_(3)<< "\t"<<rd_.q_desired(4) <<"\t"<<rd_.q_(4)<< "\t"<<rd_.q_desired(5) <<"\t"<<rd_.q_(5)<< std::endl;
+                }    
            }
         }
         else if (rd_.tc_.walking_enable == 3.0)
@@ -740,9 +735,6 @@ void CustomController::computeFast()
             cc_mutex.unlock();
        
             walking_init_tick++;
-            
-                file[1] << rd_.link_[Pelvis].xipos(0)<<"\t" << rd_.link_[Right_Foot].xpos(1) << "\t"<< rd_.link_[Left_Foot].xpos(1) << std::endl; 
-            //file[1] << rd_.link_[COM_id].xpos(0) << "\t" << rd_.link_[COM_id].xpos(1) << "\t" << rd_.link_[COM_id].v(0) << "\t" << rd_.link_[COM_id].v(1) << "\t" << ZMP_FT_l(0) << "\t" << ZMP_FT_l(1) << "\t" << COM_float_current.translation()(0) << "\t" << COM_float_current.translation()(1) << "\t" << COM_float_current.translation()(2) << "\t" << rd_.total_mass_ << "\t" << std::endl;
         }
     }
 }

@@ -27,7 +27,7 @@ void WalkingController::walkingCompute(RobotData &rd)
     desired_leg_q_temp = desired_leg_q;
 
     if (dob == 1)
-    {
+    {   
         inverseKinematicsdob(rd);
     }
 
@@ -577,13 +577,16 @@ void WalkingController::setCpPosition(RobotData &rd)
     {
         if(rd.tc_.MPC == false)
         {
-            capturePoint_offsety(i) = 0.03;
+            if(i%2 == 0)
+                capturePoint_offsety(i) = 0.01; //RIGHTTFOOT
+            else
+                capturePoint_offsety(i) = 0.02; //LEFTs
         }
         else
         {
             capturePoint_offsety(i) = 0.00;
         }
-        capturePoint_offsetx(i) = 0.03;
+        capturePoint_offsetx(i) = 0.01;
     }
 
     if (com_control == 0)
@@ -1970,7 +1973,7 @@ void WalkingController::inverseKinematicsdob(RobotData &Robot)
     double rejectionGainSim[12] = {dobrgain1, dobrgain2, dobrgain3, dobrgain4, dobrgain5, dobrgain6, dobrgain1, dobrgain2, dobrgain3, dobrgain4, dobrgain5, dobrgain6};//{-3.0, -3.0, -3.0, -3.0, -3.0, -3.0, -3.0, -3.0, -3.0, -3.0, -3.0, -3.0};//-9.0, -9.0, -9.0, -9.0, -15.0, -15.0, -9.0, -9.0, -9.0, -9.0, -15.0, -15.0};
     double rejectionGainReal[12] = {dobrgain1, dobrgain2, dobrgain3, dobrgain4, dobrgain5, dobrgain6, dobrgain1, dobrgain2, dobrgain3, dobrgain4, dobrgain5, dobrgain6};
     double rejectionGain_[12];
-    double compliantTick = 0.15 * wk_Hz;
+    double compliantTick = 0.1 * wk_Hz;
 
     memcpy(rejectionGain_, rejectionGainSim, sizeof(rejectionGainSim));
 
@@ -2431,9 +2434,10 @@ void WalkingController::comController(RobotData &Robot)
     
     if(Robot.tc_.MPC == false)
     {
-        PELV_trajectory_float_c.translation()(0) =  pelvR_sup(0) + pelv_xp*(pelvR_sup(0) - com_sup(0));//(PELV_float_current.translation()(0) - com_refx(walking_tick));   
-        PELV_trajectory_float_c.translation()(1) =  pelvR_sup(1) + pelv_yp*(pelvR_sup(1) - com_sup(1));//COM_float_current.translation()(1) - com_refy(walking_tick));
-       // PELV_trajectory_float_c.translation()(0) =  pelvR_sup(0) + pelv_xp*(comR_sup(0) - com_sup(0));//(PELV_float_current.translation()(0) - com_refx(walking_tick));
+        // PELV_trajectory_float_c.translation()(0) =  pelvR_sup(0) + pelv_xp*(comR_sup(0) - com_sup(0));//(PELV_float_current.translation()(0) - com_refx(walking_tick));
+    
+        PELV_trajectory_float_c.translation()(0) =  com_sup(0) + pelv_xp*(pelvR_sup(0) - com_sup(0));//(PELV_float_current.translation()(0) - com_refx(walking_tick));   
+        PELV_trajectory_float_c.translation()(1) =  com_sup(1) + pelv_yp*(pelvR_sup(1) - com_sup(1));//COM_float_current.translation()(1) - com_refy(walking_tick));
        
         PELV_trajectory_float_c.translation()(2) = pelv_init_sup;//PELV_float_init.translation()(2);
         PELV_trajectory_float_c.linear() = PELV_float_init.linear();
@@ -2448,9 +2452,9 @@ void WalkingController::comController(RobotData &Robot)
 
         RF_trajectory_float.linear() = RF_float_init.linear();
         LF_trajectory_float.linear() = LF_float_init.linear(); 
-   
-    /*    PELV_trajectory_float_c.translation()(0) = com_refx(walking_tick) - com_offset + pelv_xp*(comR_sup(0) - com_sup(0));//(PELV_float_current.translation()(0) - com_refx(walking_tick));  
-        PELV_trajectory_float_c.translation()(1) = com_refy(walking_tick) + pelv_yp*(comR_sup(1) - com_sup(1));//COM_float_current.translation()(1) - com_refy(walking_tick));
+   /*
+        PELV_trajectory_float_c.translation()(0) = com_refx(walking_tick);//PELV_float_current.translation()(0) + pelv_xp*(PELV_float_current.translation()(0) - com_refx(walking_tick));  
+        PELV_trajectory_float_c.translation()(1) = com_refy(walking_tick);// PELV_float_current.translation()(1) + pelv_yp*(PELV_float_current.translation()(1) - com_refy(walking_tick));  //(comR_sup(1) - com_sup(1));//COM_float_current.translation()(1) - com_refy(walking_tick));
        
         PELV_trajectory_float_c.translation()(2) = PELV_float_init.translation()(2);
         PELV_trajectory_float_c.linear() = PELV_float_init.linear();
@@ -2464,8 +2468,8 @@ void WalkingController::comController(RobotData &Robot)
         LF_trajectory_float.translation()(2) = LFz_trajectory_float(walking_tick);
 
         RF_trajectory_float.linear() = RF_float_init.linear();
-        LF_trajectory_float.linear() = LF_float_init.linear();*/
-    }
+        LF_trajectory_float.linear() = LF_float_init.linear();
+    */}
     else
     {
         if (walking_tick > 300)
