@@ -48,17 +48,17 @@ void WalkingController::getRobotState(RobotData &rd)
 
     PELV_float_current.translation() = rd.link_[Pelvis].xipos;
     PELV_float_current.linear() = rd.link_[Pelvis].rotm;
- Eigen::Vector3d pelv_rpy_cur_;
+    Eigen::Vector3d pelv_rpy_cur_;
     pelv_rpy_cur_ = DyrosMath::rot2Euler(PELV_float_current.linear());
 
     pelv_yaw.setIdentity();
     pelv_yaw.translation().setZero();
     pelv_yaw.linear() = /*PELV_float_init.linear();*/DyrosMath::rotateWithZ(pelv_rpy_cur_(2));
 
-   /* COM_float_current = pelv_yaw.inverse() * COM_float_current;
+    COM_float_current = pelv_yaw.inverse() * COM_float_current;
     PELV_float_current = pelv_yaw.inverse() * PELV_float_current;
     RF_float_current = pelv_yaw.inverse() * RF_float_current;
-    LF_float_current = pelv_yaw.inverse() * LF_float_current;*/
+    LF_float_current = pelv_yaw.inverse() * LF_float_current;
     if (foot_step(current_step_num, 6) == 0)
     {
         SUF_float_current = RF_float_current;
@@ -178,21 +178,20 @@ void WalkingController::getRobotInitState(RobotData &rd)
             }
         }
       
-      /*  Eigen::Vector3d pelv_rpy_init_;
+        Eigen::Vector3d pelv_rpy_init_;
         pelv_rpy_init_ = DyrosMath::rot2Euler(PELV_float_init.linear());
 
         pelv_yaw.setIdentity();
         pelv_yaw.translation().setZero();
-        pelv_yaw.translation() = PELV_float_init.translation();
+        //pelv_yaw.translation() = PELV_float_init.translation();
         pelv_yaw.linear() = DyrosMath::rotateWithZ(pelv_rpy_init_(2));
 
-  /*      RF_float_init = pelv_yaw.inverse() * RF_float_init;
+        RF_float_init = pelv_yaw.inverse() * RF_float_init;
         LF_float_init = pelv_yaw.inverse() * LF_float_init;
         PELV_float_init = pelv_yaw.inverse() * PELV_float_init;
         COM_float_init = pelv_yaw.inverse() * COM_float_init;
         HLR_float_init = pelv_yaw.inverse() * HLR_float_init;
         HRR_float_init = pelv_yaw.inverse() * HRR_float_init;
-*/
 
         //////Real Robot Support Foot Frame//////
         RF_support_init = DyrosMath::multiplyIsometry3d(DyrosMath::inverseIsometry3d(SUF_float_init), RF_float_init);
@@ -2315,7 +2314,7 @@ void WalkingController::supportToFloatPattern(RobotData &Robot)
 
         pelvSR_float.segment<3>(0) = PSR_float.translation();
         pelvSR_float(3) = 1.0;
-      //  com_float = pelv_yaw.inverse() * com_float;
+        com_float = pelv_yaw.inverse() * com_float;
         
         com_sup = DyrosMath::inverseIsometry3d(SFf) * com_float;
         comR_sup = DyrosMath::inverseIsometry3d(SFf) * comR_float;
