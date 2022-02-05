@@ -169,8 +169,8 @@ public:
     int mpct1_prev = 1;
     int mpct2 = 1;
     int mpct2_prev = 1;
-    std::atomic<int> mpc_cycle = 0;
-    std::atomic<int> mpc_cycle_prev = 0;
+    std::atomic<int> mpc_cycle;
+    std::atomic<int> mpc_cycle_prev;
 
     //momentumControl
     CQuadraticProgram QP_m;

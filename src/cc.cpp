@@ -30,6 +30,8 @@ CustomController::CustomController(RobotData &rd) : rd_(rd) //, wbc_(dc.wbc_)
     {
         file[i].open(FILE_NAMES[i].c_str(), std::ios_base::out);
     }
+    mpc_cycle = 0;
+    mpc_cycle_prev = 0;
 
     rd_.mujoco_dist = false;
     ros::NodeHandle nh;

@@ -90,6 +90,9 @@ public:
     Eigen::Vector2d RT, LT, RT_prev, LT_prev, RT_l, LT_l, RT_mu, LT_mu;
     Eigen::Vector3d RF_d, LF_d, z_ctrl;
     double K_fx, T_fx, K_fy, T_fy, K_fz, T_fz;
+    Eigen::Isometry3d pelv_yaw;
+    double pelv_init_sup;
+    bool debug1 = false;
 
     //mutex
     std::mutex cc_mutex;
@@ -97,7 +100,8 @@ public:
 
     //walkingInit
     Eigen::VectorQd q_target, q_init;
-
+    Eigen::Vector4d com_float, comR_float;
+    double aaa1111;
     //walking
     void walkingCompute(RobotData &rd);
     void getRobotInitState(RobotData &rd);
@@ -327,6 +331,7 @@ public:
 
     double m;
     bool vib_est = false;
-
+    bool sim_mode;
+    double dob_gain;
 private:
 };
