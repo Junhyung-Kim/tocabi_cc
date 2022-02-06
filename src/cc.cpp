@@ -642,8 +642,8 @@ void CustomController::computeFast()
 
             if(walking_tick != walking_tick_prev)
             {
-                file[1] <<hpipm_statusx<<"\t"<<com_mpcx <<"\t"<<zmp_mpcx<<"\t"<<mom_mpcx <<"\t"<<xL[walking_tick][2]<<"\t"<<xU[walking_tick][2]<<std::endl;
-                file[0] <<hpipm_statusy<<"\t"<<com_mpcy <<"\t"<<zmp_mpcy<<"\t"<<mom_mpcy <<"\t"<<yL[walking_tick][2]<<"\t"<<yU[walking_tick][2]<<std::endl;
+                file[1] <<hpipm_statusx<<"\t"<<com_mpcx <<"\t"<<rd_.link_[COM_id].xipos(0)<<"\t"<<zmp_mpcx<<"\t"<<ZMP_FT_l_mu(0)<<"\t"<<mom_mpcx <<"\t"<<xL[walking_tick][2]<<"\t"<<xU[walking_tick][2]<<"\t"<<xL_mu[mpc_cycle][2]<<"\t"<<xU_mu[mpc_cycle][2]<<std::endl;
+                file[0] <<hpipm_statusy<<"\t"<<com_mpcy <<"\t"<<rd_.link_[COM_id].xipos(0)<<"\t"<<zmp_mpcy<<"\t"<<ZMP_FT_l_mu(1)<<"\t"<<mom_mpcy <<"\t"<<yL[walking_tick][2]<<"\t"<<yU[walking_tick][2]<<std::endl;
                 //file[1] << walking_tick << "\t"<< mpc_cycle << "\t" << mpc_cycle_prev << "\t" <<hpipm_statusy<<"\t"<< zmp_refy(walking_tick) <<"\t" << rd_.link_[COM_id].xpos(1) << "\t" << com_mpcy << "\t" << ZMP_FT_l(1) << "\t" << zmp_mpcy << "\t" <<yL[walking_tick][2]<<"\t" << yU[walking_tick][2] <<"\t"<< rd_.link_[COM_id].v(1) << "\t" << rd_.link_[COM_id].xpos(1) << "\t" << com_mpcy << "\t" << ZMP_FT_l(1) << "\t" << ZMP_FT(1) << "\t" << zmp_mpcy << "\t" << com_mpcdy << "\t" <<rd_.link_[COM_id].v(1) << "\t"<< H_roll << "\t" << mom_mpcy  <<std::endl;            
                 //file[0] << walking_tick << "\t"<< mpc_cycle << "\t" <<mpct1<<"\t"<<hpipm_statusx<<"\t"<< zmp_refx(walking_tick) <<"\t" << rd_.link_[COM_id].xpos(0) << "\t" << com_mpcx << "\t" << ZMP_FT_l(0) << "\t" << zmp_mpcx << "\t" <<xL[walking_tick][2]<<"\t" << xU[walking_tick][2] <<"\t"<< rd_.link_[COM_id].v(0) << "\t" << rd_.link_[COM_id].xpos(0) << "\t" << com_mpcx << "\t" << ZMP_FT_l(0) << "\t" << ZMP_FT(1) << "\t" << zmp_mpcy << "\t" << com_mpcdy << "\t" <<rd_.link_[COM_id].v(1) << "\t"<< H_pitch << "\t" << mom_mpcx  << "\t" << H_leg(0) << "\t" << H_leg(1)<< "\t" << F_err_l(0)<<"\t"<<F_err_l(1)<<"\t"<<mot_mpcx << "\t"<<mot_mpcy<<"\t"<<rd_.q_desired(12)<<"\t"<<rd_.q_desired(13)<<"\t"<<rd_.q_desired(14)<<"\t"<<rd_.q_desired(16)<<"\t"<<rd_.q_desired(17)<<"\t"<<rd_.q_desired(26)<<"\t"<<rd_.q_desired(27)<<"\t"<<H_leg1(0)<<"\t"<<H_leg1(1)<<std::endl;
             } 
@@ -935,13 +935,9 @@ void CustomController::mpc_variablex()
     {
         if (mpc_cycle > 300)
         {   
-           
-         //   x11x[0] = rd_.link_[COM_id].xpos(0);
-         //   x11x[1] = rd_.link_[COM_id].v(0);
-         //   x11x[2] = ZMP_FT_l_mu(0);
-        
-           // if(mpc_cycle > 362 && mpct1 < 2)
-             //   x11x[4] = H_pitch;   
+            x11x[0] = rd_.link_[COM_id].xpos(0);
+            x11x[1] = rd_.link_[COM_id].v(0);
+            x11x[2] = ZMP_FT_l_mu(0);  
         }
         hd_lbxx[0] = x11x;
         hd_ubxx[0] = x11x;
@@ -975,17 +971,22 @@ void CustomController::mpc_variabley()
     }
     else
     {
-       /* if (mpc_cycle > 100)// && mpc_cycle % 4 == 0)
+        if (mpc_cycle > 100)// && mpc_cycle % 4 == 0)
         {
-                x11y[0] = rd_.link_[COM_id].xpos(1);
-                x11y[1] = rd_.link_[COM_id].v(1);
-
+            x11y[0] = rd_.link_[COM_id].xpos(1);
+            x11y[1] = rd_.link_[COM_id].v(1);
+            x11y[2] = ZMP_FT_l_mu(1);
+            
             if(mpct2 < 2)
             {
-              x11y[2] = ZMP_FT_l_mu(1);
-              x11y[4] = H_roll;
+            //  x11y[4] = H_roll;
             }
-        }*/
+        }
+
+       // x11y[0] = rd_.link_[COM_id].xpos(1);
+       // x11y[1] = rd_.link_[COM_id].v(1);
+
+
         hd_lbxy[0] = x11y;
         hd_ubxy[0] = x11y;
     }
@@ -1179,7 +1180,6 @@ void CustomController::flyWheelModel(double Ts, int nx, int nu, double *Ax, doub
     }
     
     Bx[2] = 1.00 * Ts;
-   
     By[2] = 1.00 * Ts;
    
     std::cout << "total_mass" << std::endl;
@@ -1556,9 +1556,9 @@ void CustomController::mpcVariableInit()
     }
 
     //INPUT CONSTRAINT
-    d_lbu0x[0] = -1.0;
+    d_lbu0x[0] = -3.0;
     //d_lbu0x[1] = -10;
-    d_ubu0x[0] = 1.0;
+    d_ubu0x[0] = 3.0;
    // d_ubu0x[1] = 10;
 
     d_lbu0y[0] = -3.2;
@@ -1566,9 +1566,9 @@ void CustomController::mpcVariableInit()
     d_ubu0y[0] = 3.2;
   //  d_ubu0y[1] = 15;
 
-    d_lbu1x[0] = -1.0;
+    d_lbu1x[0] = -3.0;
    // d_lbu1x[1] = -10;
-    d_ubu1x[0] = 1.0;
+    d_ubu1x[0] = 3.0;
    // d_ubu1x[1] = 10;
 
     d_lbu1y[0] = -3.2;
