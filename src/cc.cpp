@@ -937,12 +937,12 @@ void CustomController::mpc_variablex()
         if (mpc_cycle > 300)
         {   
            
-         //   x11x[0] = rd_.link_[COM_id].xpos(0);
-         //   x11x[1] = rd_.link_[COM_id].v(0);
-         //   x11x[2] = ZMP_FT_l_mu(0);
+            x11x[0] = rd_.link_[COM_id].xpos(0);
+            x11x[1] = rd_.link_[COM_id].v(0);
+            x11x[2] = ZMP_FT_l_mu(0);
         
            // if(mpc_cycle > 362 && mpct1 < 2)
-             //   x11x[4] = H_pitch;   
+            x11x[4] = H_pitch;   
         }
         hd_lbxx[0] = x11x;
         hd_ubxx[0] = x11x;
@@ -987,6 +987,11 @@ void CustomController::mpc_variabley()
               x11y[4] = H_roll;
             }
         }*/
+
+        x11y[0] = rd_.link_[COM_id].xpos(1);
+        x11y[1] = rd_.link_[COM_id].v(1);
+        x11y[2] = ZMP_FT_l_mu(1);
+        x11y[4] = H_roll;
         hd_lbxy[0] = x11y;
         hd_ubxy[0] = x11y;
     }
