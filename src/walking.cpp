@@ -2448,26 +2448,26 @@ void WalkingController::comController(RobotData &Robot)
     */}
     else
     {
-        if(walking_tick > 300)
+         if(walking_tick > 300)
         { 
-            PELV_trajectory_float_c.translation()(0) = com_sup(0) - com_offset  + pelv_xp*(comR_sup(0)  - com_sup(0)) - zmp_xp *(ZMP_sup(0) - ZMP_r_sup(0));    
+            PELV_trajectory_float_c.translation()(0) = com_mpcx - com_offset  + pelv_xp*(Robot.link_[COM_id].xpos(0)  - com_mpcx) - zmp_xp *(ZMP_sup(0) - ZMP_r_sup(0));    
         }
         else
         {
-            PELV_trajectory_float_c.translation()(0) = com_sup(0) - com_offset  + pelv_xp*(comR_sup(0)- com_sup(0));
+            PELV_trajectory_float_c.translation()(0) = com_mpcx - com_offset  + pelv_xp*(Robot.link_[COM_id].xpos(0)- com_mpcx);
         }
 
-        PELV_trajectory_float_c.translation()(1) = pelvR_sup(1) + pelv_yp*(comR_sup(1) - com_sup(1)) - zmp_yp *(ZMP_sup(1) - ZMP_r_sup(1));
-        PELV_trajectory_float_c.translation()(2) = 0.69;   
+        PELV_trajectory_float_c.translation()(1) = Robot.link_[Pelvis].xipos(1) + pelv_yp*(Robot.link_[COM_id].xpos(1) - com_mpcy) - zmp_yp *(ZMP_sup(1) - ZMP_r_sup(1));
+        PELV_trajectory_float_c.translation()(2) = PELV_float_init.translation()(2);   
         PELV_trajectory_float_c.linear() = PELV_float_init.linear();
 
-        RF_trajectory_float.translation()(0) = RF_sup(0);
-        RF_trajectory_float.translation()(1) = RF_sup(1);
-        RF_trajectory_float.translation()(2) = RF_sup(2);
+        RF_trajectory_float.translation()(0) = RFx_trajectory_float(walking_tick);// - 0.9*(Robot.link_[Right_Foot].xpos(0) - RFx_trajectory_float(walking_tick));
+        RF_trajectory_float.translation()(1) = RFy_trajectory_float(walking_tick);// - 0.7*(Robot.link_[Right_Foot].xpos(1) - RFy_trajectory_float(walking_tick));
+        RF_trajectory_float.translation()(2) = RFz_trajectory_float(walking_tick);
 
-        LF_trajectory_float.translation()(0) = LF_sup(0);
-        LF_trajectory_float.translation()(1) = LF_sup(1);
-        LF_trajectory_float.translation()(2) = LF_sup(2);
+        LF_trajectory_float.translation()(0) = LFx_trajectory_float(walking_tick);// - 0.9*(Robot.link_[Left_Foot].xpos(0) - LFx_trajectory_float(walking_tick));
+        LF_trajectory_float.translation()(1) = LFy_trajectory_float(walking_tick);// - 0.7*(Robot.link_[Left_Foot].xpos(1) - LFy_trajectory_float(walking_tick));
+        LF_trajectory_float.translation()(2) = LFz_trajectory_float(walking_tick);
     }
 
     if(Robot.ankleHybrid == true)
