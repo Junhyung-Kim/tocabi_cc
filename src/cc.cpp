@@ -642,8 +642,11 @@ void CustomController::computeFast()
 
             if(walking_tick != walking_tick_prev)
             {
-                file[1] << walking_tick << "\t"<< mpc_cycle << "\t" << mpc_cycle_prev << "\t" <<hpipm_statusy<<"\t"<< zmp_refy(walking_tick) <<"\t" << rd_.link_[COM_id].xpos(1) << "\t" << com_mpcy << "\t" << ZMP_FT_l(1) << "\t" << zmp_mpcy << "\t" <<yL[walking_tick][2]<<"\t" << yU[walking_tick][2] <<"\t"<< rd_.link_[COM_id].v(1) << "\t" << rd_.link_[COM_id].xpos(1) << "\t" << com_mpcy << "\t" << ZMP_FT_l(1) << "\t" << ZMP_FT(1) << "\t" << zmp_mpcy << "\t" << com_mpcdy << "\t" <<rd_.link_[COM_id].v(1) << "\t"<< H_roll << "\t" << mom_mpcy  <<std::endl;            
-                file[0] << walking_tick << "\t"<< mpc_cycle << "\t" <<mpct1<<"\t"<<hpipm_statusx<<"\t"<< zmp_refx(walking_tick) <<"\t" << rd_.link_[COM_id].xpos(0) << "\t" << com_mpcx << "\t" << ZMP_FT_l(0) << "\t" << zmp_mpcx << "\t" <<xL[walking_tick][2]<<"\t" << xU[walking_tick][2] <<"\t"<< rd_.link_[COM_id].v(0) << "\t" << rd_.link_[COM_id].xpos(0) << "\t" << com_mpcx << "\t" << ZMP_FT_l(0) << "\t" << ZMP_FT(1) << "\t" << zmp_mpcy << "\t" << com_mpcdy << "\t" <<rd_.link_[COM_id].v(1) << "\t"<< H_pitch << "\t" << mom_mpcx  << "\t" << H_leg(0) << "\t" << H_leg(1)<< "\t" << F_err_l(0)<<"\t"<<F_err_l(1)<<"\t"<<mot_mpcx << "\t"<<mot_mpcy<<"\t"<<rd_.q_desired(12)<<"\t"<<rd_.q_desired(13)<<"\t"<<rd_.q_desired(14)<<"\t"<<rd_.q_desired(16)<<"\t"<<rd_.q_desired(17)<<"\t"<<rd_.q_desired(26)<<"\t"<<rd_.q_desired(27)<<"\t"<<H_leg1(0)<<"\t"<<H_leg1(1)<<std::endl;
+                file[1] <<hpipm_statusx<<"\t"<<com_mpcx <<"\t"<<zmp_mpcx<<"\t"<<mom_mpcx <<"\t"<<xL[walking_tick][0]<<"\t"<<xU[walking_tick][0]<<"\t"<<xL[walking_tick][2]<<"\t"<<xU[walking_tick][2]<<"\t"<<xL[walking_tick][3]<<"\t"<<xU[walking_tick][3]<<std::endl;
+                
+                file[0] <<hpipm_statusy<<"\t"<<com_mpcy <<"\t"<<zmp_mpcy<<"\t"<<mom_mpcy <<"\t"<<yL[walking_tick][0]<<"\t"<<yU[walking_tick][0]<<"\t"<<yL[walking_tick][2]<<"\t"<<yU[walking_tick][2]<<"\t"<<yL[walking_tick][3]<<"\t"<<yU[walking_tick][3]<<std::endl;
+                //file[1] << walking_tick << "\t"<< mpc_cycle << "\t" << mpc_cycle_prev << "\t" <<hpipm_statusy<<"\t"<< zmp_refy(walking_tick) <<"\t" << rd_.link_[COM_id].xpos(1) << "\t" << com_mpcy << "\t" << ZMP_FT_l(1) << "\t" << zmp_mpcy << "\t" <<yL[walking_tick][2]<<"\t" << yU[walking_tick][2] <<"\t"<< rd_.link_[COM_id].v(1) << "\t" << rd_.link_[COM_id].xpos(1) << "\t" << com_mpcy << "\t" << ZMP_FT_l(1) << "\t" << ZMP_FT(1) << "\t" << zmp_mpcy << "\t" << com_mpcdy << "\t" <<rd_.link_[COM_id].v(1) << "\t"<< H_roll << "\t" << mom_mpcy  <<std::endl;            
+                //file[0] << walking_tick << "\t"<< mpc_cycle << "\t" <<mpct1<<"\t"<<hpipm_statusx<<"\t"<< zmp_refx(walking_tick) <<"\t" << rd_.link_[COM_id].xpos(0) << "\t" << com_mpcx << "\t" << ZMP_FT_l(0) << "\t" << zmp_mpcx << "\t" <<xL[walking_tick][2]<<"\t" << xU[walking_tick][2] <<"\t"<< rd_.link_[COM_id].v(0) << "\t" << rd_.link_[COM_id].xpos(0) << "\t" << com_mpcx << "\t" << ZMP_FT_l(0) << "\t" << ZMP_FT(1) << "\t" << zmp_mpcy << "\t" << com_mpcdy << "\t" <<rd_.link_[COM_id].v(1) << "\t"<< H_pitch << "\t" << mom_mpcx  << "\t" << H_leg(0) << "\t" << H_leg(1)<< "\t" << F_err_l(0)<<"\t"<<F_err_l(1)<<"\t"<<mot_mpcx << "\t"<<mot_mpcy<<"\t"<<rd_.q_desired(12)<<"\t"<<rd_.q_desired(13)<<"\t"<<rd_.q_desired(14)<<"\t"<<rd_.q_desired(16)<<"\t"<<rd_.q_desired(17)<<"\t"<<rd_.q_desired(26)<<"\t"<<rd_.q_desired(27)<<"\t"<<H_leg1(0)<<"\t"<<H_leg1(1)<<std::endl;
             } 
            }
         }
@@ -717,10 +720,10 @@ void CustomController::computePlanner()
                 d_ocp_qp_ipm_arg_set_tol_ineq(&tol_ineq, &argx);
                 d_ocp_qp_ipm_arg_set_tol_comp(&tol_comp, &argx);
                 d_ocp_qp_ipm_arg_set_reg_prim(&reg_prim, &argx);*/
-                d_ocp_qp_ipm_arg_set_warm_start(&warm_start, &argx);
+              //  d_ocp_qp_ipm_arg_set_warm_start(&warm_start, &argx);
                // d_ocp_qp_ipm_arg_set_ric_alg(&ric_alg, &argx);
              //   d_ocp_qp_ipm_arg_set_split_step(&split_step, &argx);
-                argx.abs_form = 1.0;
+               // argx.abs_form = 1.0;
 
                 d_ocp_qp_dim_set_all(nx, nu, nbx, nbu, ng, nsbx, nsbu, nsg, &dimx);
                 qp_sizex = d_ocp_qp_memsize(&dimx);
@@ -737,7 +740,7 @@ void CustomController::computePlanner()
                 else
                     mu0 = 2.0;
                 
-                mode = SPEED_ABS;
+                mode = BALANCE;
                 //tol_stat = 1e+60;
 
                 iter_max = 80;
@@ -757,7 +760,7 @@ void CustomController::computePlanner()
                 ipm_arg_memy = malloc(ipm_arg_sizey);
                 d_ocp_qp_ipm_arg_create(&dimy, &argy, ipm_arg_memy);
                 d_ocp_qp_ipm_arg_set_default(mode, &argy);
-                d_ocp_qp_ipm_arg_set_mu0(&mu0, &argy);
+             /*   d_ocp_qp_ipm_arg_set_mu0(&mu0, &argy);
                 d_ocp_qp_ipm_arg_set_iter_max(&iter_max, &argy);
                 d_ocp_qp_ipm_arg_set_tol_stat(&tol_stat, &argy);
                 d_ocp_qp_ipm_arg_set_tol_eq(&tol_eq, &argy);
@@ -766,7 +769,7 @@ void CustomController::computePlanner()
                 d_ocp_qp_ipm_arg_set_reg_prim(&reg_prim, &argy);
                 d_ocp_qp_ipm_arg_set_warm_start(&warm_start, &argy);
                 d_ocp_qp_ipm_arg_set_ric_alg(&ric_alg, &argy);
-                
+                */
                 d_ocp_qp_dim_set_all(nx, nu, nbx, nbu, ng, nsbx, nsbu, nsg, &dimy);
                 qp_sizey = d_ocp_qp_memsize(&dimy);
                 qp_memy = malloc(qp_sizey);
@@ -862,23 +865,25 @@ void CustomController::computePlanner()
                     com_mpcx = x11x[0];
                     com_mpcdx = x11x[1];
                     zmp_mpcx = x11x[2];
+                    mom_mpcx = x11x[3];
                     
-                    if(mpct1 != 1 || mpct1_prev != 1)
+                  /*  if(mpct1 != 1 || mpct1_prev != 1)
                         mom_mpcx = (0.05*(softCx_s[mpc_cycle][0] * x11x[0] + softCx_s[mpc_cycle][1] * x11x[1] - softBoundx_s[mpc_cycle][0]) + 0.95*H_pitch) ;//x11x[4]; 
                     else
                         mom_mpcx = x11x[4];//-1.2*(softCx_s[mpc_cycle][0] * x11x[0] + softCx_s[mpc_cycle][1] * x11x[1] - softBoundx_s[mpc_cycle][0]);//x11x[4];    
-
+*/
                     com_mpcy = x11y[0];
                     com_mpcdy = x11y[1];
                     zmp_mpcy = x11y[2];
+                    mom_mpcy = x11y[3];
 
-                    if(mpct2 != 1 || mpct2_prev != 1)
+                 /*   if(mpct2 != 1 || mpct2_prev != 1)
                         mom_mpcy = (0.05*(softCy_s[mpc_cycle][0] * x11y[0] + softCy_s[mpc_cycle][1] * x11y[1] - softBoundy_s[mpc_cycle][0]) + 0.95*H_roll);//x11x[4]; 
                     else
                         mom_mpcy = x11y[4];
+                    */
 
-
-                    if(mpc_cycle == 0)
+              /*      if(mpc_cycle == 0)
                     {
                         mom_mpcx_prev = mom_mpcx;
                         mom_mpcy_prev = mom_mpcy;
@@ -886,7 +891,7 @@ void CustomController::computePlanner()
 
                     mot_mpcx = (mom_mpcx - mom_mpcx_prev)/Ts;
                     mot_mpcy = (mom_mpcy - mom_mpcy_prev)/Ts;
-
+*/
                     auto t5 = std::chrono::steady_clock::now();
                     auto d1 = std::chrono::duration_cast<std::chrono::microseconds>(t5 - t4).count();
 
@@ -931,22 +936,20 @@ void CustomController::mpc_variablex()
     {
         if (mpc_cycle > 300)
         {   
-           /// if(mpct1 < 3)
-           // {
-                x11x[0] = rd_.link_[COM_id].xpos(0);
-                x11x[1] = rd_.link_[COM_id].v(0);
-                x11x[2] = ZMP_FT_l_mu(0);
-            //}
+           
+         //   x11x[0] = rd_.link_[COM_id].xpos(0);
+         //   x11x[1] = rd_.link_[COM_id].v(0);
+         //   x11x[2] = ZMP_FT_l_mu(0);
         
-            if(mpc_cycle > 362 && mpct1 < 2)
-                x11x[4] = H_pitch;   
+           // if(mpc_cycle > 362 && mpct1 < 2)
+             //   x11x[4] = H_pitch;   
         }
         hd_lbxx[0] = x11x;
         hd_ubxx[0] = x11x;
     }
-    std::copy(softCx_mu + mpc_cycle, softCx_mu + N + mpc_cycle, hCx);
-    std::copy(softBoundx_mu + mpc_cycle, softBoundx_mu + N + mpc_cycle, hd_lgx);
-    std::copy(softBoundx_mu + mpc_cycle, softBoundx_mu + N + mpc_cycle, hd_ugx);
+//    std::copy(softCx_mu + mpc_cycle, softCx_mu + N + mpc_cycle, hCx);
+  //  std::copy(softBoundx_mu + mpc_cycle, softBoundx_mu + N + mpc_cycle, hd_lgx);
+   // std::copy(softBoundx_mu + mpc_cycle, softBoundx_mu + N + mpc_cycle, hd_ugx);
     std::copy(zmpx_mu + mpc_cycle, zmpx_mu + N + 1 + mpc_cycle, hqx);
 }
 
@@ -973,7 +976,7 @@ void CustomController::mpc_variabley()
     }
     else
     {
-        if (mpc_cycle > 100)// && mpc_cycle % 4 == 0)
+       /* if (mpc_cycle > 100)// && mpc_cycle % 4 == 0)
         {
                 x11y[0] = rd_.link_[COM_id].xpos(1);
                 x11y[1] = rd_.link_[COM_id].v(1);
@@ -983,14 +986,14 @@ void CustomController::mpc_variabley()
               x11y[2] = ZMP_FT_l_mu(1);
               x11y[4] = H_roll;
             }
-        }
+        }*/
         hd_lbxy[0] = x11y;
         hd_ubxy[0] = x11y;
     }
 
-    std::copy(softCy_mu + mpc_cycle, softCy_mu + N + mpc_cycle, hCy);
-    std::copy(softBoundy_mu + mpc_cycle, softBoundy_mu + N + mpc_cycle, hd_lgy);
-    std::copy(softBoundy_mu + mpc_cycle, softBoundy_mu + N + mpc_cycle, hd_ugy);
+  //  std::copy(softCy_mu + mpc_cycle, softCy_mu + N + mpc_cycle, hCy);
+  //  std::copy(softBoundy_mu + mpc_cycle, softBoundy_mu + N + mpc_cycle, hd_lgy);
+  //  std::copy(softBoundy_mu + mpc_cycle, softBoundy_mu + N + mpc_cycle, hd_ugy);
     std::copy(zmpy_mu + mpc_cycle, zmpy_mu + N + 1 + mpc_cycle, hqy);
 }
 
@@ -1000,8 +1003,8 @@ void CustomController::walking_x()
     d_ocp_qp_set_all(hAx, hBx, hbx, hQx, hSx, hRx, hqx, hrx, hidxbx, hd_lbxx, hd_ubxx, hidxbu, hd_lbux, hd_ubux, hCx, hDx, hd_lgx, hd_ugx, hZlx, hZux, hzlx, hzux, hidxs, hd_lsx, hd_usx, &qpx);
     d_ocp_qp_ipm_solve(&qpx, &qp_solx, &argx, &workspacex);
     d_ocp_qp_ipm_get_status(&workspacex, &hpipm_statusx);
-
-    if(hpipm_statusx == 0 || mpc_cycle <= 100)
+    d_ocp_qp_sol_get_x(1, &qp_solx, x11x);
+   /* if(hpipm_statusx == 0 || mpc_cycle <= 100)
     {
         for(int i = 0; i < N; i ++)
         {
@@ -1027,7 +1030,7 @@ void CustomController::walking_x()
             x11x[j] = x11x_temp(j,mpct1);
         }
         mpct1_prev = mpct1;
-    }
+    }*/
 }
 
 void CustomController::walking_y()
@@ -1035,6 +1038,7 @@ void CustomController::walking_y()
     d_ocp_qp_set_all(hAy, hBy, hby, hQy, hSy, hRy, hqy, hry, hidxbx, hd_lbxy, hd_ubxy, hidxbu, hd_lbuy, hd_ubuy, hCy, hDy, hd_lgy, hd_ugy, hZly, hZuy, hzly, hzuy, hidxs, hd_lsy, hd_usy, &qpy);
     d_ocp_qp_ipm_solve(&qpy, &qp_soly, &argy, &workspacey);
     d_ocp_qp_ipm_get_status(&workspacey, &hpipm_statusy);
+    d_ocp_qp_sol_get_x(1, &qp_soly, x11y);
   /*  d_ocp_qp_sol_get_x(1, &qp_soly, x11y);
     if(hpipm_statusy != 0)
     {
@@ -1049,7 +1053,7 @@ void CustomController::walking_y()
         }
         mpct2 = 1;
     }*/
-    if(hpipm_statusy == 0 || mpc_cycle <= 100)
+   /* if(hpipm_statusy == 0 || mpc_cycle <= 100)
     {
         for(int i = 0; i < N; i ++)
         {
@@ -1075,7 +1079,7 @@ void CustomController::walking_y()
             x11y[j] = x11y_temp(j,mpct2);
         }
         mpct2_prev = mpct2;
-    }
+    }*/
 }
 
 void CustomController::copyRobotData(RobotData &rd_l)
@@ -1154,47 +1158,68 @@ void CustomController::flyWheelModel(double Ts, int nx, int nu, double *Ax, doub
     }
 
     Ax[0] = 1.0;
-    Ax[6] = 1.0;
-    Ax[12] = 1.0;
-    Ax[18] = 1.0;
-    Ax[24] = 1.0;
-
-    Ax[1] = lipm_w * lipm_w * Ts;
-    Ax[23] = 1.0 * Ts;
-    Ax[11] = -lipm_w * lipm_w * Ts;
-    Ax[5] = 1.0 * Ts;
-
+    Ax[5] = 1.0;
+    Ax[10] = 1.0;
+    Ax[15] = 1.0;
+    
+    Ax[4] = Ts;
+    Ax[1] = lipm_w * lipm_w * Ts;  
+    Ax[9] = -lipm_w * lipm_w * Ts;
+    
     Ay[0] = 1.0;
-    Ay[6] = 1.0;
-    Ay[12] = 1.0;
-    Ay[18] = 1.0;
-    Ay[24] = 1.0;
-
-    Ay[1] = lipm_w * lipm_w * Ts;
-    Ay[23] = 1.0 * Ts;
-    Ay[11] = -lipm_w * lipm_w * Ts;
-    Ay[5] = 1.0 * Ts;
+    Ay[5] = 1.0;
+    Ay[10] = 1.0;
+    Ay[15] = 1.0;
+    
+    Ay[4] = Ts;
+    Ay[1] = lipm_w * lipm_w * Ts;  
+    Ay[9] = -lipm_w * lipm_w * Ts;
+  
 
     for (ii = 0; ii < nx * nu; ii++)
     {
         Bx[ii] = 0.0;
         By[ii] = 0.0;
     }
-
-    Bx[6] = -1.0 / (total_mass * zc) * Ts;
+    
     Bx[2] = 1.00 * Ts;
-    Bx[9] = 1.00 * Ts;
+    Bx[6] = -1.0 / (total_mass * zc) * Ts;
+    Bx[7] = 1.00 * Ts;
 
-    By[6] = 1.0 / (total_mass * zc) * Ts;
     By[2] = 1.00 * Ts;
-    By[9] = 1.00 * Ts;
+    By[6] = 1.0 / (total_mass * zc) * Ts;
+    By[7] = 1.00 * Ts;
+
+    std::cout << "total_mass" << std::endl;
+    std::cout << total_mass << std::endl;
+
+    std::cout << "z_c" << std::endl;
+    std::cout << zc << std::endl;
+
+    std::cout << "Ts" << std::endl;
+    std::cout << Ts << std::endl;
+
+    std::cout << "lipm_w" << std::endl;
+    std::cout << lipm_w << std::endl;
+
+    std::cout << "Ax" << std::endl;
+    d_print_mat(nx_,nx_,Ax,nx_);
+
+    std::cout << "Ay" << std::endl;
+    d_print_mat(nx_,nx_,Ay,nx_);
+
+    std::cout << "Bx" << std::endl;
+    d_print_mat(nu_,nx_,Bx,nu_);
+
+    std::cout << "By" << std::endl;
+    d_print_mat(nu_,nx_,By,nu_);
 }
 
 void CustomController::mpcVariableInit()
 {
     N = timeHorizon / Ts;
     std::cout << "N  :   " <<N << std::endl;
-    nx_ = 5;
+    nx_ = 4;
     nu_ = 2;
 
     //resize
@@ -1267,12 +1292,12 @@ void CustomController::mpcVariableInit()
         nbu[ii] = nu[ii];
         nbx[ii] = nx[ii];
         nb[ii] = nbu[ii] + nbx[ii];
-        ng[ii] = 1;
+        ng[ii] = 0;
         nsbx[ii] = 0;
     }
 
     nu[N] = 0;
-    ng[N] = 1;
+    ng[N] = 0;
     nbu[N] = 0;
     nsbx[N] = 0;
     nu[0] = nu_;
@@ -1289,7 +1314,7 @@ void CustomController::mpcVariableInit()
 
     for (ii = 1; ii <= N; ii++)
     {
-        nsg[ii] = 1;
+        nsg[ii] = 0;
         nsbu[ii] = 0;
         ns[ii] = nsbx[ii] + nsbu[ii] + nsg[ii];
     }
@@ -1418,13 +1443,13 @@ void CustomController::mpcVariableInit()
     Qy[1 * (nx_ + 1)] = Qy2_mpc;
     Qy[2 * (nx_ + 1)] = Qy3_mpc;
     Qy[3 * (nx_ + 1)] = Qy4_mpc;
-    Qy[4 * (nx_ + 1)] = Qy5_mpc;
+   // Qy[4 * (nx_ + 1)] = Qy5_mpc;
 
     Qx[0] = Qx1_mpc;
     Qx[1 * (nx_ + 1)] = Qx2_mpc;
     Qx[2 * (nx_ + 1)] = Qx3_mpc;
     Qx[3 * (nx_ + 1)] = Qx4_mpc;
-    Qx[4 * (nx_ + 1)] = Qx5_mpc;
+   // Qx[4 * (nx_ + 1)] = Qx5_mpc;
 
     for (ii = 0; ii < nu_; ii++)
     {
