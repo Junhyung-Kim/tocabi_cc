@@ -864,7 +864,7 @@ void CustomController::computePlanner()
                     zmp_mpcx = x11x[2];
                     
                     if(mpct1 != 1 || mpct1_prev != 1)
-                        mom_mpcx = (0.05*(softCx_s[mpc_cycle][0] * x11x[0] + softCx_s[mpc_cycle][1] * x11x[1] - softBoundx_s[mpc_cycle][0]) + 0.95*H_pitch) ;//x11x[4]; 
+                        mom_mpcx = (0.05*(-softCx_s[mpc_cycle][0] * x11x[0] - softCx_s[mpc_cycle][1] * x11x[1] + softBoundx_s[mpc_cycle][0]) + 0.95*H_pitch) ;//x11x[4]; 
                     else
                         mom_mpcx = x11x[4];//-1.2*(softCx_s[mpc_cycle][0] * x11x[0] + softCx_s[mpc_cycle][1] * x11x[1] - softBoundx_s[mpc_cycle][0]);//x11x[4];    
 
@@ -873,7 +873,7 @@ void CustomController::computePlanner()
                     zmp_mpcy = x11y[2];
 
                     if(mpct2 != 1 || mpct2_prev != 1)
-                        mom_mpcy = (0.05*(softCy_s[mpc_cycle][0] * x11y[0] + softCy_s[mpc_cycle][1] * x11y[1] - softBoundy_s[mpc_cycle][0]) + 0.95*H_roll);//x11x[4]; 
+                        mom_mpcy = (0.05*(-softCy_s[mpc_cycle][0] * x11y[0] - softCy_s[mpc_cycle][1] * x11y[1] + softBoundy_s[mpc_cycle][0]) + 0.95*H_roll);//x11x[4]; 
                     else
                         mom_mpcy = x11y[4];
 
