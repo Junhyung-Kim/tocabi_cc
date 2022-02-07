@@ -1376,13 +1376,13 @@ void WalkingController::mpcSoftVariable(RobotData &Robot)
         softCx[i][1] = -softBoundy2[i];
         softCx[i][2] = 0.0;
         softCx[i][3] = 0.0;
-        softCx[i][4] = 1.0;
+        softCx[i][4] = -1.0;
 
         softCy[i][0] = -softBoundx1[i];
         softCy[i][1] = -softBoundx2[i];
         softCy[i][2] = 0.0;
         softCy[i][3] = 0.0;
-        softCy[i][4] = 1.0;
+        softCy[i][4] = -1.0;
     }
 
     for (int i = t_total * (total_step_num + 1) + t_temp - 2; i < t_total * (total_step_num + 1) + t_temp - 1 + 30 * N; i++)
