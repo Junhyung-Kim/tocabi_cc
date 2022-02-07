@@ -1375,14 +1375,14 @@ void WalkingController::mpcSoftVariable(RobotData &Robot)
         softCx[i][0] = -softBoundy1[i];
         softCx[i][1] = -softBoundy2[i];
         softCx[i][2] = 0.0;
-        softCx[i][3] = 0.0;
-      //  softCx[i][4] = 1.0;
+       // softCx[i][3] = 0.0;
+        softCx[i][3] = 1.0;
 
         softCy[i][0] = -softBoundx1[i];
         softCy[i][1] = -softBoundx2[i];
         softCy[i][2] = 0.0;
-        softCy[i][3] = 0.0;
-     //   softCy[i][4] = 1.0;
+     //   softCy[i][3] = 0.0;
+        softCy[i][3] = 1.0;
     }
 
     for (int i = t_total * (total_step_num + 1) + t_temp - 2; i < t_total * (total_step_num + 1) + t_temp - 1 + 30 * N; i++)
@@ -1392,14 +1392,14 @@ void WalkingController::mpcSoftVariable(RobotData &Robot)
         softCx[i][0] = 0.0;
         softCx[i][1] = 0.0;
         softCx[i][2] = 0.0;
+      //  softCx[i][3] = 0.0;
         softCx[i][3] = 0.0;
-     //   softCx[i][4] = 0.0;
 
         softCy[i][0] = 0.0;
         softCy[i][1] = 0.0;
         softCy[i][2] = 0.0;
+       // softCy[i][3] = 0.0;
         softCy[i][3] = 0.0;
-     //   softCy[i][4] = 0.0;
     }
 
     for (int i = 0; i < (t_total * (total_step_num + 1) + t_temp - 1 + 30 * N) / mpct; i++)
@@ -1408,6 +1408,7 @@ void WalkingController::mpcSoftVariable(RobotData &Robot)
         softCy_s[i] = softCy[mpct * i];
         softBoundx_s[i] = softBoundy[mpct * i];
         softBoundy_s[i] = softBoundx[mpct * i];
+
 
         softCx_s1[i] = softCx[mpct * i];
         softCy_s1[i] = softCy[mpct * i];
@@ -1682,8 +1683,8 @@ void WalkingController::mpcStateContraint(RobotData &Robot)
             xU[i][1] = 0.0;
             xL[i][2] = com_refx(0);
             xU[i][2] = com_refx(0);
-        //    xL[i][3] = 0.0;
-         //   xU[i][3] = 0.0;
+            xL[i][3] = 0.0;
+            xU[i][3] = 0.0;
         //    xL[i][4] = 0.0;
        //     xU[i][4] = 0.0;
         }

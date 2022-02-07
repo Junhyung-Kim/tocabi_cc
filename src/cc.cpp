@@ -942,14 +942,14 @@ void CustomController::mpc_variablex()
             x11x[2] = ZMP_FT_l_mu(0);
         
            // if(mpc_cycle > 362 && mpct1 < 2)
-               x11x[4] = H_pitch;   
+            //   x11x[4] = H_pitch;   
         }
         hd_lbxx[0] = x11x;
         hd_ubxx[0] = x11x;
     }
-//    std::copy(softCx_mu + mpc_cycle, softCx_mu + N + mpc_cycle, hCx);
-  //  std::copy(softBoundx_mu + mpc_cycle, softBoundx_mu + N + mpc_cycle, hd_lgx);
-   // std::copy(softBoundx_mu + mpc_cycle, softBoundx_mu + N + mpc_cycle, hd_ugx);
+    std::copy(softCx_mu + mpc_cycle, softCx_mu + N + mpc_cycle, hCx);
+    std::copy(softBoundx_mu + mpc_cycle, softBoundx_mu + N + mpc_cycle, hd_lgx);
+    std::copy(softBoundx_mu + mpc_cycle, softBoundx_mu + N + mpc_cycle, hd_ugx);
     std::copy(zmpx_mu + mpc_cycle, zmpx_mu + N + 1 + mpc_cycle, hqx);
 }
 
@@ -979,7 +979,7 @@ void CustomController::mpc_variabley()
         x11y[0] = rd_.link_[COM_id].xpos(1);
         x11y[1] = rd_.link_[COM_id].v(1);
         x11y[2] = ZMP_FT_l_mu(1);
-        x11y[4] = H_roll;
+       // x11y[4] = H_roll;
        /* if (mpc_cycle > 100)// && mpc_cycle % 4 == 0)
         {
                 x11y[0] = rd_.link_[COM_id].xpos(1);
@@ -995,9 +995,9 @@ void CustomController::mpc_variabley()
         hd_ubxy[0] = x11y;
     }
 
-  //  std::copy(softCy_mu + mpc_cycle, softCy_mu + N + mpc_cycle, hCy);
-  //  std::copy(softBoundy_mu + mpc_cycle, softBoundy_mu + N + mpc_cycle, hd_lgy);
-  //  std::copy(softBoundy_mu + mpc_cycle, softBoundy_mu + N + mpc_cycle, hd_ugy);
+    std::copy(softCy_mu + mpc_cycle, softCy_mu + N + mpc_cycle, hCy);
+    std::copy(softBoundy_mu + mpc_cycle, softBoundy_mu + N + mpc_cycle, hd_lgy);
+    std::copy(softBoundy_mu + mpc_cycle, softBoundy_mu + N + mpc_cycle, hd_ugy);
     std::copy(zmpy_mu + mpc_cycle, zmpy_mu + N + 1 + mpc_cycle, hqy);
 }
 
@@ -1296,12 +1296,12 @@ void CustomController::mpcVariableInit()
         nbu[ii] = nu[ii];
         nbx[ii] = nx[ii];
         nb[ii] = nbu[ii] + nbx[ii];
-        ng[ii] = 0;
+        ng[ii] = 1;
         nsbx[ii] = 0;
     }
 
     nu[N] = 0;
-    ng[N] = 0;
+    ng[N] = 1;
     nbu[N] = 0;
     nsbx[N] = 0;
     nu[0] = nu_;
