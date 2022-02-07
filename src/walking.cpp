@@ -1951,7 +1951,7 @@ void WalkingController::inverseKinematicsdob(RobotData &Robot)
     double rejectionGainSim[12] = {-9.0, -9.0, -9.0, -9.0, -15.0, -15.0, -9.0, -9.0, -9.0, -9.0, -15.0, -15.0};
     double rejectionGainReal[12] = {-3.0, -3.0, -3.0, -3.0, -3.0, -3.0, -3.0, -3.0, -3.0, -3.0, -3.0, -3.0};
     double rejectionGain_[12];
-    double compliantTick = 0.04 * wk_Hz;
+    double compliantTick = 0.15 * wk_Hz;
 
     memcpy(rejectionGain_, rejectionGainSim, sizeof(rejectionGainSim));
 
