@@ -32,6 +32,8 @@ CustomController::CustomController(RobotData &rd) : rd_(rd) //, wbc_(dc.wbc_)
     }
     mpc_cycle = 0;
     mpc_cycle_prev = 0;
+    Imom_mpcx = 0;
+    Imom_mpcy = 0;
 
     rd_.mujoco_dist = false;
     ros::NodeHandle nh;
@@ -642,9 +644,8 @@ void CustomController::computeFast()
 
             if(walking_tick != walking_tick_prev)
             {
-                file[1] <<hpipm_statusx<<"\t"<<com_mpcx <<"\t"<<zmp_mpcx<<"\t"<<mom_mpcx <<"\t"<<xL[walking_tick][0]<<"\t"<<xU[walking_tick][0]<<"\t"<<xL[walking_tick][2]<<"\t"<<xU[walking_tick][2]<<"\t"<<xL[walking_tick][3]<<"\t"<<xU[walking_tick][3]<<std::endl;
-                
-                file[0] <<hpipm_statusy<<"\t"<<com_mpcy <<"\t"<<zmp_mpcy<<"\t"<<mom_mpcy <<"\t"<<yL[walking_tick][0]<<"\t"<<yU[walking_tick][0]<<"\t"<<yL[walking_tick][2]<<"\t"<<yU[walking_tick][2]<<"\t"<<yL[walking_tick][3]<<"\t"<<yU[walking_tick][3]<<std::endl;
+                file[1] <<hpipm_statusx<<"\t"<<com_mpcx <<"\t"<<zmp_mpcx<<"\t"<<mom_mpcx <<"\t"<<RF_trajectory_float.translation()(0)<<"\t"<<LF_trajectory_float.translation()(0)<<"\t"<<H_pitch<<"\t"<<(-softCx_s[mpc_cycle][0] * com_mpcx - softCx_s[mpc_cycle][1] * com_mpcdx + softBoundx_s[mpc_cycle][0])<<"\t"<<Imom_mpcx<<"\t"<<xL[walking_tick][0]<<"\t"<<xU[walking_tick][0]<<"\t"<<xL[walking_tick][2]<<"\t"<<xU[walking_tick][2]<<"\t"<<xL[walking_tick][3]<<"\t"<<xU[walking_tick][3]<<std::endl;
+                file[0] <<hpipm_statusy<<"\t"<<com_mpcy <<"\t"<<zmp_mpcy<<"\t"<<mom_mpcy <<"\t"<<H_roll<<"\t"<<(-softCy_s[mpc_cycle][0] * com_mpcy - softCy_s[mpc_cycle][1] * com_mpcdy + softBoundy_s[mpc_cycle][0])<<"\t"<<Imom_mpcy<<"\t"<<yL[walking_tick][0]<<"\t"<<yU[walking_tick][0]<<"\t"<<yL[walking_tick][2]<<"\t"<<yU[walking_tick][2]<<"\t"<<yL[walking_tick][3]<<"\t"<<yU[walking_tick][3]<<std::endl;
                 //file[1] << walking_tick << "\t"<< mpc_cycle << "\t" << mpc_cycle_prev << "\t" <<hpipm_statusy<<"\t"<< zmp_refy(walking_tick) <<"\t" << rd_.link_[COM_id].xpos(1) << "\t" << com_mpcy << "\t" << ZMP_FT_l(1) << "\t" << zmp_mpcy << "\t" <<yL[walking_tick][2]<<"\t" << yU[walking_tick][2] <<"\t"<< rd_.link_[COM_id].v(1) << "\t" << rd_.link_[COM_id].xpos(1) << "\t" << com_mpcy << "\t" << ZMP_FT_l(1) << "\t" << ZMP_FT(1) << "\t" << zmp_mpcy << "\t" << com_mpcdy << "\t" <<rd_.link_[COM_id].v(1) << "\t"<< H_roll << "\t" << mom_mpcy  <<std::endl;            
                 //file[0] << walking_tick << "\t"<< mpc_cycle << "\t" <<mpct1<<"\t"<<hpipm_statusx<<"\t"<< zmp_refx(walking_tick) <<"\t" << rd_.link_[COM_id].xpos(0) << "\t" << com_mpcx << "\t" << ZMP_FT_l(0) << "\t" << zmp_mpcx << "\t" <<xL[walking_tick][2]<<"\t" << xU[walking_tick][2] <<"\t"<< rd_.link_[COM_id].v(0) << "\t" << rd_.link_[COM_id].xpos(0) << "\t" << com_mpcx << "\t" << ZMP_FT_l(0) << "\t" << ZMP_FT(1) << "\t" << zmp_mpcy << "\t" << com_mpcdy << "\t" <<rd_.link_[COM_id].v(1) << "\t"<< H_pitch << "\t" << mom_mpcx  << "\t" << H_leg(0) << "\t" << H_leg(1)<< "\t" << F_err_l(0)<<"\t"<<F_err_l(1)<<"\t"<<mot_mpcx << "\t"<<mot_mpcy<<"\t"<<rd_.q_desired(12)<<"\t"<<rd_.q_desired(13)<<"\t"<<rd_.q_desired(14)<<"\t"<<rd_.q_desired(16)<<"\t"<<rd_.q_desired(17)<<"\t"<<rd_.q_desired(26)<<"\t"<<rd_.q_desired(27)<<"\t"<<H_leg1(0)<<"\t"<<H_leg1(1)<<std::endl;
             } 
@@ -695,14 +696,14 @@ void CustomController::computePlanner()
                     mu0 = 2.0;
 
                 //solver Setup
-                int iter_max = 100;
+                int iter_max = 80;
                 double alpha_min = 0.01;
                 double tol_stat = 0.01;
                 double tol_eq = 0.01;//8e-3;
                 double tol_ineq = 0.01;//8e-3;
                 double tol_comp = 0.01;
                 double reg_prim = 0.01;
-                int warm_start = 1;
+                int warm_start = 0;
                 int ric_alg = 0;
                 enum hpipm_mode mode = BALANCE;
 
@@ -713,6 +714,7 @@ void CustomController::computePlanner()
                 ipm_arg_memx = malloc(ipm_arg_sizex);
                 d_ocp_qp_ipm_arg_create(&dimx, &argx, ipm_arg_memx);
                 d_ocp_qp_ipm_arg_set_default(mode, &argx);
+                d_ocp_qp_ipm_arg_set_iter_max(&iter_max, &argx);
             /*    d_ocp_qp_ipm_arg_set_mu0(&mu0, &argx);
                 d_ocp_qp_ipm_arg_set_iter_max(&iter_max, &argx);
                 d_ocp_qp_ipm_arg_set_tol_stat(&tol_stat, &argx);
@@ -760,6 +762,7 @@ void CustomController::computePlanner()
                 ipm_arg_memy = malloc(ipm_arg_sizey);
                 d_ocp_qp_ipm_arg_create(&dimy, &argy, ipm_arg_memy);
                 d_ocp_qp_ipm_arg_set_default(mode, &argy);
+                d_ocp_qp_ipm_arg_set_iter_max(&iter_max, &argy);
              /*   d_ocp_qp_ipm_arg_set_mu0(&mu0, &argy);
                 d_ocp_qp_ipm_arg_set_iter_max(&iter_max, &argy);
                 d_ocp_qp_ipm_arg_set_tol_stat(&tol_stat, &argy);
@@ -877,6 +880,9 @@ void CustomController::computePlanner()
                     zmp_mpcy = x11y[2];
                     mom_mpcy = x11y[3];
 
+                    Imom_mpcx = Imom_mpcx + mom_mpcx/100.0;
+                    Imom_mpcy = Imom_mpcy + mom_mpcy/100.0;
+
                  /*   if(mpct2 != 1 || mpct2_prev != 1)
                         mom_mpcy = (0.05*(softCy_s[mpc_cycle][0] * x11y[0] + softCy_s[mpc_cycle][1] * x11y[1] - softBoundy_s[mpc_cycle][0]) + 0.95*H_roll);//x11x[4]; 
                     else
@@ -934,16 +940,13 @@ void CustomController::mpc_variablex()
     }
     else
     {
-        if (mpc_cycle > 300)
-        {   
-           
-          //  x11x[0] = rd_.link_[COM_id].xpos(0);
-          //  x11x[1] = rd_.link_[COM_id].v(0);
-          //  x11x[2] = ZMP_FT_l_mu(0);
-        
-           // if(mpc_cycle > 362 && mpct1 < 2)
-            //   x11x[4] = H_pitch;   
-        }
+    //    if (mpc_cycle > 300)
+      //  {   
+            x11x[0] = rd_.link_[COM_id].xpos(0);
+            x11x[1] = rd_.link_[COM_id].v(0);
+            x11x[2] = ZMP_FT_l_mu(0);
+            x11x[3] = H_pitch;   
+        //}
         hd_lbxx[0] = x11x;
         hd_ubxx[0] = x11x;
     }
@@ -976,10 +979,10 @@ void CustomController::mpc_variabley()
     }
     else
     {
-       // x11y[0] = rd_.link_[COM_id].xpos(1);
-       // x11y[1] = rd_.link_[COM_id].v(1);
-        //x11y[2] = ZMP_FT_l_mu(1);
-       // x11y[4] = H_roll;
+        x11y[0] = rd_.link_[COM_id].xpos(1);
+        x11y[1] = rd_.link_[COM_id].v(1);
+        x11y[2] = ZMP_FT_l_mu(1);
+        x11y[3] = H_roll;
        /* if (mpc_cycle > 100)// && mpc_cycle % 4 == 0)
         {
                 x11y[0] = rd_.link_[COM_id].xpos(1);
@@ -1318,7 +1321,7 @@ void CustomController::mpcVariableInit()
 
     for (ii = 1; ii <= N; ii++)
     {
-        nsg[ii] = 0;
+        nsg[ii] = 1;
         nsbu[ii] = 0;
         ns[ii] = nsbx[ii] + nsbu[ii] + nsg[ii];
     }
