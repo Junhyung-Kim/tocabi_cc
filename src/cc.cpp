@@ -935,10 +935,9 @@ void CustomController::mpc_variablex()
     {
       //  if (mpc_cycle > 300)
       //  {   
-           
-           // x11x[0] = rd_.link_[COM_id].xpos(0);
-         //   x11x[1] = rd_.link_[COM_id].v(0);
-        //    x11x[2] = ZMP_FT_l_mu(0);
+            x11x[0] = rd_.link_[COM_id].xpos(0);
+            x11x[1] = rd_.link_[COM_id].v(0);
+            x11x[2] = ZMP_FT_l_mu(0);
             x11x[3] = H_pitch;   
         //}
         hd_lbxx[0] = x11x;
@@ -1167,6 +1166,7 @@ void CustomController::flyWheelModel(double Ts, int nx, int nu, double *Ax, doub
   
 
     for (ii = 0; ii < nx * nu; ii++)
+
     {
         Bx[ii] = 0.0;
         By[ii] = 0.0;
