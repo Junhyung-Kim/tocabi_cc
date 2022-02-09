@@ -568,14 +568,14 @@ void CustomController::computeFast()
                 {
                     if (rd_.tc_.mom == true && walking_tick > 2500)
                     {
-                        rd_.q_desired(12) = rd_.q_desired(12) + q_dm(0) / wk_Hz;
-                        rd_.q_desired(13) = rd_.q_desired(13) + q_dm(1) / wk_Hz;
-                        rd_.q_desired(14) = rd_.q_desired(14) + q_dm(2) / wk_Hz;
-                        rd_.q_desired(16) = rd_.q_desired(16) + q_dm(3) / wk_Hz;
+                     //   rd_.q_desired(12) = rd_.q_desired(12) + q_dm(0) / wk_Hz;
+                        rd_.q_desired(13) = rd_.q_desired(13) + q_dm(0) / wk_Hz;
+                        rd_.q_desired(14) = rd_.q_desired(14) + q_dm(1) / wk_Hz;
+                 /*       rd_.q_desired(16) = rd_.q_desired(16) + q_dm(3) / wk_Hz;
                         rd_.q_desired(17) = rd_.q_desired(17) + q_dm(4) / wk_Hz;
                         rd_.q_desired(26) = rd_.q_desired(26) + q_dm(5) / wk_Hz;
                         rd_.q_desired(27) = rd_.q_desired(27) + q_dm(6) / wk_Hz;
-                    }
+                   */ }
                 }
                 cc_mutex.unlock();
 
@@ -642,9 +642,8 @@ void CustomController::computeFast()
 
             if(walking_tick != walking_tick_prev)
             {
-                file[1] <<hpipm_statusx<<"\t"<<com_mpcx <<"\t"<<zmp_mpcx<<"\t"<<mom_mpcx <<"\t"<<xL[walking_tick][0]<<"\t"<<xU[walking_tick][0]<<"\t"<<xL[walking_tick][2]<<"\t"<<xU[walking_tick][2]<<"\t"<<xL[walking_tick][3]<<"\t"<<xU[walking_tick][3]<<std::endl;
-                
-                file[0] <<hpipm_statusy<<"\t"<<com_mpcy <<"\t"<<zmp_mpcy<<"\t"<<mom_mpcy <<"\t"<<yL[walking_tick][0]<<"\t"<<yU[walking_tick][0]<<"\t"<<yL[walking_tick][2]<<"\t"<<yU[walking_tick][2]<<"\t"<<yL[walking_tick][3]<<"\t"<<yU[walking_tick][3]<<std::endl;
+                file[1] <<hpipm_statusx<<"\t"<<com_mpcx <<"\t"<<rd_.link_[COM_id].xpos(0)<<"\t"<<zmp_mpcx<<"\t"<<ZMP_FT_l(0)<<"\t"<<mom_mpcx <<"\t"<<H_pitch<<"\t"<<xL[walking_tick][0]<<"\t"<<xU[walking_tick][0]<<"\t"<<xL[walking_tick][2]<<"\t"<<xU[walking_tick][2]<<"\t"<<xL[walking_tick][3]<<"\t"<<xU[walking_tick][3]<<std::endl;  
+                file[0] <<hpipm_statusy<<"\t"<<com_mpcy <<"\t"<<rd_.link_[COM_id].xpos(1)<<"\t"<<zmp_mpcy<<"\t"<<ZMP_FT_l(1)<<"\t"<<mom_mpcy <<"\t"<<H_roll<<"\t"<<yL[walking_tick][0]<<"\t"<<yU[walking_tick][0]<<"\t"<<yL[walking_tick][2]<<"\t"<<yU[walking_tick][2]<<"\t"<<yL[walking_tick][3]<<"\t"<<yU[walking_tick][3]<<std::endl;
                 //file[1] << walking_tick << "\t"<< mpc_cycle << "\t" << mpc_cycle_prev << "\t" <<hpipm_statusy<<"\t"<< zmp_refy(walking_tick) <<"\t" << rd_.link_[COM_id].xpos(1) << "\t" << com_mpcy << "\t" << ZMP_FT_l(1) << "\t" << zmp_mpcy << "\t" <<yL[walking_tick][2]<<"\t" << yU[walking_tick][2] <<"\t"<< rd_.link_[COM_id].v(1) << "\t" << rd_.link_[COM_id].xpos(1) << "\t" << com_mpcy << "\t" << ZMP_FT_l(1) << "\t" << ZMP_FT(1) << "\t" << zmp_mpcy << "\t" << com_mpcdy << "\t" <<rd_.link_[COM_id].v(1) << "\t"<< H_roll << "\t" << mom_mpcy  <<std::endl;            
                 //file[0] << walking_tick << "\t"<< mpc_cycle << "\t" <<mpct1<<"\t"<<hpipm_statusx<<"\t"<< zmp_refx(walking_tick) <<"\t" << rd_.link_[COM_id].xpos(0) << "\t" << com_mpcx << "\t" << ZMP_FT_l(0) << "\t" << zmp_mpcx << "\t" <<xL[walking_tick][2]<<"\t" << xU[walking_tick][2] <<"\t"<< rd_.link_[COM_id].v(0) << "\t" << rd_.link_[COM_id].xpos(0) << "\t" << com_mpcx << "\t" << ZMP_FT_l(0) << "\t" << ZMP_FT(1) << "\t" << zmp_mpcy << "\t" << com_mpcdy << "\t" <<rd_.link_[COM_id].v(1) << "\t"<< H_pitch << "\t" << mom_mpcx  << "\t" << H_leg(0) << "\t" << H_leg(1)<< "\t" << F_err_l(0)<<"\t"<<F_err_l(1)<<"\t"<<mot_mpcx << "\t"<<mot_mpcy<<"\t"<<rd_.q_desired(12)<<"\t"<<rd_.q_desired(13)<<"\t"<<rd_.q_desired(14)<<"\t"<<rd_.q_desired(16)<<"\t"<<rd_.q_desired(17)<<"\t"<<rd_.q_desired(26)<<"\t"<<rd_.q_desired(27)<<"\t"<<H_leg1(0)<<"\t"<<H_leg1(1)<<std::endl;
             } 
@@ -713,9 +712,9 @@ void CustomController::computePlanner()
                 ipm_arg_memx = malloc(ipm_arg_sizex);
                 d_ocp_qp_ipm_arg_create(&dimx, &argx, ipm_arg_memx);
                 d_ocp_qp_ipm_arg_set_default(mode, &argx);
-            /*    d_ocp_qp_ipm_arg_set_mu0(&mu0, &argx);
+            /*    d_ocp_qp_ipm_arg_set_mu0(&mu0, &argx); */
                 d_ocp_qp_ipm_arg_set_iter_max(&iter_max, &argx);
-                d_ocp_qp_ipm_arg_set_tol_stat(&tol_stat, &argx);
+                /*d_ocp_qp_ipm_arg_set_tol_stat(&tol_stat, &argx);
                 d_ocp_qp_ipm_arg_set_tol_eq(&tol_eq, &argx);
                 d_ocp_qp_ipm_arg_set_tol_ineq(&tol_ineq, &argx);
                 d_ocp_qp_ipm_arg_set_tol_comp(&tol_comp, &argx);
@@ -760,8 +759,8 @@ void CustomController::computePlanner()
                 ipm_arg_memy = malloc(ipm_arg_sizey);
                 d_ocp_qp_ipm_arg_create(&dimy, &argy, ipm_arg_memy);
                 d_ocp_qp_ipm_arg_set_default(mode, &argy);
-             /*   d_ocp_qp_ipm_arg_set_mu0(&mu0, &argy);
-                d_ocp_qp_ipm_arg_set_iter_max(&iter_max, &argy);
+             /*   d_ocp_qp_ipm_arg_set_mu0(&mu0, &argy);*/
+                d_ocp_qp_ipm_arg_set_iter_max(&iter_max, &argy);/*
                 d_ocp_qp_ipm_arg_set_tol_stat(&tol_stat, &argy);
                 d_ocp_qp_ipm_arg_set_tol_eq(&tol_eq, &argy);
                 d_ocp_qp_ipm_arg_set_tol_ineq(&tol_ineq, &argy);
@@ -890,7 +889,7 @@ void CustomController::computePlanner()
                     }
 
                     mot_mpcx = (mom_mpcx - mom_mpcx_prev)/Ts;
-                    mot_mpcy = (mom_mpcy - mom_mpcy_prev)/Ts;
+                    mot_mpcy = (mom_mpcy - mom_mpcy_prev)/Ts;B
 */
                     auto t5 = std::chrono::steady_clock::now();
                     auto d1 = std::chrono::duration_cast<std::chrono::microseconds>(t5 - t4).count();
@@ -934,16 +933,14 @@ void CustomController::mpc_variablex()
     }
     else
     {
-        if (mpc_cycle > 300)
-        {   
+      //  if (mpc_cycle > 300)
+      //  {   
            
-            x11x[0] = rd_.link_[COM_id].xpos(0);
-            x11x[1] = rd_.link_[COM_id].v(0);
-            x11x[2] = ZMP_FT_l_mu(0);
-        
-           // if(mpc_cycle > 362 && mpct1 < 2)
-               x11x[4] = H_pitch;   
-        }
+           // x11x[0] = rd_.link_[COM_id].xpos(0);
+         //   x11x[1] = rd_.link_[COM_id].v(0);
+        //    x11x[2] = ZMP_FT_l_mu(0);
+            x11x[3] = H_pitch;   
+        //}
         hd_lbxx[0] = x11x;
         hd_ubxx[0] = x11x;
     }
@@ -979,18 +976,7 @@ void CustomController::mpc_variabley()
         x11y[0] = rd_.link_[COM_id].xpos(1);
         x11y[1] = rd_.link_[COM_id].v(1);
         x11y[2] = ZMP_FT_l_mu(1);
-        x11y[4] = H_roll;
-       /* if (mpc_cycle > 100)// && mpc_cycle % 4 == 0)
-        {
-                x11y[0] = rd_.link_[COM_id].xpos(1);
-                x11y[1] = rd_.link_[COM_id].v(1);
-
-            if(mpct2 < 2)
-            {
-              x11y[2] = ZMP_FT_l_mu(1);
-              x11y[4] = H_roll;
-            }
-        }*/
+        x11y[3] = H_roll;
         hd_lbxy[0] = x11y;
         hd_ubxy[0] = x11y;
     }
@@ -1187,11 +1173,11 @@ void CustomController::flyWheelModel(double Ts, int nx, int nu, double *Ax, doub
     }
     
     Bx[2] = 1.00 * Ts;
-    Bx[6] = -1.0 / (total_mass * zc) * Ts;
+    Bx[5] = -1.0 / (total_mass * zc) * Ts;
     Bx[7] = 1.00 * Ts;
 
     By[2] = 1.00 * Ts;
-    By[6] = 1.0 / (total_mass * zc) * Ts;
+    By[5] = 1.0 / (total_mass * zc) * Ts;
     By[7] = 1.00 * Ts;
 
     std::cout << "total_mass" << std::endl;
@@ -1213,10 +1199,10 @@ void CustomController::flyWheelModel(double Ts, int nx, int nu, double *Ax, doub
     d_print_mat(nx_,nx_,Ay,nx_);
 
     std::cout << "Bx" << std::endl;
-    d_print_mat(nu_,nx_,Bx,nu_);
+    d_print_mat(nx_,nu_,Bx,nx_);
 
     std::cout << "By" << std::endl;
-    d_print_mat(nu_,nx_,By,nu_);
+    d_print_mat(nx_,nu_,By,nx_);
 }
 
 void CustomController::mpcVariableInit()
@@ -1736,8 +1722,8 @@ void CustomController::momentumControl(RobotData &Robot)
 {
     int variable_size, constraint_size;
 
-    variable_size = 7;
-    constraint_size = 7;
+    variable_size = 2;
+    constraint_size = 2;
 
     if (walking_tick == 0)
         QP_m.InitializeProblemSize(variable_size, constraint_size);
@@ -1754,10 +1740,12 @@ void CustomController::momentumControl(RobotData &Robot)
     ubA.setZero(constraint_size);
 
     Eigen::Vector6d H_leg_ref;
+    Eigen::Vector2d H_leg_qp;
 
     H_leg.setZero();
+    H_leg_qp.setZero();
     H_leg_ref.setZero();
-    
+
     if (Robot.tc_.MPC == true)
     {
         H_leg_ref(3) = mom_mpcy;
@@ -1771,25 +1759,23 @@ void CustomController::momentumControl(RobotData &Robot)
         Eigen::Vector6d h_temp;
         h_temp = Ag_v * q_dot_virtual_lpf_.segment<6>(0);
 
-        H_data.segment<2>(0) = H_leg_1.segment<2>(0);// + h_temp.segment<2>(0);
-        H_data.segment<3>(3) = H_leg_1.segment<3>(3) + h_temp.segment<3>(3); 
-        
-        H_roll = H_leg_1(3);
-        H_pitch = H_leg_1(4);
+        H_upper = (Ag_waist * q_dot_est_mu.segment(12, 3)).segment<3>(3);
 
+        H_data.segment<2>(0) = H_leg_1.segment<2>(0); // + h_temp.segment<2>(0);
+        H_data.segment<3>(3) = H_leg_1.segment<3>(3) + h_temp.segment<3>(3);
 
-        H_leg1 =  (Ag_waist * q_dot_est_mu.segment(12, 3) + Ag_armL * q_dot_est_mu.segment(15, 8) + Ag_armR * q_dot_est_mu.segment(25, 8)).segment<3>(3);
+        H_roll = H_upper(0);  //H_leg_1(3);
+        H_pitch = H_upper(1); //H_leg_1(4);
 
-       // Hl_leg(0) = H_roll - H_leg_ref(0);
-       // Hl_leg(1) = H_pitch - H_leg_ref(1);
+        H_leg1 = (Ag_waist * q_dot_est_mu.segment(12, 3) + Ag_armL * q_dot_est_mu.segment(15, 8) + Ag_armR * q_dot_est_mu.segment(25, 8)).segment<3>(3);
 
-        H_leg(0) = H_roll - H_leg_ref(3);
-        H_leg(1) = H_pitch - H_leg_ref(4);
-        H_leg(2) = H_leg_1(5);
+        H_leg_qp(0) = H_roll - H_leg_ref(3);
+        H_leg_qp(1) = H_pitch - H_leg_ref(4);
+        // H_leg(2) = H_leg_1(5);
     }
     else
     {
-   // H_leg = Ag_leg * q_dot_est_mu.head(12) + Ag_waist * q_dot_est_mu.segment(12, 3) + Ag_armL * q_dot_est_mu.segment(15, 8) + Ag_armR * q_dot_est_mu.segment(25, 8);
+        // H_leg = Ag_leg * q_dot_est_mu.head(12) + Ag_waist * q_dot_est_mu.segment(12, 3) + Ag_armL * q_dot_est_mu.segment(15, 8) + Ag_armR * q_dot_est_mu.segment(25, 8);
     }
 
     F_ref(0) = lipm_w * lipm_w * Robot.total_mass_ * (com_mpcx - zmp_mpcx) - mom_mpcy / zc;
@@ -1799,65 +1785,61 @@ void CustomController::momentumControl(RobotData &Robot)
     F_cur(1) = lipm_w * lipm_w * Robot.total_mass_ * (Robot.link_[COM_id].xpos(1) - ZMP_FT(1)) + H_roll / zc;
 
     F_err = F_cur - F_ref;
-    if(walking_tick == 0)
+
+    if (walking_tick == 0)
     {
         F_err_l = F_err.segment<2>(0);
     }
 
-    for(int i = 0; i < 2; i ++)
+    for (int i = 0; i < 2; i++)
     {
-        F_err_l(i) = DyrosMath::lowPassFilter(F_err(i),F_err_l(i),1 / wk_Hz, 1 / (2 * 3.14 * 3));
+        F_err_l(i) = DyrosMath::lowPassFilter(F_err(i), F_err_l(i), 1 / wk_Hz, 1 / (2 * 3.14 * 3));
     }
 
     Eigen::MatrixXd Ag_temp;
     Eigen::MatrixXd Agl_temp;
-    Eigen::Matrix7d I;
-    Eigen::Matrix7d alpha;
-    Eigen::Vector7d qd_prev;
+    Eigen::Matrix2d I;
+    Eigen::Matrix2d alpha;
+    Eigen::Vector2d qd_prev;
 
     I.setIdentity();
     alpha.setIdentity();
     alpha = 0.05 * alpha;
-    alpha(3, 3) = 0.001;
-    alpha(4, 4) = 0.001;
-    alpha(5, 5) = 0.001;
-    alpha(6, 6) = 0.001;
 
-    Ag_temp.resize(3, variable_size);
+    Ag_temp.resize(2, variable_size);
     Agl_temp.resize(2, variable_size);
-    Agl_temp.block<2, 3>(0, 0).setZero() = Ag_waist.block<2, 3>(0, 0);
+    /*Agl_temp.block<2, 3>(0, 0).setZero() = Ag_waist.block<2, 3>(0, 0);
     Agl_temp.block<2, 2>(0, 3).setZero() = Ag_armL.block<2, 2>(0, 2);
     Agl_temp.block<2, 2>(0, 5).setZero() = Ag_armR.block<2, 2>(0, 2);
-
-    Ag_temp.block<3, 3>(0, 0) = Ag_waist.block<3, 3>(3, 0);
-    Ag_temp.block<3, 2>(0, 3) = Ag_armL.block<3, 2>(3, 2);
-    Ag_temp.block<3, 2>(0, 5) = Ag_armR.block<3, 2>(3, 2);
+*/
+    Ag_temp.block<2, 2>(0, 0) = Ag_waist.block<2, 2>(3, 1);
+    // Ag_temp.block<2, 2>(0, 3) = Ag_armL.block<3, 2>(3, 2);
+    // Ag_temp.block<2, 2>(0, 5) = Ag_armR.block<3, 2>(3, 2);
 
     if (walking_tick == 0)
     {
         qd_prev.setZero();
     }
 
-    q_w(0) = Robot.q_desired(12);
-    q_w(1) = Robot.q_desired(13);
-    q_w(2) = Robot.q_desired(14);
-
+    q_w(0) = Robot.q_desired(13);
+    q_w(1) = Robot.q_desired(14);
+    /* q_w(2) = Robot.q_desired(14);
     q_w(3) = Robot.q_desired(16);
     q_w(4) = Robot.q_desired(17);
     q_w(5) = Robot.q_desired(26);
     q_w(6) = Robot.q_desired(27);
-
-    H = Ag_temp.transpose() * Ag_temp + alpha * I + lmom * Agl_temp.transpose() * Agl_temp;
-    g = 2 * Ag_temp.transpose() * H_leg + lmom * 2 * Agl_temp.transpose() * Hl_leg; // - 2*alpha*qd_prev;
+    */
+    H = Ag_temp.transpose() * Ag_temp + alpha * I; // + lmom * Agl_temp.transpose() * Agl_temp;
+    g = 2 * Ag_temp.transpose() * H_leg_qp;        // + lmom * 2 * Agl_temp.transpose() * Hl_leg; // - 2*alpha*qd_prev;
 
     A.setIdentity();
 
-    for (int i = 0; i < 3; i++)
+    for (int i = 0; i < 2; i++)
     {
         lbA(i) = (-0.3 - q_w(i)) * wk_Hz;
         ubA(i) = (0.3 - q_w(i)) * wk_Hz;
     }
-
+    /*
     lbA(3) = (-0.6 - q_w(3)) * wk_Hz;
     ubA(3) = (1.2 - q_w(3)) * wk_Hz;
     lbA(4) = (1.2 - q_w(4)) * wk_Hz;
@@ -1866,24 +1848,21 @@ void CustomController::momentumControl(RobotData &Robot)
     ubA(5) = (0.6 - q_w(5)) * wk_Hz;
     lbA(6) = (-1.8 - q_w(6)) * wk_Hz;
     ubA(6) = (-1.2 - q_w(6)) * wk_Hz;
-
+*/
     for (int i = 0; i < variable_size; i++)
     {
         lb(i) = -1.0;
         ub(i) = 1.0;
     }
-
+    /*
     lb(3) = -1.0;
     lb(4) = -1.0;
-
     ub(3) = 1.0;
     ub(4) = 1.0;
-
     lb(5) = -1.0;
     lb(6) = -1.0;
-
     ub(5) = 1.0;
-    ub(6) = 1.0;
+    ub(6) = 1.0;*/
 
     if (rd_.tc_.mom == true && walking_tick > 2500)
     {

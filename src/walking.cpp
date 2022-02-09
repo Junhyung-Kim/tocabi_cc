@@ -1616,6 +1616,8 @@ void WalkingController::mpcStateContraint(RobotData &Robot)
         {
             zmpy[i][2] = -Qy3_mpc * zmp_refy(i);
             zmpx[i][2] = -Qx3_mpc * zmp_refx(i); //COM_float_init.translation()(0);
+            zmpy[i][0] = -Qy1_mpc * zmp_refy(i);
+            zmpx[i][0] = -Qx1_mpc * zmp_refx(i); //COM_float_init.translation()(0);
         }
         else
         {
@@ -1623,11 +1625,15 @@ void WalkingController::mpcStateContraint(RobotData &Robot)
             {
                 zmpy[i][2] = -Qy3_mpc * (/*foot_step(j + 1, 1)*/ zmp_refy(i) + zmp_xyo(1));
                 zmpx[i][2] = -Qx3_mpc * (zmp_refx(i) /*COM_float_init.translation()(0)*/ + zmp_xyo(0));
+                zmpy[i][0] = -Qy1_mpc * (/*foot_step(j + 1, 1)*/ zmp_refy(i) + zmp_xyo(1));
+                zmpx[i][0] = -Qx1_mpc * (zmp_refx(i) /*COM_float_init.translation()(0)*/ + zmp_xyo(0));
             }
             else
             {
                 zmpy[i][2] = -Qy3_mpc * (zmp_refy(i) /*foot_step(j - 1, 1)*/ + zmp_xyo(1));
                 zmpx[i][2] = -Qx3_mpc * (zmp_refx(i) + zmp_xyo(0));
+                zmpy[i][0] = -Qy1_mpc * (/*foot_step(j + 1, 1)*/ zmp_refy(i) + zmp_xyo(1));
+                zmpx[i][0] = -Qx1_mpc * (zmp_refx(i) /*COM_float_init.translation()(0)*/ + zmp_xyo(0));
             }
         }
 
@@ -1676,13 +1682,13 @@ void WalkingController::mpcStateContraint(RobotData &Robot)
 
         if (i <= t_temp) // + t_rest_init)
         {
-            xL[i][0] = com_refx(0);
+        /*    xL[i][0] = com_refx(0);
             xU[i][0] = com_refx(0);
             xL[i][1] = 0.0;
             xU[i][1] = 0.0;
             xL[i][2] = com_refx(0);
             xU[i][2] = com_refx(0);
-        //    xL[i][3] = 0.0;
+       */ //    xL[i][3] = 0.0;
          //   xU[i][3] = 0.0;
         //    xL[i][4] = 0.0;
        //     xU[i][4] = 0.0;
@@ -2448,15 +2454,7 @@ void WalkingController::comController(RobotData &Robot)
     */}
     else
     {
-         if(walking_tick > 300)
-        { 
-            PELV_trajectory_float_c.translation()(0) = com_mpcx - com_offset  + pelv_xp*(Robot.link_[COM_id].xpos(0)  - com_mpcx) - zmp_xp *(ZMP_sup(0) - ZMP_r_sup(0));    
-        }
-        else
-        {
-            PELV_trajectory_float_c.translation()(0) = com_mpcx - com_offset  + pelv_xp*(Robot.link_[COM_id].xpos(0)- com_mpcx);
-        }
-
+        PELV_trajectory_float_c.translation()(0) = /* Robot.link_[Pelvis].xipos(0)*/com_mpcx - com_offset  + pelv_xp*(Robot.link_[COM_id].xpos(0)  - com_mpcx) - zmp_xp *(ZMP_sup(0) - ZMP_r_sup(0));    
         PELV_trajectory_float_c.translation()(1) = Robot.link_[Pelvis].xipos(1) + pelv_yp*(Robot.link_[COM_id].xpos(1) - com_mpcy) - zmp_yp *(ZMP_sup(1) - ZMP_r_sup(1));
         PELV_trajectory_float_c.translation()(2) = PELV_float_init.translation()(2);   
         PELV_trajectory_float_c.linear() = PELV_float_init.linear();
@@ -2468,6 +2466,8 @@ void WalkingController::comController(RobotData &Robot)
         LF_trajectory_float.translation()(0) = LFx_trajectory_float(walking_tick);// - 0.9*(Robot.link_[Left_Foot].xpos(0) - LFx_trajectory_float(walking_tick));
         LF_trajectory_float.translation()(1) = LFy_trajectory_float(walking_tick);// - 0.7*(Robot.link_[Left_Foot].xpos(1) - LFy_trajectory_float(walking_tick));
         LF_trajectory_float.translation()(2) = LFz_trajectory_float(walking_tick);
+        RF_trajectory_float.linear() = RF_float_init.linear();
+        LF_trajectory_float.linear() = LF_float_init.linear();
     }
 
     if(Robot.ankleHybrid == true)
@@ -2482,4 +2482,8 @@ void WalkingController::comController(RobotData &Robot)
         PELV_trajectory_float_c.linear() = PELV_float_init.linear() * DyrosMath::rotateWithY(posture_input(1)) * DyrosMath::rotateWithX(posture_input(0));
     }
 
+    PELV_trajectory_float = PELV_trajectory_float_c;
+    PELV_trajectory_float_c = DyrosMath::inverseIsometry3d(PELV_trajectory_float) * PELV_trajectory_float_c;
+    RF_trajectory_float = DyrosMath::inverseIsometry3d(PELV_trajectory_float) * RF_trajectory_float;
+    LF_trajectory_float = DyrosMath::inverseIsometry3d(PELV_trajectory_float) * LF_trajectory_float;
 }
