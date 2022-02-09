@@ -2184,14 +2184,14 @@ void CustomController::zmpControl(RobotData &Robot)
                 }
                 else
                 {
-                    if (control_input(i) > 0.10)
+                    if (control_input(i) > 0.05)
                     {
-                        control_input(i) = 0.10;
+                        control_input(i) = 0.05;
                     }
 
-                    if (control_input(i) < -0.10)
+                    if (control_input(i) < -0.05)
                     {
-                        control_input(i) = -0.10;
+                        control_input(i) = -0.05;
                     }
                 }
             }
@@ -2211,14 +2211,14 @@ void CustomController::zmpControl(RobotData &Robot)
                 }
                 else
                 {
-                    if (control_input(i) > 0.10)
+                    if (control_input(i) > 0.05)
                     {
-                        control_input(i) = 0.10;
+                        control_input(i) = 0.05;
                     }
 
-                    if (control_input(i) < -0.10)
+                    if (control_input(i) < -0.05)
                     {
-                        control_input(i) = -0.10;
+                        control_input(i) = -0.05;
                     }
                 }
             }
@@ -2226,14 +2226,14 @@ void CustomController::zmpControl(RobotData &Robot)
 
         for (int i = 0; i < 2; i++)
         {
-            if (posture_input(i) > 0.1)
+            if (posture_input(i) > 0.05)
             {
-                posture_input(i) = 0.1;
+                posture_input(i) = 0.05;
             }
 
-            if (posture_input(i) < -0.1)
+            if (posture_input(i) < -0.05)
             {
-                posture_input(i) = -0.1;
+                posture_input(i) = -0.05;
             }
         }
         // file[0] << posture_input(0) << "\t" << posture_input(1) << "\t" << Robot.roll << "\t" << Robot.pitch << std::endl;
