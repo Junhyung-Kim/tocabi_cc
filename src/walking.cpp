@@ -2462,7 +2462,7 @@ void WalkingController::comController(RobotData &Robot)
         PELV_trajectory_float_c.linear() = PELV_float_init.linear();
         
         RF_trajectory_float.translation()(0) = RF_sup(0);//RFx_trajectory_float(walking_tick);
-        RF_trajectory_float.translation()(1) = RF_sup(1);//RFy_trajectory_float(walking_tick);
+        RF_trajectory_float.translation()(1) = RF_sup(1);//RFy_trajectory_float(walsking_tick);
         RF_trajectory_float.translation()(2) = RF_sup(2);//RFz_trajectory_float(walking_tick);
 
         LF_trajectory_float.translation()(0) = LF_sup(0);//LFx_trajectory_float(walking_tick);
@@ -2470,7 +2470,7 @@ void WalkingController::comController(RobotData &Robot)
         LF_trajectory_float.translation()(2) = LF_sup(2);//LFz_trajectory_float(walking_tick);
 
         RF_trajectory_float.linear() = RF_float_init.linear();
-        LF_trajectory_float.linear() = LF_float_init.linear(); 
+        LF_trajectory_float.linear() = LF_float_init.linear();  
 
        // PELV_trajectory_float_c.translation()(0) = com_refx(walking_tick) + pelv_xp*(Robot.link_[Pelvis].xipos(0) - com_refx(walking_tick));//Robot.link_[Pelvis].xipos(0) + pelv_xp*(Robot.link_[COM_id].xpos(0) - com_mpcx);    
 /*        PELV_trajectory_float_c.translation()(0) = Robot.link_[Pelvis].xipos(0) + pelv_xp*(Robot.link_[COM_id].xpos(0) - com_mpcx);

@@ -641,13 +641,12 @@ void CustomController::computeFast()
                 {
                     if (rd_.tc_.MPC == true)
                     {
-                        file[1] << hpipm_statusx << "\t" << PELV_trajectory_float.translation()(0) << "\t" << com_sup(0) << "\t" << com_mpcdx << "\t" << com_mpcx << "\t" << rd_.link_[COM_id].xpos(0) << "\t" << zmp_mpcx << "\t" << ZMP_FT_l_mu(0) << "\t" << mom_mpcx << "\t" << xL[walking_tick][2] << "\t" << xU[walking_tick][2] << "\t" << xL_mu[mpc_cycle][2] << "\t" << xU_mu[mpc_cycle][2] << std::endl;
-                        file[0] << hpipm_statusy << "\t" << com_mpcdy << "\t" << PELV_trajectory_float_c.translation()(0) << "\t" << com_mpcy << "\t" << rd_.link_[COM_id].xpos(1) << "\t" << zmp_mpcy << "\t" << ZMP_FT_l_mu(1) << "\t" << mom_mpcy << "\t" << yL[walking_tick][2] << "\t" << yU[walking_tick][2] << "\t" << rd_.q_desired(0) << "\t" << rd_.q_desired(1) << "\t" << rd_.q_desired(2) << "\t" << rd_.q_desired(3) << "\t" << rd_.q_desired(4) << "\t" << rd_.q_desired(5) << std::endl;
+                        file[1] << COM_float_current.translation()(0)<<"\t"<< hpipm_statusx << "\t" << PELV_trajectory_float.translation()(0) << "\t" << com_sup(0) << "\t" << comR_sup(0) << "\t"<< com_mpcx << "\t" << rd_.link_[COM_id].xpos(0) << "\t" << zmp_mpcx << "\t" << ZMP_FT_l_mu(0) << "\t" << mom_mpcx << "\t" << xL[walking_tick][2] << "\t" << xU[walking_tick][2] << "\t" << xL_mu[mpc_cycle][2] << "\t" << xU_mu[mpc_cycle][2] << std::endl;
+                        file[0] << COM_float_current.translation()(1)<<"\t" << hpipm_statusy << "\t" << PELV_trajectory_float.translation()(0) << "\t" << com_sup(1) << "\t" << comR_sup(1) << "\t"<< com_mpcy << "\t" << rd_.link_[COM_id].xpos(1) << "\t" << zmp_mpcy << "\t" << ZMP_FT_l_mu(1) << "\t" << mom_mpcy << "\t" << yL[walking_tick][2] << "\t" << yU[walking_tick][2] << "\t" << rd_.q_desired(0) << "\t" << rd_.q_desired(1) << "\t" << rd_.q_desired(2) << "\t" << rd_.q_desired(3) << "\t" << rd_.q_desired(4) << "\t" << rd_.q_desired(5) << std::endl;
                     }
                     else
                     {
                         file[0] << PELV_trajectory_float.translation()(0) << "\t" << com_refx(walking_tick) << "\t" << rd_.link_[COM_id].xpos(0) << "\t" << rd_.link_[Pelvis].xipos(0) << "\t" << PELV_trajectory_float.translation()(0) << "\t" << com_sup(0) << "\t" << zmp_refx(walking_tick) << "\t" << ZMP_FT_l(0) << std::endl;
-
                         file[1] << PELV_trajectory_float.translation()(1) << "\t" << com_refy(walking_tick) << "\t" << rd_.link_[COM_id].xpos(1) << "\t" << rd_.link_[Pelvis].xipos(1) << "\t" << PELV_trajectory_float.translation()(1) << "\t" << com_sup(1) << "\t" << zmp_refy(walking_tick) << "\t" << ZMP_FT_l(1) << "\t" << control_input(0) << "\t" << control_input(1) << "\t" << posture_input(0) << "\t" << posture_input(1) << std::endl;
                         // file[1] << rd_.q_desired(0) << "\t" <<rd_.q_(0) << "\t"<< rd_.q_desired(1) << "\t" <<rd_.q_(1) << "\t"<< rd_.q_desired(2) << "\t" <<rd_.q_(2) << "\t"<< rd_.q_desired(3) << "\t" <<rd_.q_(3) << "\t"<< rd_.q_desired(4) << "\t" <<rd_.q_(4) <<"\t"<< rd_.q_desired(5) << "\t" <<rd_.q_(5) << "\t"<<rd_.roll << "\t" << rd_.pitch<<std::endl;
                     }
@@ -938,9 +937,9 @@ void CustomController::mpc_variablex()
     }
     else
     {
-        //   x11x[0] = rd_.link_[COM_id].xpos(0);
-        //   x11x[1] = rd_.link_[COM_id].v(0);
-        //   x11x[2] = ZMP_FT_l_mu(0);
+       // x11x[0] = rd_.link_[COM_id].xpos(0);
+       // x11x[1] = rd_.link_[COM_id].v(0);
+       // x11x[2] = ZMP_FT_l_mu(0);
         hd_lbxx[0] = x11x;
         hd_ubxx[0] = x11x;
     }
@@ -961,7 +960,7 @@ void CustomController::mpc_variabley()
         d_lbx0y[1] = 0.0; //com_refdy(2000);
         d_lbx0y[2] = 0.0; //zmp_refy_mu(2000);
                           //  d_lbx0y[3] = 0.0;
-                          //   d_lbx0y[4] = 0.0;
+                                                    //   d_lbx0y[4] = 0.0;
         d_ubx0y[0] = 0.0; //com_refy_mu(2000);
         d_ubx0y[1] = 0.0; //com_refdy(2000);
         d_ubx0y[2] = 0.0; //zmp_refy_mu(2000);
@@ -973,9 +972,9 @@ void CustomController::mpc_variabley()
     }
     else
     {
-        // x11y[0] = rd_.link_[COM_id].xpos(1);
-        // x11y[1] = rd_.link_[COM_id].v(1);
-        // x11y[2] = ZMP_FT_l_mu(1);
+        x11y[0] = rd_.link_[COM_id].xpos(1);
+        x11y[1] = rd_.link_[COM_id].v(1);
+        x11y[2] = ZMP_FT_l_mu(1);
 
         hd_lbxy[0] = x11y;
         hd_ubxy[0] = x11y;
