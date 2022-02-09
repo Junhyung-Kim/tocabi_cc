@@ -2455,7 +2455,7 @@ void WalkingController::comController(RobotData &Robot)
     */}
     else
     {
-        PELV_trajectory_float_c.translation()(0) =  pelvR_sup(0) + pelv_xp*(comR_sup(0) - com_sup(0));//(PELV_float_current.translation()(0) - com_refx(walking_tick));   
+        PELV_trajectory_float_c.translation()(0) =  pelvR_sup(0) + pelv_xp*(COM_float_current.translation()(0) - com_mpcx);//(comR_sup(0) - com_sup(0));//(PELV_float_current.translation()(0) - com_refx(walking_tick));   
         PELV_trajectory_float_c.translation()(1) =  pelvR_sup(1) + pelv_yp*(comR_sup(1) - com_sup(1));//COM_float_current.translation()(1) - com_refy(walking_tick));
        
         PELV_trajectory_float_c.translation()(2) = pelv_init_sup;//PELV_float_init.translation()(2);
