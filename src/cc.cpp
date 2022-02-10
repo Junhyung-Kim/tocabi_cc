@@ -633,7 +633,7 @@ void CustomController::computeFast()
                     rd_.mujoco_dist = false;
                 }
 
-                /*                if(walking_tick >= 4205 && walking_tick < 4255 && dist == 1)
+                /* if(walking_tick >= 4205 && walking_tick < 4255 && dist == 1)
                 {
                     rd_.mujoco_dist  = true;
                 }
@@ -708,7 +708,7 @@ void CustomController::computePlanner()
                     mu0 = 2.0;
 
                 //solver Setup
-                int iter_max = 100;
+                int iter_max = 80;
                 double alpha_min = 0.01;
                 double tol_stat = 0.01;
                 double tol_eq = 0.01;   //8e-3;
@@ -727,8 +727,8 @@ void CustomController::computePlanner()
                 d_ocp_qp_ipm_arg_create(&dimx, &argx, ipm_arg_memx);
                 d_ocp_qp_ipm_arg_set_default(mode, &argx);
                 /*    d_ocp_qp_ipm_arg_set_mu0(&mu0, &argx);
-                d_ocp_qp_ipm_arg_set_iter_max(&iter_max, &argx);
-                d_ocp_qp_ipm_arg_set_tol_stat(&tol_stat, &argx);
+                */d_ocp_qp_ipm_arg_set_iter_max(&iter_max, &argx);
+                /*d_ocp_qp_ipm_arg_set_tol_stat(&tol_stat, &argx);
                 d_ocp_qp_ipm_arg_set_tol_eq(&tol_eq, &argx);
                 d_ocp_qp_ipm_arg_set_tol_ineq(&tol_ineq, &argx);
                 d_ocp_qp_ipm_arg_set_tol_comp(&tol_comp, &argx);
@@ -2456,6 +2456,17 @@ void CustomController::zmpControl(RobotData &Robot)
             control_input(2) = apk_r / 1000.0 * (RT(1) - Fr_l(4)) + (1 - app_r / 1000.0) * control_input(2);
             control_input(3) = ark_r / 1000.0 * (RT(0) - Fr_l(3)) + (1 - arp_r / 1000.0) * control_input(3);
       //  }
+
+        if (contactMode == 2)
+        {
+            control_input(2) = 0.0;
+            control_input(3) = 0.0;
+        }
+        else if (contactMode == 3)
+        {
+            control_input(0) = 0.0;
+            control_input(1) = 0.0;
+        }
 
         posture_input(0) = kc_r / 1000.0 * (-Robot.roll) + (1 - tc_r / 1000.0) * posture_input(0);  //pitch
         posture_input(1) = kc_p / 1000.0 * (-Robot.pitch) + (1 - tc_p / 1000.0) * posture_input(1); //roll
