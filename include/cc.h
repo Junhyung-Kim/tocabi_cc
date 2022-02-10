@@ -172,6 +172,10 @@ public:
     std::atomic<int> mpc_cycle;
     std::atomic<int> mpc_cycle_prev;
 
+
+    std::atomic<double> momI;
+    std::atomic<double> momIdebug;
+
     //momentumControl
     CQuadraticProgram QP_m;
     Eigen::VectorXd q_dm;

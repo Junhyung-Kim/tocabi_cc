@@ -1637,7 +1637,7 @@ void WalkingController::mpcStateContraint(RobotData &Robot)
             }
         }
 
-        if (i == t_temp + t_total + t_rest_init)
+        if (i == t_temp + t_total)
         {
             /*  xL[i][2] = xL[i-1][2];//zmp_refx(i);
             yL[i][2] = yL[i-1][2];
@@ -1649,7 +1649,7 @@ void WalkingController::mpcStateContraint(RobotData &Robot)
            // xU[i][3] = 0.0;
             yU[i][3] = 0.0;
         }
-        else if (i == t_temp + t_total * j + t_rest_init && j != 1)
+        else if (i == t_temp + t_total * j && j != 1)
         {
             if (j != 0)
             {
