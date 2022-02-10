@@ -1,11 +1,11 @@
-Qx1 : 2000.0
+Qx1 : 500000.0
 Qx2 : 0.0
-Qx3 : 10000
+Qx3 : 100.0
 Qx4 : 0.0
 Qx5 : 0.0
 
-Rx1 : 8.0
-Rx2 : 8.0
+Rx1 : 1.0
+Rx2 : 1.0
 
 Zl0x : 0.0
 Zu0x : 0.0
@@ -24,7 +24,7 @@ zuNx : 0
 
 lmom : 0
 
-Qy1 : 100.0
+Qy1 : 1000.0
 Qy2 : 0.0
 Qy3 : 10000.0
 Qy4 : 0.0
@@ -48,36 +48,36 @@ ZuNy : 0.0
 zlNy : 0
 zuNy : 0
 
-kc_r : 80
+kc_r : 20
 tc_r : 10
 
-kc_p : 50
+kc_p : 20
 tc_p : 10
 
 arp_dl : 30
 ark_dl : 0.02
 app_dl : 20
-apk_dl : 0.04
+apk_dl : 0.02
 
 arp_sl : 40
-ark_sl : 0.05
+ark_sl : 0.02
 app_sl : 30
-apk_sl : 0.04
+apk_sl : 0.02
 
 arp_dr : 30
-ark_dr : 0.05
+ark_dr : 0.02
 app_dr : 20
-apk_dr : 0.04
+apk_dr : 0.02
 
 arp_sr : 40
-ark_sr : 0.05
+ark_sr : 0.02
 app_sr : 30
-apk_sr : 0.04
+apk_sr : 0.02
 
 com_gain : 0.5
 
 pelv_xp : -0.8
-pelv_yp : -0.8
+pelv_yp : -0.7
 zmp_xp : 0.0
 zmp_yp : 0.0
 
