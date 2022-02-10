@@ -707,7 +707,7 @@ void CustomController::computePlanner()
                     mu0 = 2.0;
 
                 //solver Setup
-                int iter_max = 100;
+                int iter_max = 80;
                 double alpha_min = 0.01;
                 double tol_stat = 0.01;
                 double tol_eq = 0.01;   //8e-3;
@@ -944,10 +944,10 @@ void CustomController::mpc_variablex()
     }
     else
     {
-       // x11x[0] = rd_.link_[COM_id].xpos(0);
-      //  x11x[1] = rd_.link_[COM_id].v(0);
-      //  x11x[2] = ZMP_FT_l_mu(0);
-      //  x11x[3] = H_pitch;
+        x11x[0] = rd_.link_[COM_id].xpos(0);
+        x11x[1] = rd_.link_[COM_id].v(0);
+        x11x[2] = ZMP_FT_l_mu(0);
+        x11x[3] = H_pitch;
 
         hd_lbxx[0] = x11x;
         hd_ubxx[0] = x11x;
@@ -2406,13 +2406,21 @@ void CustomController::zmpControl(RobotData &Robot)
             control_input.setZero();
         }
 
-    //    if (walking_tick <= 4200 || walking_tick >= 4300)
-    //    {
-            control_input(0) = apk_l / 1000.0 * (LT(1) - Fl_l(4)) + (1 - app_l / 1000.0) * control_input(0); //pitch
-            control_input(1) = ark_l / 1000.0 * (LT(0) - Fl_l(3)) + (1 - arp_l / 1000.0) * control_input(1); //roll
-            control_input(2) = apk_r / 1000.0 * (RT(1) - Fr_l(4)) + (1 - app_r / 1000.0) * control_input(2);
-            control_input(3) = ark_r / 1000.0 * (RT(0) - Fr_l(3)) + (1 - arp_r / 1000.0) * control_input(3);
-      //  }
+        control_input(0) = apk_l / 1000.0 * (LT(1) - Fl_l(4)) + (1 - app_l / 1000.0) * control_input(0); //pitch
+        control_input(1) = ark_l / 1000.0 * (LT(0) - Fl_l(3)) + (1 - arp_l / 1000.0) * control_input(1); //roll
+        control_input(2) = apk_r / 1000.0 * (RT(1) - Fr_l(4)) + (1 - app_r / 1000.0) * control_input(2);
+        control_input(3) = ark_r / 1000.0 * (RT(0) - Fr_l(3)) + (1 - arp_r / 1000.0) * control_input(3);
+
+        if (contactMode == 2)
+        {
+            control_input(2) = 0.0;
+            control_input(3) = 0.0;
+        }
+        else if (contactMode == 3)
+        {
+            control_input(0) = 0.0;
+            control_input(1) = 0.0;
+        }
 
         posture_input(0) = kc_r / 1000.0 * (-Robot.roll) + (1 - tc_r / 1000.0) * posture_input(0);  //pitch
         posture_input(1) = kc_p / 1000.0 * (-Robot.pitch) + (1 - tc_p / 1000.0) * posture_input(1); //roll
