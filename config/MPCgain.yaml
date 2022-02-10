@@ -1,10 +1,10 @@
-Qx1 : 500000.0
+Qx1 : 5000.0
 Qx2 : 0.0
 Qx3 : 100.0
 Qx4 : 0.0
 Qx5 : 0.0
 
-Rx1 : 1.0
+Rx1 : 0.5
 Rx2 : 1.0
 
 Zl0x : 0.0
@@ -76,7 +76,7 @@ apk_sr : 0.02
 
 com_gain : 0.5
 
-pelv_xp : -0.8
+pelv_xp : -0.7
 pelv_yp : -0.7
 zmp_xp : 0.0
 zmp_yp : 0.0

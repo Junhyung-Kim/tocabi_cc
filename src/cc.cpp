@@ -650,7 +650,7 @@ void CustomController::computeFast()
                 {
                     if (rd_.tc_.MPC == true)
                     {
-                        file[1] << zmp_refx(walking_tick) << "\t" << hpipm_statusx << "\t" << PELV_trajectory_float.translation()(0) << "\t" << com_sup(0) << "\t" << comR_sup(0) << "\t" << com_mpcx << "\t" << rd_.link_[COM_id].xpos(0) << "\t" << zmp_mpcx << "\t" << ZMP_FT_l_mu(0) << "\t" << mom_mpcx << "\t" << H_pitch << "\t" << xL[walking_tick][2] << "\t" << xU[walking_tick][2] << "\t" << xL_mu[mpc_cycle][2] << "\t" << xU_mu[mpc_cycle][2] << std::endl;
+                        file[1] << com_mpcdx << "\t" << hpipm_statusx << "\t" << PELV_trajectory_float.translation()(0) << "\t" << com_sup(0) << "\t" << comR_sup(0) << "\t" << com_mpcx << "\t" << rd_.link_[COM_id].xpos(0) << "\t" << zmp_mpcx << "\t" << ZMP_FT_l_mu(0) << "\t" << mom_mpcx << "\t" << H_pitch << "\t" << xL[walking_tick][2] << "\t" << xU[walking_tick][2] << "\t" << xL_mu[mpc_cycle][2] << "\t" << xU_mu[mpc_cycle][2] << std::endl;
                         file[0] << COM_float_current.translation()(1) << "\t" << hpipm_statusy << "\t" << PELV_trajectory_float.translation()(0) << "\t" << com_sup(1) << "\t" << comR_sup(1) << "\t" << com_mpcy << "\t" << rd_.link_[COM_id].xpos(1) << "\t" << zmp_mpcy << "\t" << ZMP_FT_l_mu(1) << "\t" << mom_mpcy << "\t" << H_roll << "\t" << yL[walking_tick][2] << "\t" << yU[walking_tick][2] << "\t" << rd_.q_desired(0) << "\t" << rd_.q_desired(1) << "\t" << rd_.q_desired(2) << "\t" << rd_.q_desired(3) << "\t" << rd_.q_desired(4) << "\t" << rd_.q_desired(5) << std::endl;
                     }
                     else
@@ -944,10 +944,10 @@ void CustomController::mpc_variablex()
     }
     else
     {
-        x11x[0] = rd_.link_[COM_id].xpos(0);
-        x11x[1] = rd_.link_[COM_id].v(0);
-        x11x[2] = ZMP_FT_l_mu(0);
-        x11x[3] = H_pitch;
+       // x11x[0] = rd_.link_[COM_id].xpos(0);
+      //  x11x[1] = rd_.link_[COM_id].v(0);
+      //  x11x[2] = ZMP_FT_l_mu(0);
+      //  x11x[3] = H_pitch;
 
         hd_lbxx[0] = x11x;
         hd_ubxx[0] = x11x;
@@ -1562,9 +1562,9 @@ void CustomController::mpcVariableInit()
     }
 
     //INPUT CONSTRAINT
-    d_lbu0x[0] = -1.0;
+    d_lbu0x[0] = -3.0;
     d_lbu0x[1] = -10;
-    d_ubu0x[0] = 1.0;
+    d_ubu0x[0] = 3.0;
     d_ubu0x[1] = 10;
 
     d_lbu0y[0] = -3.2;
@@ -1572,9 +1572,9 @@ void CustomController::mpcVariableInit()
     d_ubu0y[0] = 3.2;
     d_ubu0y[1] = 15;
 
-    d_lbu1x[0] = -1.0;
+    d_lbu1x[0] = -3.0;
     d_lbu1x[1] = -10;
-    d_ubu1x[0] = 1.0;
+    d_ubu1x[0] = 3.0;
     d_ubu1x[1] = 10;
 
     d_lbu1y[0] = -3.2;
@@ -2406,13 +2406,13 @@ void CustomController::zmpControl(RobotData &Robot)
             control_input.setZero();
         }
 
-        if (walking_tick <= 4200 || walking_tick >= 4300)
-        {
+    //    if (walking_tick <= 4200 || walking_tick >= 4300)
+    //    {
             control_input(0) = apk_l / 1000.0 * (LT(1) - Fl_l(4)) + (1 - app_l / 1000.0) * control_input(0); //pitch
             control_input(1) = ark_l / 1000.0 * (LT(0) - Fl_l(3)) + (1 - arp_l / 1000.0) * control_input(1); //roll
             control_input(2) = apk_r / 1000.0 * (RT(1) - Fr_l(4)) + (1 - app_r / 1000.0) * control_input(2);
             control_input(3) = ark_r / 1000.0 * (RT(0) - Fr_l(3)) + (1 - arp_r / 1000.0) * control_input(3);
-        }
+      //  }
 
         posture_input(0) = kc_r / 1000.0 * (-Robot.roll) + (1 - tc_r / 1000.0) * posture_input(0);  //pitch
         posture_input(1) = kc_p / 1000.0 * (-Robot.pitch) + (1 - tc_p / 1000.0) * posture_input(1); //roll

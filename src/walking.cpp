@@ -1593,8 +1593,8 @@ void WalkingController::mpcStateContraint(RobotData &Robot)
       //  yL[i][4] = -10;
       //  yU[i][4] = 10;
 
-        xL[i][1] = -5.0;
-        xU[i][1] = 5.0;
+        xL[i][1] = -10.0;
+        xU[i][1] = 10.0;
         xL[i][3] = -10;
         xU[i][3] = 10;
       //  xL[i][4] = -10;
@@ -2454,7 +2454,7 @@ void WalkingController::comController(RobotData &Robot)
     */}
     else
     {
-        PELV_trajectory_float_c.translation()(0) =  pelvR_sup(0) + pelv_xp*(comR_sup(0) - com_sup(0));//(PELV_float_current.translation()(0) - com_refx(walking_tick));   
+        PELV_trajectory_float_c.translation()(0) =  pelvR_sup(0) + pelv_xp*(COM_float_current.translation()(0) - com_mpcx);//(PELV_float_current.translation()(0) - com_refx(walking_tick));   
         PELV_trajectory_float_c.translation()(1) =  pelvR_sup(1) + pelv_yp*(comR_sup(1) - com_sup(1));//COM_float_current.translation()(1) - com_refy(walking_tick));
        
         PELV_trajectory_float_c.translation()(2) = pelv_init_sup;//PELV_float_init.translation()(2);
