@@ -637,20 +637,39 @@ void CustomController::computeFast()
                 //if (walking_tick % 5 == 0)
                 //     file[1] << walking_tick << "\t"<< mpc_cycle << "\t" << zmp_refx(walking_tick) <<"\t" << rd_.link_[COM_id].xpos(0) << "\t" << com_mpcx << "\t" << ZMP_FT_l(0) << "\t" << zmp_mpcx << "\t" <<xL[walking_tick][0]<<"\t" << xU[walking_tick][0] <<"\t"<< rd_.link_[COM_id].v(1) << "\t" << rd_.link_[COM_id].xpos(1) << "\t" <<hpipm_statusy<<"\t" << com_mpcy << "\t" << ZMP_FT_l(1) << "\t" << ZMP_FT(1) << "\t" << zmp_mpcy << "\t" << rd_.link_[COM_id].xpos(2) << "\t" << H_data(3) << "\t" << mom_mpcy << "\t" << H_data(4) << "\t" << mom_mpcx << "\t" << control_input(0) << "\t" << control_input(1) <<std::endl;
 
+<<<<<<< HEAD
                 if (walking_tick != walking_tick_prev)
                 {
                     if (rd_.tc_.MPC == true)
                     {
                         file[1] << hpipm_statusx << "\t" << PELV_trajectory_float.translation()(0) << "\t" << com_sup(0) << "\t" << comR_sup(0) << "\t" << com_mpcx << "\t" << rd_.link_[COM_id].xpos(0) << "\t" << zmp_mpcx << "\t" << ZMP_FT_l_mu(0) << "\t" << mom_mpcx << "\t" << H_pitch<<"\t" << xL[walking_tick][2] << "\t" << xU[walking_tick][2] << "\t" << xL_mu[mpc_cycle][2] << "\t" << xU_mu[mpc_cycle][2] << "\t" << control_input(0) << "\t" << control_input(1) << "\t" << rd_.q_desired(0) << "\t" << rd_.q_(0) << "\t" << rd_.q_desired(1) << "\t" << rd_.q_(1) << "\t" << rd_.q_desired(2) << "\t" << rd_.q_(2) << "\t" << rd_.q_desired(3) << "\t" << rd_.q_(3) << "\t" << rd_.q_desired(4) << "\t" << rd_.q_(4) << "\t" << rd_.q_desired(5) << "\t" << rd_.q_(5) << std::endl;
                         file[0] << hpipm_statusy << "\t" << PELV_trajectory_float.translation()(0) << "\t" << com_sup(1) << "\t" << comR_sup(1) << "\t" << com_mpcy << "\t" << rd_.link_[COM_id].xpos(1) << "\t" << zmp_mpcy << "\t" << ZMP_FT_l_mu(1) << "\t" << mom_mpcy << "\t" << H_roll<<"\t"<< yL[walking_tick][2] << "\t" << yU[walking_tick][2] << "\t" << rd_.q_desired(0) << "\t" << rd_.q_desired(1) << "\t" << rd_.q_desired(2) << "\t" << rd_.q_desired(3) << "\t" << rd_.q_desired(4) << "\t" << rd_.q_desired(5) << std::endl;
+=======
+    
+
+            if(walking_tick != walking_tick_prev)
+            {
+                if (rd_.tc_.MPC == true)
+                    {
+                        file[1] << zmp_refx(walking_tick)<<"\t"<< hpipm_statusx << "\t" << PELV_trajectory_float.translation()(0) << "\t" << com_sup(0) << "\t" << comR_sup(0) << "\t"<< com_mpcx << "\t" << rd_.link_[COM_id].xpos(0) << "\t" << zmp_mpcx << "\t" << ZMP_FT_l_mu(0) << "\t" << mom_mpcx << "\t" << H_pitch <<"\t"<<xL[walking_tick][2] << "\t" << xU[walking_tick][2] << "\t" << xL_mu[mpc_cycle][2] << "\t" << xU_mu[mpc_cycle][2] << std::endl;
+                        file[0] << COM_float_current.translation()(1)<<"\t" << hpipm_statusy << "\t" << PELV_trajectory_float.translation()(0) << "\t" << com_sup(1) << "\t" << comR_sup(1) << "\t"<< com_mpcy << "\t" << rd_.link_[COM_id].xpos(1) << "\t" << zmp_mpcy << "\t" << ZMP_FT_l_mu(1) << "\t" << mom_mpcy << "\t"<< H_roll <<"\t"<< yL[walking_tick][2] << "\t" << yU[walking_tick][2] <<"\t"<< yL[walking_tick][3] << "\t" << yU[walking_tick][3] << "\t" << rd_.q_desired(0) << "\t" << rd_.q_desired(1) << "\t" << rd_.q_desired(2) << "\t" << rd_.q_desired(3) << "\t" << rd_.q_desired(4) << "\t" << rd_.q_desired(5) << std::endl;
+>>>>>>> origin/main
                     }
                     else
                     {
                         file[0] << PELV_trajectory_float.translation()(0) << "\t" << com_refx(walking_tick) << "\t" << rd_.link_[COM_id].xpos(0) << "\t" << rd_.link_[Pelvis].xipos(0) << "\t" << PELV_trajectory_float.translation()(0) << "\t" << com_sup(0) << "\t" << zmp_refx(walking_tick) << "\t" << ZMP_FT_l(0) << std::endl;
+<<<<<<< HEAD
                         file[1] << PELV_trajectory_float.translation()(1) << "\t" << com_refy(walking_tick) << "\t" << rd_.link_[COM_id].xpos(1) << "\t" << rd_.link_[Pelvis].xipos(1) << "\t" << PELV_trajectory_float.translation()(1) << "\t" << com_sup(1) << "\t" << zmp_refy(walking_tick) << "\t" << ZMP_FT_l(1) << "\t" << control_input(0) << "\t" << control_input(1) << "\t" << posture_input(0) << "\t" << posture_input(1) << "\t" << rd_.q_desired(0) << "\t" << rd_.q_(0) << "\t" << rd_.q_desired(1) << "\t" << rd_.q_(1) << "\t" << rd_.q_desired(2) << "\t" << rd_.q_(2) << "\t" << rd_.q_desired(3) << "\t" << rd_.q_(3) << "\t" << rd_.q_desired(4) << "\t" << rd_.q_(4) << "\t" << rd_.q_desired(5) << "\t" << rd_.q_(5) << std::endl;
                     }
                 }
             }
+=======
+                        file[1] << PELV_trajectory_float.translation()(1) << "\t" << com_refy(walking_tick) << "\t" << rd_.link_[COM_id].xpos(1) << "\t" << rd_.link_[Pelvis].xipos(1) << "\t" << PELV_trajectory_float.translation()(1) << "\t" << com_sup(1) << "\t" << zmp_refy(walking_tick) << "\t" << ZMP_FT_l(1) << "\t" << control_input(0) << "\t" << control_input(1) << "\t" << posture_input(0) << "\t" << posture_input(1) << std::endl;
+                        // file[1] << rd_.q_desired(0) << "\t" <<rd_.q_(0) << "\t"<< rd_.q_desired(1) << "\t" <<rd_.q_(1) << "\t"<< rd_.q_desired(2) << "\t" <<rd_.q_(2) << "\t"<< rd_.q_desired(3) << "\t" <<rd_.q_(3) << "\t"<< rd_.q_desired(4) << "\t" <<rd_.q_(4) <<"\t"<< rd_.q_desired(5) << "\t" <<rd_.q_(5) << "\t"<<rd_.roll << "\t" << rd_.pitch<<std::endl;
+                    }
+            } 
+           }
+>>>>>>> origin/main
         }
         else if (rd_.tc_.walking_enable == 3.0)
         {
@@ -1933,8 +1952,11 @@ void CustomController::zmpControl(RobotData &Robot)
 
         int k;
         zmp_delx = 0.0;
+<<<<<<< HEAD
         zmp_dely = 0.0;
 
+=======
+>>>>>>> origin/main
         if (rd_.tc_.MPC == false)
         {
             if (contactMode == 1)
@@ -2010,6 +2032,7 @@ void CustomController::zmpControl(RobotData &Robot)
                 C = (zmp_mpcx + zmp_delx) / A + (zmp_mpcy + zmp_dely);
                 xi = (C - B) / (A + 1 / A);
                 yi = A * xi + B;
+<<<<<<< HEAD
 
                 if (yi > pl(1))
                 {
@@ -2053,6 +2076,51 @@ void CustomController::zmpControl(RobotData &Robot)
                 pl_temp(1) = pl(1) - (zmp_mpcy + zmp_dely);
                 pl_temp(2) = 0.0;
 
+=======
+
+                if (yi > pl(1))
+                {
+                    xi = pl(0);
+                    yi = pl(1);
+                }
+                else if (yi < pr(1))
+                {
+                    xi = pr(0);
+                    yi = pr(1);
+                }
+
+                pl_temp(0) = pl(0) - (zmp_mpcx + zmp_delx); //zmp_refx(walking_tick);
+                pl_temp(1) = pl(1) - (zmp_mpcy + zmp_dely); //zmp_refy(walking_tick);
+                pl_temp(2) = 0.0;
+
+                pr_temp(0) = pr(0) - (zmp_mpcx + zmp_delx); //zmp_refx(walking_tick);
+                pr_temp(1) = pr(1) - (zmp_mpcy + zmp_dely); //zmp_refy(walking_tick);
+                pl_temp(2) = 0.0;
+
+                Lz = sqrt((pr(0) - pl(0)) * (pr(0) - pl(0)) + (pr(1) - pl(1)) * (pr(1) - pl(1)));
+                Lz1 = sqrt((xi - pl(0)) * (xi - pl(0)) + (yi - pl(1)) * (yi - pl(1)));
+                alpha = Lz1 / Lz;
+
+                if (alpha > 1)
+                {
+                    alpha = 1;
+                }
+                else if (alpha < 0)
+                {
+                    alpha = 0;
+                }
+
+                desired_ankle_torque = -DyrosMath::skew(pl_temp) * Fl_l.segment<3>(0) - DyrosMath::skew(pr_temp) * Fr_l.segment<3>(0);
+            }
+            else if (contactMode == 2)
+            {
+                alpha = 0.0;
+
+                pl_temp(0) = pl(0) - (zmp_mpcx + zmp_delx);
+                pl_temp(1) = pl(1) - (zmp_mpcy + zmp_dely);
+                pl_temp(2) = 0.0;
+
+>>>>>>> origin/main
                 desired_ankle_torque = -DyrosMath::skew(pl_temp) * Fl_l.segment<3>(0);
             }
             else
@@ -2090,6 +2158,96 @@ void CustomController::zmpControl(RobotData &Robot)
 
         double arp_l, ark_l, app_l, apk_l, arp_r, ark_r, app_r, apk_r;
 
+<<<<<<< HEAD
+=======
+        /* if (phaseChange2 == true && phaseChange3 == false)
+        {
+            if (foot_step(current_step_num, 6) == 1)
+            {
+                arp_l = DyrosMath::cubic(walking_tick, double2Single_pre1, double2Single1, arp_dl, arp_sl, 0, 0);
+                ark_l = DyrosMath::cubic(walking_tick, double2Single_pre1, double2Single1, ark_dl, ark_sl, 0, 0);
+                app_l = DyrosMath::cubic(walking_tick, double2Single_pre1, double2Single1, app_dl, app_sl, 0, 0);
+                apk_l = DyrosMath::cubic(walking_tick, double2Single_pre1, double2Single1, apk_dl, apk_sl, 0, 0);
+                arp_r = DyrosMath::cubic(walking_tick, double2Single_pre1, double2Single1, arp_dl, arp_sl, 0, 0);
+                ark_r = DyrosMath::cubic(walking_tick, double2Single_pre1, double2Single1, ark_dl, ark_sl, 0, 0);
+                app_r = DyrosMath::cubic(walking_tick, double2Single_pre1, double2Single1, app_dl, app_sl, 0, 0);
+                apk_r = DyrosMath::cubic(walking_tick, double2Single_pre1, double2Single1, apk_dl, apk_sl, 0, 0);
+            }
+            else
+            {
+                arp_r = DyrosMath::cubic(walking_tick, double2Single_pre1, double2Single1, arp_dl, arp_sl, 0, 0);
+                ark_r = DyrosMath::cubic(walking_tick, double2Single_pre1, double2Single1, ark_dl, ark_sl, 0, 0);
+                app_r = DyrosMath::cubic(walking_tick, double2Single_pre1, double2Single1, app_dl, app_sl, 0, 0);
+                apk_r = DyrosMath::cubic(walking_tick, double2Single_pre1, double2Single1, apk_dl, apk_sl, 0, 0);
+                arp_l = DyrosMath::cubic(walking_tick, double2Single_pre1, double2Single1, arp_dl, arp_sl, 0, 0);
+                ark_l = DyrosMath::cubic(walking_tick, double2Single_pre1, double2Single1, ark_dl, ark_sl, 0, 0);
+                app_l = DyrosMath::cubic(walking_tick, double2Single_pre1, double2Single1, app_dl, app_sl, 0, 0);
+                apk_l = DyrosMath::cubic(walking_tick, double2Single_pre1, double2Single1, apk_dl, apk_sl, 0, 0);
+            }
+        }
+        else if (phaseChange2 == false && phaseChange3 == true)
+        {
+            if (contactMode == 2)
+            {
+                arp_l = DyrosMath::cubic(walking_tick, single2Double_pre1, single2Double1, arp_sl, arp_dl, 0, 0);
+                ark_l = DyrosMath::cubic(walking_tick, single2Double_pre1, single2Double1, ark_sl, ark_dl, 0, 0);
+                app_l = DyrosMath::cubic(walking_tick, single2Double_pre1, single2Double1, app_sl, app_dl, 0, 0);
+                apk_l = DyrosMath::cubic(walking_tick, single2Double_pre1, single2Double1, apk_sl, apk_dl, 0, 0);
+                arp_r = DyrosMath::cubic(walking_tick, single2Double_pre1, single2Double1, arp_sl, arp_dl, 0, 0);
+                ark_r = DyrosMath::cubic(walking_tick, single2Double_pre1, single2Double1, ark_sl, ark_dl, 0, 0);
+                app_r = DyrosMath::cubic(walking_tick, single2Double_pre1, single2Double1, app_sl, app_dl, 0, 0);
+                apk_r = DyrosMath::cubic(walking_tick, single2Double_pre1, single2Double1, apk_sl, apk_dl, 0, 0);
+            }
+            else
+            {
+                arp_r = DyrosMath::cubic(walking_tick, single2Double_pre1, single2Double1, arp_sl, arp_dl, 0, 0);
+                ark_r = DyrosMath::cubic(walking_tick, single2Double_pre1, single2Double1, ark_sl, ark_dl, 0, 0);
+                app_r = DyrosMath::cubic(walking_tick, single2Double_pre1, single2Double1, app_sl, app_dl, 0, 0);
+                apk_r = DyrosMath::cubic(walking_tick, single2Double_pre1, single2Double1, apk_sl, apk_dl, 0, 0);
+                arp_l = DyrosMath::cubic(walking_tick, single2Double_pre1, single2Double1, arp_sl, arp_dl, 0, 0);
+                ark_l = DyrosMath::cubic(walking_tick, single2Double_pre1, single2Double1, ark_sl, ark_dl, 0, 0);
+                app_l = DyrosMath::cubic(walking_tick, single2Double_pre1, single2Double1, app_sl, app_dl, 0, 0);
+                apk_l = DyrosMath::cubic(walking_tick, single2Double_pre1, single2Double1, apk_sl, apk_dl, 0, 0);
+            }
+        }
+        else
+        {
+            if (contactMode == 1)
+            {
+                arp_l = arp_dl;
+                ark_l = ark_dl;
+                app_l = app_dl;
+                apk_l = apk_dl;
+                arp_r = arp_dl;
+                ark_r = ark_dl;
+                app_r = app_dl;
+                apk_r = apk_dl;
+            }
+            else if (contactMode == 2)
+            {
+                arp_l = arp_sl;
+                ark_l = ark_sl;
+                app_l = app_sl;
+                apk_l = apk_sl;
+                arp_r = arp_sl;
+                ark_r = ark_sl;
+                app_r = app_sl;
+                apk_r = apk_sl;
+            }
+            else
+            {
+                arp_l = arp_sl;
+                ark_l = ark_sl;
+                app_l = app_sl;
+                apk_l = apk_sl;
+                arp_r = arp_sl;
+                ark_r = ark_sl;
+                app_r = app_sl;
+                apk_r = apk_sl;
+            }
+        }*/
+
+>>>>>>> origin/main
         if (contactMode == 1)
         {
             arp_l = arp_dl;
@@ -2147,6 +2305,7 @@ void CustomController::zmpControl(RobotData &Robot)
             control_input.setZero();
         }
 
+<<<<<<< HEAD
         //  if(walking_tick <= 4200 || walking_tick >=4300)
         //  {
         control_input(0) = apk_l / 1000.0 * (LT(1) - Fl_l(4)) + (1 - app_l / 1000.0) * control_input(0); //pitch
@@ -2154,6 +2313,15 @@ void CustomController::zmpControl(RobotData &Robot)
         control_input(2) = apk_r / 1000.0 * (RT(1) - Fr_l(4)) + (1 - app_r / 1000.0) * control_input(2);
         control_input(3) = ark_r / 1000.0 * (RT(0) - Fr_l(3)) + (1 - arp_r / 1000.0) * control_input(3);
         //  }
+=======
+    //    if (walking_tick <= 4200 || walking_tick >= 4300)
+    //    {
+            control_input(0) = apk_l / 1000.0 * (LT(1) - Fl_l(4)) + (1 - app_l / 1000.0) * control_input(0); //pitch
+            control_input(1) = ark_l / 1000.0 * (LT(0) - Fl_l(3)) + (1 - arp_l / 1000.0) * control_input(1); //roll
+            control_input(2) = apk_r / 1000.0 * (RT(1) - Fr_l(4)) + (1 - app_r / 1000.0) * control_input(2);
+            control_input(3) = ark_r / 1000.0 * (RT(0) - Fr_l(3)) + (1 - arp_r / 1000.0) * control_input(3);
+      //  }
+>>>>>>> origin/main
 
         if (contactMode == 2)
         {
