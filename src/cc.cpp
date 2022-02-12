@@ -624,7 +624,7 @@ void CustomController::computeFast()
                     rd_.mujoco_dist = false;
                 }
 
-                /*                if(walking_tick >= 4205 && walking_tick < 4255 && dist == 1)
+                /*if(walking_tick >= 4205 && walking_tick < 4255 && dist == 1)
                 {
                     rd_.mujoco_dist  = true;
                 }
@@ -641,14 +641,13 @@ void CustomController::computeFast()
                 {
                     if (rd_.tc_.MPC == true)
                     {
-                        file[1] << hpipm_statusx << "\t" << PELV_trajectory_float.translation()(0) << "\t" << com_sup(0) << "\t" << comR_sup(0) << "\t" << com_mpcx << "\t" << rd_.link_[COM_id].xpos(0) << "\t" << zmp_mpcx << "\t" << ZMP_FT_l_mu(0) << "\t" << mom_mpcx << "\t" << xL[walking_tick][2] << "\t" << xU[walking_tick][2] << "\t" << xL_mu[mpc_cycle][2] << "\t" << xU_mu[mpc_cycle][2] << "\t" << control_input(0) << "\t" << control_input(1) << "\t" << rd_.q_desired(0) << "\t" << rd_.q_(0) << "\t" << rd_.q_desired(1) << "\t" << rd_.q_(1) << "\t" << rd_.q_desired(2) << "\t" << rd_.q_(2) << "\t" << rd_.q_desired(3) << "\t" << rd_.q_(3) << "\t" << rd_.q_desired(4) << "\t" << rd_.q_(4) << "\t" << rd_.q_desired(5) << "\t" << rd_.q_(5) << std::endl;
-                        file[0] << hpipm_statusy << "\t" << PELV_trajectory_float.translation()(0) << "\t" << com_sup(1) << "\t" << comR_sup(1) << "\t" << com_mpcy << "\t" << rd_.link_[COM_id].xpos(1) << "\t" << zmp_mpcy << "\t" << ZMP_FT_l_mu(1) << "\t" << mom_mpcy << "\t" << yL[walking_tick][2] << "\t" << yU[walking_tick][2] << "\t" << rd_.q_desired(0) << "\t" << rd_.q_desired(1) << "\t" << rd_.q_desired(2) << "\t" << rd_.q_desired(3) << "\t" << rd_.q_desired(4) << "\t" << rd_.q_desired(5) << std::endl;
+                        file[1] << hpipm_statusx << "\t" << PELV_trajectory_float.translation()(0) << "\t" << com_sup(0) << "\t" << comR_sup(0) << "\t" << com_mpcx << "\t" << rd_.link_[COM_id].xpos(0) << "\t" << zmp_mpcx << "\t" << ZMP_FT_l_mu(0) << "\t" << mom_mpcx << "\t" << H_pitch<<"\t" << xL[walking_tick][2] << "\t" << xU[walking_tick][2] << "\t" << xL_mu[mpc_cycle][2] << "\t" << xU_mu[mpc_cycle][2] << "\t" << control_input(0) << "\t" << control_input(1) << "\t" << rd_.q_desired(0) << "\t" << rd_.q_(0) << "\t" << rd_.q_desired(1) << "\t" << rd_.q_(1) << "\t" << rd_.q_desired(2) << "\t" << rd_.q_(2) << "\t" << rd_.q_desired(3) << "\t" << rd_.q_(3) << "\t" << rd_.q_desired(4) << "\t" << rd_.q_(4) << "\t" << rd_.q_desired(5) << "\t" << rd_.q_(5) << std::endl;
+                        file[0] << hpipm_statusy << "\t" << PELV_trajectory_float.translation()(0) << "\t" << com_sup(1) << "\t" << comR_sup(1) << "\t" << com_mpcy << "\t" << rd_.link_[COM_id].xpos(1) << "\t" << zmp_mpcy << "\t" << ZMP_FT_l_mu(1) << "\t" << mom_mpcy << "\t" << H_roll<<"\t"<< yL[walking_tick][2] << "\t" << yU[walking_tick][2] << "\t" << rd_.q_desired(0) << "\t" << rd_.q_desired(1) << "\t" << rd_.q_desired(2) << "\t" << rd_.q_desired(3) << "\t" << rd_.q_desired(4) << "\t" << rd_.q_desired(5) << std::endl;
                     }
                     else
                     {
                         file[0] << PELV_trajectory_float.translation()(0) << "\t" << com_refx(walking_tick) << "\t" << rd_.link_[COM_id].xpos(0) << "\t" << rd_.link_[Pelvis].xipos(0) << "\t" << PELV_trajectory_float.translation()(0) << "\t" << com_sup(0) << "\t" << zmp_refx(walking_tick) << "\t" << ZMP_FT_l(0) << std::endl;
                         file[1] << PELV_trajectory_float.translation()(1) << "\t" << com_refy(walking_tick) << "\t" << rd_.link_[COM_id].xpos(1) << "\t" << rd_.link_[Pelvis].xipos(1) << "\t" << PELV_trajectory_float.translation()(1) << "\t" << com_sup(1) << "\t" << zmp_refy(walking_tick) << "\t" << ZMP_FT_l(1) << "\t" << control_input(0) << "\t" << control_input(1) << "\t" << posture_input(0) << "\t" << posture_input(1) << "\t" << rd_.q_desired(0) << "\t" << rd_.q_(0) << "\t" << rd_.q_desired(1) << "\t" << rd_.q_(1) << "\t" << rd_.q_desired(2) << "\t" << rd_.q_(2) << "\t" << rd_.q_desired(3) << "\t" << rd_.q_(3) << "\t" << rd_.q_desired(4) << "\t" << rd_.q_(4) << "\t" << rd_.q_desired(5) << "\t" << rd_.q_(5) << std::endl;
-                        // file[1] << rd_.q_desired(0) << "\t" <<rd_.q_(0) << "\t"<< rd_.q_desired(1) << "\t" <<rd_.q_(1) << "\t"<< rd_.q_desired(2) << "\t" <<rd_.q_(2) << "\t"<< rd_.q_desired(3) << "\t" <<rd_.q_(3) << "\t"<< rd_.q_desired(4) << "\t" <<rd_.q_(4) <<"\t"<< rd_.q_desired(5) << "\t" <<rd_.q_(5) << "\t"<<rd_.roll << "\t" << rd_.pitch<<std::endl;
                     }
                 }
             }
@@ -762,7 +761,7 @@ void CustomController::computePlanner()
                 ipm_arg_memy = malloc(ipm_arg_sizey);
                 d_ocp_qp_ipm_arg_create(&dimy, &argy, ipm_arg_memy);
                 d_ocp_qp_ipm_arg_set_default(mode, &argy);
-                d_ocp_qp_ipm_arg_set_mu0(&mu0, &argy);
+               // d_ocp_qp_ipm_arg_set_mu0(&mu0, &argy);
                 /* d_ocp_qp_ipm_arg_set_iter_max(&iter_max, &argy);
                 d_ocp_qp_ipm_arg_set_tol_stat(&tol_stat, &argy);
                 d_ocp_qp_ipm_arg_set_tol_eq(&tol_eq, &argy);
@@ -866,6 +865,9 @@ void CustomController::computePlanner()
                     com_mpcx = x11x[0];
                     com_mpcdx = x11x[1];
                     zmp_mpcx = x11x[2];
+                    
+                    double ab;
+                    ab = H_pitch;
                     mom_mpcx = x11x[4];
 
                     /*  if (mpct1 != 1 || mpct1_prev != 1)
@@ -933,10 +935,18 @@ void CustomController::mpc_variablex()
     }
     else
     {
-        x11x[0] = rd_.link_[COM_id].xpos(0);
+       /* x11x[0] = rd_.link_[COM_id].xpos(0);
         x11x[1] = rd_.link_[COM_id].v(0);
         x11x[2] = ZMP_FT_l_mu(0);
-        x11x[4] = H_pitch;
+        if(mpc_cycle > 300)
+        {
+            x11x[4] = 0.0;
+        }
+        else
+        {
+            x11x[4] = H_pitch;
+        }*/
+        
         hd_lbxx[0] = x11x;
         hd_ubxx[0] = x11x;
     }
@@ -969,10 +979,10 @@ void CustomController::mpc_variabley()
     }
     else
     {
-        x11y[0] = rd_.link_[COM_id].xpos(1);
+      /*  x11y[0] = rd_.link_[COM_id].xpos(1);
         x11y[1] = rd_.link_[COM_id].v(1);
         x11y[2] = ZMP_FT_l_mu(1);
-        x11y[4] = H_roll;
+        x11y[4] = H_roll;*/
         hd_lbxy[0] = x11y;
         hd_ubxy[0] = x11y;
     }
