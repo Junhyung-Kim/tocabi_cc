@@ -1,11 +1,11 @@
-Qx1 : 1000
+Qx1 : 50000
 Qx2 : 0.0
-Qx3 : 300000
+Qx3 : 30000
 Qx4 : 0.0
 Qx5 : 0.0
 
 Rx1 : 2.0
-Rx2 : 2.0
+Rx2 : 5.0
 
 Zl0x : 0.0
 Zu0x : 0.0
@@ -54,24 +54,24 @@ tc_r : 10
 kc_p : 20
 tc_p : 10
 
-arp_dl : 2
-ark_dl : 0.02
-app_dl : 2
-apk_dl : 0.02
+arp_dl : 10
+ark_dl : 0.04
+app_dl : 10
+apk_dl : 0.04
 
-arp_sl : 3
+arp_sl : 10
 ark_sl : 0.03
-app_sl : 3
+app_sl : 10
 apk_sl : 0.03
 
-arp_dr : 2
-ark_dr : 0.02
-app_dr : 2
-apk_dr : 0.02
+arp_dr : 10
+ark_dr : 0.04
+app_dr : 10
+apk_dr : 0.04
 
-arp_sr : 3
+arp_sr : 10
 ark_sr : 0.03
-app_sr : 3
+app_sr : 10
 apk_sr : 0.03
 
 com_gain : 0.5
