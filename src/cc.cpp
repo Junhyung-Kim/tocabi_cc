@@ -639,6 +639,7 @@ void CustomController::computeFast()
 
                 if (walking_tick != walking_tick_prev)
                 {
+                    walking_tick_prev = walking_tick;
                     if (rd_.tc_.MPC == true)
                     {
                         file[1] << hpipm_statusx << "\t" << PELV_trajectory_float.translation()(0) << "\t" << com_sup(0) << "\t" << comR_sup(0) << "\t" << com_mpcx << "\t" << rd_.link_[COM_id].xpos(0) << "\t" << zmp_mpcx << "\t" << ZMP_FT_l_mu(0) << "\t" << mom_mpcx << "\t" << H_pitch<<"\t" << xL[walking_tick][2] << "\t" << xU[walking_tick][2] << "\t" << xL_mu[mpc_cycle][2] << "\t" << xU_mu[mpc_cycle][2] << "\t" << control_input(0) << "\t" << control_input(1) << "\t" << rd_.q_desired(0) << "\t" << rd_.q_(0) << "\t" << rd_.q_desired(1) << "\t" << rd_.q_(1) << "\t" << rd_.q_desired(2) << "\t" << rd_.q_(2) << "\t" << rd_.q_desired(3) << "\t" << rd_.q_(3) << "\t" << rd_.q_desired(4) << "\t" << rd_.q_(4) << "\t" << rd_.q_desired(5) << "\t" << rd_.q_(5) << std::endl;
@@ -716,8 +717,8 @@ void CustomController::computePlanner()
                 d_ocp_qp_ipm_arg_create(&dimx, &argx, ipm_arg_memx);
                 d_ocp_qp_ipm_arg_set_default(mode, &argx);
                 /*    d_ocp_qp_ipm_arg_set_mu0(&mu0, &argx);
-                d_ocp_qp_ipm_arg_set_iter_max(&iter_max, &argx);
-                d_ocp_qp_ipm_arg_set_tol_stat(&tol_stat, &argx);
+                */d_ocp_qp_ipm_arg_set_iter_max(&iter_max, &argx);
+                /*d_ocp_qp_ipm_arg_set_tol_stat(&tol_stat, &argx);
                 d_ocp_qp_ipm_arg_set_tol_eq(&tol_eq, &argx);
                 d_ocp_qp_ipm_arg_set_tol_ineq(&tol_ineq, &argx);
                 d_ocp_qp_ipm_arg_set_tol_comp(&tol_comp, &argx);
@@ -762,8 +763,8 @@ void CustomController::computePlanner()
                 d_ocp_qp_ipm_arg_create(&dimy, &argy, ipm_arg_memy);
                 d_ocp_qp_ipm_arg_set_default(mode, &argy);
                // d_ocp_qp_ipm_arg_set_mu0(&mu0, &argy);
-                /* d_ocp_qp_ipm_arg_set_iter_max(&iter_max, &argy);
-                d_ocp_qp_ipm_arg_set_tol_stat(&tol_stat, &argy);
+                d_ocp_qp_ipm_arg_set_iter_max(&iter_max, &argy);
+               /* d_ocp_qp_ipm_arg_set_tol_stat(&tol_stat, &argy);
                 d_ocp_qp_ipm_arg_set_tol_eq(&tol_eq, &argy);
                 d_ocp_qp_ipm_arg_set_tol_ineq(&tol_ineq, &argy);
                 d_ocp_qp_ipm_arg_set_tol_comp(&tol_comp, &argy);
@@ -935,17 +936,17 @@ void CustomController::mpc_variablex()
     }
     else
     {
-       /* x11x[0] = rd_.link_[COM_id].xpos(0);
+        x11x[0] = rd_.link_[COM_id].xpos(0);
         x11x[1] = rd_.link_[COM_id].v(0);
         x11x[2] = ZMP_FT_l_mu(0);
-        if(mpc_cycle > 300)
+      /*  if(mpc_cycle > 300)
         {
             x11x[4] = 0.0;
         }
         else
-        {
+        {*/
             x11x[4] = H_pitch;
-        }*/
+        //}
         
         hd_lbxx[0] = x11x;
         hd_ubxx[0] = x11x;
@@ -979,10 +980,10 @@ void CustomController::mpc_variabley()
     }
     else
     {
-      /*  x11y[0] = rd_.link_[COM_id].xpos(1);
+        x11y[0] = rd_.link_[COM_id].xpos(1);
         x11y[1] = rd_.link_[COM_id].v(1);
         x11y[2] = ZMP_FT_l_mu(1);
-        x11y[4] = H_roll;*/
+        x11y[4] = H_roll;
         hd_lbxy[0] = x11y;
         hd_ubxy[0] = x11y;
     }
