@@ -763,8 +763,8 @@ void CustomController::computePlanner()
                 d_ocp_qp_ipm_arg_create(&dimy, &argy, ipm_arg_memy);
                 d_ocp_qp_ipm_arg_set_default(mode, &argy);
                // d_ocp_qp_ipm_arg_set_mu0(&mu0, &argy);
-                d_ocp_qp_ipm_arg_set_iter_max(&iter_max, &argy);
-               /* d_ocp_qp_ipm_arg_set_tol_stat(&tol_stat, &argy);
+               d_ocp_qp_ipm_arg_set_iter_max(&iter_max, &argy);
+            /*    d_ocp_qp_ipm_arg_set_tol_stat(&tol_stat, &argy);
                 d_ocp_qp_ipm_arg_set_tol_eq(&tol_eq, &argy);
                 d_ocp_qp_ipm_arg_set_tol_ineq(&tol_ineq, &argy);
                 d_ocp_qp_ipm_arg_set_tol_comp(&tol_comp, &argy);
