@@ -5,7 +5,7 @@ Qx4 : 0.0
 Qx5 : 0.0
 
 Rx1 : 0.5
-Rx2 : 1.0
+Rx2 : 0.0001
 
 Zl0x : 0.0
 Zu0x : 0.0
@@ -24,13 +24,13 @@ zuNx : 0
 
 lmom : 0
 
-Qy1 : 1.0
+Qy1 : 10.0
 Qy2 : 0.0
-Qy3 : 1000.0
+Qy3 : 80000.0
 Qy4 : 0.0
 Qy5 : 0.0
 
-Ry1 : 6.0
+Ry1 : 60.0
 Ry2 : 1.0
 
 Zl0y : 0.0
@@ -76,8 +76,8 @@ apk_sr : 0.03
 
 com_gain : 0.5
 
-pelv_xp : -0.6
-pelv_yp : -0.7
+pelv_xp : -0.8
+pelv_yp : -0.8
 zmp_xp : 0.0
 zmp_yp : 0.0
 
