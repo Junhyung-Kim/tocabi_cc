@@ -615,7 +615,7 @@ void CustomController::computeFast()
                     walking_tick++;
                 }
 
-                if (walking_tick >= 4351 && walking_tick < 4420 && dist == 1)
+           /*    if (walking_tick >= 4351 && walking_tick < 4420 && dist == 1)
                 {
                     rd_.mujoco_dist = true;
                 }
@@ -623,15 +623,15 @@ void CustomController::computeFast()
                 {
                     rd_.mujoco_dist = false;
                 }
-
-                /*if(walking_tick >= 4205 && walking_tick < 4255 && dist == 1)
+*/
+                if(walking_tick >= 4205 && walking_tick < 4255 && dist == 1)
                 {
                     rd_.mujoco_dist  = true;
                 }
                 else
                 {
                     rd_.mujoco_dist = false;
-                }*/
+                }
 
                 //  file[1] << PELV_trajectory_float_c.translation()(0) << "\t" << PELV_trajectory_float_c.translation()(1) << "\t" << PELV_trajectory_float_c.translation()(2) << "\t" << RF_trajectory_float.translation()(0)<< "\t" << RF_trajectory_float.translation()(1)<< "\t" << RF_trajectory_float.translation()(2)<<std::endl;
                 //if (walking_tick % 5 == 0)

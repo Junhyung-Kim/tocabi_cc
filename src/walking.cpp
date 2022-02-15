@@ -574,7 +574,7 @@ void WalkingController::setCpPosition()
     for (int i = 0; i < total_step_num + 3; i++)
     {
         capturePoint_offsety(i) = 0.03;
-        capturePoint_offsetx(i) = 0.00;
+        capturePoint_offsetx(i) = 0.02;
     }
 
     if (com_control == 0)
@@ -1643,9 +1643,9 @@ void WalkingController::mpcStateContraint(RobotData &Robot)
             yU[i][2] = yU[i-1][2];
          */
            // xL[i][3] = 0.0;
-            yL[i][3] = 0.0;
+            yL[i][3] = -0.11;
            // xU[i][3] = 0.0;
-            yU[i][3] = 0.0;
+            yU[i][3] = 0.11;
         }
         else if (i == t_temp + t_total * j && j != 1)
         {
@@ -1653,11 +1653,11 @@ void WalkingController::mpcStateContraint(RobotData &Robot)
             {
                 if (j != 1)
                 {
-                    xL[i][3] = 0.0;
-                    xU[i][3] = 0.0;
+                    xL[i][3] = -0.11;
+                    xU[i][3] = 0.11;
                 }
-                yL[i][3] = 0.0;
-                yU[i][3] = 0.0;
+                yL[i][3] = -0.11;
+                yU[i][3] = 0.11;
             }
 
             if (j != total_step_num && j != 0)
