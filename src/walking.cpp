@@ -575,7 +575,7 @@ void WalkingController::setCpPosition()
     {
         capturePoint_offsety(i) = 0.00;
         capturePoint_offsety(i) = 0.01;
-        capturePoint_offsetx(i) = 0.03;
+        capturePoint_offsetx(i) = 0.02;
     }
 
     if (com_control == 0)
@@ -1519,10 +1519,10 @@ void WalkingController::mpcStateContraint(RobotData &Robot)
                 yL[i][2] = -0.145;
                 yU[i][2] = 0.145;
 
-                xL[i][0] = foot_step(j - 1, 0) - 0.07;
+                xL[i][0] = foot_step(j - 2, 0) - 0.07;
                 xU[i][0] = foot_step(j - 1, 0) + 0.13;
 
-                xL[i][2] = foot_step(j - 1, 0) - 0.07;
+                xL[i][2] = foot_step(j - 2, 0) - 0.07;
                 xU[i][2] = foot_step(j - 1, 0) + 0.13;
             }
             else if (t_start_real + t_total * j + t_double1 + t_rest_temp <= i && i <= t_start + t_total * j + t_total - t_rest_last - t_double2 - t_imp - t_rest_temp)
@@ -1603,6 +1603,17 @@ void WalkingController::mpcStateContraint(RobotData &Robot)
       //  zmpy[i][4] = 0.0;
         Eigen::Vector2d zmp_xyo;
         zmp_xyo.setZero();
+
+        if(i % 1000 > 900|| i % 1000 < 3)
+        {
+            int ab;
+            ab = i/1000;
+            if(ab < 8)
+            {
+                zmp_refx(i) = zmp_refx((ab + 1)*1000 + 3);
+                zmp_refy(i) = zmp_refy((ab + 1)*1000 + 3);
+            }
+        }
 
         if (i < t_temp)
         {
@@ -2391,7 +2402,7 @@ void WalkingController::comController(RobotData &Robot)
     */}
     else
     {
-        PELV_trajectory_float_c.translation()(0) =  pelvR_sup(0) + pelv_xp*(COM_float_current.translation()(0) - com_mpcx);//(comR_sup(0) - com_sup(0));//(PELV_float_current.translation()(0) - com_refx(walking_tick));   
+        PELV_trajectory_float_c.translation()(0) =  pelvR_sup(0) + pelv_xp*(Robot.link_[COM_id].xpos(0) - com_mpcx);//(comR_sup(0) - com_sup(0));//(PELV_float_current.translation()(0) - com_refx(walking_tick));   
         PELV_trajectory_float_c.translation()(1) =  pelvR_sup(1) + pelv_yp*(comR_sup(1) - com_sup(1));//COM_float_current.translation()(1) - com_refy(walking_tick));
        
         PELV_trajectory_float_c.translation()(2) = pelv_init_sup;//PELV_float_init.translation()(2);
