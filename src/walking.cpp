@@ -574,7 +574,7 @@ void WalkingController::setCpPosition()
     for (int i = 0; i < total_step_num + 3; i++)
     {
         capturePoint_offsety(i) = 0.03;
-        capturePoint_offsetx(i) = 0.015;
+        capturePoint_offsetx(i) = 0.02;
     }
 
     if (com_control == 0)
