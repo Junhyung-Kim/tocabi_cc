@@ -650,8 +650,11 @@ void CustomController::computeFast()
                 {
                     if (rd_.tc_.MPC == true)
                     {
-                        file[1] << hpipm_statusx << "\t" << PELV_trajectory_float.translation()(0) << "\t" << com_sup(0) << "\t" << comR_sup(0) << "\t" << com_mpcx << "\t" << rd_.link_[COM_id].xpos(0) << "\t" << zmp_mpcx << "\t" << ZMP_FT_l_mu(0) << "\t" << mom_mpcx << "\t" << H_pitch << "\t" <<u11x[1]<<"\t"<< xL[walking_tick][2] << "\t" << xU[walking_tick][2] << "\t" << xL_mu[mpc_cycle][2] << "\t" << xU_mu[mpc_cycle][2] << "\t" << rd_.q_desired(13) << "\t" <<rd_.q_(13)<<"\t"<< rd_.q_desired(14)<< "\t" <<rd_.q_(14)<<std::endl;
-                        file[0] << COM_float_current.translation()(1) << "\t" << hpipm_statusy << "\t" << PELV_trajectory_float.translation()(0) << "\t" << com_sup(1) << "\t" << comR_sup(1) << "\t" << com_mpcy << "\t" << rd_.link_[COM_id].xpos(1) << "\t" << zmp_mpcy << "\t" << ZMP_FT_l_mu(1) << "\t" << mom_mpcy << "\t" << H_roll << "\t" << yL[walking_tick][2] << "\t" << yU[walking_tick][2] << "\t" << rd_.q_desired(0) << "\t" << rd_.q_desired(1) << "\t" << rd_.q_desired(2) << "\t" << rd_.q_desired(3) << "\t" << rd_.q_desired(4) << "\t" << rd_.q_desired(5) << std::endl;
+                        if(walking_tick > 5)
+                        {
+                            file[1] << hpipm_statusx << "\t" << PELV_trajectory_float.translation()(0) << "\t" << com_sup(0) << "\t" << comR_sup(0) << "\t" << com_mpcx << "\t" << rd_.link_[COM_id].xpos(0) << "\t" << zmp_mpcx << "\t" << ZMP_FT_l_mu(0) << "\t" << mom_mpcx << "\t" << H_pitch << "\t" <<u11x[1]<<"\t"<< xL[walking_tick][2] << "\t" << xU[walking_tick][2] << "\t" << xL_mu[mpc_cycle][2] << "\t" << xU_mu[mpc_cycle][2] << "\t" << rd_.q_desired(13) << "\t" <<rd_.q_(13)<<"\t"<< rd_.q_desired(14)<< "\t" <<rd_.q_(14)<<std::endl;
+                            file[0] << hpipm_statusy << "\t" << PELV_trajectory_float.translation()(0) << "\t" << com_sup(1) << "\t" << comR_sup(1) << "\t" << com_mpcy << "\t" << rd_.link_[COM_id].xpos(1) << "\t" << zmp_mpcy << "\t" << ZMP_FT_l_mu(1) << "\t" << mom_mpcy << "\t" << H_roll << "\t" << yL[walking_tick][2] << "\t" << yU[walking_tick][2] << "\t" << rd_.q_desired(0) << "\t" << rd_.q_desired(1) << "\t" << rd_.q_desired(2) << "\t" << rd_.q_desired(3) << "\t" << rd_.q_desired(4) << "\t" << rd_.q_desired(5) << std::endl;
+                        }
                     }
                     else
                     {
@@ -1768,7 +1771,7 @@ void CustomController::momentumControl(RobotData &Robot)
         Eigen::Vector6d h_temp;
         h_temp = Ag_v * q_dot_virtual_lpf_.segment<6>(0);
 
-        H_upper = (Ag_waist * q_dot_est_mu.segment(12, 3)).segment<3>(3) ;
+        H_upper = (Ag_waist * q_dot_est_mu.segment(12, 3)+ Ag_armL * q_dot_est_mu.segment(15, 8) + Ag_armR * q_dot_est_mu.segment(25, 8)).segment<3>(3) ;
 
         H_data.segment<2>(0) = H_leg_1.segment<2>(0); // + h_temp.segment<2>(0);
         H_data.segment<3>(3) = H_leg_1.segment<3>(3);// + h_temp.segment<3>(3);
@@ -1852,8 +1855,8 @@ void CustomController::momentumControl(RobotData &Robot)
         q_dm = QP_m.SolveQPoases(100);
         qd_prev = q_dm;
     }
+
     /*
-    
     int variable_size, constraint_size;
 
     variable_size = 7;
