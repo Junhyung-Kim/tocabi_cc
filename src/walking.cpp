@@ -1589,25 +1589,25 @@ void WalkingController::mpcStateContraint(RobotData &Robot)
         yU[i][1] = 10.0;
         yL[i][3] = -10;
         yU[i][3] = 10;
-      //  yL[i][4] = -10;
-      //  yU[i][4] = 10;
+        yL[i][4] = -10;
+        yU[i][4] = 10;
 
         xL[i][1] = -10.0;
         xU[i][1] = 10.0;
         xL[i][3] = -10;
         xU[i][3] = 10;
-      //  xL[i][4] = -10;
-      //  xU[i][4] = 10;
+        xL[i][4] = -10;
+        xU[i][4] = 10;
 
         //qx
         zmpx[i][0] = 0.0;
         zmpx[i][1] = 0.0;
         zmpx[i][3] = 0.0;
-      //  zmpx[i][4] = 0.0;
+        zmpx[i][4] = 0.0;
         zmpy[i][0] = 0.0;
         zmpy[i][1] = 0.0;
         zmpy[i][3] = 0.0;
-      //  zmpy[i][4] = 0.0;
+        zmpy[i][4] = 0.0;
         Eigen::Vector2d zmp_xyo;
         zmp_xyo.setZero();
 
