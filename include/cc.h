@@ -103,6 +103,7 @@ public:
     Eigen::Vector3d pelv_lp_prev;
     double debug_temp;
     bool debug = false;
+    bool debug2 = false;
 
     int cycle = 0;
     double Ts = 0.01;
