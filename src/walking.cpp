@@ -1417,7 +1417,7 @@ void WalkingController::mpcSoftVariable(RobotData &Robot)
 
 void WalkingController::mpcStateContraint(RobotData &Robot)
 {
-   xL = (double **)malloc((t_total * (total_step_num + 1) + t_temp - 1 + 30 * N) * sizeof(double *));
+    xL = (double **)malloc((t_total * (total_step_num + 1) + t_temp - 1 + 30 * N) * sizeof(double *));
     xU = (double **)malloc((t_total * (total_step_num + 1) + t_temp - 1 + 30 * N) * sizeof(double *));
     yL = (double **)malloc((t_total * (total_step_num + 1) + t_temp - 1 + 30 * N) * sizeof(double *));
     yU = (double **)malloc((t_total * (total_step_num + 1) + t_temp - 1 + 30 * N) * sizeof(double *));
@@ -1643,9 +1643,9 @@ void WalkingController::mpcStateContraint(RobotData &Robot)
             yU[i][2] = yU[i-1][2];
          */
            // xL[i][3] = 0.0;
-            yL[i][3] = -0.11;
+            yL[i][3] = -0.2;
            // xU[i][3] = 0.0;
-            yU[i][3] = 0.11;
+            yU[i][3] = 0.2;
         }
         else if (i == t_temp + t_total * j && j != 1)
         {
@@ -1656,8 +1656,8 @@ void WalkingController::mpcStateContraint(RobotData &Robot)
                     xL[i][3] = -0.11;
                     xU[i][3] = 0.11;
                 }
-                yL[i][3] = -0.11;
-                yU[i][3] = 0.11;
+                yL[i][3] = -0.2;
+                yU[i][3] = 0.2;
             }
 
             if (j != total_step_num && j != 0)
@@ -2355,14 +2355,7 @@ void WalkingController::comController(RobotData &Robot)
 
     if(walking_tick == 0)
     {
-        if(Robot.tc_.MPC == true)
-        {
-            com_offset = com_mpcx - Robot.link_[Pelvis].xipos(0);
-        }
-        else
-        {
-            com_offset = com_refx(walking_tick) - Robot.link_[Pelvis].xipos(0);
-        }       
+          
         x_est(0) = Robot.link_[COM_id].xpos(1);
         x_est(1) = 0.0;
         u  = com_mpcy;
@@ -2400,6 +2393,7 @@ void WalkingController::comController(RobotData &Robot)
     }
     if(Robot.tc_.MPC == false)
     {
+        
         PELV_trajectory_float_c.translation()(0) =  pelvR_sup(0) + pelv_xp*(comR_sup(0) - com_sup(0));//(PELV_float_current.translation()(0) - com_refx(walking_tick));   
         PELV_trajectory_float_c.translation()(1) =  pelvR_sup(1) + pelv_yp*(comR_sup(1) - com_sup(1));//COM_float_current.translation()(1) - com_refy(walking_tick));
        

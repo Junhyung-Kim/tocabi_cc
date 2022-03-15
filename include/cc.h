@@ -83,6 +83,9 @@ public:
     Eigen::VectorQd Int_dis;
     bool mob_start = false;
 
+    Eigen::Vector3d H_upper;
+    Eigen::Vector3d H_lower;
+
     //Contact Redistribution
     Eigen::VectorQd TorqueContact;
     Eigen::VectorQd TorqueGrav;

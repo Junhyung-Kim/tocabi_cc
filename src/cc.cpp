@@ -642,9 +642,9 @@ void CustomController::computeFast()
                     walking_tick_prev = walking_tick;
                     if (rd_.tc_.MPC == true)
                     {
-                        file[1] << hpipm_statusx << "\t" << PELV_trajectory_float.translation()(0) << "\t" << com_sup(0) << "\t" << comR_sup(0) << "\t" << com_mpcx << "\t" << rd_.link_[COM_id].xpos(0) << "\t" << zmp_mpcx << "\t" << ZMP_FT_l_mu(0) << "\t" << mom_mpcx << "\t" << H_pitch<<"\t" << xL[walking_tick][2] << "\t" << xU[walking_tick][2] << "\t" << xL_mu[mpc_cycle][2] << "\t" << xU_mu[mpc_cycle][2] << "\t" << control_input(0) << "\t" << control_input(1) << "\t" << rd_.q_desired(0) << "\t" << rd_.q_(0) << "\t" << rd_.q_desired(1) << "\t" << rd_.q_(1) << "\t" << rd_.q_desired(2) << "\t" << rd_.q_(2) << "\t" << rd_.q_desired(13) << "\t" << rd_.q_(13) << "\t" << rd_.q_desired(14) << "\t" << rd_.q_(14) << "\t" << rd_.q_desired(15) << "\t" << rd_.q_(15) << std::endl;
-                        file[0] << hpipm_statusy << "\t" << PELV_trajectory_float.translation()(0) << "\t" << com_sup(1) << "\t" << comR_sup(1) << "\t" << com_mpcy << "\t" << rd_.link_[COM_id].xpos(1) << "\t" << zmp_mpcy << "\t" << ZMP_FT_l_mu(1) << "\t" << mom_mpcy << "\t" << H_roll<<"\t"<< yL[walking_tick][2] << "\t" << yU[walking_tick][2] << "\t" << rd_.q_desired(0) << "\t" << rd_.q_desired(1) << "\t" << rd_.q_desired(2) << "\t" << rd_.q_desired(3) << "\t" << rd_.q_desired(4) << "\t" << rd_.q_desired(5) << std::endl;
-                    }
+                        file[1] <<PELV_trajectory_float.translation()(1) << "\t" << x11y[0] <<"\t" << rd_.link_[COM_id].xpos(1) << "\t"<< yL[walking_tick][0] << "\t" << yU[walking_tick][0] << "\t"<<ZMP_FT_l(1)<<"\t"<<zmp_mpcy<<"\t"<<mom_mpcx<<"\t"<<hpipm_statusy<<std::endl;
+                        file[0] <<PELV_trajectory_float.translation()(0) << "\t" << x11x[0] <<"\t" << rd_.link_[COM_id].xpos(0) << "\t"<< xL[walking_tick][0] << "\t" << xU[walking_tick][0] << "\t"<<ZMP_FT_l(0)<<"\t"<<zmp_mpcx<<"\t"<<mom_mpcy<<"\t"<<control_input(0)<<"\t"<<control_input(2)<<"\t"<< hpipm_statusx << "\t"<<(comR_sup(0) - com_sup(0))<< std::endl;
+                     }
                     else
                     {
                         file[0] << PELV_trajectory_float.translation()(0) << "\t" << com_refx(walking_tick) << "\t" << rd_.link_[COM_id].xpos(0) << "\t" << rd_.link_[Pelvis].xipos(0) << "\t" << PELV_trajectory_float.translation()(0) << "\t" << com_sup(0) << "\t" << zmp_refx(walking_tick) << "\t" << ZMP_FT_l(0) << std::endl;
@@ -698,7 +698,7 @@ void CustomController::computePlanner()
                     mu0 = 2.0;
 
                 //solver Setup
-                int iter_max = 100;
+                int iter_max = 70;
                 double alpha_min = 0.01;
                 double tol_stat = 0.01;
                 double tol_eq = 0.01;   //8e-3;
@@ -745,7 +745,7 @@ void CustomController::computePlanner()
 
                 mode = BALANCE;
 
-                iter_max = 80;
+                iter_max = 70;
                 alpha_min = 1;
                 tol_stat = 0.005;
                 tol_eq = 0.01;
@@ -866,9 +866,6 @@ void CustomController::computePlanner()
                     com_mpcx = x11x[0];
                     com_mpcdx = x11x[1];
                     zmp_mpcx = x11x[2];
-                    
-                    double ab;
-                    ab = H_pitch;
                     mom_mpcx = x11x[4];
 
                     /*  if (mpct1 != 1 || mpct1_prev != 1)
@@ -939,14 +936,7 @@ void CustomController::mpc_variablex()
         x11x[0] = rd_.link_[COM_id].xpos(0);
         x11x[1] = rd_.link_[COM_id].v(0);
         x11x[2] = ZMP_FT_l_mu(0);
-      /*  if(mpc_cycle > 300)
-        {
-            x11x[4] = 0.0;
-        }
-        else
-        {*/
-            x11x[4] = H_pitch;
-        //}
+        x11x[4] = H_pitch;
         
         hd_lbxx[0] = x11x;
         hd_ubxx[0] = x11x;
@@ -984,6 +974,7 @@ void CustomController::mpc_variabley()
         x11y[1] = rd_.link_[COM_id].v(1);
         x11y[2] = ZMP_FT_l_mu(1);
         x11y[4] = H_roll;
+
         hd_lbxy[0] = x11y;
         hd_ubxy[0] = x11y;
     }
@@ -1001,33 +992,6 @@ void CustomController::walking_x()
     d_ocp_qp_ipm_solve(&qpx, &qp_solx, &argx, &workspacex);
     d_ocp_qp_ipm_get_status(&workspacex, &hpipm_statusx);
     d_ocp_qp_sol_get_x(1, &qp_solx, x11x);
-    /*
-    if (hpipm_statusx == 0 || mpc_cycle <= 100)
-    {
-        for (int i = 0; i < N; i++)
-        {
-            d_ocp_qp_sol_get_x(i, &qp_solx, x11x);
-            for (int j = 0; j < 5; j++)
-            {
-                x11x_temp(j, i) = x11x[j];
-            }
-        }
-        d_ocp_qp_sol_get_x(1, &qp_solx, x11x);
-        if (mpct1 == 1)
-        {
-            mpct1_prev = 1;
-        }
-        mpct1 = 1;
-    }
-    else if (mpc_cycle > 100)
-    {
-        mpct1 = mpct1 + 1;
-        for (int j = 0; j < 5; j++)
-        {
-            x11x[j] = x11x_temp(j, mpct1);
-        }
-        mpct1_prev = mpct1;
-    }*/
 }
 
 void CustomController::walking_y()
@@ -1036,46 +1000,6 @@ void CustomController::walking_y()
     d_ocp_qp_ipm_solve(&qpy, &qp_soly, &argy, &workspacey);
     d_ocp_qp_ipm_get_status(&workspacey, &hpipm_statusy);
     d_ocp_qp_sol_get_x(1, &qp_soly, x11y);
-    /*if(hpipm_statusy != 0)
-    {
-        mpct2 = mpct2 +1;
-        mpct2_prev = mpct2;
-    }
-    else
-    {
-        if(mpct2 == 1)
-        {
-            mpct2_prev = 1;
-        }
-        mpct2 = 1;
-    }
-    if (hpipm_statusy == 0 || mpc_cycle <= 100)
-    {
-        for (int i = 0; i < N; i++)
-        {
-            d_ocp_qp_sol_get_x(i, &qp_soly, x11y);
-            for (int j = 0; j < 5; j++)
-            {
-                x11y_temp(j, i) = x11y[j];
-            }
-        }
-        d_ocp_qp_sol_get_x(1, &qp_soly, x11y);
-        if (mpct2 == 1)
-        {
-            mpct2_prev = 1;
-        }
-        mpct2 = 1;
-    }
-    else if (mpc_cycle > 100)
-    {
-        mpct2 = mpct2 + 1;
-        for (int j = 0; j < 5; j++)
-        {
-            x11y[j] = x11y_temp(j, mpct2);
-        }
-        mpct2_prev = mpct2;
-    }
-    */
 }
 
 void CustomController::copyRobotData(RobotData &rd_l)
@@ -1742,6 +1666,9 @@ void CustomController::momentumControl(RobotData &Robot)
         Eigen::Vector6d h_temp;
         h_temp = Ag_v * q_dot_virtual_lpf_.segment<6>(0);
 
+        H_upper = (Ag_waist * q_dot_est_mu.segment(12, 3) + Ag_armL * q_dot_est_mu.segment(15, 8) + Ag_armR * q_dot_est_mu.segment(25, 8)).segment<3>(3);
+        H_lower =   (Ag_leg * q_dot_est_mu.head(12)).segment<3>(3);
+
         H_data.segment<2>(0) = H_leg_1.segment<2>(0); // + h_temp.segment<2>(0);
         H_data.segment<3>(3) = H_leg_1.segment<3>(3) + h_temp.segment<3>(3);
 
@@ -1817,8 +1744,8 @@ void CustomController::momentumControl(RobotData &Robot)
     q_w(5) = Robot.q_desired(26);
     q_w(6) = Robot.q_desired(27);
 
-    H = Ag_temp.transpose() * Ag_temp + alpha * I + lmom * Agl_temp.transpose() * Agl_temp;
-    g = 2 * Ag_temp.transpose() * H_leg + lmom * 2 * Agl_temp.transpose() * Hl_leg; // - 2*alpha*qd_prev;
+    H = Ag_temp.transpose() * Ag_temp;// + alpha * I + lmom * Agl_temp.transpose() * Agl_temp;
+    g = 2 * Ag_temp.transpose() * H_leg;// + lmom * 2 * Agl_temp.transpose() * Hl_leg; // - 2*alpha*qd_prev;
 
     A.setIdentity();
 
@@ -2188,14 +2115,14 @@ void CustomController::zmpControl(RobotData &Robot)
                 }
                 else
                 {
-                    if (control_input(i) > 0.05)
+                    if (control_input(i) > 0.150)
                     {
-                        control_input(i) = 0.05;
+                        control_input(i) = 0.150;
                     }
 
-                    if (control_input(i) < -0.05)
+                    if (control_input(i) < -0.150)
                     {
-                        control_input(i) = -0.05;
+                        control_input(i) = -0.150;
                     }
                 }
             }
@@ -2215,14 +2142,14 @@ void CustomController::zmpControl(RobotData &Robot)
                 }
                 else
                 {
-                    if (control_input(i) > 0.05)
+                    if (control_input(i) > 0.150)
                     {
-                        control_input(i) = 0.05;
+                        control_input(i) = 0.150;
                     }
 
-                    if (control_input(i) < -0.05)
+                    if (control_input(i) < -0.150)
                     {
-                        control_input(i) = -0.05;
+                        control_input(i) = -0.150;
                     }
                 }
             }
