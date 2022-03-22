@@ -1,19 +1,19 @@
-Qx1 : 30000
-Qx2 : 1000.0
-Qx3 : 100000
+Qx1 : 520000
+Qx2 : 0.0
+Qx3 : 10000
 Qx4 : 0.0
 Qx5 : 0.0
 
 Rx1 : 2.0
-Rx2 : 0.01
+Rx2 : 0.0
 
 Zl0x : 0.0
 Zu0x : 0.0
 zl0x : 0.0
 zu0x : 0.0
 
-Zl1x : 50.0
-Zu1x : 50.0
+Zl1x : 30.0
+Zu1x : 30.0
 zl1x : 0.0
 zu1x : 0.0
 
@@ -31,7 +31,7 @@ Qy4 : 0.0
 Qy5 : 0.00
 
 Ry1 : 80.0
-Ry2 : 2.0
+Ry2 : 0.0
 
 Zl0y : 0.0
 Zu0y : 0.0
@@ -76,19 +76,19 @@ apk_sr : 0.03
 
 com_gain : 0.5
 
-pelv_xp : -0.8
+pelv_xp : -0.7
 pelv_yp : -0.8
 zmp_xp : 0.0
 zmp_yp : 0.0
 
 K_fx : 0.0001
-T_fx : 1.0
+T_fx : 3.0
 
 K_fy : 0.0001 
-T_fy : 1.0
+T_fy : 3.0
 
 K_fz : 0.0001
-T_fz : 1.0
+T_fz : 3.0
 
 mobgain1 : 40
 mobgain2 : 40
@@ -98,5 +98,5 @@ mobgain5 : 40
 mobgain6 : 40
 
 ft : 0
-dist : 1
+dist : 0
 

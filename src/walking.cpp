@@ -1643,9 +1643,9 @@ void WalkingController::mpcStateContraint(RobotData &Robot)
             yU[i][2] = yU[i-1][2];
          */
            // xL[i][3] = 0.0;
-            yL[i][3] = -0.2;
+            yL[i][3] = -0.15;
            // xU[i][3] = 0.0;
-            yU[i][3] = 0.2;
+            yU[i][3] = 0.15;
         }
         else if (i == t_temp + t_total * j && j != 1)
         {
@@ -1653,12 +1653,12 @@ void WalkingController::mpcStateContraint(RobotData &Robot)
             {
                 if (j != 1)
                 {
-                    xL[i][3] = -0.11;
-                    xU[i][3] = 0.11;
+                    xL[i][3] = -0.2;
+                    xU[i][3] = 0.2;
                 }
-                yL[i][3] = -0.2;
-                yU[i][3] = 0.2;
-            }
+                yL[i][3] = -0.15;
+                yU[i][3] = 0.15;
+            }//
 
             if (j != total_step_num && j != 0)
             {

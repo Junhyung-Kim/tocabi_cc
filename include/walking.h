@@ -311,6 +311,9 @@ public:
     std::atomic<double> mom_mpcx;
     std::atomic<double> mom_mpcy;
 
+        std::atomic<double> mom_mpcIx;
+    std::atomic<double> mom_mpcIy;
+
     double mom_mpcx_prev;
     double mom_mpcy_prev;
 
