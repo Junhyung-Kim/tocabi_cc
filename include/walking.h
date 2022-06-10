@@ -260,6 +260,8 @@ public:
     Eigen::Vector4d pelvR_sup;
     Eigen::Vector4d RF_sup;    
     Eigen::Vector4d LF_sup;
+    Eigen::Vector4d RF_supd;    
+    Eigen::Vector4d LF_supd;
     
     Eigen::Vector3d pelvR_sup1;
     Eigen::Vector4d pelvPR_sup;
