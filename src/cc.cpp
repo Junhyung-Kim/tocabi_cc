@@ -34,6 +34,7 @@ CustomController::CustomController(RobotData &rd) : rd_(rd) //, wbc_(dc.wbc_)
     mpc_cycle_prev = 0;
 
     rd_.mujoco_dist = false;
+    zmp_on = false;
     ros::NodeHandle nh;
     nh.getParam("/tocabi_controller/Qx1", Qx1_mpc);
     nh.getParam("/tocabi_controller/Qx2", Qx2_mpc);
@@ -49,10 +50,15 @@ CustomController::CustomController(RobotData &rd) : rd_(rd) //, wbc_(dc.wbc_)
     nh.getParam("/tocabi_controller/zl0x", zl0x_mpc);
     nh.getParam("/tocabi_controller/zu0x", zu0x_mpc);
 
-    nh.getParam("/tocabi_controller/Zl1y", Zl1x_mpc);
-    nh.getParam("/tocabi_controller/Zu1y", Zu1x_mpc);
-    nh.getParam("/tocabi_controller/zl1y", zl1x_mpc);
-    nh.getParam("/tocabi_controller/zu1y", zu1x_mpc);
+    nh.getParam("/tocabi_controller/Zl1x", Zl1x_mpc);
+    nh.getParam("/tocabi_controller/Zu1x", Zu1x_mpc);
+    nh.getParam("/tocabi_controller/zl1x", zl1x_mpc);
+    nh.getParam("/tocabi_controller/zu1x", zu1x_mpc);
+
+    nh.getParam("/tocabi_controller/Zl1x1", Zl1x_mpc1);
+    nh.getParam("/tocabi_controller/Zu1x1", Zu1x_mpc1);
+    nh.getParam("/tocabi_controller/zl1x1", zl1x_mpc1);
+    nh.getParam("/tocabi_controller/zu1x1", zu1x_mpc1);
 
     nh.getParam("/tocabi_controller/ZlNy", ZlNx_mpc);
     nh.getParam("/tocabi_controller/ZuNy", ZuNx_mpc);
@@ -77,6 +83,11 @@ CustomController::CustomController(RobotData &rd) : rd_(rd) //, wbc_(dc.wbc_)
     nh.getParam("/tocabi_controller/Zu1y", Zu1y_mpc);
     nh.getParam("/tocabi_controller/zl1y", zl1y_mpc);
     nh.getParam("/tocabi_controller/zu1y", zu1y_mpc);
+
+    nh.getParam("/tocabi_controller/Zl1y1", Zl1y_mpc1);
+    nh.getParam("/tocabi_controller/Zu1y1", Zu1y_mpc1);
+    nh.getParam("/tocabi_controller/zl1y1", zl1y_mpc1);
+    nh.getParam("/tocabi_controller/zu1y1", zu1y_mpc1);
 
     nh.getParam("/tocabi_controller/ZlNy", ZlNy_mpc);
     nh.getParam("/tocabi_controller/ZuNy", ZuNy_mpc);
@@ -485,17 +496,6 @@ void CustomController::computeFast()
                 yL_mu = yL_s;
                 yU_mu = yU_s;
 
-                softCx1_mu = softCx_s;
-                softCy1_mu = softCy_s;
-                softBoundx1_mu = softBoundx_s;
-                softBoundy1_mu = softBoundy_s;
-                zmpx1_mu = zmpx_s;
-                zmpy1_mu = zmpy_s;
-                xL1_mu = xL_s;
-                xU1_mu = xU_s;
-                yL1_mu = yL_s;
-                yU1_mu = yU_s;
-
                 cc_mutex.unlock();
 
                 wlk_on = true;
@@ -508,6 +508,12 @@ void CustomController::computeFast()
 
                 if (rd_.tc_.MPC == true)
                 {
+                  /*  if(mpcu < 10)
+                    {
+                        com_mpcx = 0.1 * com_mpcxe + com_mpcx;
+                        mpcu = mpcu + 1;
+                    }*/
+
                     cp_mpcx = com_mpcx + com_mpcdx / lipm_w;
                     cp_mpcy = com_mpcy + com_mpcdy / lipm_w;
 
@@ -566,7 +572,7 @@ void CustomController::computeFast()
                 }
                 else
                 {
-                    if (rd_.tc_.mom == true && walking_tick > 2500)
+                    if (rd_.tc_.mom == true && walking_tick > 2000)
                     {
                         rd_.q_desired(12) = rd_.q_desired(12) + q_dm(0) / wk_Hz;
                         rd_.q_desired(13) = rd_.q_desired(13) + q_dm(1) / wk_Hz;
@@ -597,6 +603,7 @@ void CustomController::computeFast()
                                 walking_tick++;
                                 mpc_temp = mpc_cycle;
                                 mpc_cycle_prev = mpc_temp;
+                                mpcu = 0;
                             }
 
                             if (mpc_cycle >= (t_total * (total_step_num + 1) + t_temp - 1 + 30 * N) / mpct)
@@ -642,12 +649,15 @@ void CustomController::computeFast()
                     walking_tick_prev = walking_tick;
                     if (rd_.tc_.MPC == true)
                     {
-                        file[1] <<PELV_trajectory_float.translation()(1) << "\t" << com_mpcy <<"\t" << rd_.link_[COM_id].xpos(1) << "\t"<< yL[walking_tick][0] << "\t" << yU[walking_tick][0] << "\t"<<ZMP_FT_l(1)<<"\t"<<zmp_mpcy<<"\t"<<mom_mpcx<<"\t"<<H_pitch<<"\t"<<mom_mpcIx << "\t" <<hpipm_statusx <<"\t"<<rd_.q_desired(12)<<"\t"<<rd_.q_desired(13)<<"\t"<<rd_.q_desired(14)<<std::endl;
-                        file[0] <<PELV_trajectory_float.translation()(0) << "\t" << com_mpcx <<"\t" << rd_.link_[COM_id].xpos(0) << "\t"<< xL[walking_tick][0] << "\t" << xU[walking_tick][0] << "\t"<<ZMP_FT_l(0)<<"\t"<<zmp_mpcx<<"\t"<<mom_mpcy<<"\t"<<H_roll<<"\t"<<hpipm_statusy<< std::endl;
-                     }
+                        if(mpc_cycle > 1)
+                        {
+                            file[0] << walking_tick << "\t" << mpc_cycle << "\t" <<rd_.link_[Pelvis].xipos(1) << "\t" << zmp_mpcy <<"\t" << ZMP_FT_l(1) << "\t"<< yL[walking_tick][2] << "\t" << yU[walking_tick][2] << "\t"<<ZMP_FT_l(1)<<"\t"<<zmp_mpcy<<"\t"<<mom_mpcy<<"\t"<<H_roll<<"\t"<<(softBoundy_s[mpc_cycle][0] - softCy_s[mpc_cycle][0] * com_mpcy - softCy_s[mpc_cycle][2] * com_mpcdy - softCy_s[mpc_cycle][4] * zmp_mpcy - softCy_s[mpc_cycle][6] * mom_mpcy)/softCy_s[mpc_cycle][8] << "\t" <<soft[walking_tick] << "\t" <<hpipm_statusy <<"\t"<<sly[0] << "\t" << suy[0]<< "\t" << com_mpcdy << "\t" << rd_.link_[COM_id].v(1)<<std::endl;
+                            file[1] <<mpc_cycle<< "\t" << PELV_trajectory_float_c.translation()(0) << "\t"<<rd_.link_[Pelvis].xipos(0)  <<"\t"<< com_mpcx <<"\t" << rd_.link_[COM_id].xpos(0)<<"\t"<< zmp_mpcx <<"\t" << ZMP_FT_l(0) << "\t"<< xL[walking_tick][2] << "\t" << xU[walking_tick][2] << "\t"<<ZMP_FT_l(0)<<"\t"<<zmp_mpcx<<"\t"<<mom_mpcx<<"\t"<<H_pitch<<"\t"<<(softBoundx_s[mpc_cycle][0] - softCx_s[mpc_cycle][0] * com_mpcx - softCx_s[mpc_cycle][2] * com_mpcdx - softCx_s[mpc_cycle][4] * zmp_mpcx - softCx_s[mpc_cycle][6] * mom_mpcx)/softCx_s[mpc_cycle][8]<<"\t"<<mom_mpcIx<<"\t"<<soft[walking_tick]<<"\t"<<slx[0] << "\t" <<sux[0]<< "\t" <<slx[1]<<"\t"<<sux[1]<<"\t"<<hpipm_statusx<< "\t" << RF_float_current.translation()(0)<<"\t" << RFx_trajectory_float(walking_tick)<<"\t"<<RF_trajectory_float.translation()(0)<<"\t"<<RF_sup(0)<<"\t"<<RF_supd(0)<<std::endl;
+                        }
+                    }
                     else
                     {
-                        file[0] << PELV_trajectory_float.translation()(0) << "\t" << com_refx(walking_tick) << "\t" << rd_.link_[COM_id].xpos(0) << "\t" << rd_.link_[Pelvis].xipos(0) << "\t" << PELV_trajectory_float.translation()(0) << "\t" << com_sup(0) << "\t" << zmp_refx(walking_tick) << "\t" << ZMP_FT_l(0) << std::endl;
+                        file[0] << PELV_trajectory_float.translation()(0) << "\t" << com_refx(walking_tick) << "\t" << rd_.link_[COM_id].xpos(0) << "\t" << rd_.link_[Pelvis].xipos(0) << "\t" << PELV_trajectory_float.translation()(0) << "\t" << com_sup(0) << "\t" << zmp_refx(walking_tick) << "\t" << ZMP_FT_l(0) <<"\t"<<H_pitch<<"\t"<<(softBoundy[walking_tick][0] - softCx[walking_tick][0] * com_refx(walking_tick) - softCx[walking_tick][2] * com_refdx(walking_tick) - softCx[walking_tick][4] * zmp_refx(walking_tick) - softCx[walking_tick][6] * H_pitch)/softCx[walking_tick][8]<<std::endl;
                         file[1] << PELV_trajectory_float.translation()(1) << "\t" << com_refy(walking_tick) << "\t" << rd_.link_[COM_id].xpos(1) << "\t" << rd_.link_[Pelvis].xipos(1) << "\t" << PELV_trajectory_float.translation()(1) << "\t" << com_sup(1) << "\t" << zmp_refy(walking_tick) << "\t" << ZMP_FT_l(1) << "\t" << control_input(0) << "\t" << control_input(1) << "\t" << posture_input(0) << "\t" << posture_input(1) << "\t" << rd_.q_desired(0) << "\t" << rd_.q_(0) << "\t" << rd_.q_desired(1) << "\t" << rd_.q_(1) << "\t" << rd_.q_desired(2) << "\t" << rd_.q_(2) << "\t" << rd_.q_desired(3) << "\t" << rd_.q_(3) << "\t" << rd_.q_desired(4) << "\t" << rd_.q_(4) << "\t" << rd_.q_desired(5) << "\t" << rd_.q_(5) << std::endl;
                     }
                 }
@@ -866,25 +876,18 @@ void CustomController::computePlanner()
                     com_mpcx = x11x[0];
                     com_mpcdx = x11x[1];
                     zmp_mpcx = x11x[2];
+                    if(mpc_cycle < 5)
+                    {
+                        std::cout << mpc_cycle << "\t" << zmp_mpcx << std::endl;
+                    }
                     mom_mpcIx = x11x[3];
                     mom_mpcx = x11x[4];
 
-                    /*  if (mpct1 != 1 || mpct1_prev != 1)
-                        mom_mpcx = (0.05 * (-softCx_s[mpc_cycle][0] * x11x[0] - softCx_s[mpc_cycle][1] * x11x[1] + softBoundx_s[mpc_cycle][0]) + 0.95 * H_pitch); //x11x[4];
-                    else
-                        mom_mpcx = x11x[4]; //-1.2*(softCx_s[mpc_cycle][0] * x11x[0] + softCx_s[mpc_cycle][1] * x11x[1] - softBoundx_s[mpc_cycle][0]);//x11x[4];
-                    */
                     com_mpcy = x11y[0];
                     com_mpcdy = x11y[1];
                     zmp_mpcy = x11y[2];
-
                     mom_mpcIy = x11y[3];
                     mom_mpcy = x11y[4];
-
-                    /*if (mpct2 != 1 || mpct2_prev != 1)
-                        mom_mpcy = (0.05 * (-softCy_s[mpc_cycle][0] * x11y[0] - softCy_s[mpc_cycle][1] * x11y[1] + softBoundy_s[mpc_cycle][0]) + 0.95 * H_roll); //x11x[4];
-                    else
-                        mom_mpcy = x11y[4];*/
 
                     if (mpc_cycle == 0)
                     {
@@ -938,9 +941,25 @@ void CustomController::mpc_variablex()
     {
         x11x[0] = rd_.link_[COM_id].xpos(0);
         x11x[1] = rd_.link_[COM_id].v(0);
-        x11x[2] = ZMP_FT_l_mu(0);
+        if(zmp_on == true)
+            x11x[2] = ZMP_FT_l_mu(0);
+        else
+        {
+            ZMP_FT = WBC::GetZMPpos_fromFT(rd_);
+            x11x[2] = ZMP_FT(0);
+        }
         x11x[4] = H_pitch;
+ /*
+        if(walking_tick < 2000)
+        {
+            x11x[3] = 0.0;
         
+        }
+        else
+        {
+            x11x[4] = H_pitch;
+        }
+*/        
         hd_lbxx[0] = x11x;
         hd_ubxx[0] = x11x;
     }
@@ -975,9 +994,15 @@ void CustomController::mpc_variabley()
     {
         x11y[0] = rd_.link_[COM_id].xpos(1);
         x11y[1] = rd_.link_[COM_id].v(1);
-        x11y[2] = ZMP_FT_l_mu(1);
+        if(zmp_on == true)
+            x11y[2] = ZMP_FT_l_mu(1);
+        else
+        {
+            ZMP_FT = WBC::GetZMPpos_fromFT(rd_);
+            x11y[2] = ZMP_FT(1);
+        }
         x11y[4] = H_roll;
-
+        
         hd_lbxy[0] = x11y;
         hd_ubxy[0] = x11y;
     }
@@ -994,7 +1019,38 @@ void CustomController::walking_x()
     d_ocp_qp_set_all(hAx, hBx, hbx, hQx, hSx, hRx, hqx, hrx, hidxbx, hd_lbxx, hd_ubxx, hidxbu, hd_lbux, hd_ubux, hCx, hDx, hd_lgx, hd_ugx, hZlx, hZux, hzlx, hzux, hidxs, hd_lsx, hd_usx, &qpx);
     d_ocp_qp_ipm_solve(&qpx, &qp_solx, &argx, &workspacex);
     d_ocp_qp_ipm_get_status(&workspacex, &hpipm_statusx);
+    
+    if(mpc_cycle == 540)
+    {
+        std::cout << "Cx" << std::endl;
+        for (int k=0; k<10; k++)
+        {
+            for(int i=0; i<2; i++)
+                {
+                for(int j=0; j<5; j++)
+                    {
+                    printf("%9.5f ", hCx[k][j+5*i]);
+                    }
+                printf("\n");
+                }
+            printf("\n");  
+            std::cout << "print" << std::endl;
+            d_print_mat(ng[1], nx[1], hCx[k], ng[1]);
+        }
+
+        for(int i = 0; i < 100; i ++)
+        {
+            d_ocp_qp_sol_get_x(i, &qp_solx, x11x);
+            d_ocp_qp_sol_get_sl(i, &qp_solx, slx);
+            d_ocp_qp_sol_get_su(i, &qp_solx, sux);
+           // file[1] << x11x[0]<<"\t"<< x11x[2]<<"\t" << x11x[3]<<"\t"<< x11x[4]<<"\t"<<hd_lgx[i][1]-slx[1]<<"\t"<<hd_lgx[i][1]+sux[1]<<"\t"<<hpipm_statusx<< "\t"<<hCx[i][7]<<"\t"<<sux[2]<<std::endl;        
+            file[0] << x11x[0]<<"\t"<< x11x[2]<<"\t" << x11x[3]<<"\t"<< x11x[4]<<"\t"<<sux[0]<<"\t"<<slx[0] << "\t" << sux[1] << "\t"<< hd_lbxx[i][2]<< "\t"<< hd_ubxx[i][2] << std::endl;//(hd_lgx[i][0] - hCx[i][0] * x11x[0] - hCx[i][2] * x11x[1] - hCx[i][4] * x11x[2] - hCx[i][6] * x11x[3])/hCx[i][8] <<"\t"<<hCx[i][0] * x11x[0] + hCx[i][2] * x11x[1] + hCx[i][4] * x11x[2] + hCx[i][6] * x11x[3] + hCx[i][8] * x11x[4]<<"\t"/*<<hd_lgx[i][0]<<"\t"<<hd_ugx[i][0]<<"\t"*/<<hd_lgx[i][0]-1 * slx[0] << "\t" <<hd_lgx[i][0] + sux[0]<< "\t" <<hd_lgx[i][1]-slx[1]<<"\t"<<hd_lgx[i][1]+sux[1]<<"\t"<<hpipm_statusx<< "\t"<<hCx[i][7]<<std::endl;              
+        }
+    }
+
     d_ocp_qp_sol_get_x(1, &qp_solx, x11x);
+    d_ocp_qp_sol_get_sl(1, &qp_solx, slx);
+    d_ocp_qp_sol_get_su(1, &qp_solx, sux);
 }
 
 void CustomController::walking_y()
@@ -1002,7 +1058,33 @@ void CustomController::walking_y()
     d_ocp_qp_set_all(hAy, hBy, hby, hQy, hSy, hRy, hqy, hry, hidxbx, hd_lbxy, hd_ubxy, hidxbu, hd_lbuy, hd_ubuy, hCy, hDy, hd_lgy, hd_ugy, hZly, hZuy, hzly, hzuy, hidxs, hd_lsy, hd_usy, &qpy);
     d_ocp_qp_ipm_solve(&qpy, &qp_soly, &argy, &workspacey);
     d_ocp_qp_ipm_get_status(&workspacey, &hpipm_statusy);
+ 
+    if(mpc_cycle == 520)
+    {
+        for (int k=0; k<10; k++)
+        {
+            for(int i=0; i<2; i++)
+                {
+                for(int j=0; j<5; j++)
+                    {
+                    printf("%9.5f ", hCy[k][j+5*i]);
+                    }
+                printf("\n");
+                }
+            printf("\n");  
+        }
+        for(int i = 0; i < 100; i ++)
+        {
+            d_ocp_qp_sol_get_x(i, &qp_soly, x11y);
+            d_ocp_qp_sol_get_sl(i, &qp_soly, sly);
+            d_ocp_qp_sol_get_su(i, &qp_soly, suy);
+            //file[1] << x11y[0]<<"\t"<< x11y[2]<<"\t" << x11y[3]<<"\t"<< x11y[4]<<"\t"<<suy[0]<<"\t"<<(hd_lgy[i][0] - hCy[i][0] * x11y[0] - hCy[i][2] * x11y[1] - hCy[i][4] * x11y[2] - hCy[i][6] * x11y[3])/hCy[i][8] <<"\t"<<hCy[i][0] * x11y[0] + hCy[i][2] * x11y[1] + hCy[i][4] * x11y[2] + hCy[i][6] * x11y[3] + hCy[i][8] * x11y[4]<<"\t"/*<<hd_lgx[i][0]<<"\t"<<hd_ugx[i][0]<<"\t"*/<<hd_lgy[i][0]-1 * sly[0] << "\t" <<hd_lgy[i][0] + suy[0]<< "\t" <<hd_lgy[i][1]-sly[1]<<"\t"<<hd_lgy[i][1]+suy[1]<<"\t"<<hpipm_statusy<< "\t"<<hCy[i][7]<<std::endl;               
+        }
+    }
+
     d_ocp_qp_sol_get_x(1, &qp_soly, x11y);
+    d_ocp_qp_sol_get_sl(1, &qp_soly, sly);
+    d_ocp_qp_sol_get_su(1, &qp_soly, suy);
 }
 
 void CustomController::copyRobotData(RobotData &rd_l)
@@ -1194,12 +1276,14 @@ void CustomController::mpcVariableInit()
         nbu[ii] = nu[ii];
         nbx[ii] = nx[ii];
         nb[ii] = nbu[ii] + nbx[ii];
-        ng[ii] = 1;
+        ng[ii] = 2;
+        //ng[ii] = 1;
         nsbx[ii] = 0;
     }
 
     nu[N] = 0;
-    ng[N] = 1;
+   // ng[N] = 1;
+    ng[N] = 2;
     nbu[N] = 0;
     nsbx[N] = 0;
     nu[0] = nu_;
@@ -1216,7 +1300,8 @@ void CustomController::mpcVariableInit()
 
     for (ii = 1; ii <= N; ii++)
     {
-        nsg[ii] = 1;
+        nsg[ii] = 2;
+        //nsg[ii] = 1;
         nsbu[ii] = 0;
         ns[ii] = nsbx[ii] + nsbu[ii] + nsg[ii];
     }
@@ -1280,10 +1365,11 @@ void CustomController::mpcVariableInit()
     d_zeros(&D1x, ng[1], nu[1]);
     d_zeros(&CNx, ng[N], nx[N]);
     d_zeros(&DNx, ng[N], nu[N]);
-    d_zeros(&Zl0x, ns[0], 1);
-    d_zeros(&Zu0x, ns[0], 1);
-    d_zeros(&zl0x, ns[0], 1);
-    d_zeros(&zu0x, ns[0], 1);
+ 
+    d_zeros(&Zl0x, ns[0], ns[0]);
+    d_zeros(&Zu0x, ns[0], ns[0]);
+    d_zeros(&zl0x, ns[0], ns[0]);
+    d_zeros(&zu0x, ns[0], ns[0]);
     d_zeros(&d_lbxNy, nbx[N], 1);
     d_zeros(&d_ubxNy, nbx[N], 1);
     d_zeros(&d_lgNy, ng[N], 1);
@@ -1294,35 +1380,35 @@ void CustomController::mpcVariableInit()
     d_zeros(&D1y, ng[1], nu[1]);
     d_zeros(&CNy, ng[N], nx[N]);
     d_zeros(&DNy, ng[N], nu[N]);
-    d_zeros(&Zl0y, ns[0], 1);
-    d_zeros(&Zu0y, ns[0], 1);
-    d_zeros(&zl0y, ns[0], 1);
-    d_zeros(&zu0y, ns[0], 1);
+    d_zeros(&Zl0y, ns[0], ns[0]);
+    d_zeros(&Zu0y, ns[0], ns[0]);
+    d_zeros(&zl0y, ns[0], ns[0]);
+    d_zeros(&zu0y, ns[0], ns[0]);
 
     int_zeros(&idxs0, ns[0], 1);
     d_zeros(&d_ls0x, ns[0], 1);
     d_zeros(&d_us0x, ns[0], 1);
-    d_zeros(&Zl1x, ns[1], 1);
-    d_zeros(&Zu1x, ns[1], 1);
+    d_zeros(&Zl1x, ns[1], ns[1]);
+    d_zeros(&Zu1x, ns[1], ns[1]);
     d_zeros(&zl1x, ns[1], 1);
     d_zeros(&zu1x, ns[1], 1);
     d_zeros(&d_ls0y, ns[0], 1);
     d_zeros(&d_us0y, ns[0], 1);
-    d_zeros(&Zl1y, ns[1], 1);
-    d_zeros(&Zu1y, ns[1], 1);
+    d_zeros(&Zl1y, ns[1], ns[1]);
+    d_zeros(&Zu1y, ns[1], ns[1]);
     d_zeros(&zl1y, ns[1], 1);
     d_zeros(&zu1y, ns[1], 1);
     int_zeros(&idxs1, ns[1], 1);
     d_zeros(&d_ls1x, ns[1], 1);
     d_zeros(&d_us1x, ns[1], 1);
-    d_zeros(&ZlNx, ns[N], 1);
-    d_zeros(&ZuNx, ns[N], 1);
+    d_zeros(&ZlNx, ns[N], ns[N]);
+    d_zeros(&ZuNx, ns[N], ns[N]);
     d_zeros(&zlNx, ns[N], 1);
     d_zeros(&zuNx, ns[N], 1);
     d_zeros(&d_ls1y, ns[1], 1);
     d_zeros(&d_us1y, ns[1], 1);
-    d_zeros(&ZlNy, ns[N], 1);
-    d_zeros(&ZuNy, ns[N], 1);
+    d_zeros(&ZlNy, ns[N], ns[N]);
+    d_zeros(&ZuNy, ns[N], ns[N]);
     d_zeros(&zlNy, ns[N], 1);
     d_zeros(&zuNy, ns[N], 1);
     int_zeros(&idxsN, ns[N], 1);
@@ -1392,6 +1478,7 @@ void CustomController::mpcVariableInit()
     //SOFT CONSTARINT
     for (ii = 0; ii < ns[0]; ii++)
     {
+        ROS_INFO("ns[0");
         Zl0x[ii] = Zl0x_mpc;
         Zu0x[ii] = Zu0x_mpc;
         zl0x[ii] = zl0x_mpc;
@@ -1409,27 +1496,52 @@ void CustomController::mpcVariableInit()
 
     for (ii = 0; ii < ns[1]; ii++)
     {
-        Zl1x[ii] = Zl1x_mpc;
-        Zu1x[ii] = Zu1x_mpc;
-        zl1x[ii] = zl1x_mpc;
-        zu1x[ii] = zu1x_mpc;
-        Zl1y[ii] = Zl1y_mpc;
-        Zu1y[ii] = Zu1y_mpc;
-        zl1y[ii] = zl1y_mpc;
-        zu1y[ii] = zu1y_mpc;
+        if(ii == 0)
+        {
+            Zl1x[ii] = Zl1x_mpc;
+            Zu1x[ii] = Zu1x_mpc;
+            zl1x[ii] = zl1x_mpc;
+            zu1x[ii] = zu1x_mpc;
+            Zl1y[ii] = Zl1y_mpc;
+            Zu1y[ii] = Zu1y_mpc;
+            zl1y[ii] = zl1y_mpc;
+            zu1y[ii] = zu1y_mpc;
+
+            ZlNx[ii] = ZlNx_mpc;
+            ZuNx[ii] = ZuNx_mpc;
+            zlNx[ii] = zlNx_mpc;
+            zuNx[ii] = zuNx_mpc;
+            ZlNy[ii] = ZlNy_mpc;
+            ZuNy[ii] = ZuNy_mpc;
+            zlNy[ii] = zlNy_mpc;
+            zuNy[ii] = zuNy_mpc;
+        }
+        else if(ii == 1)
+        {
+            Zl1x[3] = Zl1x_mpc1;
+            Zu1x[3] = Zu1x_mpc1;
+            zl1x[ii] = zl1x_mpc1;
+            zu1x[ii] = zu1x_mpc1;
+            Zl1y[3] = Zl1y_mpc1;
+            Zu1y[3] = Zu1y_mpc1;
+            zl1y[ii] = zl1y_mpc1;
+            zu1y[ii] = zu1y_mpc1;
+
+            ZlNx[3] = ZlNx_mpc;
+            ZuNx[3] = ZuNx_mpc;
+            zlNx[ii] = zlNx_mpc;
+            zuNx[ii] = zuNx_mpc;
+            ZlNy[3] = ZlNy_mpc;
+            ZuNy[3] = ZuNy_mpc;
+            zlNy[ii] = zlNy_mpc;
+            zuNy[ii] = zuNy_mpc;
+        }
+
         idxs1[ii] = nu[1] + nx[1] + ii;
         d_ls1x[ii] = 0.0; //-1.0;
         d_us1x[ii] = 0.0;
         d_ls1y[ii] = 0.0; //-1.0;
         d_us1y[ii] = 0.0;
-        ZlNx[ii] = ZlNx_mpc;
-        ZuNx[ii] = ZuNx_mpc;
-        zlNx[ii] = zlNx_mpc;
-        zuNx[ii] = zuNx_mpc;
-        ZlNy[ii] = ZlNy_mpc;
-        ZuNy[ii] = ZuNy_mpc;
-        zlNy[ii] = zlNy_mpc;
-        zuNy[ii] = zuNy_mpc;
         idxsN[ii] = nu[N] + nx[N] + ii;
         d_lsNx[ii] = 0.0; //-1.0;
         d_usNx[ii] = 0.0;
@@ -1444,12 +1556,12 @@ void CustomController::mpcVariableInit()
 
     x11x = (double *)malloc(nx_max * sizeof(double));
     u11x = (double *)malloc(nx_max * sizeof(double));
-    slx = (double *)malloc(1 * sizeof(double));
-    sux = (double *)malloc(1 * sizeof(double));
+    slx = (double *)malloc(ns[1] * sizeof(double));
+    sux = (double *)malloc(ns[1] * sizeof(double));
     x11y = (double *)malloc(nx_max * sizeof(double));
     u11y = (double *)malloc(nx_max * sizeof(double));
-    sly = (double *)malloc(1 * sizeof(double));
-    suy = (double *)malloc(1 * sizeof(double));
+    sly = (double *)malloc(ns[1] * sizeof(double));
+    suy = (double *)malloc(ns[1] * sizeof(double));
 
     //Identify
     hidxbx[0] = idxbx0;
@@ -1686,9 +1798,24 @@ void CustomController::momentumControl(RobotData &Robot)
         H_leg(0) = H_roll - H_leg_ref(3);
         H_leg(1) = H_pitch - H_leg_ref(4);
         H_leg(2) = H_leg_1(5);
+
+
+        H_leg_1 = Ag_leg.block<6,6>(0,0) * q_dot_est_mu.head(6);
+        H_pitch_l = H_leg_1(4);
+        H_leg_1 = Ag_leg.block<6,6>(0,6) * q_dot_est_mu.segment<6>(6);
+        H_pitch_r = H_leg_1(4);
     }
     else
     {
+        Eigen::Vector6d H_leg_1;
+        H_leg_1 = Ag_leg * q_dot_est_mu.head(12) + Ag_waist * q_dot_est_mu.segment(12, 3) + Ag_armL * q_dot_est_mu.segment(15, 8) + Ag_armR * q_dot_est_mu.segment(25, 8);
+        H_roll = H_leg_1(3);
+        H_pitch = H_leg_1(4);
+        H_leg_1 = Ag_leg.block<6,6>(0,0) * rd_.q_dot_virtual_.segment<6>(6);
+        H_pitch_l = H_leg_1(4);
+        H_leg_1 = Ag_leg.block<6,6>(0,6) * rd_.q_dot_virtual_.segment<6>(12);
+        H_pitch_r = H_leg_1(4);
+        
         // H_leg = Ag_leg * q_dot_est_mu.head(12) + Ag_waist * q_dot_est_mu.segment(12, 3) + Ag_armL * q_dot_est_mu.segment(15, 8) + Ag_armR * q_dot_est_mu.segment(25, 8);
     }
 
@@ -1699,6 +1826,7 @@ void CustomController::momentumControl(RobotData &Robot)
     F_cur(1) = lipm_w * lipm_w * Robot.total_mass_ * (Robot.link_[COM_id].xpos(1) - ZMP_FT(1)) + H_roll / zc;
 
     F_err = F_cur - F_ref;
+    
     if (walking_tick == 0)
     {
         F_err_l = F_err.segment<2>(0);
@@ -1785,7 +1913,7 @@ void CustomController::momentumControl(RobotData &Robot)
     ub(5) = 1.0;
     ub(6) = 1.0;
 
-    if (rd_.tc_.mom == true && walking_tick > 2500)
+    if (rd_.tc_.mom == true && walking_tick > 2000)
     {
         QP_m.EnableEqualityCondition(0.005);
         QP_m.UpdateMinProblem(H, g);
@@ -1843,6 +1971,7 @@ void CustomController::zmpCalc(RobotData &Robot)
     ZMP_FT_l_mu = ZMP_FT_l;
     Fr_mu = Fr;
     Fl_mu = Fl;
+    zmp_on = true;
     cc_mutex.unlock();
 }
 
