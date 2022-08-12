@@ -1,3 +1,4 @@
+#include "walking.h"
 #include <vector>
 #include <array>
 #include <string>
@@ -8,7 +9,6 @@
 #include "hpipm_d_ocp_qp_utils.h"
 #include "math_type_define.h"
 #include "d_tools.c"
-#include "walking.h"
 
 #include <future>
 
@@ -77,6 +77,8 @@ public:
     Eigen::MatrixVQVQd M_1;
     Eigen::VectorVQd G_1;
 
+    double q4;
+
     Eigen::VectorQd torque_dis_prev;
     Eigen::VectorQd torque_dis;
     Eigen::VectorQd torque_dis_l;
@@ -99,6 +101,7 @@ public:
 
     //MPC
     std::atomic<bool> wlk_on;
+    std::atomic<bool> zmp_on;
     std::atomic<bool> mpc_on;
 
     Eigen::Vector3d pelv_lp;

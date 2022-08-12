@@ -65,6 +65,7 @@ target_link_libraries(${PROJECT_NAME}
   ${catkin_LIBRARIES}
   -lpinocchio
   ${HPIPM_LIBS}
+  -lcasadi
 )
 
 install(TARGETS ${PROJECT_NAME}

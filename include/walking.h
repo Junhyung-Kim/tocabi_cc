@@ -1,3 +1,4 @@
+#include "qp.h"
 #include "tocabi_lib/robot_data.h"
 #include <vector>
 #include <mutex>
@@ -87,17 +88,23 @@ public:
     std::atomic<double> phaseChange2;
     std::atomic<double> phaseChange3;
 
+    Eigen::Vector3d err_foot, err_com, err_foot_w, err_com_w, desired_u_dot;
+    Eigen::Vector3d comv_temp, c_dot_psem_, pelv_ik;
+
     //FT
     Eigen::Vector2d RT, LT, RT_prev, LT_prev, RT_l, LT_l, RT_mu, LT_mu;
     Eigen::Vector3d RF_d, LF_d, z_ctrl;
     double K_fx, T_fx, K_fy, T_fy, K_fz, T_fz;
     Eigen::Isometry3d pelv_yaw;
+    Eigen::Isometry3d sup_yaw;
     double pelv_init_sup;
     bool debug1 = false;
 
     //mutex
     std::mutex cc_mutex;
     std::mutex cc_mutex1;
+
+    CQuadraticProgram QP_ik;
 
     //walkingInit
     Eigen::VectorQd q_target, q_init;
@@ -124,6 +131,7 @@ public:
     void inverseKinematics(RobotData &Robot, Eigen::Isometry3d PELV_float_transform, Eigen::Isometry3d LF_float_transform, Eigen::Isometry3d RF_float_transform, Eigen::Vector12d &leg_q);
     void jacobianInverseKinematics(RobotData &Robot, Eigen::Isometry3d PELV_float, Eigen::Isometry3d LF_float, Eigen::Isometry3d RF_float, Eigen::Isometry3d PELV_float_pos, Eigen::Isometry3d LF_float_pos, Eigen::Isometry3d RF_float_pos);
     void comjacobianInverseKinematics(RobotData &Robot, Eigen::Vector12d &leg_q);
+    void comikopt(RobotData &Robot, Eigen::Vector12d &leg_q);
     void inverseKinematicsdob(RobotData &Robot);
     void updateNextStepTime(RobotData &rd);
     void setWalkingParameter();
@@ -193,6 +201,13 @@ public:
     Eigen::VectorXd LFvz_trajectory_float;
     Eigen::VectorXd RFvz_trajectory_float;
 
+    Eigen::VectorXd LFax_trajectory_float;
+    Eigen::VectorXd RFax_trajectory_float;
+    Eigen::VectorXd LFay_trajectory_float;
+    Eigen::VectorXd RFay_trajectory_float;
+    Eigen::VectorXd LFaz_trajectory_float;
+    Eigen::VectorXd RFaz_trajectory_float;
+
     Eigen::VectorXd LFvx_trajectory_float_mu;
     Eigen::VectorXd RFvx_trajectory_float_mu;
     Eigen::VectorXd LFvy_trajectory_float_mu;
@@ -201,7 +216,11 @@ public:
     Eigen::VectorXd RFvz_trajectory_float_mu;
 
     Eigen::Matrix6Vd Ag_;
+    Eigen::Matrix6Vd dAg_;
     Eigen::Matrix6d Ag_v;
+    Eigen::MatrixXd dJ_l;
+    Eigen::MatrixXd dJ_p;
+    Eigen::MatrixXd dJ_r;
     Eigen::Matrix6x12d Ag_leg;
     Eigen::Matrix6x8d Ag_armR;
     Eigen::Matrix6x8d Ag_armL;
@@ -217,6 +236,11 @@ public:
     Eigen::Isometry3d RF_trajectory_float;
     Eigen::Isometry3d LFD_trajectory_float;
     Eigen::Isometry3d RFD_trajectory_float;
+
+    Eigen::VectorVQd q_init_ik;
+    Eigen::VectorXd q_ddot_ik;
+    Eigen::VectorVQd qv_dot_qp;
+    VectorXd drift_terms, desired_acceleration;
 
     Eigen::MatrixXd foot_step;
     Eigen::MatrixXd foot_step_mu;
@@ -248,6 +272,8 @@ public:
     Eigen::VectorXd com_refy_mu;
     Eigen::VectorXd com_refdx;
     Eigen::VectorXd com_refdy;
+    Eigen::VectorXd com_refddx;
+    Eigen::VectorXd com_refddy;
     Eigen::VectorXd zmp_refx;
     Eigen::VectorXd zmp_refy;
     Eigen::VectorXd zmp_refx_mu;

@@ -1,6 +1,6 @@
-Qx1 : 22000
+Qx1 : 150000
 Qx2 : 0.0
-Qx3 : 80000
+Qx3 : 150000
 Qx4 : 0.0
 Qx5 : 0.0
 
@@ -17,8 +17,8 @@ Zu1x : 30.0
 zl1x : 0.0
 zu1x : 0.0
 
-Zl1x1 : 2000000.0
-Zu1x1 : 2000000.0
+Zl1x1 : 0.0
+Zu1x1 : 0.0
 zl1x1 : 0.0
 zu1x1 : 0.0
 
@@ -93,8 +93,8 @@ apk_sr : 0.03
 
 com_gain : 0.5
 
-pelv_xp : -0.7
-pelv_yp : -0.8
+pelv_xp : 0.0 #-0.4
+pelv_yp : 0.0 #-0.4
 zmp_xp : 0.0
 zmp_yp : 0.0
 
@@ -113,6 +113,8 @@ mobgain3 : 40
 mobgain4 : 60
 mobgain5 : 40
 mobgain6 : 40
+
+q4 : 1.4
 
 ft : 0
 dist : 0
