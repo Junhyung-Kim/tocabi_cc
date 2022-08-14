@@ -16,7 +16,7 @@ void WalkingController::walkingCompute(RobotData &rd)
     setContactMode();
     setIKparam(rd);
     supportToFloatPattern(rd);
-    //comController(rd);
+   // comController(rd);
 
     // if (rd.tc_.MPC == true)
     //    inverseKinematics(rd, PELV_trajectory_float_c, LF_trajectory_float, RF_trajectory_float, desired_leg_q);
@@ -2251,8 +2251,9 @@ void WalkingController::comikopt(RobotData &Robot, Eigen::Vector12d &leg_q)
     int variable_size, constraint_size;
     Eigen::MatrixXd alpha;
     Eigen::Matrix3d I3;
-        I3.setIdentity();
+    I3.setIdentity();
     variable_size = 18;
+    constraint_size = 4;
     if (walking_tick == 0)
     {
         QP_ik.InitializeProblemSize(variable_size, constraint_size);
@@ -2278,40 +2279,46 @@ void WalkingController::comikopt(RobotData &Robot, Eigen::Vector12d &leg_q)
     drift_terms.resize(18);
     desired_acceleration.resize(18);*/
 
-    J.resize(12,18);
-    drift_terms.resize(12);
-    desired_acceleration.resize(12);
+    J.resize(15,18);
+    drift_terms.resize(15);
+    desired_acceleration.resize(15);
     drift_terms.setZero();
     desired_acceleration.setZero();
-    alpha.setZero(12,12);
+    alpha.setZero(15,15);
     alpha.setIdentity();
 
     J.block(0,0,3,18) = Ag_.block(0,0,3,18);
-    J.block(3,0,3,18) = Robot.link_[Pelvis].Jac().block<3, 18>(3, 0);
-    J.block(6,0,3,18) = Robot.link_[Left_Foot].Jac().block<3, 18>(0, 0);
-    J.block(9,0,3,18) = Robot.link_[Right_Foot].Jac().block<3, 18>(0, 0);
+    J.block(3,0,3,18) = Robot.ee_[0].jac_contact.cast<double>().block<3, 18>(0, 0);//Robot.link_[Left_Foot].Jac().block<3, 18>(0, 0);
+    J.block(6,0,3,18) = Robot.ee_[1].jac_contact.cast<double>().block<3, 18>(0, 0);//Robot.link_[Right_Foot].Jac().block<3, 18>(0, 0);
+    J.block(9,0,3,18) = Robot.ee_[0].jac_contact.cast<double>().block<3, 18>(3, 0);//Robot.link_[Left_Foot].Jac().block<3, 18>(0, 0);
+    J.block(12,0,3,18) = Robot.ee_[1].jac_contact.cast<double>().block<3, 18>(3, 0);//Robot.link_[Right_Foot].Jac().block<3, 18>(0, 0);
 
-    drift_terms.segment<3>(0) = (dAg_ * Robot.q_dot_virtual_ ).segment<3>(0);
+
+  //  drift_terms.segment<3>(0) = (dAg_ * Robot.q_dot_virtual_ ).segment<3>(0);
    // drift_terms.segment<3>(3) = (dJ_p * Robot.q_dot_virtual_ ).segment<3>(3);
    // drift_terms.segment<3>(6) = (dJ_l * Robot.q_dot_virtual_ ).segment<3>(0);
    // drift_terms.segment<3>(9) = (dJ_r * Robot.q_dot_virtual_).segment<3>(0);
   //  err_com_w = -0.5 * DyrosMath::getPhi(Robot.link_[Pelvis].rotm, I3);
 
-    desired_acceleration(0) = total_mass * com_refddx(walking_tick) + pelv_xp* (total_mass * com_refdx(walking_tick) - (Ag_ * Robot.q_dot_virtual_)(0)) + pelv_xp * 100 * (com_refx(walking_tick) - COM_float_current.translation()(0));
-    //desired_acceleration(1) = total_mass * 0.0/*com_refddy(walking_tick) */+ pelv_yp * (total_mass * 0.0/*com_refdy(walking_tick)*/ - (Ag_ * Robot.q_dot_virtual_)(1)) + pelv_yp * 100 * (/*com_refy(walking_tick)*/COM_float_init.translation()(1) - COM_float_current.translation()(1));
-    //desired_acceleration(2) = pelv_xp * ( - (Ag_ * Robot.q_dot_virtual_)(2)) + pelv_yp * (com_sup(2) - comR_sup(2));
-    //desired_acceleration(3) = err_com_w(0);
-    //desired_acceleration(4) = err_com_w(1);
-    //desired_acceleration(5) = err_com_w(2);
-   /* desired_acceleration(6) = pelv_xp/3 * ( - (Robot.link_[Left_Foot].Jac().block<6, MODEL_DOF_VIRTUAL>(0, 0) * Robot.q_dot_virtual_)(0)) + pelv_xp * (LFx_trajectory_float(walking_tick) - LF_float_current.translation()(0));
-    desired_acceleration(7) = pelv_xp/3 * ( - (Robot.link_[Left_Foot].Jac().block<6, MODEL_DOF_VIRTUAL>(0, 0) * Robot.q_dot_virtual_)(1)) + pelv_yp * (LFy_trajectory_float(walking_tick) - LF_float_current.translation()(1));
-    desired_acceleration(8) = pelv_xp/3 * ( - (Robot.link_[Left_Foot].Jac().block<6, MODEL_DOF_VIRTUAL>(0, 0) * Robot.q_dot_virtual_)(2)) + pelv_yp * (LF_supd(2) - LF_sup(2));
-    desired_acceleration(9) = pelv_xp/3 * ( - (Robot.link_[Right_Foot].Jac().block<6, MODEL_DOF_VIRTUAL>(0, 0) * Robot.q_dot_virtual_)(0)) + pelv_xp * (RFx_trajectory_float(walking_tick) - RF_float_current.translation()(0));
-    desired_acceleration(10) = pelv_xp/3 * ( - (Robot.link_[Right_Foot].Jac().block<6, MODEL_DOF_VIRTUAL>(0, 0) * Robot.q_dot_virtual_)(1)) + pelv_yp * (RFy_trajectory_float(walking_tick) - RF_float_current.translation()(1));
-    desired_acceleration(11) = pelv_xp/3 * ( - (Robot.link_[Right_Foot].Jac().block<6, MODEL_DOF_VIRTUAL>(0, 0) * Robot.q_dot_virtual_)(2)) + pelv_yp * (RF_supd(2) - RF_sup(2));
+    desired_acceleration(0) = total_mass * com_refdx(walking_tick) + pelv_xp * (com_refx(walking_tick) - COM_float_current.translation()(0));// + pelv_xp* (total_mass * com_refdx(walking_tick) - (Ag_ * Robot.q_dot_virtual_)(0)) + pelv_xp * 100 * (com_refx(walking_tick) - COM_float_current.translation()(0));
+    desired_acceleration(1) = total_mass * com_refdy(walking_tick) + pelv_yp * (com_refy(walking_tick) - COM_float_current.translation()(1));//(total_mass * 0.0/*com_refdy(walking_tick)*/ - (Ag_ * Robot.q_dot_virtual_)(1)) + pelv_yp * 100 * (/*com_refy(walking_tick)*/COM_float_init.translation()(1) - COM_float_current.translation()(1));
+   // desired_acceleration(2) = pelv_yp * (com_sup(2) - comR_sup(2));
+ /*   desired_acceleration(3) =  pelv_yp/3000 * (LFx_trajectory_float(walking_tick) - LF_float_current.translation()(0));
+    desired_acceleration(4) = pelv_yp/3000 * (LFy_trajectory_float(walking_tick) - LF_float_current.translation()(1));
+    desired_acceleration(5) = pelv_yp/3000 * (LF_supd(2) - LF_sup(2));
+    desired_acceleration(6) = pelv_yp/3000 * (RFx_trajectory_float(walking_tick) - RF_float_current.translation()(0));
+    desired_acceleration(7) = pelv_yp/3000 * (RFy_trajectory_float(walking_tick) - RF_float_current.translation()(1));
+    desired_acceleration(8) = pelv_yp/3000 * (RF_supd(2) - RF_sup(2));
 */
+    err_com_w = -0.05 * DyrosMath::getPhi(Robot.link_[Left_Foot].rotm, I3);
+    desired_acceleration(9) = err_com_w(0);
+    //desired_acceleration.segment<3>(9) = err_com_w;
+    err_com_w = -0.05 * DyrosMath::getPhi(Robot.link_[Right_Foot].rotm, I3);
+    desired_acceleration(12) = err_com_w(0);
+    //desired_acceleration.segment<3>(12) = err_com_w;
+
     H = J.transpose()* alpha * J;
-    g = -1 * J.transpose() * alpha * (desired_acceleration - drift_terms); 
+    g = -1 * J.transpose() * alpha * (desired_acceleration);// - drift_terms); 
 
     Eigen::VectorXd lb1, ub1;
     lb1.resize(variable_size);
@@ -2323,22 +2330,40 @@ void WalkingController::comikopt(RobotData &Robot, Eigen::Vector12d &leg_q)
         ub1(i) = 100000.0;
     }
 
-    alpha(0,0) = 10000000;
-    alpha(2,2) = 0.0;
-    alpha(3,3) = 0.0;
-    alpha(4,4) = 0.0;
-    alpha(5,5) = 0.0;
-    alpha(6,6) = 0.0;
-    alpha(7,7) = 0.0;
-    alpha(8,8) = 0.0;
+    A.setZero();
+    A(0,0) = 1.0;
+    A.block<1,12>(0,6) = -Robot.ee_[0].jac_contact.cast<double>().block<1, 12>(0, 6);//-Robot.link_[Pelvis].Jac().block<1, 12>(0, 6);
+    A.block<1,6>(1,6) = Robot.ee_[0].jac_contact.cast<double>().block<1, 6>(0, 6);//-Robot.link_[Pelvis].Jac().block<1, 12>(0, 6);
+    A.block<1,6>(1,12) = -Robot.ee_[1].jac_contact.cast<double>().block<1, 6>(0, 12);//-Robot.link_[Pelvis].Jac().block<1, 12>(0, 6);
+    
+    A(2,1) = 1.0;
+    A.block<1,12>(2,6) = Robot.ee_[0].jac_contact.cast<double>().block<1, 12>(1, 6);//-Robot.link_[Pelvis].Jac().block<1, 12>(0, 6);
+    A.block<1,6>(3,6) = Robot.ee_[0].jac_contact.cast<double>().block<1, 6>(1, 6);//-Robot.link_[Pelvis].Jac().block<1, 12>(0, 6);
+    A.block<1,6>(3,12) = -Robot.ee_[1].jac_contact.cast<double>().block<1, 6>(1, 12);//-Robot.link_[Pelvis].Jac().block<1, 12>(0, 6);
+    
+    lbA(0) = 0.0;//-(dJ_l.block<1, 12>(0, 6) * qv_dot_qp.segment<12>(6))(0);
+    ubA(0) = 0.0;//-(dJ_l.block<1, 12>(0, 6) * qv_dot_qp.segment<12>(6))(0);
+    lbA(1) = 0.0;
+    ubA(1) = 0.0;
+    lbA(2) = 0.0;
+    ubA(2) = 0.0;
+    lbA(3) = 0.0;
+    ubA(3) = 0.0;
+    //std::cout<<"ss"<<std::endl;
+    //std::cout<<Robot.ee_[0].jac_contact.cast<double>().block<1, 12>(0, 0)<<std::endl;
+    if(walking_tick > 600)
+    {
+        QP_ik.EnableEqualityCondition(0.005);
+        QP_ik.UpdateMinProblem(H, g);
+        QP_ik.UpdateSubjectToX(lb1, ub1);
+        QP_ik.UpdateSubjectToAx(A, lbA, ubA);
+        q_ddot_ik = QP_ik.SolveQPoases(100);
 
-    //QP_ik.EnableEqualityCondition(0.005);
-    QP_ik.UpdateMinProblem(H, g);
-    QP_ik.UpdateSubjectToX(lb1, ub1);
-    q_ddot_ik = QP_ik.SolveQPoases(100);
-    qv_dot_qp.segment<18>(0) = qv_dot_qp.segment<18>(0) + q_ddot_ik/1000.0;
-    q_init_ik.segment<12>(0) = q_init_ik.segment<12>(0)/*Robot.q_.segment<12>(0)*/ + qv_dot_qp.segment<12>(6)/1000.0;
-    pelv_ik = pelv_ik + qv_dot_qp.segment<3>(0)/1000.0;
+        //qv_dot_qp.segment<18>(0) = qv_dot_qp.segment<18>(0) + q_ddot_ik/1000.0;
+        q_init_ik.segment<12>(0) = q_init_ik.segment<12>(0)/*Robot.q_.segment<12>(0)*/ + q_ddot_ik.segment<12>(6)/1000.0;
+        pelv_ik = pelv_ik + qv_dot_qp.segment<3>(0)/1000.0;
+    } 
+
    /* q_init_ik = q_init_ik + qv_dot_qp/wk_Hz;*/
    // q_init_ik.segment<6>(0) = q_init_ik.segment<6>(0) + qv_dot_qp.segment<6>(0)/wk_Hz;
    //  q_init_ik.segment<MODEL_DOF_VIRTUAL-6>(6) = q_init_ik.segment<MODEL_DOF_VIRTUAL-6>(6) + qv_dot_qp.segment<MODEL_DOF_VIRTUAL-6>(6)/wk_Hz;

@@ -4,6 +4,7 @@
 
 using namespace TOCABI;
 using namespace pinocchio;
+using namespace casadi_kin_dyn;
 using std::shared_ptr;
 
 CustomController::CustomController(RobotData &rd) : rd_(rd) //, wbc_(dc.wbc_)
@@ -159,7 +160,9 @@ CustomController::CustomController(RobotData &rd) : rd_(rd) //, wbc_(dc.wbc_)
 
     std::cout << "Robot total mass" << rd_.total_mass_ << std::endl;
     ControlVal_.setZero();
-    pinocchio::urdf::buildModel("/home/jhk/catkin_ws/src/dyros_tocabi_v2/tocabi_description/robots/dyros_tocabi_with_redhands.urdf", model);
+    std::string urdf_link = "/home/jhk/catkin_ws/src/dyros_tocabi_v2/tocabi_description/robots/dyros_tocabi_with_redhands.urdf";
+
+    pinocchio::urdf::buildModel(urdf_link, model);
     pinocchio::Data data(model);
     model_data = data;
     q_ = randomConfiguration(model);
@@ -170,7 +173,7 @@ CustomController::CustomController(RobotData &rd) : rd_(rd) //, wbc_(dc.wbc_)
 
     pinocchio::JointModelFreeFlyer root_joint;
     pinocchio::Model model2;
-    pinocchio::urdf::buildModel("/home/jhk/catkin_ws/src/dyros_tocabi_v2/tocabi_description/robots/dyros_tocabi_with_redhands.urdf", root_joint, model2);
+    pinocchio::urdf::buildModel(urdf_link, root_joint, model2);
     pinocchio::Data data1(model2);
 
     model1 = model2;
@@ -186,7 +189,9 @@ CustomController::CustomController(RobotData &rd) : rd_(rd) //, wbc_(dc.wbc_)
     mpc_on = false;
     wlk_on = false;
     velEst_f = false;
-
+    CasadiKinDyn *model4 = new CasadiKinDyn("/home/jhk/catkin_ws/src/dyros_tocabi_v2/tocabi_description/robots/dyros_tocabi_with_redhands.urdf");
+    model3 = model4;
+    model3->rnea();
     mpcVariableInit();
     std::cout << "Custom Controller Init" << std::endl;
 }
@@ -304,7 +309,8 @@ void CustomController::computeSlow()
             Vector12d fc_redis;
             double fc_ratio = 0.000;
             fc_redis.setZero();
-
+            //temp0813
+            contactMode = 1;
             if (walking_tick >= 1 && wlk_on == true && current_step_num != total_step_num)
             {
                 if (contactMode == 1)
@@ -667,7 +673,7 @@ void CustomController::computeFast()
                         file[1]<<rd_.q_desired(0) << "\t" << rd_.q_(0) << "\t"<<rd_.q_desired(1) << "\t" << rd_.q_(1) << "\t"<<rd_.q_desired(2) << "\t" << rd_.q_(2) << "\t"<<rd_.q_desired(3) << "\t" << rd_.q_(3) << "\t"<<rd_.q_desired(4) << "\t" << rd_.q_(4) << "\t"<<rd_.q_desired(5) << "\t" << rd_.q_(5) << "\t"<<rd_.q_desired(6) << "\t" << rd_.q_(6) << "\t"<<rd_.q_desired(7) << "\t" << rd_.q_(7) << "\t"<<rd_.q_desired(8) << "\t" << rd_.q_(8) << "\t"<<rd_.q_desired(9) << "\t" << rd_.q_(9) << "\t"<<rd_.q_desired(10) << "\t" << rd_.q_(10) << "\t"<<rd_.q_desired(11) << "\t" << rd_.q_(11) << "\t"<<rd_.q_desired(12) << "\t" << rd_.q_(12) << "\t"<<rd_.q_desired(13) << "\t" << rd_.q_(13) << "\t"<<rd_.q_desired(14) << "\t" << rd_.q_(14) << "\t"<<rd_.q_desired(15) << "\t" << rd_.q_(15) << "\t"<<rd_.q_desired(16) << "\t" << rd_.q_(16) << "\t"<<rd_.q_desired(17) << "\t" << rd_.q_(17) << "\t"<<rd_.q_desired(18) << "\t" << rd_.q_(18) <<  std::endl;
                       // file[1]<<desired_acceleration(0) << "\t" <<desired_acceleration(1) << "\t"<< desired_acceleration(2) << "\t"<<desired_acceleration(3) << "\t"<<desired_acceleration(4) << "\t"<<desired_acceleration(5) << "\t"<<desired_acceleration(6) << "\t"<<desired_acceleration(7) << "\t"<<desired_acceleration(8) << "\t"<<drift_terms(0) << "\t"<<drift_terms(1) << "\t"<<drift_terms(2) << "\t"<<drift_terms(3) << "\t"<<drift_terms(4) << "\t"<<drift_terms(5) << "\t"<<drift_terms(6) << "\t"<<drift_terms(7) << "\t"<<drift_terms(8) << "\t"<<qv_dot_qp(6)<< "\t"<<qv_dot_qp(7)<< "\t"<<qv_dot_qp(8)<< "\t"<<qv_dot_qp(9)<< "\t"<<qv_dot_qp(10)<< std::endl;
                         //file[0] << q_init_ik(6) << "\t"<< q_init_ik(7) << "\t"<< q_init_ik(8) << "\t" << q_init_ik(9) << "\t"<< q_init_ik(10) << "\t"<< q_init_ik(11)<< "\t"<< q_init_ik(12) << "\t"<<rd_.q_dot_virtual_(0) << "\t"<<rd_.q_dot_virtual_(1) << "\t"<<rd_.q_dot_virtual_(2)<< "\t"<<rd_.q_dot_virtual_(3)<< "\t"<<rd_.q_dot_virtual_(4) << "\t"<<rd_.q_dot_virtual_(5) <<  std::endl;         
-                        file[0]<<q_init_ik(0)<<"\t" <<(rd_.q_virtual_)(0)<<"\t"<< (Ag_ * qv_dot_qp)(0) << "\t"<<total_mass*com_refdx(walking_tick) << "\t" << PELV_float_current.translation()(0)<< "\t"<< com_refx(walking_tick) << "\t" << COM_float_current.translation()(0) << "\t"<< com_refy(walking_tick) << "\t" << COM_float_current.translation()(1) << "\t" << com_sup(2) << "\t" << comR_sup(2) << "\t" << PELV_trajectory_float.translation()(0) << "\t"  << zmp_refx(walking_tick) << "\t" << ZMP_FT_l(0) << "\t" << LFx_trajectory_float(walking_tick) << "\t" << rd_.link_[Left_Foot].xpos(0) << "\t" << LFvz_trajectory_float(walking_tick) << "\t"<< LFz_trajectory_float(walking_tick) << "\t" << rd_.link_[Left_Foot].xpos(2) << "\t" << foot_step(current_step_num,6) <<"\t"<<P_e(0)<<"\t"<< P_e(1)<< "\t" << P_e(2)<< std::endl;;
+                        file[0]<<-(rd_.ee_[0].jac_contact.cast<double>().block<1, 12>(1, 6) * rd_.q_dot_virtual_.segment<12>(6))(0)<<"\t"<<rd_.q_dot_virtual_(1)<<"\t"<<q_ddot_ik(1)<<"\t"<<(Ag_.block(0,0,3,18) * rd_.q_dot_virtual_.segment<18>(0))(1) <<"\t"<<(Ag_.block(0,0,3,18) * q_ddot_ik)(1) << "\t"<<total_mass*com_refdy(walking_tick) <<"\t"<<total_mass*rd_.link_[COM_id].v(1)<<"\t"<<com_refy(walking_tick)<<"\t"<<COM_float_current.translation()(1)<<std::endl;//<<"\t"<<q_ddot_ik(0)<<"\t"<<-(rd_.ee_[0].jac_contact.cast<double>().block<1, 12>(0, 6) * q_ddot_ik.segment<12>(6))(0)-(dJ_l.block<1, 12>(0, 6) * qv_dot_qp.segment<12>(6))(0)<<"\t"<<(rd_.ee_[0].jac_contact.cast<double>().block<1, 6>(0, 6) * rd_.q_dot_virtual_.segment<6>(6))(0)<<"\t" <<rd_.ee_[1].jac_contact.cast<double>().block<1, 6>(0, 12) * rd_.q_dot_virtual_.segment<6>(12)<<"\t"<<(rd_.q_dot_virtual_)(0) <<"\t" <<(qv_dot_qp)(0)<<"\t"<< (Ag_ * qv_dot_qp)(0) << "\t"<<total_mass*com_refdx(walking_tick) << "\t" << PELV_float_current.translation()(0)<< "\t"<< com_refx(walking_tick) << "\t" << COM_float_current.translation()(0) << "\t"<< com_refy(walking_tick) << "\t" << COM_float_current.translation()(1) << "\t" << com_sup(2) << "\t" << comR_sup(2) << "\t" << PELV_trajectory_float.translation()(0) << "\t"  << zmp_refx(walking_tick) << "\t" << ZMP_FT_l(0) << "\t" << LFx_trajectory_float(walking_tick) << "\t" << rd_.link_[Left_Foot].xpos(0) << "\t" << LFvz_trajectory_float(walking_tick) << "\t"<< LFz_trajectory_float(walking_tick) << "\t" << rd_.link_[Left_Foot].xpos(2) << "\t" << foot_step(current_step_num,6) <<"\t"<<P_e(0)<<"\t"<< P_e(1)<< "\t" << P_e(2)<< std::endl;;
                         //file[1] <<c_dot_psem_(1)<<"\t"<<comv_temp(1)<<"\t"<< com_refdy(walking_tick)<<"\t"<< desired_u_dot(1) <<"\t"<< rd_.link_[COM_id].v(1) <<"\t"<< com_refy(walking_tick) << "\t" << COM_float_current.translation()(1) << "\t" << rd_.link_[Pelvis].xipos(1) << "\t" << PELV_trajectory_float.translation()(1) << "\t"  << zmp_refy(walking_tick) << "\t" << ZMP_FT_l(1) <<"\t" << rd_.link_[Right_Foot].xipos(2) <<"\t"<< RFz_trajectory_float(walking_tick) << "\t"<<L_e(0)<<"\t"<<R_e(0)<<"\t"<<P_e(0)<<"\t"<<com_refdy(walking_tick)<<std::endl;
                     }
                 }
@@ -1155,15 +1161,15 @@ void CustomController::jointVelocityEstimate()
 
         Eigen::VectorQd tau_;
         tau_ = Cor_ * q_dot_est + G_;
-        int RFjoint_id = model1.getJointId("R_AnkleRoll_Joint");
-        int LFjoint_id = model1.getJointId("L_AnkleRoll_Joint");
+        int RFjoint_id = model1.getFrameId("R_Foot_Link");
+        int LFjoint_id = model1.getFrameId("L_Foot_Link");
         int Pelvis_id = model1.getFrameId("Pelvis_Link");
         cc_mutex.lock();
         q_dot_est_mu = -(q_dot_est + B_dt.bottomRightCorner(MODEL_DOF, MODEL_DOF) * (rd_.torque_desired + L1 * (rd_.q_ - q_est) - tau_));
         Ag_ = CMM;
-        pinocchio::getJointJacobianTimeVariation(model1, model_data1, LFjoint_id, pinocchio::LOCAL_WORLD_ALIGNED, dJ_l);
+        pinocchio::getFrameJacobianTimeVariation(model1, model_data1, LFjoint_id, pinocchio::LOCAL_WORLD_ALIGNED, dJ_l);
         pinocchio::getFrameJacobianTimeVariation(model1, model_data1, Pelvis_id, pinocchio::LOCAL_WORLD_ALIGNED, dJ_p);
-        pinocchio::getJointJacobianTimeVariation(model1, model_data1, RFjoint_id, pinocchio::LOCAL_WORLD_ALIGNED, dJ_r);
+        pinocchio::getFrameJacobianTimeVariation(model1, model_data1, RFjoint_id, pinocchio::LOCAL_WORLD_ALIGNED, dJ_r);
         dAg_ = model_data1.dAg;
         cc_mutex.unlock();
         q_dot_est = q_dot_est_mu;

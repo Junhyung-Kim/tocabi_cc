@@ -66,6 +66,7 @@ target_link_libraries(${PROJECT_NAME}
   -lpinocchio
   ${HPIPM_LIBS}
   -lcasadi
+  -lcasadi_kin_dyn
 )
 
 install(TARGETS ${PROJECT_NAME}

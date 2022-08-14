@@ -12,9 +12,15 @@
 #include "pinocchio/algorithm/frames.hpp"
 #include <pinocchio/autodiff/casadi.hpp>
 #include <casadi/casadi.hpp>
+#include <casadi_kin_dyn/casadi_kin_dyn.h>
+#include <urdf_parser/urdf_parser.h>
 
 pinocchio::Model model;
 pinocchio::Data model_data;
 
 pinocchio::Model model1;
 pinocchio::Data model_data1;
+
+casadi_kin_dyn::CasadiKinDyn *model3;
+//auto model3;
+//casadi_kin_dyn::CasadiKinDyn a;
