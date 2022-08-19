@@ -49,9 +49,15 @@ catkin_package(
 include_directories(
     include
     ${catkin_INCLUDE_DIRS}
+    ${HPIPM_LIBS}
     -lboost_system 
     -lpinocchio
+    /opt/hpipm/include
+    /opt/blasfeo/include
     -lurdfdom_model
+    -lcasadi
+    -lcasadi_kin_dyn
+    /usr/local/lib/
 )
 
 add_library(${PROJECT_NAME}
@@ -65,8 +71,12 @@ target_link_libraries(${PROJECT_NAME}
   ${catkin_LIBRARIES}
   -lpinocchio
   ${HPIPM_LIBS}
+  /opt/hpipm/include
+  /opt/blasfeo/include
+  /usr/local/lib/
   -lcasadi
   -lcasadi_kin_dyn
+  -lcrocoddyl
 )
 
 install(TARGETS ${PROJECT_NAME}

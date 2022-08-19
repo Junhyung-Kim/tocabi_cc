@@ -218,6 +218,8 @@ public:
     Eigen::Matrix6Vd Ag_;
     Eigen::Matrix6Vd dAg_;
     Eigen::Matrix6d Ag_v;
+    Eigen::MatrixXd J_lc;
+    Eigen::MatrixXd J_rc;
     Eigen::MatrixXd dJ_l;
     Eigen::MatrixXd dJ_p;
     Eigen::MatrixXd dJ_r;

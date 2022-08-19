@@ -93,8 +93,8 @@ apk_sr : 0.03
 
 com_gain : 0.5
 
-pelv_xp : 100.0 #-0.4
-pelv_yp : 100.0 #-0.4
+pelv_xp : 150.0 #-0.4
+pelv_yp : 150.0 #-0.4
 zmp_xp : 0.0
 zmp_yp : 0.0
 
