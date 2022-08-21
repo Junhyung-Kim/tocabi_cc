@@ -1,7 +1,6 @@
 #include "pinocchio.h"
 #include "cc.h"
 #include "wholebody_functions.h"
-#include "crocoddyl/core/solvers/ddp.hpp"
 
 using namespace TOCABI;
 using namespace casadi_kin_dyn;
@@ -208,11 +207,50 @@ CustomController::CustomController(RobotData &rd) : rd_(rd) //, wbc_(dc.wbc_)
     mpc_on = false;
     wlk_on = false;
     velEst_f = false;
-    CasadiKinDyn *model4 = new CasadiKinDyn(model1);
+
+    unsigned int N = 20;  // number of nodes
+    unsigned int T = 20;  // number of trials
+    unsigned int MAXITER = 30;
+
+    typedef crocoddyl::ActionModelFlywheelTpl<double> ActionModelFlywheel;
+
+    Eigen::VectorXd x0 = Eigen::Vector4d(0., 0., 0., 0.);
+    boost::shared_ptr<crocoddyl::ActionModelAbstract> model = boost::make_shared<ActionModelFlywheel>();
+    std::vector<Eigen::VectorXd> xs(N + 1, x0);
+    std::vector<Eigen::VectorXd> us(N, Eigen::Vector2d::Zero());
+    std::vector<boost::shared_ptr<crocoddyl::ActionModelAbstract> > runningModels(N, model);
+    boost::shared_ptr<crocoddyl::ShootingProblem> problem =
+    boost::make_shared<crocoddyl::ShootingProblem>(x0, runningModels, model);
+    crocoddyl::SolverDDP ddp(problem);
+
+    bool CALLBACKS = false;
+    if (CALLBACKS) {
+    std::vector<boost::shared_ptr<crocoddyl::CallbackAbstract> > cbs;
+    cbs.push_back(boost::make_shared<crocoddyl::CallbackVerbose>());
+    ddp.setCallbacks(cbs);
+    }
+    // Solving the optimal control problem
+    Eigen::ArrayXd duration(T);
+    for (unsigned int i = 0; i < T; ++i) {
+        crocoddyl::Timer timer;
+        ddp.solve(xs, us, MAXITER);
+        duration[i] = timer.get_duration();
+    }
+
+    double avrg_duration = duration.sum() / T;
+    double min_duration = duration.minCoeff();
+    double max_duration = duration.maxCoeff();
+    std::cout << "  DDP.solve [ms]: " << avrg_duration << " (" << min_duration << "-" << max_duration << ")"
+                << std::endl;
+    //boost::shared_ptr<crocoddyl::StateMultibody> state =
+    //boost::make_shared<crocoddyl::StateMultibody>(boost::make_shared<pinocchio::Model>(model2));
+
+
+/*    CasadiKinDyn *model4 = new CasadiKinDyn(model1);
     model3 = model4;
 
     // Time length
-    double T = 1.0;
+   double T = 1.0;
 
     // Time
     casadi::SX x1 = casadi::SX::sym("x1");
@@ -374,14 +412,14 @@ CustomController::CustomController(RobotData &rd) : rd_(rd) //, wbc_(dc.wbc_)
     // NLP solver options
     casadi::Dict solver_opts;
     string solver_name;
-    solver_name = "blocksqp";
-    solver_opts["blocksqp.tol"] = 1e-2;
- /*   solver_opts["ipopt.hessian_approximation"] = "limited-memory";
+    solver_name = "ipopt";
+    solver_opts["ipopt.tol"] = 1e-2;
+    solver_opts["ipopt.hessian_approximation"] = "limited-memory";
     solver_opts["ipopt.warm_start_init_point"]="yes";
     solver_opts["ipopt.warm_start_bound_push"]=1e-6;
     solver_opts["ipopt.warm_start_slack_bound_push"]=1e-6;
     solver_opts["ipopt.warm_start_mult_bound_push"]=1e-6;
-    solver_opts["ipopt.mu_init"]=1e-6;*/
+    solver_opts["ipopt.mu_init"]=1e-6;
 
 std::cout << "V2" << std::endl;
     // Create NLP solver
@@ -403,70 +441,7 @@ std::cout << "V4" << std::endl;
 
     std::cout << "Usol" << std::endl;
     std::cout << Usol << std::endl;
-
-    // std::cout << "V" << std::endl;
-    //   std::cout << V << std::endl;
-
-    // START WITH AN EMPTY NLP
-
-    // Integrate over all intervals
-    /*   casadi::MX X = X0;
-
-       // Objective function
-       casadi::MX J = dot(U,U);
-
-       for (int k = 0; k < nc; ++k)
-       {
-           // Integrate
-           X = F(casadi::MXDict{{"x0", X}, {"p", U(k)}}).at("xf");
-       }
-
-       // Terminal constraints
-       casadi::MX G = vertcat(X(0), X(1), X(2), X(3));
-       // Create the NLP
-       casadi::MXDict nlp = {{"x", U}, {"f", J}, {"g", G}};
-       // NLP solver options
-       casadi::Dict solver_opts;
-       string solver_name;
-       solver_name = "ipopt";
-       solver_opts["ipopt.tol"] = 1e-5;
-       solver_opts["ipopt.hessian_approximation"] = "limited-memory";
-
-       // Create NLP solver
-       casadi::Function solver = nlpsol("nlpsol", solver_name, nlp, solver_opts);
-       // Bounds on u and initial condition
-       std::vector<double> umin(nc, -10), umax(nc, 10), u0(nc, 0.4);
-       umin[nc-1] = 0.05;
-       umax[nc-1] = 0.05;
-       // Bounds on g
-       std::vector<double> gmin = {10, 0}, gmax = {10, 0};
-
-       // Solve NLP
-       std::map<std::string, casadi::DM> arg, res;
-       arg["lbx"] = umin;
-       arg["ubx"] = umax;
-       arg["lbg"] = 0;
-       arg["ubg"] = 0;
-       arg["x0"] = u0;
-       res = solver(arg);
-       casadi::DM Usol = res.at("x");
-       casadi::MX Xsol = X0;
-
-       for(int i = 0; i < nc; i++)
-       {
-           Xsol = F(casadi::MXDict{{"x0", Xsol}, {"p", Usol(i)}}).at("xf");
-       }
-
-       for(int i = 0; i < nc; i++)
-       {
-           std::cout << Xsol(i) << std::endl;
-       }
-
-       std::cout << "solution" << std::endl;
-       std::cout << res << std::endl;
-
-           std::cout << "Usol" << std::endl;
-       std::cout << Usol << std::endl;*/
+*/
 }
 
 Eigen::VectorQd CustomController::getControl()
