@@ -214,21 +214,29 @@ CustomController::CustomController(RobotData &rd) : rd_(rd) //, wbc_(dc.wbc_)
 
     typedef crocoddyl::ActionModelFlywheelTpl<double> ActionModelFlywheel;
 
-    Eigen::VectorXd x0 = Eigen::Vector4d(0., 0., 0., 0.);
-    boost::shared_ptr<crocoddyl::ActionModelAbstract> model = boost::make_shared<ActionModelFlywheel>();
+    Eigen::VectorXd x0 = Eigen::Vector4d(0.0, 0., 0., 0.);
+    boost::shared_ptr<crocoddyl::ActionModelAbstract> model_fly = boost::make_shared<ActionModelFlywheel>();
+    //model_fly.set_dt(0.005);
     std::vector<Eigen::VectorXd> xs(N + 1, x0);
     std::vector<Eigen::VectorXd> us(N, Eigen::Vector2d::Zero());
-    std::vector<boost::shared_ptr<crocoddyl::ActionModelAbstract> > runningModels(N, model);
+    std::vector<boost::shared_ptr<crocoddyl::ActionModelAbstract> > runningModels(N, model_fly);
+    
     boost::shared_ptr<crocoddyl::ShootingProblem> problem =
-    boost::make_shared<crocoddyl::ShootingProblem>(x0, runningModels, model);
+    boost::make_shared<crocoddyl::ShootingProblem>(x0, runningModels, model_fly);
+    problem->set_nthreads(4);
+    int a  = problem->get_nthreads();
+    std::cout << a << std::endl;
     crocoddyl::SolverDDP ddp(problem);
-
-    bool CALLBACKS = false;
+    
+    //crocoddyl::SolverBoxFDDP ddp(problem);
+    bool CALLBACKS = true;
     if (CALLBACKS) {
     std::vector<boost::shared_ptr<crocoddyl::CallbackAbstract> > cbs;
     cbs.push_back(boost::make_shared<crocoddyl::CallbackVerbose>());
     ddp.setCallbacks(cbs);
     }
+
+   // ddp.th_stop_ = 5e-3;
     // Solving the optimal control problem
     Eigen::ArrayXd duration(T);
     for (unsigned int i = 0; i < T; ++i) {
@@ -237,11 +245,23 @@ CustomController::CustomController(RobotData &rd) : rd_(rd) //, wbc_(dc.wbc_)
         duration[i] = timer.get_duration();
     }
 
+    xs = ddp.get_xs();
+    us = ddp.get_us();
+    //ddp.qp_;
+    //crocoddyl::BoxQPSolution sol = ddp.qp_.get_solution();
+    std::cout << "x" << std::endl;
+    for(int i = 0; i < N + 1; i ++)
+        std::cout << xs[i][0] << "\t"<< xs[i][1] << "\t"<< xs[i][2] << "\t"<< xs[i][3] << std::endl;
+    std::cout << "u" << std::endl;
+    for(int i = 0; i < N ; i ++)
+        std::cout << us[i][0] << "\t"<< us[i][1]  << std::endl;
+
+
     double avrg_duration = duration.sum() / T;
     double min_duration = duration.minCoeff();
     double max_duration = duration.maxCoeff();
     std::cout << "  DDP.solve [ms]: " << avrg_duration << " (" << min_duration << "-" << max_duration << ")"
-                << std::endl;
+               << std::endl;
     //boost::shared_ptr<crocoddyl::StateMultibody> state =
     //boost::make_shared<crocoddyl::StateMultibody>(boost::make_shared<pinocchio::Model>(model2));
 

@@ -28,6 +28,9 @@
 #include "crocoddyl/core/action-base.hpp"
 #include "crocoddyl/core/states/euclidean.hpp"
 #include <functional> 
+#include "crocoddyl/core/solvers/ddp.hpp"
+#include "crocoddyl/core/solvers/fddp.hpp"
+#include "crocoddyl/core/solvers/box-fddp.hpp"
 //#include <pinocchio/autodiff/casadi.hpp>
 #include <casadi_kin_dyn/casadi_kin_dyn.h>
 #include <casadi/casadi.hpp>       
@@ -126,6 +129,7 @@ class ActionModelFlywheelTpl : public ActionModelAbstractTpl<_Scalar> {
  protected:
   using Base::nu_;     //!< Control dimension
   using Base::state_;  //!< Model of the state
+  int a = 0;
 
  private:
   Vector2s cost_weights_;
@@ -136,7 +140,7 @@ class ActionModelFlywheelTpl : public ActionModelAbstractTpl<_Scalar> {
 namespace crocoddyl {
 template <typename Scalar>
 ActionModelFlywheelTpl<Scalar>::ActionModelFlywheelTpl()
-    : ActionModelAbstractTpl<Scalar>(boost::make_shared<StateVectorTpl<Scalar> >(4), 2, 5), dt_(Scalar(0.1)) {
+    : ActionModelAbstractTpl<Scalar>(boost::make_shared<StateVectorTpl<Scalar> >(4), 2, 5), dt_(Scalar(0.05)) {
   cost_weights_ << Scalar(10.), Scalar(1.);
 }
 
@@ -155,14 +159,17 @@ void ActionModelFlywheelTpl<Scalar>::calc(const boost::shared_ptr<ActionDataAbst
                  << "u has wrong dimension (it should be " + std::to_string(nu_) + ")");
   }
   Data* d = static_cast<Data*>(data.get());
-
-  //const Scalar c = cos(x[2]);
-  //const Scalar s = sin(x[2]);
-  d->xnext << x[1], 0.5 * x[0] - 0.5 * x[2] - x[3] / 900, u[0], u[1];
-
-  d->r.template head<4>() = cost_weights_[0] * x;
-  d->r.template tail<2>() = cost_weights_[1] * u;
-  d->cost = Scalar(0.5) * d->r.dot(d->r);
+  std::cout << "a " << a << std::endl;
+  a++;
+  
+  d->xnext << x[0] + x[1] * dt_, 0.5 * x[0] * dt_ + x[1] - 0.5 * x[2] * dt_ - x[3] / 900 * dt_, x[2] + u[0] * dt_, x[3] + u[1] * dt_;
+  Eigen::Vector4d zmp_task; 
+  zmp_task << 1.0, 1.0, 1.0, 1.0;
+  d->r.template head<4>() = cost_weights_[0] * (x - zmp_task);
+  d->r.template tail<2>().setZero();// = cost_weights_[1] * u;
+  d->cost = Scalar(1.0) * d->r.dot(d->r);
+  //boost::shared_ptr<crocoddyl::CostModelAbstract> zmpCost_data = boost::make_shared<crocoddyl::CostModelResidual>(state_, boost::make_shared<crocoddyl::ResidualModelState>(state_, zmp_task, u.size()));
+ // d->cost->addCost("zmp_track", zmpCost_data, 100.);
 }
 
 template <typename Scalar>
@@ -173,9 +180,20 @@ void ActionModelFlywheelTpl<Scalar>::calc(const boost::shared_ptr<ActionDataAbst
                  << "x has wrong dimension (it should be " + std::to_string(state_->get_nx()) + ")");
   }
   Data* d = static_cast<Data*>(data.get());
-  d->r.template head<4>() = cost_weights_[0] * x;
+  Eigen::Vector4d zmp_task; 
+  zmp_task << 1.0, 1.0, 1.0, 1.0;
+  d->r.template head<4>() = cost_weights_[0] * (x - zmp_task);
   d->r.template tail<2>().setZero();
-  d->cost = Scalar(0.5) * d->r.template head<4>().dot(d->r.template head<4>());
+  d->cost = Scalar(1.0) * d->r.template head<4>().dot(d->r.template head<4>());
+  std::cout << "a_ " << a << std::endl;
+  a++;
+  
+  // boost::shared_ptr<crocoddyl::CostModelAbstract> zmpCost_data = boost::make_shared<crocoddyl::CostModelResidual>(
+  //      state_, boost::make_shared<crocoddyl::ResidualModelState>(state_, zmp_task, 2));
+  //d->r.template head<4>() = cost_weights_[0] * x;
+  //d->r.template tail<2>() = cost_weights_[1] * u;
+  //d->cost = Scalar(0.5) * d->r.dot(d->r);
+  //d->cost->addCost("zmp_track", zmpCost_data, 100.);
 }
 
 template <typename Scalar>
@@ -192,29 +210,24 @@ void ActionModelFlywheelTpl<Scalar>::calcDiff(const boost::shared_ptr<ActionData
   }
   Data* d = static_cast<Data*>(data.get());
 
- // const Scalar c = cos(x[2]);
- // const Scalar s = sin(x[2]);
   const Scalar w_x = cost_weights_[0] * cost_weights_[0];
-  const Scalar w_u = cost_weights_[1] * cost_weights_[1];
-  d->Lx = x * w_x;
+  const Scalar w_u = 0.0;// cost_weights_[1] * cost_weights_[1];
+  Eigen::Vector4d zmp_task; 
+  zmp_task << 1.0, 1.0, 1.0, 1.0;
+  d->Lx = (x-zmp_task) * w_x;
   d->Lu = u * w_u;
   d->Lxx.diagonal().setConstant(w_x);
   d->Luu.diagonal().setConstant(w_u);
-  //d->Fx(0, 2) = -s * u[0] * dt_;
-  //d->Fx(1, 2) = c * u[0] * dt_;
-//  d->Fu(0, 0) = c * dt_;
-//  d->Fu(1, 0) = s * dt_;
-//  d->Fu(2, 1) = dt_;
- 
-  d->Fx(0, 1) = 1.0;
-  d->Fx(1, 0) = 0.5;
-  d->Fx(1, 2) = -0.5;
-  d->Fx(1, 3) = -1/900;
+  d->Fx(0, 1) = dt_;
+  d->Fx(1, 0) = 0.5 * dt_;
+  d->Fx(1, 2) = -0.5 * dt_;
+  d->Fx(1, 3) = -1/900 * dt_;
 
-  d->Fu(2, 0) = 1.0;
-  d->Fu(3, 1) = 1.0;
-  //x[1], 0.5 * x[0] - 0.5 * x[2] - x[3] / 900, u[0], u[1]
-  //x[0] + c * u[0] * dt_, x[1] + s * u[0] * dt_, x[2] + u[1] * dt_;
+  d->Fu(2, 0) = dt_;
+  d->Fu(3, 1) = dt_;
+  std::cout << "a___ " << a << std::endl;
+  a++;
+  
 }
 
 template <typename Scalar>
@@ -225,10 +238,13 @@ void ActionModelFlywheelTpl<Scalar>::calcDiff(const boost::shared_ptr<ActionData
                  << "x has wrong dimension (it should be " + std::to_string(state_->get_nx()) + ")");
   }
   Data* d = static_cast<Data*>(data.get());
-
   const Scalar w_x = cost_weights_[0] * cost_weights_[0];
-  d->Lx = x * w_x;
+  Eigen::Vector4d zmp_task; 
+  zmp_task << 1.0, 1.0, 1.0, 1.0;
+  d->Lx = (x-zmp_task) * w_x;
   d->Lxx.diagonal().setConstant(w_x);
+  std::cout << "a_______ " << a << std::endl;
+  a++;
 }
 
 template <typename Scalar>
