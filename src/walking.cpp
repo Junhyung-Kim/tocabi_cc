@@ -2630,8 +2630,8 @@ void WalkingController::setInitPose(RobotData &Robot, Eigen::VectorQd &leg_q)
     if (walking_init_tick == 0)
     {
         Eigen::VectorQd q_temp;
-        // q_temp << 0.0, 0.00, -0.595, 1.24, -0.65, 0.00, 0.0, 0.00, -0.595, 1.24, -0.65, 0.00, 0.0, 0.0, 0.0, 0.2, 0.5, 1.5, -1.27, -1, 0, -1, 0, 0, 0, -0.2, -0.5, -1.5, 1.27, 1.0, 0, 1.0, 0;
-        q_temp = Robot.q_;
+        q_temp << 0.0, 0.00, -0.595, 1.24, -0.65, 0.00, 0.0, 0.00, -0.595, 1.24, -0.65, 0.00, 0.0, 0.0, 0.0, 0.2, 0.5, 1.5, -1.27, -1, 0, -1, 0, 0, 0, -0.2, -0.5, -1.5, 1.27, 1.0, 0, 1.0, 0;
+        q_init = Robot.q_;
         // q_temp.setZero();
         // q_target = Robot.q_;
         q_target = q_temp;

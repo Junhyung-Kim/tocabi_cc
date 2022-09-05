@@ -71,6 +71,11 @@ struct ActionDataFlywheelTpl : public ActionDataAbstractTpl<_Scalar> {
   typedef _Scalar Scalar;
   typedef MathBaseTpl<Scalar> MathBase;
   typedef ActionDataAbstractTpl<Scalar> Base;
+  typedef typename MathBase::VectorXs VectorXs;
+  typedef typename MathBase::MatrixXs MatrixXs;
+
+  template <template <typename Scalar> class Model>
+  explicit ActionDataFlywheelTpl(Model<Scalar>* const model) : Base(model){}
   using Base::cost;
   using Base::Fu;
   using Base::Fx;
@@ -81,11 +86,7 @@ struct ActionDataFlywheelTpl : public ActionDataAbstractTpl<_Scalar> {
   using Base::Lxx;
   using Base::r;
   using Base::xnext;
-
-  template <template <typename Scalar> class Model>
-  explicit ActionDataFlywheelTpl(Model<Scalar>* const model) : Base(model) {
-    Fx.diagonal().array() = Scalar(1.);
-  }
+  using Base::zmp_task_;
 };
 
 template <typename _Scalar>
@@ -115,6 +116,7 @@ class ActionModelFlywheelTpl : public ActionModelAbstractTpl<_Scalar> {
 
   const Vector2s& get_cost_weights() const;
   void set_cost_weights(const Vector2s& weights);
+  void set_trajectory(const VectorXs& task);
 
   Scalar get_dt() const;
   void set_dt(const Scalar dt);
@@ -129,7 +131,8 @@ class ActionModelFlywheelTpl : public ActionModelAbstractTpl<_Scalar> {
  protected:
   using Base::nu_;     //!< Control dimension
   using Base::state_;  //!< Model of the state
-  int a = 0;
+  int T = 10; //multiple shooting
+  Eigen::Vector4d zmp_task;
 
  private:
   Vector2s cost_weights_;
@@ -140,8 +143,8 @@ class ActionModelFlywheelTpl : public ActionModelAbstractTpl<_Scalar> {
 namespace crocoddyl {
 template <typename Scalar>
 ActionModelFlywheelTpl<Scalar>::ActionModelFlywheelTpl()
-    : ActionModelAbstractTpl<Scalar>(boost::make_shared<StateVectorTpl<Scalar> >(4), 2, 5), dt_(Scalar(0.05)) {
-  cost_weights_ << Scalar(10.), Scalar(1.);
+    : ActionModelAbstractTpl<Scalar>(boost::make_shared<StateVectorTpl<Scalar> >(4), 2, 6), dt_(Scalar(0.05)) {
+  cost_weights_ << Scalar(100000.), Scalar(1.);
 }
 
 template <typename Scalar>
@@ -159,17 +162,12 @@ void ActionModelFlywheelTpl<Scalar>::calc(const boost::shared_ptr<ActionDataAbst
                  << "u has wrong dimension (it should be " + std::to_string(nu_) + ")");
   }
   Data* d = static_cast<Data*>(data.get());
-  std::cout << "a " << a << std::endl;
-  a++;
-  
-  d->xnext << x[0] + x[1] * dt_, 0.5 * x[0] * dt_ + x[1] - 0.5 * x[2] * dt_ - x[3] / 900 * dt_, x[2] + u[0] * dt_, x[3] + u[1] * dt_;
-  Eigen::Vector4d zmp_task; 
-  zmp_task << 1.0, 1.0, 1.0, 1.0;
-  d->r.template head<4>() = cost_weights_[0] * (x - zmp_task);
+  zmp_task = d->zmp_task_;
+  d->xnext << x[0] + x[1] * dt_, 10 * x[0] * dt_ + x[1] - 10 * x[2] * dt_ - x[3] * 1.0/ 70.0 * dt_, x[2] + u[0] * dt_, x[3] + u[1] * dt_; 
+  d->r.template head<4>().setZero();
+  d->r(0) = cost_weights_[0] * (x[0] - zmp_task(0));
   d->r.template tail<2>().setZero();// = cost_weights_[1] * u;
   d->cost = Scalar(1.0) * d->r.dot(d->r);
-  //boost::shared_ptr<crocoddyl::CostModelAbstract> zmpCost_data = boost::make_shared<crocoddyl::CostModelResidual>(state_, boost::make_shared<crocoddyl::ResidualModelState>(state_, zmp_task, u.size()));
- // d->cost->addCost("zmp_track", zmpCost_data, 100.);
 }
 
 template <typename Scalar>
@@ -180,20 +178,12 @@ void ActionModelFlywheelTpl<Scalar>::calc(const boost::shared_ptr<ActionDataAbst
                  << "x has wrong dimension (it should be " + std::to_string(state_->get_nx()) + ")");
   }
   Data* d = static_cast<Data*>(data.get());
-  Eigen::Vector4d zmp_task; 
-  zmp_task << 1.0, 1.0, 1.0, 1.0;
-  d->r.template head<4>() = cost_weights_[0] * (x - zmp_task);
+  zmp_task = d->zmp_task_;
+  d->r.template head<4>().setZero();
+  d->r(0) = cost_weights_[0] * (x[0] - zmp_task(0));
+ // d->r.template head<1>() = cost_weights_[0] * (x[0] - zmp_task((0)));
   d->r.template tail<2>().setZero();
   d->cost = Scalar(1.0) * d->r.template head<4>().dot(d->r.template head<4>());
-  std::cout << "a_ " << a << std::endl;
-  a++;
-  
-  // boost::shared_ptr<crocoddyl::CostModelAbstract> zmpCost_data = boost::make_shared<crocoddyl::CostModelResidual>(
-  //      state_, boost::make_shared<crocoddyl::ResidualModelState>(state_, zmp_task, 2));
-  //d->r.template head<4>() = cost_weights_[0] * x;
-  //d->r.template tail<2>() = cost_weights_[1] * u;
-  //d->cost = Scalar(0.5) * d->r.dot(d->r);
-  //d->cost->addCost("zmp_track", zmpCost_data, 100.);
 }
 
 template <typename Scalar>
@@ -212,22 +202,26 @@ void ActionModelFlywheelTpl<Scalar>::calcDiff(const boost::shared_ptr<ActionData
 
   const Scalar w_x = cost_weights_[0] * cost_weights_[0];
   const Scalar w_u = 0.0;// cost_weights_[1] * cost_weights_[1];
-  Eigen::Vector4d zmp_task; 
-  zmp_task << 1.0, 1.0, 1.0, 1.0;
-  d->Lx = (x-zmp_task) * w_x;
+  zmp_task = d->zmp_task_;
+  d->Lx(0) = (x[0]-zmp_task[0]) * w_x;
+  d->Lxx(0,0) = w_x;
+  /*d->Lx = (x-zmp_task) * w_x;
   d->Lu = u * w_u;
   d->Lxx.diagonal().setConstant(w_x);
   d->Luu.diagonal().setConstant(w_u);
-  d->Fx(0, 1) = dt_;
-  d->Fx(1, 0) = 0.5 * dt_;
-  d->Fx(1, 2) = -0.5 * dt_;
-  d->Fx(1, 3) = -1/900 * dt_;
-
+  d->xnext << x[0] + x[1] * dt_, 
+  10 * x[0] * dt_ + x[1] - 10 * x[2] * dt_ - x[3] / 900 * dt_, 
+  x[2] + u[0] * dt_, 
+  x[3] + u[1] * dt_; 
+*/ 
+  double dt  = dt_;
+  d->Fx.setIdentity();
+  d->Fx(0, 1) = dt;
+  d->Fx(1, 0) = 10 * dt_;
+  d->Fx(1, 2) = -10 * dt_;
+  d->Fx(1, 3) = -1.0/70.0 * dt_;
   d->Fu(2, 0) = dt_;
   d->Fu(3, 1) = dt_;
-  std::cout << "a___ " << a << std::endl;
-  a++;
-  
 }
 
 template <typename Scalar>
@@ -239,12 +233,11 @@ void ActionModelFlywheelTpl<Scalar>::calcDiff(const boost::shared_ptr<ActionData
   }
   Data* d = static_cast<Data*>(data.get());
   const Scalar w_x = cost_weights_[0] * cost_weights_[0];
-  Eigen::Vector4d zmp_task; 
-  zmp_task << 1.0, 1.0, 1.0, 1.0;
-  d->Lx = (x-zmp_task) * w_x;
-  d->Lxx.diagonal().setConstant(w_x);
-  std::cout << "a_______ " << a << std::endl;
-  a++;
+  zmp_task = d->zmp_task_;
+  d->Lx(0) = (x[0]-zmp_task[0]) * w_x;
+  d->Lxx(0,0) = w_x;
+//  d->Lx = (x-zmp_task) * w_x;
+//  d->Lxx.diagonal().setConstant(w_x);
 }
 
 template <typename Scalar>
@@ -275,6 +268,11 @@ const typename MathBaseTpl<Scalar>::Vector2s& ActionModelFlywheelTpl<Scalar>::ge
 template <typename Scalar>
 void ActionModelFlywheelTpl<Scalar>::set_cost_weights(const typename MathBase::Vector2s& weights) {
   cost_weights_ = weights;
+}
+
+template <typename Scalar>
+void ActionModelFlywheelTpl<Scalar>::set_trajectory(const typename MathBase::VectorXs& task) {
+  zmp_task = task;
 }
 
 template <typename Scalar>

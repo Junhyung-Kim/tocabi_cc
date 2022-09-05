@@ -208,27 +208,74 @@ CustomController::CustomController(RobotData &rd) : rd_(rd) //, wbc_(dc.wbc_)
     wlk_on = false;
     velEst_f = false;
 
-    unsigned int N = 20;  // number of nodes
-    unsigned int T = 20;  // number of trials
+    unsigned int N = 10;  // number of nodes
+    unsigned int T = 1;  // number of trials
     unsigned int MAXITER = 30;
 
     typedef crocoddyl::ActionModelFlywheelTpl<double> ActionModelFlywheel;
+    typedef crocoddyl::ActionDataFlywheelTpl<double> ActionDataFlywheel;
 
     Eigen::VectorXd x0 = Eigen::Vector4d(0.0, 0., 0., 0.);
     boost::shared_ptr<crocoddyl::ActionModelAbstract> model_fly = boost::make_shared<ActionModelFlywheel>();
     //model_fly.set_dt(0.005);
     std::vector<Eigen::VectorXd> xs(N + 1, x0);
     std::vector<Eigen::VectorXd> us(N, Eigen::Vector2d::Zero());
-    std::vector<boost::shared_ptr<crocoddyl::ActionModelAbstract> > runningModels(N, model_fly);
+    std::vector<Eigen::Vector4d> x_traj(N);
+    x_traj[0] << 0.00, 0.0, 0.00, 0.0;
+    x_traj[1] << 0.00, 0.0, 0.00, 0.0;
+    x_traj[2] << 0.01, 0.0, 0.00, 0.0;
+    x_traj[3] << 0.01, 0.0, 0.00, 0.0;
+    x_traj[4] << 0.01, 0.0, 0.00, 0.0;
+    x_traj[5] << 0.01, 0.0, 0.00, 0.0;
+    x_traj[6] << 0.01, 0.0, 0.00, 0.0;
+    x_traj[7] << 0.01, 0.0, 0.00, 0.0;
+    x_traj[8] << 0.01, 0.0, 0.00, 0.0;
+    x_traj[9] << 0.01, 0.0, 0.00, 0.0;
+
+//    std::vector<boost::shared_ptr<crocoddyl::ActionModelAbstract>> runningModels(N, model_fly);
+    std::vector<boost::shared_ptr<crocoddyl::ActionModelAbstract>> runningModels;
+    std::vector<boost::shared_ptr<crocoddyl::ActionDataAbstract>> runningModelDatas(N);
+    std::vector<boost::shared_ptr<crocoddyl::StateAbstract>> runningStates(N);
+   // std::vector<boost::shared_ptr<crocoddyl::CostModelAbstract>> runningResCost(N);
+   // std::vector<boost::shared_ptr<crocoddyl::CostModelSum>> runningCost(N);
     
+
+    for(int i = 0; i < N; i++)
+    {
+        runningModels.push_back(boost::make_shared<ActionModelFlywheel>());
+        runningModels[i]->set_trajectory(x_traj[i]);
+        runningModelDatas[i] = runningModels[i]->createData();
+        runningStates[i] = runningModels[i]->get_state();
+        runningModelDatas[i]->zmp_task_ = x_traj[i];
+      //  runningCost[i] = boost::make_shared<crocoddyl::CostModelSum>(runningStates[i], runningModelDatas[i]->get_nu());
+    }
+    runningStates[8]->set_lb(x_traj[7]);
+    runningStates[8]->set_ub(x_traj[7]);
+/*
+    for(int i = 8; i < 9; i++)
+    {
+        runningResCost[i] = boost::make_shared<crocoddyl::CostModelResidual>(runningStates[i], boost::make_shared<crocoddyl::ResidualModelState>(runningStates[i], runningModelDatas[i]->get_nu()));
+        runningCost[i]->addCost("xReg", runningResCost[i], 1e-4)
+    }
+
+
+   /* for(int i = 0; i < N; i++)
+    {
+        std::cout << "xxxx" << std::endl;
+        std::cout << runningModels[i]->get_trajectory() << std::endl;
+    }*/
+
     boost::shared_ptr<crocoddyl::ShootingProblem> problem =
-    boost::make_shared<crocoddyl::ShootingProblem>(x0, runningModels, model_fly);
+    boost::make_shared<crocoddyl::ShootingProblem>(x0, runningModels, model_fly, runningModelDatas, model_fly->createData());//, runningModelDatas);
     problem->set_nthreads(4);
+    
     int a  = problem->get_nthreads();
     std::cout << a << std::endl;
-    crocoddyl::SolverDDP ddp(problem);
     
-    //crocoddyl::SolverBoxFDDP ddp(problem);
+    //crocoddyl::SolverDDP ddp(problem);
+ //   std::cout << problem->running_models_[1]->get_trajectory() << std::endl;
+    
+    crocoddyl::SolverBoxFDDP ddp(problem);
     bool CALLBACKS = true;
     if (CALLBACKS) {
     std::vector<boost::shared_ptr<crocoddyl::CallbackAbstract> > cbs;
@@ -236,7 +283,6 @@ CustomController::CustomController(RobotData &rd) : rd_(rd) //, wbc_(dc.wbc_)
     ddp.setCallbacks(cbs);
     }
 
-   // ddp.th_stop_ = 5e-3;
     // Solving the optimal control problem
     Eigen::ArrayXd duration(T);
     for (unsigned int i = 0; i < T; ++i) {
@@ -264,7 +310,6 @@ CustomController::CustomController(RobotData &rd) : rd_(rd) //, wbc_(dc.wbc_)
                << std::endl;
     //boost::shared_ptr<crocoddyl::StateMultibody> state =
     //boost::make_shared<crocoddyl::StateMultibody>(boost::make_shared<pinocchio::Model>(model2));
-
 
 /*    CasadiKinDyn *model4 = new CasadiKinDyn(model1);
     model3 = model4;
