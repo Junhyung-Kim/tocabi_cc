@@ -15,7 +15,10 @@
 #include "pinocchio/parsers/sample-models.hpp"
 
 
+#include "crocoddyl/core/activation-base.hpp"
+#include "crocoddyl/core/activations/quadratic-barrier.hpp"
 #include "crocoddyl/core/activations/weighted-quadratic.hpp"
+#include "crocoddyl/core/activations/weighted-quadratic-barrier.hpp"
 #include "crocoddyl/core/mathbase.hpp"
 #include "crocoddyl/multibody/states/multibody.hpp"
 #include "crocoddyl/multibody/contacts/contact-6d.hpp"

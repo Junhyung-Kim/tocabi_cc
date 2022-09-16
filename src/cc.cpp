@@ -217,6 +217,9 @@ CustomController::CustomController(RobotData &rd) : rd_(rd) //, wbc_(dc.wbc_)
     typedef crocoddyl::DifferentialActionModelKinoDynamicsTpl<double> DifferentialActionModelContactKinoDynamics;
     typedef crocoddyl::DifferentialActionDataKinoDynamicsTpl<double> DifferentialActionDataKinoDynamics;
     typedef crocoddyl::ActivationModelWeightedQuadTpl<double> ActivationModelWeightedQuad;
+    typedef crocoddyl::ResidualModelStateTpl<double> ResidualModelState;
+    typedef crocoddyl::ActivationModelQuadraticBarrierTpl<double> ActivationModelQuadraticBarrier;
+    typedef crocoddyl::ActivationBoundsTpl<double> ActivationBounds;
 
     //DifferentialActionDataKinoDynamicss
     pinocchio::Model model3;
@@ -236,7 +239,9 @@ CustomController::CustomController(RobotData &rd) : rd_(rd) //, wbc_(dc.wbc_)
     std::vector<boost::shared_ptr<crocoddyl::ActionDataAbstract>> runningModelWithRK4_data;
     std::vector<boost::shared_ptr<crocoddyl::CostModelAbstract>> xRegCost_vector;
     std::vector<boost::shared_ptr<crocoddyl::CostModelAbstract>> uRegCost_vector;
-
+    std::vector<boost::shared_ptr<crocoddyl::CostModelAbstract>> stateBoundCost_vector;
+    std::vector<boost::shared_ptr<ActivationModelQuadraticBarrier>> state_activations;
+    std::vector<ActivationBounds> state_bounds;
     std::vector<boost::shared_ptr<crocoddyl::DifferentialActionDataAbstract>> runningDAM_data;
 
     boost::shared_ptr<StateKinodynamic> state =
@@ -249,28 +254,52 @@ CustomController::CustomController(RobotData &rd) : rd_(rd) //, wbc_(dc.wbc_)
     traj_.resize(41);
     traj_.setZero();
     traj_(6) = 1.0;
-   // traj_.segment<19>(0) << 0, 0, 0.80783, 0, 0, 0, 1, 0.0, 0.0, -0.55 ,1.26, -0.71, 0.0, 0.0, 0.0, -0.55, 1.26, -0.71, 0.0;
-
     traj_(37) = 0.01;
     traj_(38) = 0.0;
     traj_(39) = 0.0;
     traj_(40) = 0.00;
 
+    Eigen::VectorXd lb_;
+    lb_.resize(40);
+    lb_.setOnes();
+    lb_ = -10 * lb_;
+    lb_(36) = -0.005;
+
+    Eigen::VectorXd ub_;
+    ub_.resize(40);
+    ub_.setOnes();
+    ub_ = 10 * ub_;
+    ub_(36) = 0.005;
+
     Eigen::VectorXd weight_quad;
     weight_quad.resize(state->get_ndx());
     weight_quad.setZero();
     weight_quad(36) = 10;
-    
+   
+    ActivationBounds bounds(lb_, ub_);
 
     for(int i = 0; i < N; i++)
-    {
-        state_vector.push_back(boost::make_shared<StateKinodynamic>(boost::make_shared<pinocchio::Model>(model3)));
+    {  
+        std::cout << "i " << i << std::endl;
+        state_vector.push_back(boost::make_shared<StateKinodynamic>(boost::make_shared<pinocchio::Model>(model3)));     
+        state_bounds.push_back(ActivationBounds(lb_, ub_) );
+        state_activations.push_back(boost::make_shared<ActivationModelQuadraticBarrier>(state_bounds[i]));//bounds));//state_bounds[i]));
+        std::cout << "ii " << i << std::endl;
         actuation_vector.push_back(boost::make_shared<ActuationModelFloatingKinoBase>(state_vector[i]));
         xRegCost_vector.push_back(boost::make_shared<crocoddyl::CostModelResidual>(
             state, boost::make_shared<ActivationModelWeightedQuad>(weight_quad), boost::make_shared<crocoddyl::ResidualModelState>(state_vector[i], traj_, actuation_vector[i]->get_nu() + 2)));
         uRegCost_vector.push_back(boost::make_shared<crocoddyl::CostModelResidual>(
             state, boost::make_shared<crocoddyl::ResidualModelControl>(state_vector[i], actuation_vector[i]->get_nu() + 2)));
+
+        std::cout << "iii " << i << std::endl;
+        stateBoundCost_vector.push_back(boost::make_shared<crocoddyl::CostModelResidual>(
+            state_vector[i], state_activations[i], boost::make_shared<ResidualModelState>(state_vector[i], actuation_vector[i]->get_nu() + 2)));
     } 
+
+    for(int i = 0; i < N; i++)
+    {
+        std::cout << "i " << i << "lb "  << state_activations[i]->get_bounds().lb(36)<< "ub "  << state_activations[i]->get_bounds().ub(36) << std::endl;
+    }
 
     std::cout << "state->get_nv()" << std::endl;
     std::cout << state->get_nv() << std::endl; ///nv_
@@ -290,19 +319,21 @@ CustomController::CustomController(RobotData &rd) : rd_(rd) //, wbc_(dc.wbc_)
     for(int i = 0; i < N-1; i++)
     {
         runningCostModel_vector.push_back(boost::make_shared<crocoddyl::CostModelSum>(state_vector[i], actuation_vector[i]->get_nu() + 2));
-        runningCostModel_vector[i]->addCost("xReg", xRegCost_vector[i], 1e10);
+        runningCostModel_vector[i]->addCost("xReg", xRegCost_vector[i], 1e1);
         runningCostModel_vector[i]->addCost("uReg", uRegCost_vector[i], 1e-30);
+        runningCostModel_vector[i]->addCost("stateReg", stateBoundCost_vector[i], 1e3);
     }    
 
     boost::shared_ptr<crocoddyl::CostModelSum> terminalCostModel =
             boost::make_shared<crocoddyl::CostModelSum>(state_vector[N-1], actuation_vector[N-1]->get_nu() + 2);
     terminalCostModel->addCost("xReg", xRegCost_vector[N-1], 1e-30);
     terminalCostModel->addCost("uReg", uRegCost_vector[N-1], 1e-30);
+    terminalCostModel->addCost("stateReg", stateBoundCost_vector[N-1], 1e3);
 
     boost::shared_ptr<DifferentialActionModelContactKinoDynamics> terminalDAM =
       boost::make_shared<DifferentialActionModelContactKinoDynamics>(state_vector[N-1], actuation_vector[N-1],
                                                                                terminalCostModel);
-
+    
     for(int i = 0; i < N-1; i++)
     {
         runningDAM_vector.push_back(boost::make_shared<DifferentialActionModelContactKinoDynamics>(state_vector[i], actuation_vector[i],
