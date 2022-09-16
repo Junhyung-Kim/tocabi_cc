@@ -210,72 +210,131 @@ CustomController::CustomController(RobotData &rd) : rd_(rd) //, wbc_(dc.wbc_)
 
     unsigned int N = 10;  // number of nodes
     unsigned int T = 1;  // number of trials
-    unsigned int MAXITER = 30;
+    unsigned int MAXITER = 20;
 
-    typedef crocoddyl::ActionModelFlywheelTpl<double> ActionModelFlywheel;
-    typedef crocoddyl::ActionDataFlywheelTpl<double> ActionDataFlywheel;
+    typedef crocoddyl::StateKinodynamicTpl<double> StateKinodynamic;
+    typedef crocoddyl::ActuationModelFloatingKinoBaseTpl<double> ActuationModelFloatingKinoBase;
+    typedef crocoddyl::DifferentialActionModelKinoDynamicsTpl<double> DifferentialActionModelContactKinoDynamics;
+    typedef crocoddyl::DifferentialActionDataKinoDynamicsTpl<double> DifferentialActionDataKinoDynamics;
+    typedef crocoddyl::ActivationModelWeightedQuadTpl<double> ActivationModelWeightedQuad;
 
-    Eigen::VectorXd x0 = Eigen::Vector4d(0.0, 0., 0., 0.);
-    boost::shared_ptr<crocoddyl::ActionModelAbstract> model_fly = boost::make_shared<ActionModelFlywheel>();
-    //model_fly.set_dt(0.005);
-    std::vector<Eigen::VectorXd> xs(N + 1, x0);
-    std::vector<Eigen::VectorXd> us(N, Eigen::Vector2d::Zero());
-    std::vector<Eigen::Vector4d> x_traj(N);
-    x_traj[0] << 0.00, 0.0, 0.00, 0.0;
-    x_traj[1] << 0.00, 0.0, 0.00, 0.0;
-    x_traj[2] << 0.01, 0.0, 0.00, 0.0;
-    x_traj[3] << 0.01, 0.0, 0.00, 0.0;
-    x_traj[4] << 0.01, 0.0, 0.00, 0.0;
-    x_traj[5] << 0.01, 0.0, 0.00, 0.0;
-    x_traj[6] << 0.01, 0.0, 0.00, 0.0;
-    x_traj[7] << 0.01, 0.0, 0.00, 0.0;
-    x_traj[8] << 0.01, 0.0, 0.00, 0.0;
-    x_traj[9] << 0.01, 0.0, 0.00, 0.0;
+    //DifferentialActionDataKinoDynamicss
+    pinocchio::Model model3;
+    pinocchio::urdf::buildModel("/home/jhk/catkin_ws/src/tocabi_cc/robots/dyros_tocabi_with_redhands.urdf",
+                              pinocchio::JointModelFreeFlyer(), model3);
+    model3.lowerPositionLimit.head<7>().array() = -1;
+    model3.upperPositionLimit.head<7>().array() = 1.;
 
-//    std::vector<boost::shared_ptr<crocoddyl::ActionModelAbstract>> runningModels(N, model_fly);
-    std::vector<boost::shared_ptr<crocoddyl::ActionModelAbstract>> runningModels;
-    std::vector<boost::shared_ptr<crocoddyl::ActionDataAbstract>> runningModelDatas(N);
-    std::vector<boost::shared_ptr<crocoddyl::StateAbstract>> runningStates(N);
-   // std::vector<boost::shared_ptr<crocoddyl::CostModelAbstract>> runningResCost(N);
-   // std::vector<boost::shared_ptr<crocoddyl::CostModelSum>> runningCost(N);
+    const std::string RF = "R_AnkleRoll_Joint";
+    const std::string LF = "L_AnkleRoll_Joint";
+
+    std::vector<boost::shared_ptr<StateKinodynamic>> state_vector;
+    std::vector<boost::shared_ptr<ActuationModelFloatingKinoBase>> actuation_vector;
+    std::vector<boost::shared_ptr<crocoddyl::CostModelSum>> runningCostModel_vector;
+    std::vector<boost::shared_ptr<DifferentialActionModelContactKinoDynamics>> runningDAM_vector;
+    std::vector<boost::shared_ptr<crocoddyl::ActionModelAbstract>> runningModelWithRK4_vector;
+    std::vector<boost::shared_ptr<crocoddyl::ActionDataAbstract>> runningModelWithRK4_data;
+    std::vector<boost::shared_ptr<crocoddyl::CostModelAbstract>> xRegCost_vector;
+    std::vector<boost::shared_ptr<crocoddyl::CostModelAbstract>> uRegCost_vector;
+
+    std::vector<boost::shared_ptr<crocoddyl::DifferentialActionDataAbstract>> runningDAM_data;
+
+    boost::shared_ptr<StateKinodynamic> state =
+        boost::make_shared<StateKinodynamic>(boost::make_shared<pinocchio::Model>(model3));
+
+    boost::shared_ptr<ActuationModelFloatingKinoBase> actuation =
+        boost::make_shared<ActuationModelFloatingKinoBase>(state);
+
+    Eigen::VectorXd traj_;
+    traj_.resize(41);
+    traj_.setZero();
+    traj_(6) = 1.0;
+   // traj_.segment<19>(0) << 0, 0, 0.80783, 0, 0, 0, 1, 0.0, 0.0, -0.55 ,1.26, -0.71, 0.0, 0.0, 0.0, -0.55, 1.26, -0.71, 0.0;
+
+    traj_(37) = 0.01;
+    traj_(38) = 0.0;
+    traj_(39) = 0.0;
+    traj_(40) = 0.00;
+
+    Eigen::VectorXd weight_quad;
+    weight_quad.resize(state->get_ndx());
+    weight_quad.setZero();
+    weight_quad(36) = 10;
     
 
     for(int i = 0; i < N; i++)
     {
-        runningModels.push_back(boost::make_shared<ActionModelFlywheel>());
-        runningModels[i]->set_trajectory(x_traj[i]);
-        runningModelDatas[i] = runningModels[i]->createData();
-        runningStates[i] = runningModels[i]->get_state();
-        runningModelDatas[i]->zmp_task_ = x_traj[i];
-      //  runningCost[i] = boost::make_shared<crocoddyl::CostModelSum>(runningStates[i], runningModelDatas[i]->get_nu());
-    }
-    runningStates[8]->set_lb(x_traj[7]);
-    runningStates[8]->set_ub(x_traj[7]);
-/*
-    for(int i = 8; i < 9; i++)
+        state_vector.push_back(boost::make_shared<StateKinodynamic>(boost::make_shared<pinocchio::Model>(model3)));
+        actuation_vector.push_back(boost::make_shared<ActuationModelFloatingKinoBase>(state_vector[i]));
+        xRegCost_vector.push_back(boost::make_shared<crocoddyl::CostModelResidual>(
+            state, boost::make_shared<ActivationModelWeightedQuad>(weight_quad), boost::make_shared<crocoddyl::ResidualModelState>(state_vector[i], traj_, actuation_vector[i]->get_nu() + 2)));
+        uRegCost_vector.push_back(boost::make_shared<crocoddyl::CostModelResidual>(
+            state, boost::make_shared<crocoddyl::ResidualModelControl>(state_vector[i], actuation_vector[i]->get_nu() + 2)));
+    } 
+
+    std::cout << "state->get_nv()" << std::endl;
+    std::cout << state->get_nv() << std::endl; ///nv_
+
+    std::cout << "state->get_nq()" << std::endl;
+    std::cout << state->get_nq() << std::endl; //nq_
+
+    std::cout << "state->get_nx()" << std::endl;
+    std::cout << state->get_nx() << std::endl; //nx_
+
+    std::cout << "state->get_ndx()" << std::endl;
+    std::cout << state->get_ndx() << std::endl; //ndx_
+
+    std::cout << "actuation->get_nu()" <<std::endl;
+    std::cout << actuation->get_nu() <<std::endl;
+
+    for(int i = 0; i < N-1; i++)
     {
-        runningResCost[i] = boost::make_shared<crocoddyl::CostModelResidual>(runningStates[i], boost::make_shared<crocoddyl::ResidualModelState>(runningStates[i], runningModelDatas[i]->get_nu()));
-        runningCost[i]->addCost("xReg", runningResCost[i], 1e-4)
+        runningCostModel_vector.push_back(boost::make_shared<crocoddyl::CostModelSum>(state_vector[i], actuation_vector[i]->get_nu() + 2));
+        runningCostModel_vector[i]->addCost("xReg", xRegCost_vector[i], 1e10);
+        runningCostModel_vector[i]->addCost("uReg", uRegCost_vector[i], 1e-30);
+    }    
+
+    boost::shared_ptr<crocoddyl::CostModelSum> terminalCostModel =
+            boost::make_shared<crocoddyl::CostModelSum>(state_vector[N-1], actuation_vector[N-1]->get_nu() + 2);
+    terminalCostModel->addCost("xReg", xRegCost_vector[N-1], 1e-30);
+    terminalCostModel->addCost("uReg", uRegCost_vector[N-1], 1e-30);
+
+    boost::shared_ptr<DifferentialActionModelContactKinoDynamics> terminalDAM =
+      boost::make_shared<DifferentialActionModelContactKinoDynamics>(state_vector[N-1], actuation_vector[N-1],
+                                                                               terminalCostModel);
+
+    for(int i = 0; i < N-1; i++)
+    {
+        runningDAM_vector.push_back(boost::make_shared<DifferentialActionModelContactKinoDynamics>(state_vector[i], actuation_vector[i],
+                                                                               runningCostModel_vector[i]));
+        runningModelWithRK4_vector.push_back(boost::make_shared<crocoddyl::IntegratedActionModelRK>(runningDAM_vector[i], crocoddyl::RKType::four, 1e-2));
+    }
+    
+    Eigen::VectorXd x0(state->get_nx() + 4);
+    Eigen::VectorXd u0(actuation->get_nu() + 2);
+    u0.setZero();
+    x0.setZero();
+
+    x0.segment<7>(0) << 0, 0, 0, 0, 0, 0, 1;
+    //x0.segment<19>(0) << 0, 0, 0.80783, 0, 0, 0, 1, 0.0, 0.0, -0.55 ,1.26, -0.71, 0.0, 0.0, 0.0, -0.55, 1.26, -0.71, 0.0;
+    boost::shared_ptr<crocoddyl::ActionModelAbstract> terminalModel =
+        boost::make_shared<crocoddyl::IntegratedActionModelEuler>(terminalDAM, 1e-2);
+    boost::shared_ptr<crocoddyl::ShootingProblem> problemWithRK4 =
+        boost::make_shared<crocoddyl::ShootingProblem>(x0, runningModelWithRK4_vector, terminalModel);
+ 
+    for(int i = 0; i < N-1; i++)
+    {
+        runningModelWithRK4_data.push_back(runningModelWithRK4_vector[i]->createData());
+     //   runningDAM_data.push_back(runningDAM_vector[i]->createData());
     }
 
-
-   /* for(int i = 0; i < N; i++)
-    {
-        std::cout << "xxxx" << std::endl;
-        std::cout << runningModels[i]->get_trajectory() << std::endl;
-    }*/
-
-    boost::shared_ptr<crocoddyl::ShootingProblem> problem =
-    boost::make_shared<crocoddyl::ShootingProblem>(x0, runningModels, model_fly, runningModelDatas, model_fly->createData());//, runningModelDatas);
-    problem->set_nthreads(4);
-    
-    int a  = problem->get_nthreads();
-    std::cout << a << std::endl;
-    
-    //crocoddyl::SolverDDP ddp(problem);
- //   std::cout << problem->running_models_[1]->get_trajectory() << std::endl;
-    
-    crocoddyl::SolverBoxFDDP ddp(problem);
+    crocoddyl::SolverBoxFDDP ddp(problemWithRK4);
+    std::vector<Eigen::VectorXd> xs(N, x0);
+    std::vector<Eigen::VectorXd> us(N-1, u0);
+/*     crocoddyl::DifferentialActionDataKinoDynamics* d =
+      static_cast<crocoddyl::DifferentialActionDataKinoDynamics*>(runningDAM_data[i].get());
+  boost::shared_ptr<crocoddyl::ActuationDataAbstract> actuation_data = actuation->createData();
+*/
     bool CALLBACKS = true;
     if (CALLBACKS) {
     std::vector<boost::shared_ptr<crocoddyl::CallbackAbstract> > cbs;
@@ -283,230 +342,80 @@ CustomController::CustomController(RobotData &rd) : rd_(rd) //, wbc_(dc.wbc_)
     ddp.setCallbacks(cbs);
     }
 
-    // Solving the optimal control problem
+    typedef crocoddyl::MathBaseTpl<double> MathBase;
+    typename MathBase::VectorXs VectorXs;
+    int css;
     Eigen::ArrayXd duration(T);
     for (unsigned int i = 0; i < T; ++i) {
+       /* std::cout << "aaa" <<std::endl;
+        
+        std::cout << "aa" << std::endl;
+        ddp.setCandidate(xs, us, true);
+
+        std::cout << "bb" << std::endl;
+        ddp.computeDirection(true);
+
+        std::cout << "cc" << std::endl;
+        ddp.increaseRegularization();
+
+        std::cout << "dd" << std::endl;
+        ddp.updateExpectedImprovement();
+
+        std::cout << "ee" << std::endl;
+        ddp.tryStep();
+
+                std::cout << "ff" << std::endl;
+        ddp.expectedImprovement();
+
+                        std::cout << "gg" << std::endl;
+        ddp.decreaseRegularization();
+
+                        std::cout << "hh" << std::endl;
+        ddp.stoppingCriteria();
+        
+*/
         crocoddyl::Timer timer;
-        ddp.solve(xs, us, MAXITER);
+        css = ddp.solve(xs, us, MAXITER);
+
+        std::cout << "aftersolve" << std::endl;
+        //problemWithRK4->get_runningDatas()
+        std::cout << "sss " << us[0].size() << "  " << css <<std::endl;
+        //terminalModel->calc(terminalModel->createData(),xs[0], u0);
+       // runningModelWithRK4_vector[0]->calc(runningModelWithRK4_data[0], xs[0], u0);
         duration[i] = timer.get_duration();
     }
-
     xs = ddp.get_xs();
     us = ddp.get_us();
-    //ddp.qp_;
-    //crocoddyl::BoxQPSolution sol = ddp.qp_.get_solution();
-    std::cout << "x" << std::endl;
-    for(int i = 0; i < N + 1; i ++)
-        std::cout << xs[i][0] << "\t"<< xs[i][1] << "\t"<< xs[i][2] << "\t"<< xs[i][3] << std::endl;
-    std::cout << "u" << std::endl;
-    for(int i = 0; i < N ; i ++)
-        std::cout << us[i][0] << "\t"<< us[i][1]  << std::endl;
 
+    std::cout << "x" << std::endl;
+    for(int i = 0; i < N; i ++)
+    {    
+        for(int j = xs[i].size()-4; j < xs[i].size(); j ++)
+        {
+            std::cout << xs[i][j] << " ";
+        }
+        std::cout << std::endl;
+    }
+    std::cout << actuation->get_nu() << std::endl;
+    for(int i = 0; i < N-1; i ++)
+    {    
+        for(int j = actuation->get_nu(); j < actuation->get_nu() + 2; j ++)
+        {
+            std::cout << us[i][j] << " ";
+        }
+        std::cout << std::endl;
+    }
+
+    std::cout << "css " <<ddp.get_cost() <<" " << ddp.get_is_feasible()<<std::endl;
 
     double avrg_duration = duration.sum() / T;
     double min_duration = duration.minCoeff();
     double max_duration = duration.maxCoeff();
     std::cout << "  DDP.solve [ms]: " << avrg_duration << " (" << min_duration << "-" << max_duration << ")"
-               << std::endl;
-    //boost::shared_ptr<crocoddyl::StateMultibody> state =
-    //boost::make_shared<crocoddyl::StateMultibody>(boost::make_shared<pinocchio::Model>(model2));
+               << std::endl; 
+    //for(int i = 0; i < N ; i ++)
+    //    std::cout << us[i][0] << "\t"<< us[i][1]  << std::endl;
 
-/*    CasadiKinDyn *model4 = new CasadiKinDyn(model1);
-    model3 = model4;
-
-    // Time length
-   double T = 1.0;
-
-    // Time
-    casadi::SX x1 = casadi::SX::sym("x1");
-
-    // Differential states
-    casadi::SX x2 = casadi::SX::sym("x2"), x3 = casadi::SX::sym("x3"), x4 = casadi::SX::sym("x4");
-    casadi::SX x = casadi::SX::vertcat({x1, x2, x3, x4});
-
-    // Control
-    casadi::SX u1 = casadi::SX::sym("u1");
-    casadi::SX u2 = casadi::SX::sym("u2");
-
-    casadi::SX u = casadi::SX::vertcat({u1, u2});
-
-    // Shooting length
-    int nc = 30; // Number of control segments
-    int nx = x.size().first;
-    int nu = u.size().first;
-
-    // Initial position
-    std::vector<double> X0(nx);
-    X0[0] = 0; // initial position
-    X0[1] = 0; // initial speed
-    X0[2] = 0; // initial mass
-    X0[3] = 0; // initial mass
-
-    // Time horizon for integrator
-    double t0 = 0;
-    double tf = T / nc;
-
-    // Differential equation
-    casadi::SX rhs = casadi::SX::vertcat({x2, 0.5 * x1 - 0.5 * x3 - x4 / 900, u1, u2});
-
-    // Initial conditions
-    std::vector<double> x0 = {0, 0, 0, 0};
-
-    casadi::SX f_q = x1 * x1 + x2 * x2 + u1 * u1;
-
-    // DAE
-    casadi::SXDict dae = {{"x", x}, {"p", u}, {"ode", rhs}, {"quad", f_q}};
-    std::cout << dae << std::endl;
-
-    // Total number of NLP variables
-    int NV = nx * (nc + 1) + nc * nu;
-
-    // Integrator options
-    string plugin;
-    casadi::Dict opts;
-
-    // An explicit Euler integrator
-    plugin = "rk";
-    opts["t0"] = t0;
-    opts["tf"] = tf;
-
-    // Create integrator
-    casadi::Function F = integrator("integrator", plugin, dae, opts);
-
-    vector<casadi::MX> X, U, V;
-
-    for (int i = 0; i < nc; i++)
-    {
-        std::string x_str, u_str;
-        x_str = "X" + to_string(i);
-        u_str = "U" + to_string(i);
-
-        X.push_back(casadi::MX::sym(x_str, nx));
-        U.push_back(casadi::MX::sym(u_str, nx));
-    }
-    std::string x_str;
-    x_str = "X" + to_string(nc);
-
-    X.push_back(casadi::MX::sym(x_str, nx));
-
-    for (int i = 0; i < nc; i++)
-    {
-        V.push_back(vertcat(X[i], U[i]));
-    }
-
-    int offset = 0;
-
-    // NLP variable bounds and initial guess
-    vector<double> v_min, v_max, v_init;
-    vector<casadi::MX> X1, U1, V1;
-    casadi::MX V2 = casadi::MX::sym("V", NV);
-
-    // Bounds and initial guess for the control
-    vector<double> u_min = {-50, -50};
-    vector<double> u_max = {50.0, 50.0};
-    vector<double> u_init = {0.0, 0.0};
-
-    // Bounds and initial guess for the state
-    vector<double> x0_min = {0.0, 0.0, 0.0, 0.0};
-    vector<double> x0_max = {0.0, 0.0, 0.0, 0.0};
-    vector<double> x_min = {-0.1, -1.0, -0.1, -100};
-    vector<double> x_max = {0.1, 1.0, 0.1, 100};
-    vector<double> xf_min = {0.05, 0.0, 0.0, 0.0};
-    vector<double> xf_max = {0.05, 0.0, 0.0, 0.0};
-    vector<double> x_init = {0.0, 0.0, 0.0, 0.0};
-
-    for (int k = 0; k < nc; ++k)
-    {
-        // Local state
-        X1.push_back(V2.nz(casadi::Slice(offset, offset + nx)));
-        if (k == 0)
-        {
-            v_min.insert(v_min.end(), x0_min.begin(), x0_min.end());
-            v_max.insert(v_max.end(), x0_max.begin(), x0_max.end());
-        }
-        else
-        {
-            v_min.insert(v_min.end(), x_min.begin(), x_min.end());
-            v_max.insert(v_max.end(), x_max.begin(), x_max.end());
-        }
-        v_init.insert(v_init.end(), x_init.begin(), x_init.end());
-        offset += nx;
-
-        // Local control
-        U1.push_back(V2.nz(casadi::Slice(offset, offset + nu)));
-        v_min.insert(v_min.end(), u_min.begin(), u_min.end());
-        v_max.insert(v_max.end(), u_max.begin(), u_max.end());
-        v_init.insert(v_init.end(), u_init.begin(), u_init.end());
-        offset += nu;
-    }
-
-    // State at end
-    X1.push_back(V2.nz(casadi::Slice(offset, offset + nx)));
-    v_min.insert(v_min.end(), xf_min.begin(), xf_min.end());
-    v_max.insert(v_max.end(), xf_max.begin(), xf_max.end());
-    v_init.insert(v_init.end(), x_init.begin(), x_init.end());
-    offset += nx;
-
-    std::cout << "X1" << std::endl;
-    std::cout << X1 << std::endl;
-
-    std::cout << "U1" << std::endl;
-    std::cout << U1 << std::endl;
-
-    std::cout << "V2" << std::endl;
-    std::cout << V2 << std::endl;
-
-    //OBJECTIVE
-    casadi::MX J = 0.0;
-
-    //CONSTRAINT
-    std::vector<casadi::MX> G;
-
-    for (int k = 0; k < nc; ++k)
-    {
-        casadi::MXDict I_out = F(casadi::MXDict{{"x0",X1[k]}, {"p",U1[k]}});
-        // Save continuity constraints
-        G.push_back( I_out.at("xf") - X1[k+1] );
-        // Add objective function contribution
-        J += I_out.at("qf");
-    }
-
-    // Create the NLP
-    casadi::MXDict nlp = {{"f", J}, {"x", V2}, {"g", vertcat(G)}};//, };//, };
-    
-    // NLP solver options
-    casadi::Dict solver_opts;
-    string solver_name;
-    solver_name = "ipopt";
-    solver_opts["ipopt.tol"] = 1e-2;
-    solver_opts["ipopt.hessian_approximation"] = "limited-memory";
-    solver_opts["ipopt.warm_start_init_point"]="yes";
-    solver_opts["ipopt.warm_start_bound_push"]=1e-6;
-    solver_opts["ipopt.warm_start_slack_bound_push"]=1e-6;
-    solver_opts["ipopt.warm_start_mult_bound_push"]=1e-6;
-    solver_opts["ipopt.mu_init"]=1e-6;
-
-std::cout << "V2" << std::endl;
-    // Create NLP solver
-    casadi::Function solver = nlpsol("nlpsol", solver_name, nlp, solver_opts);
-std::cout << "V4" << std::endl;
-    // Solve NLP
-    std::map<std::string, casadi::DM> arg, res;
-    arg["lbx"] = v_min;
-    arg["ubx"] = v_max;
-    arg["lbg"] = 0.0;
-    arg["ubg"] = 0.0;
-    arg["x0"] = v_init;
-    std::cout <<"v_init" << std::endl;
-    std::cout <<v_init.size() << std::endl;
-    std::cout <<v_init << std::endl;
-    res = solver(arg);
-    std::cout << "1V2" << std::endl;
-    casadi::DM Usol = res.at("x");
-
-    std::cout << "Usol" << std::endl;
-    std::cout << Usol << std::endl;
-*/
 }
 
 Eigen::VectorQd CustomController::getControl()
