@@ -259,47 +259,40 @@ CustomController::CustomController(RobotData &rd) : rd_(rd) //, wbc_(dc.wbc_)
     traj_(39) = 0.0;
     traj_(40) = 0.00;
 
-    Eigen::VectorXd lb_;
-    lb_.resize(40);
+    Eigen::MatrixXd lb_;
+    lb_.resize(40,N);
     lb_.setOnes();
     lb_ = -10 * lb_;
-    lb_(36) = -0.005;
-
-    Eigen::VectorXd ub_;
-    ub_.resize(40);
+    
+    Eigen::MatrixXd ub_;
+    ub_.resize(40,N);
     ub_.setOnes();
     ub_ = 10 * ub_;
-    ub_(36) = 0.005;
 
+    for(int i = 0; i < N; i++)
+    {
+        lb_(36,i) = -0.005;
+        ub_(36,i) = 0.005;
+    }
+   
     Eigen::VectorXd weight_quad;
     weight_quad.resize(state->get_ndx());
     weight_quad.setZero();
     weight_quad(36) = 10;
-   
-    ActivationBounds bounds(lb_, ub_);
 
     for(int i = 0; i < N; i++)
     {  
-        std::cout << "i " << i << std::endl;
         state_vector.push_back(boost::make_shared<StateKinodynamic>(boost::make_shared<pinocchio::Model>(model3)));     
-        state_bounds.push_back(ActivationBounds(lb_, ub_) );
+        state_bounds.push_back(ActivationBounds(lb_.col(i), ub_.col(i)) );
         state_activations.push_back(boost::make_shared<ActivationModelQuadraticBarrier>(state_bounds[i]));//bounds));//state_bounds[i]));
-        std::cout << "ii " << i << std::endl;
         actuation_vector.push_back(boost::make_shared<ActuationModelFloatingKinoBase>(state_vector[i]));
         xRegCost_vector.push_back(boost::make_shared<crocoddyl::CostModelResidual>(
             state, boost::make_shared<ActivationModelWeightedQuad>(weight_quad), boost::make_shared<crocoddyl::ResidualModelState>(state_vector[i], traj_, actuation_vector[i]->get_nu() + 2)));
         uRegCost_vector.push_back(boost::make_shared<crocoddyl::CostModelResidual>(
             state, boost::make_shared<crocoddyl::ResidualModelControl>(state_vector[i], actuation_vector[i]->get_nu() + 2)));
-
-        std::cout << "iii " << i << std::endl;
         stateBoundCost_vector.push_back(boost::make_shared<crocoddyl::CostModelResidual>(
             state_vector[i], state_activations[i], boost::make_shared<ResidualModelState>(state_vector[i], actuation_vector[i]->get_nu() + 2)));
     } 
-
-    for(int i = 0; i < N; i++)
-    {
-        std::cout << "i " << i << "lb "  << state_activations[i]->get_bounds().lb(36)<< "ub "  << state_activations[i]->get_bounds().ub(36) << std::endl;
-    }
 
     std::cout << "state->get_nv()" << std::endl;
     std::cout << state->get_nv() << std::endl; ///nv_
@@ -403,8 +396,8 @@ CustomController::CustomController(RobotData &rd) : rd_(rd) //, wbc_(dc.wbc_)
 
                         std::cout << "hh" << std::endl;
         ddp.stoppingCriteria();
-        
-*/
+        */
+
         crocoddyl::Timer timer;
         css = ddp.solve(xs, us, MAXITER);
 

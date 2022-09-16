@@ -503,6 +503,7 @@ class ActuationModelFloatingKinoBaseTpl : public ActuationModelAbstractTpl<_Scal
     boost::shared_ptr<StateKinodynamic> state = boost::static_pointer_cast<StateKinodynamic>(state_);
     boost::shared_ptr<Data> data = boost::allocate_shared<Data>(Eigen::aligned_allocator<Data>(), this);
     data->dtau_du.diagonal(-state->get_pinocchio()->joints[1].nv()).setOnes();
+
 #ifndef NDEBUG
     dtau_du_ = data->dtau_du;
 #endif
@@ -612,8 +613,6 @@ DifferentialActionModelKinoDynamicsTpl<Scalar>::DifferentialActionModelKinoDynam
   temp(nu_) = 1000000;
   Base::set_u_lb(Scalar(-1.) * temp);
   Base::set_u_ub(Scalar(+1.) * temp);
-  std::cout << "costs->get_nr()" << std::endl;
-  std::cout << costs->get_nr() << std::endl;
 }
 
 template <typename Scalar>
@@ -653,6 +652,8 @@ void DifferentialActionModelKinoDynamicsTpl<Scalar>::calc(
     d->u_drift = d->multibody.actuation->tau - d->pinocchio.nle;
     d->xout.noalias() = d->Minv * d->u_drift;
   }
+
+  //d->xout = d->multibody.actuation->tau;
   d->xout2 << x_state[1], 10 * x_state[0] - 10 * x_state[2] - x_state[3] * 1.0/ 70.0, d->multibody.actuation->u_x[0], d->multibody.actuation->u_x[1]; 
   
   // Computing the cost value and residuals
@@ -702,7 +703,7 @@ void DifferentialActionModelKinoDynamicsTpl<Scalar>::calcDiff(
     pinocchio::computeABADerivatives(pinocchio_, d->pinocchio, q, v, d->multibody.actuation->tau, d->Fx.topLeftCorner(nv,nv),
                                      d->Fx.topLeftCorner(nv,nv), d->pinocchio.Minv);   
     d->Fx.topLeftCorner(nv,state_->get_ndx()).noalias() += d->pinocchio.Minv * d->multibody.actuation->dtau_dx;
-    d->Fu.topLeftCorner(nv,nu_).noalias() = d->pinocchio.Minv * d->multibody.actuation->dtau_du;
+    d->Fu.topLeftCorner(nv,nu_).noalias() = (d->pinocchio.Minv * d->multibody.actuation->dtau_du);
   } else {
     pinocchio::computeRNEADerivatives(pinocchio_, d->pinocchio, q, v, d->xout);
     d->dtau_dx.leftCols(nv) = d->multibody.actuation->dtau_dx.leftCols(nv) - d->pinocchio.dtau_dq;
@@ -710,10 +711,36 @@ void DifferentialActionModelKinoDynamicsTpl<Scalar>::calcDiff(
     d->Fx.topLeftCorner(nv,state_->get_ndx()).noalias() = d->Minv * d->dtau_dx;
     d->Fu.topLeftCorner(nv,nu_).noalias() = d->Minv * d->multibody.actuation->dtau_du;
   }
-  
+  /*std::cout << "Fu___" << std::endl;
+  Eigen::MatrixXd iden;
+  iden.resize(nu,nu);
+  iden.setIdentity();
+
+  Eigen::MatrixXd iden;
+
+  std::cout << "Fu__1" << std::endl;
+
+  //iden.resize(nv,nv);
+  //iden.setIdentity();
+  //d->Fx.block(0, nv, nv, nv) = iden;//.setIdentity();
+
+
+
+  iden.resize(nu_,nu_);
+  iden.setIdentity();
+
+  std::cout << d->Fx << std::endl;
+  std::cout << "Fu__" << std::endl;
+
+  std::cout << d->Fu << std::endl;
+ // d->Fu.topLeftCorner(6,6).setIdentity(); // temp should revise 
+  d->Fu.block(6, 0, nu_, nu_) = iden;//.setIdentity();
+
+  std::cout << "Fu___a" << std::endl;
+  // Computing the cost derivatives*/
+
   d->Fx.bottomRightCorner(4,4) << 0.0, 1.0, 0.0, 0.0, 10.0, 0.0, -10.0, -1.0/70.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0;
   d->Fu.bottomRightCorner(4,2) << 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0;
-  // Computing the cost derivatives
   costs_->calcDiff(d->costs, x,  u);
 }
 
