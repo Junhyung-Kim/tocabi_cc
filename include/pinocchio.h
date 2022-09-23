@@ -11,6 +11,7 @@
 #include "pinocchio/algorithm/frames.hpp"
 #include "pinocchio/multibody/model.hpp"
 #include "pinocchio/multibody/data.hpp"
+#include "pinocchio/algorithm/centroidal-derivatives.hxx"
 #include "pinocchio/algorithm/aba-derivatives.hxx"
 #include "pinocchio/parsers/sample-models.hpp"
 
@@ -454,7 +455,7 @@ class ActuationModelFloatingKinoBaseTpl : public ActuationModelAbstractTpl<_Scal
    * @param[in] nu     Dimension of control vector
    */
   explicit ActuationModelFloatingKinoBaseTpl(boost::shared_ptr<StateKinodynamic> state)
-      : Base(state, state->get_nv() - state->get_pinocchio()->joints[1].nv()){};
+      : Base(state, state->get_nv()){};
   virtual ~ActuationModelFloatingKinoBaseTpl(){};
 
   /**
@@ -470,7 +471,7 @@ class ActuationModelFloatingKinoBaseTpl : public ActuationModelAbstractTpl<_Scal
       throw_pretty("Invalid argument: "
                    << "u has wrong dimension (it should be " + std::to_string(nu_) + ")");
     }
-    data->tau.segment(6,nu_) = u.head(nu_);
+    data->tau.segment(0,nu_) = u.head(nu_);
     data->u_x = u.tail(2);
   };
 
@@ -502,8 +503,7 @@ class ActuationModelFloatingKinoBaseTpl : public ActuationModelAbstractTpl<_Scal
     typedef StateKinodynamicTpl<Scalar> StateKinodynamic;
     boost::shared_ptr<StateKinodynamic> state = boost::static_pointer_cast<StateKinodynamic>(state_);
     boost::shared_ptr<Data> data = boost::allocate_shared<Data>(Eigen::aligned_allocator<Data>(), this);
-    data->dtau_du.diagonal(-state->get_pinocchio()->joints[1].nv()).setOnes();
-
+    data->dtau_du.diagonal(nu_).setOnes();
 #ifndef NDEBUG
     dtau_du_ = data->dtau_du;
 #endif
@@ -533,13 +533,13 @@ class DifferentialActionModelKinoDynamicsTpl : public DifferentialActionModelAbs
   typedef DifferentialActionDataKinoDynamicsTpl<Scalar> Data;
   typedef MathBaseTpl<Scalar> MathBase;
   typedef CostModelSumTpl<Scalar> CostModelSum;
-  typedef StateKinodynamicTpl<Scalar> StateMultibody;
+  typedef StateKinodynamicTpl<Scalar> StateKinodynamic;
   typedef ActuationModelAbstractTpl<Scalar> ActuationModelAbstract;
   typedef DifferentialActionDataAbstractTpl<Scalar> DifferentialActionDataAbstract;
   typedef typename MathBase::VectorXs VectorXs;
   typedef typename MathBase::MatrixXs MatrixXs;
 
-  DifferentialActionModelKinoDynamicsTpl(boost::shared_ptr<StateMultibody> state,
+  DifferentialActionModelKinoDynamicsTpl(boost::shared_ptr<StateKinodynamic> state,
                                             boost::shared_ptr<ActuationModelAbstract> actuation,
                                             boost::shared_ptr<CostModelSum> costs);
   virtual ~DifferentialActionModelKinoDynamicsTpl();
@@ -593,7 +593,7 @@ namespace crocoddyl {
 
 template <typename Scalar>
 DifferentialActionModelKinoDynamicsTpl<Scalar>::DifferentialActionModelKinoDynamicsTpl(
-    boost::shared_ptr<StateMultibody> state, boost::shared_ptr<ActuationModelAbstract> actuation,
+    boost::shared_ptr<StateKinodynamic> state, boost::shared_ptr<ActuationModelAbstract> actuation,
     boost::shared_ptr<CostModelSum> costs)
     : Base(state, actuation->get_nu(), costs->get_nr()),
       actuation_(actuation),
@@ -639,7 +639,7 @@ void DifferentialActionModelKinoDynamicsTpl<Scalar>::calc(
   actuation_->calc(d->multibody.actuation, x, u);
 
   // Computing the dynamics using ABA or manually for armature case
-  if (without_armature_) {
+ /* if (without_armature_) {
     d->xout = pinocchio::aba(pinocchio_, d->pinocchio, q, v, d->multibody.actuation->tau.segment(0,state_->get_nv()));
     pinocchio::updateGlobalPlacements(pinocchio_, d->pinocchio);
   } else {
@@ -651,9 +651,10 @@ void DifferentialActionModelKinoDynamicsTpl<Scalar>::calc(
     pinocchio::cholesky::computeMinv(pinocchio_, d->pinocchio, d->Minv);
     d->u_drift = d->multibody.actuation->tau - d->pinocchio.nle;
     d->xout.noalias() = d->Minv * d->u_drift;
-  }
+  }*/
 
   //d->xout = d->multibody.actuation->tau;
+  d->xout =  d->multibody.actuation->tau.segment(0,state_->get_nv());
   d->xout2 << x_state[1], 10 * x_state[0] - 10 * x_state[2] - x_state[3] * 1.0/ 70.0, d->multibody.actuation->u_x[0], d->multibody.actuation->u_x[1]; 
   
   // Computing the cost value and residuals
@@ -672,7 +673,7 @@ void DifferentialActionModelKinoDynamicsTpl<Scalar>::calc(
   const Eigen::VectorBlock<const Eigen::Ref<const VectorXs>, Eigen::Dynamic> q = x.head(state_->get_nq());
   const Eigen::VectorBlock<const Eigen::Ref<const VectorXs>, Eigen::Dynamic> v = x.segment(state_->get_nq(),state_->get_nv());
   const Eigen::VectorBlock<const Eigen::Ref<const VectorXs>, Eigen::Dynamic> x_state = x.tail(4);
-  pinocchio::computeAllTerms(pinocchio_, d->pinocchio, q, v);
+  //pinocchio::computeAllTerms(pinocchio_, d->pinocchio, q, v);
 
   costs_->calc(d->costs, x);
   d->cost = d->costs->cost;
@@ -699,7 +700,7 @@ void DifferentialActionModelKinoDynamicsTpl<Scalar>::calcDiff(
   Data* d = static_cast<Data*>(data.get());
   actuation_->calcDiff(d->multibody.actuation, x, u);
   // Computing the dynamics derivatives
-  if (without_armature_) {
+ /* if (without_armature_) {
     pinocchio::computeABADerivatives(pinocchio_, d->pinocchio, q, v, d->multibody.actuation->tau, d->Fx.topLeftCorner(nv,nv),
                                      d->Fx.topLeftCorner(nv,nv), d->pinocchio.Minv);   
     d->Fx.topLeftCorner(nv,state_->get_ndx()).noalias() += d->pinocchio.Minv * d->multibody.actuation->dtau_dx;
@@ -710,37 +711,20 @@ void DifferentialActionModelKinoDynamicsTpl<Scalar>::calcDiff(
     d->dtau_dx.rightCols(nv) = d->multibody.actuation->dtau_dx.rightCols(nv) - d->pinocchio.dtau_dv;
     d->Fx.topLeftCorner(nv,state_->get_ndx()).noalias() = d->Minv * d->dtau_dx;
     d->Fu.topLeftCorner(nv,nu_).noalias() = d->Minv * d->multibody.actuation->dtau_du;
-  }
-  /*std::cout << "Fu___" << std::endl;
-  Eigen::MatrixXd iden;
-  iden.resize(nu,nu);
-  iden.setIdentity();
+  }*/
 
-  Eigen::MatrixXd iden;
-
-  std::cout << "Fu__1" << std::endl;
-
-  //iden.resize(nv,nv);
-  //iden.setIdentity();
-  //d->Fx.block(0, nv, nv, nv) = iden;//.setIdentity();
-
-
-
-  iden.resize(nu_,nu_);
-  iden.setIdentity();
-
-  std::cout << d->Fx << std::endl;
-  std::cout << "Fu__" << std::endl;
-
-  std::cout << d->Fu << std::endl;
- // d->Fu.topLeftCorner(6,6).setIdentity(); // temp should revise 
-  d->Fu.block(6, 0, nu_, nu_) = iden;//.setIdentity();
-
-  std::cout << "Fu___a" << std::endl;
-  // Computing the cost derivatives*/
-
+  
   d->Fx.bottomRightCorner(4,4) << 0.0, 1.0, 0.0, 0.0, 10.0, 0.0, -10.0, -1.0/70.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0;
+  d->Fx.block(0, state_->get_nv(), state_->get_nv(), state_->get_nv()).setIdentity();
+  d->Fu.topLeftCorner(nu_, nu_).setIdentity();
   d->Fu.bottomRightCorner(4,2) << 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0;
+/*
+  std::cout << "d->Fx" << std::endl;
+  std::cout << d->Fx << std::endl;
+  
+  std::cout << "d->Fu" << std::endl;
+  std::cout << d->Fu << std::endl;
+  */
   costs_->calcDiff(d->costs, x,  u);
 }
 
@@ -844,4 +828,376 @@ void DifferentialActionModelKinoDynamicsTpl<Scalar>::set_armature(const VectorXs
   without_armature_ = false;
 }
 
+}  // namespace crocoddyl
+
+
+namespace crocoddyl {
+template <typename _Scalar>
+struct ResidualDataCentroidalAngularMomentumTpl : public ResidualDataAbstractTpl<_Scalar> {
+  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+
+  typedef _Scalar Scalar;
+  typedef MathBaseTpl<Scalar> MathBase;
+  typedef ResidualDataAbstractTpl<Scalar> Base;
+  typedef DataCollectorAbstractTpl<Scalar> DataCollectorAbstract;
+  typedef typename MathBase::Matrix6xs Matrix6xs;
+
+  template <template <typename Scalar> class Model>
+  ResidualDataCentroidalAngularMomentumTpl(Model<Scalar>* const model, DataCollectorAbstract* const data)
+      : Base(model, data), dhd_dq(6, model->get_state()->get_nv()), dhd_dv(6, model->get_state()->get_nv()), dhd_da(6, model->get_state()->get_nv()), dh_dq(6, model->get_state()->get_nv()) {
+    dhd_dq.setZero();
+    dhd_dv.setZero();
+
+    // Check that proper shared data has been passed
+    DataCollectorMultibodyTpl<Scalar>* d = dynamic_cast<DataCollectorMultibodyTpl<Scalar>*>(shared);
+    if (d == NULL) {
+      throw_pretty("Invalid argument: the shared data should be derived from DataCollectorMultibody");
+    }
+
+    // Avoids data casting at runtime
+    pinocchio = d->pinocchio;
+  }
+
+  pinocchio::DataTpl<Scalar>* pinocchio;  //!< Pinocchio data
+  Matrix6xs dhd_dq;                       //!< Jacobian of the centroidal momentum
+  Matrix6xs dhd_dv;                       //!< Jacobian of the centroidal momentum
+  Matrix6xs dh_dq;                       //!< Jacobian of the centroidal momentum
+  Matrix6xs dhd_da;                       //!< Jacobian of the centroidal momentum
+  
+  using Base::r;
+  using Base::Ru;
+  using Base::Rx;
+  using Base::shared;
+};
+
+}  // namespace crocoddyl
+
+
+namespace crocoddyl {
+
+/**
+ * @brief Centroidal momentum residual
+ *
+ * This residual function defines the centroidal momentum tracking as \f$\mathbf{r}=\mathbf{h}-\mathbf{h}^*\f$, where
+ * \f$\mathbf{h},\mathbf{h}^*\in~\mathcal{X}\f$ are the current and reference centroidal momenta, respectively. Note
+ * that the dimension of the residual vector is 6.
+ * Furthermore, the Jacobians of the residual function are computed analytically.
+ *
+ * As described in `ResidualModelAbstractTpl()`, the residual value and its Jacobians are calculated by `calc` and
+ * `calcDiff`, respectively.
+ *
+ * \sa `ResidualModelAbstractTpl`, `calc()`, `calcDiff()`, `createData()`
+ */
+template <typename _Scalar>
+class ResidualModelCentroidalAngularMomentumTpl : public ResidualModelAbstractTpl<_Scalar> {
+ public:
+  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+
+  typedef _Scalar Scalar;
+  typedef MathBaseTpl<Scalar> MathBase;
+  typedef ResidualModelAbstractTpl<Scalar> Base;
+  typedef ResidualDataCentroidalAngularMomentumTpl<Scalar> Data;
+  typedef StateKinodynamicTpl<Scalar> StateKinodynamic;
+  typedef ResidualDataAbstractTpl<Scalar> ResidualDataAbstract;
+  typedef ActivationModelAbstractTpl<Scalar> ActivationModelAbstract;
+  typedef DataCollectorAbstractTpl<Scalar> DataCollectorAbstract;
+  typedef typename MathBase::Vector6s Vector6s;
+  typedef typename MathBase::VectorXs VectorXs;
+  typedef typename MathBase::Matrix6xs Matrix6xs;
+
+  /**
+   * @brief Initialize the centroidal momentum residual model
+   *
+   * @param[in] state  State of the multibody system
+   * @param[in] href   Reference centroidal momentum
+   * @param[in] nu     Dimension of the control vector
+   */
+  ResidualModelCentroidalAngularMomentumTpl(boost::shared_ptr<StateKinodynamic> state, const Vector6s& href,
+                                     const std::size_t nu);
+
+  /**
+   * @brief Initialize the centroidal momentum residual model
+   *
+   * The default `nu` is obtained from `StateAbstractTpl::get_nv()`.
+   *
+   * @param[in] state  State of the multibody system
+   * @param[in] href   Reference centroidal momentum
+   */
+  ResidualModelCentroidalAngularMomentumTpl(boost::shared_ptr<StateKinodynamic> state, const std::size_t nu);
+  virtual ~ResidualModelCentroidalAngularMomentumTpl();
+
+  /**
+   * @brief Compute the centroidal momentum residual
+   *
+   * @param[in] data  Centroidal momentum residual data
+   * @param[in] x     State point \f$\mathbf{x}\in\mathbb{R}^{ndx}\f$
+   * @param[in] u     Control input \f$\mathbf{u}\in\mathbb{R}^{nu}\f$
+   */
+  virtual void calc(const boost::shared_ptr<ResidualDataAbstract>& data, const Eigen::Ref<const VectorXs>& x,
+                    const Eigen::Ref<const VectorXs>& u);
+
+  /**
+   * @brief Compute the derivatives of the centroidal momentum residual
+   *
+   * @param[in] data  Centroidal momentum residual data
+   * @param[in] x     State point \f$\mathbf{x}\in\mathbb{R}^{ndx}\f$
+   * @param[in] u     Control input \f$\mathbf{u}\in\mathbb{R}^{nu}\f$
+   */
+  virtual void calcDiff(const boost::shared_ptr<ResidualDataAbstract>& data, const Eigen::Ref<const VectorXs>& x,
+                        const Eigen::Ref<const VectorXs>& u);
+
+  /**
+   * @brief Create the centroidal momentum residual data
+   */
+  virtual boost::shared_ptr<ResidualDataAbstract> createData(DataCollectorAbstract* const data);
+
+  /**
+   * @brief Return the reference centroidal momentum
+   */
+  const Vector6s& get_reference() const;
+
+  /**
+   * @brief Modify the reference centroidal momentum
+   */
+  void set_reference(const Vector6s& href);
+
+  /**
+   * @brief Print relevant information of the centroidal-momentum residual
+   *
+   * @param[out] os  Output stream object
+   */
+  virtual void print(std::ostream& os) const;
+
+ protected:
+  using Base::nu_;
+  using Base::state_;
+  using Base::u_dependent_;
+  using Base::unone_;
+
+ private:
+  Vector6s href_;                                                         //!< Reference centroidal momentum
+  boost::shared_ptr<typename StateKinodynamic::PinocchioModel> pin_model_;  //!< Pinocchio model
+};
+}
+
+namespace crocoddyl {
+
+template <typename Scalar>
+ResidualModelCentroidalAngularMomentumTpl<Scalar>::ResidualModelCentroidalAngularMomentumTpl(boost::shared_ptr<StateKinodynamic> state,
+                                                                               const Vector6s& href,
+                                                                               const std::size_t nu)
+    : Base(state, 1, nu, true, true, true, false), href_(href), pin_model_(state->get_pinocchio()) {}
+
+template <typename Scalar>
+ResidualModelCentroidalAngularMomentumTpl<Scalar>::ResidualModelCentroidalAngularMomentumTpl(boost::shared_ptr<StateKinodynamic> state,
+                                                                               const std::size_t nu)
+    : Base(state, 1, nu, true, true, true, false), pin_model_(state->get_pinocchio()) {}
+
+template <typename Scalar>
+ResidualModelCentroidalAngularMomentumTpl<Scalar>::~ResidualModelCentroidalAngularMomentumTpl() {}
+
+template <typename Scalar>
+void ResidualModelCentroidalAngularMomentumTpl<Scalar>::calc(const boost::shared_ptr<ResidualDataAbstract>& data,
+                                                      const Eigen::Ref<const VectorXs>& x,
+                                                      const Eigen::Ref<const VectorXs>& u) {
+  // Compute the residual residual give the reference centroidal momentum
+  Data* d = static_cast<Data*>(data.get());
+  const Eigen::VectorBlock<const Eigen::Ref<const VectorXs>, Eigen::Dynamic> q = x.head(state_->get_nq());
+  const Eigen::VectorBlock<const Eigen::Ref<const VectorXs>, Eigen::Dynamic> v = x.segment(state_->get_nq(),state_->get_nv());
+  const Eigen::VectorBlock<const Eigen::Ref<const VectorXs>, Eigen::Dynamic> a = u.head(state_->get_nv());
+  const Eigen::VectorBlock<const Eigen::Ref<const VectorXs>, Eigen::Dynamic> x_state = x.tail(4);
+  pinocchio::computeCentroidalMomentumTimeVariation(*pin_model_.get(), *d->pinocchio, q, v, a);
+  data->r(0) = d->pinocchio->dhg.toVector()(4) - x_state(3);
+
+}
+
+template <typename Scalar>
+void ResidualModelCentroidalAngularMomentumTpl<Scalar>::calcDiff(const boost::shared_ptr<ResidualDataAbstract>& data,
+                                                          const Eigen::Ref<const VectorXs>& x,
+                                                          const Eigen::Ref<const VectorXs>& u) {
+  Data* d = static_cast<Data*>(data.get());
+  const std::size_t& nv = state_->get_nv();
+  const Eigen::VectorBlock<const Eigen::Ref<const VectorXs>, Eigen::Dynamic> q = x.head(state_->get_nq());
+  const Eigen::VectorBlock<const Eigen::Ref<const VectorXs>, Eigen::Dynamic> v = x.segment(state_->get_nq(),state_->get_nv());
+  const Eigen::VectorBlock<const Eigen::Ref<const VectorXs>, Eigen::Dynamic> a = u.head(state_->get_nv());
+  pinocchio::computeRNEADerivatives(*pin_model_.get(), *d->pinocchio, q, v, a);
+  pinocchio::getCentroidalDynamicsDerivatives(*pin_model_.get(), *d->pinocchio, d->dh_dq, d->dhd_dq, d->dhd_dv, d->dhd_da);
+  data->Rx.leftCols(nv) = d->dhd_dq.block(4,0, 1, nv);
+  data->Rx.block(0,nv,1,nv) = d->dhd_dv.block(4,0, 1, nv);
+  data->Rx.block(0,2*nv,1,4) << 0, 0, 0, -1;
+  data->Ru.leftCols(nv) =  d->dhd_da.block(4,0, 1, nv);
+}
+
+template <typename Scalar>
+boost::shared_ptr<ResidualDataAbstractTpl<Scalar> > ResidualModelCentroidalAngularMomentumTpl<Scalar>::createData(
+    DataCollectorAbstract* const data) {
+  return boost::allocate_shared<Data>(Eigen::aligned_allocator<Data>(), this, data);
+}
+
+template <typename Scalar>
+void ResidualModelCentroidalAngularMomentumTpl<Scalar>::print(std::ostream& os) const {
+  const Eigen::IOFormat fmt(2, Eigen::DontAlignCols, ", ", ";\n", "", "", "[", "]");
+  os << "ResidualModelCentroidalAngularMomentum {href=" << href_.transpose().format(fmt) << "}";
+}
+}  // namespace crocoddyl
+
+namespace crocoddyl {
+template <typename _Scalar>
+class ResidualModelCoMKinoPositionTpl : public ResidualModelAbstractTpl<_Scalar> {
+ public:
+  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+
+  typedef _Scalar Scalar;
+  typedef MathBaseTpl<Scalar> MathBase;
+  typedef ResidualModelAbstractTpl<Scalar> Base;
+  typedef ResidualDataCoMPositionTpl<Scalar> Data;
+  typedef StateKinodynamicTpl<Scalar> StateKinodynamic;
+  typedef ResidualDataAbstractTpl<Scalar> ResidualDataAbstract;
+  typedef DataCollectorAbstractTpl<Scalar> DataCollectorAbstract;
+  typedef typename MathBase::Vector3s Vector3s;
+  typedef typename MathBase::VectorXs VectorXs;
+
+  /**
+   * @brief Initialize the CoM position residual model
+   *
+   * @param[in] state  State of the multibody system
+   * @param[in] cref   Reference CoM position
+   * @param[in] nu     Dimension of the control vector
+   */
+  ResidualModelCoMKinoPositionTpl(boost::shared_ptr<StateKinodynamic> state, const std::size_t nu);
+
+  /**
+   * @brief Initialize the CoM position residual model
+   *
+   * The default `nu` value is obtained from `StateAbstractTpl::get_nv()`.
+   *
+   * @param[in] state  State of the multibody system
+   * @param[in] cref   Reference CoM position
+   */
+  ResidualModelCoMKinoPositionTpl(boost::shared_ptr<StateKinodynamic> state);
+  virtual ~ResidualModelCoMKinoPositionTpl();
+
+  /**
+   * @brief Compute the CoM position residual
+   *
+   * @param[in] data  CoM position residual data
+   * @param[in] x     State point \f$\mathbf{x}\in\mathbb{R}^{ndx}\f$
+   * @param[in] u     Control input \f$\mathbf{u}\in\mathbb{R}^{nu}\f$
+   */
+  virtual void calc(const boost::shared_ptr<ResidualDataAbstract>& data, const Eigen::Ref<const VectorXs>& x,
+                    const Eigen::Ref<const VectorXs>& u);
+
+  /**
+   * @brief Compute the derivatives of the CoM position residual
+   *
+   * @param[in] data  CoM position residual data
+   * @param[in] x     State point \f$\mathbf{x}\in\mathbb{R}^{ndx}\f$
+   * @param[in] u     Control input \f$\mathbf{u}\in\mathbb{R}^{nu}\f$
+   */
+  virtual void calcDiff(const boost::shared_ptr<ResidualDataAbstract>& data, const Eigen::Ref<const VectorXs>& x,
+                        const Eigen::Ref<const VectorXs>& u);
+  virtual boost::shared_ptr<ResidualDataAbstract> createData(DataCollectorAbstract* const data);
+
+  /**
+   * @brief Print relevant information of the com-position residual
+   *
+   * @param[out] os  Output stream object
+   */
+  virtual void print(std::ostream& os) const;
+
+ protected:
+  using Base::nu_;
+  using Base::state_;
+  using Base::u_dependent_;
+  using Base::unone_;
+  using Base::v_dependent_;
+
+ private:
+  Vector3s cref_;  //!< Reference CoM position
+  boost::shared_ptr<typename StateKinodynamic::PinocchioModel> pin_model_;  //!< Pinocchio model
+};
+
+template <typename _Scalar>
+struct ResidualDataCoMPositionTpl : public ResidualDataAbstractTpl<_Scalar> {
+  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+
+  typedef _Scalar Scalar;
+  typedef MathBaseTpl<Scalar> MathBase;
+  typedef ResidualDataAbstractTpl<Scalar> Base;
+  typedef DataCollectorAbstractTpl<Scalar> DataCollectorAbstract;
+  typedef typename MathBase::Matrix3xs Matrix3xs;
+
+  template <template <typename Scalar> class Model>
+  ResidualDataCoMPositionTpl(Model<Scalar>* const model, DataCollectorAbstract* const data) : Base(model, data) {
+    // Check that proper shared data has been passed
+    DataCollectorMultibodyTpl<Scalar>* d = dynamic_cast<DataCollectorMultibodyTpl<Scalar>*>(shared);
+    if (d == NULL) {
+      throw_pretty("Invalid argument: the shared data should be derived from DataCollectorMultibody");
+    }
+
+    // Avoids data casting at runtime
+    pinocchio = d->pinocchio;
+  }
+
+  pinocchio::DataTpl<Scalar>* pinocchio;  //!< Pinocchio data
+  using Base::r;
+  using Base::Ru;
+  using Base::Rx;
+  using Base::shared;
+};
+
+}  // namespace crocoddyl
+
+namespace crocoddyl {
+
+template <typename Scalar>
+ResidualModelCoMKinoPositionTpl<Scalar>::ResidualModelCoMKinoPositionTpl(boost::shared_ptr<StateKinodynamic> state, const std::size_t nu)
+    : Base(state, 1, nu, true, false, true, false), pin_model_(state->get_pinocchio())  {}
+
+template <typename Scalar>
+ResidualModelCoMKinoPositionTpl<Scalar>::ResidualModelCoMKinoPositionTpl(boost::shared_ptr<StateKinodynamic> state)
+    : Base(state, 1, true, false, true, false), pin_model_(state->get_pinocchio())  {}
+
+template <typename Scalar>
+ResidualModelCoMKinoPositionTpl<Scalar>::~ResidualModelCoMKinoPositionTpl() {}
+
+template <typename Scalar>
+void ResidualModelCoMKinoPositionTpl<Scalar>::calc(const boost::shared_ptr<ResidualDataAbstract>& data,
+                                               const Eigen::Ref<const VectorXs>& x, const Eigen::Ref<const VectorXs>& u) {
+  // Compute the residual residual give the reference CoMPosition position
+  Data* d = static_cast<Data*>(data.get());
+  const Eigen::VectorBlock<const Eigen::Ref<const VectorXs>, Eigen::Dynamic> q = x.head(state_->get_nq());
+  const Eigen::VectorBlock<const Eigen::Ref<const VectorXs>, Eigen::Dynamic> x_state = x.tail(4);
+  pinocchio::centerOfMass(*pin_model_.get(), *d->pinocchio, q, false);
+  data->r(0) = d->pinocchio->com[0](0) - x_state(0);
+}
+
+template <typename Scalar>
+void ResidualModelCoMKinoPositionTpl<Scalar>::calcDiff(const boost::shared_ptr<ResidualDataAbstract>& data,
+                                                   const Eigen::Ref<const VectorXs>& x,
+                                                   const Eigen::Ref<const VectorXs>& u) {
+  Data* d = static_cast<Data*>(data.get());
+  const Eigen::VectorBlock<const Eigen::Ref<const VectorXs>, Eigen::Dynamic> q = x.head(state_->get_nq());
+
+  pinocchio::jacobianCenterOfMass(*pin_model_.get(), *d->pinocchio, q, false);
+  // Compute the derivatives of the frame placement
+  const std::size_t nv = state_->get_nv();
+  data->Rx.leftCols(nv) = d->pinocchio->Jcom.block(0,0,1,nv);
+  (data->Rx.rightCols(4)).leftCols(1).setOnes();
+  (data->Rx.rightCols(4)).leftCols(1) = -1 * (data->Rx.rightCols(4)).leftCols(1);
+  //data->Ru.middleCols(nv,1).setOnes();// = -1;
+  //data->Ru = -1 * data->Ru;
+}
+
+template <typename Scalar>
+boost::shared_ptr<ResidualDataAbstractTpl<Scalar> > ResidualModelCoMKinoPositionTpl<Scalar>::createData(
+    DataCollectorAbstract* const data) {
+  return boost::allocate_shared<Data>(Eigen::aligned_allocator<Data>(), this, data);
+}
+
+template <typename Scalar>
+void ResidualModelCoMKinoPositionTpl<Scalar>::print(std::ostream& os) const {
+  const Eigen::IOFormat fmt(2, Eigen::DontAlignCols, ", ", ";\n", "", "", "[", "]");
+  os << "ResidualModelCoMPosition {cref=" << cref_.transpose().format(fmt) << "}";
+}
 }  // namespace crocoddyl

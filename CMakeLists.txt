@@ -35,6 +35,8 @@ find_package(Boost REQUIRED COMPONENTS system)
 find_package(blasfeo QUIET)
 find_package(hpipm QUIET)
 
+ADD_DEFINITIONS(-DCROCODDYL_WITH_MULTITHREADING)
+
 catkin_package(
   INCLUDE_DIRS include
   LIBRARIES ${PROJECT_NAME}
