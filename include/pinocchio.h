@@ -42,10 +42,12 @@
 #include "crocoddyl/core/solvers/fddp.hpp"
 #include "crocoddyl/core/solvers/box-fddp.hpp"
 #include "crocoddyl/core/utils/math.hpp"
+#include "pinocchio/parsers/urdf.hpp"
 //#include <pinocchio/autodiff/casadi.hpp>
-#include <casadi_kin_dyn/casadi_kin_dyn.h>
-#include <casadi/casadi.hpp>       
 #include <string.h>
+
+#define STDDEV(vec) std::sqrt(((vec - vec.mean())).square().sum() / (static_cast<double>(vec.size()) - 1))
+#define AVG(vec) (vec.mean())
 
 using namespace std;
 
@@ -101,6 +103,7 @@ struct DifferentialActionDataKinoDynamicsTpl : public DifferentialActionDataAbst
   using Base::r;
   using Base::xout;
   using Base::xout2;
+  //using Base::dhg;
 };
 
 }  // namespace crocoddyl
@@ -157,11 +160,14 @@ class StateKinodynamicTpl : public StateAbstractTpl<_Scalar> {
 
   virtual void diff(const Eigen::Ref<const VectorXs>& x0, const Eigen::Ref<const VectorXs>& x1,
                     Eigen::Ref<VectorXs> dxout) const;
+  virtual void diff1(const Eigen::Ref<const VectorXs>& x0, const Eigen::Ref<const VectorXs>& x1,
+                    Eigen::Ref<VectorXs> dxout) const;                  
   virtual void integrate(const Eigen::Ref<const VectorXs>& x, const Eigen::Ref<const VectorXs>& dx,
                          Eigen::Ref<VectorXs> xout) const;
   virtual void Jdiff(const Eigen::Ref<const VectorXs>&, const Eigen::Ref<const VectorXs>&, Eigen::Ref<MatrixXs> Jfirst,
                      Eigen::Ref<MatrixXs> Jsecond, const Jcomponent firstsecond = both) const;
-
+  virtual void Jdiff1(const Eigen::Ref<const VectorXs>&, const Eigen::Ref<const VectorXs>&, Eigen::Ref<MatrixXs> Jfirst,
+                     Eigen::Ref<MatrixXs> Jsecond, const Jcomponent firstsecond = both) const;
   virtual void Jintegrate(const Eigen::Ref<const VectorXs>& x, const Eigen::Ref<const VectorXs>& dx,
                           Eigen::Ref<MatrixXs> Jfirst, Eigen::Ref<MatrixXs> Jsecond,
                           const Jcomponent firstsecond = both, const AssignmentOp = setto) const;
@@ -253,10 +259,33 @@ void StateKinodynamicTpl<Scalar>::diff(const Eigen::Ref<const VectorXs>& x0, con
     throw_pretty("Invalid argument: "
                  << "dxout has wrong dimension (it should be " + std::to_string(ndx_) + ")");
   }
-
   pinocchio::difference(*pinocchio_.get(), x0.head(nq_), x1.head(nq_), dxout.head(nv_));
   dxout.segment(nq_,nv_) = x1.segment(nq_,nv_) - x0.segment(nq_,nv_);
   dxout.tail(4) = x1.tail(4) - x0.tail(4);
+}
+
+template <typename Scalar>
+void StateKinodynamicTpl<Scalar>::diff1(const Eigen::Ref<const VectorXs>& x0, const Eigen::Ref<const VectorXs>& x1,
+                                     Eigen::Ref<VectorXs> dxout) const {
+ // std::cout << "diff " << x0.tail(4).transpose() << std::endl;
+ // std::cout << "diffx " << x1.tail(4).transpose() << std::endl;
+
+  if (static_cast<std::size_t>(x0.size()) != nx_ + 4) {
+    throw_pretty("Invalid argument: "
+                 << "x0 has wrong dimension (it should be " + std::to_string(nx_) + ")");
+  }
+  if (static_cast<std::size_t>(x1.size()) != nx_ + 4) {
+    throw_pretty("Invalid argument: "
+                 << "x1 has wrong dimension (it should be " + std::to_string(nx_) + ")");
+  }
+  if (static_cast<std::size_t>(dxout.size()) != ndx_) {
+    throw_pretty("Invalid argument: "
+                 << "dxout has wrong dimension (it should be " + std::to_string(ndx_) + ")");
+  }
+
+  dxout.setZero();
+  dxout.tail(2) = x1.tail(2) - x0.tail(2);
+  dxout.tail(1).setZero();
 }
 
 template <typename Scalar>
@@ -306,6 +335,63 @@ void StateKinodynamicTpl<Scalar>::Jdiff(const Eigen::Ref<const VectorXs>& x0, co
                            pinocchio::ARG1);
     Jsecond.block(nv_, nv_, nv_, nv_).diagonal().array() = (Scalar)1;
     Jsecond.bottomRightCorner(4,4).diagonal().array() = (Scalar)1;
+  } else {  // computing both
+    if (static_cast<std::size_t>(Jfirst.rows()) != ndx_ || static_cast<std::size_t>(Jfirst.cols()) != ndx_) {
+      throw_pretty("Invalid argument: "
+                   << "Jfirst has wrong dimension (it should be " + std::to_string(ndx_) + "," + std::to_string(ndx_) +
+                          ")");
+    }
+    if (static_cast<std::size_t>(Jsecond.rows()) != ndx_ || static_cast<std::size_t>(Jsecond.cols()) != ndx_) {
+      throw_pretty("Invalid argument: "
+                   << "Jsecond has wrong dimension (it should be " + std::to_string(ndx_) + "," +
+                          std::to_string(ndx_) + ")");
+    }
+    pinocchio::dDifference(*pinocchio_.get(), x0.head(nq_), x1.head(nq_), Jfirst.topLeftCorner(nv_, nv_),
+                           pinocchio::ARG0);
+    pinocchio::dDifference(*pinocchio_.get(), x0.head(nq_), x1.head(nq_), Jsecond.topLeftCorner(nv_, nv_),
+                           pinocchio::ARG1);
+    Jfirst.block(nv_, nv_, nv_, nv_).diagonal().array() = (Scalar)-1;
+    Jsecond.block(nv_, nv_, nv_, nv_).diagonal().array() = (Scalar)1;
+    Jfirst.bottomRightCorner(4,4).diagonal().array() = (Scalar)-1;
+    Jsecond.bottomRightCorner(4,4).diagonal().array() = (Scalar)1;
+  }
+}
+template <typename Scalar>
+void StateKinodynamicTpl<Scalar>::Jdiff1(const Eigen::Ref<const VectorXs>& x0, const Eigen::Ref<const VectorXs>& x1,
+                                      Eigen::Ref<MatrixXs> Jfirst, Eigen::Ref<MatrixXs> Jsecond,
+                                      const Jcomponent firstsecond) const {
+  assert_pretty(is_a_Jcomponent(firstsecond), ("firstsecond must be one of the Jcomponent {both, first, second}"));
+  if (static_cast<std::size_t>(x0.size()) != nx_ + 4) {
+    throw_pretty("Invalid argument: "
+                 << "x0 has wrong dimension (it should be " + std::to_string(nx_) + ")");
+  }
+  if (static_cast<std::size_t>(x1.size()) != nx_ + 4) {
+    throw_pretty("Invalid argument: "
+                 << "x1 has wrong dimension (it should be " + std::to_string(nx_) + ")");
+  }
+
+  if (firstsecond == first) {
+    if (static_cast<std::size_t>(Jfirst.rows()) != ndx_ || static_cast<std::size_t>(Jfirst.cols()) != ndx_) {
+      throw_pretty("Invalid argument: "
+                   << "Jfirst has wrong dimension (it should be " + std::to_string(ndx_) + "," + std::to_string(ndx_) +
+                          ")");
+    }
+
+    pinocchio::dDifference(*pinocchio_.get(), x0.head(nq_), x1.head(nq_), Jfirst.topLeftCorner(nv_, nv_),
+                           pinocchio::ARG0);
+    Jfirst.block(nv_, nv_, nv_, nv_).diagonal().array() = (Scalar)-1;
+    Jfirst.bottomRightCorner(4,4).diagonal().array() = (Scalar)-1;
+  } else if (firstsecond == second) {
+    if (static_cast<std::size_t>(Jsecond.rows()) != ndx_ || static_cast<std::size_t>(Jsecond.cols()) != ndx_) {
+      throw_pretty("Invalid argument: "
+                   << "Jsecond has wrong dimension (it should be " + std::to_string(ndx_) + "," +
+                          std::to_string(ndx_) + ")");
+    }
+   // pinocchio::dDifference(*pinocchio_.get(), x0.head(nq_), x1.head(nq_), Jsecond.topLeftCorner(nv_, nv_),
+                          // pinocchio::ARG1);
+   // Jsecond.block(nv_, nv_, nv_, nv_).diagonal().array() = (Scalar)1;
+    Jsecond.setZero();
+    Jsecond.bottomRightCorner(2,2).diagonal().array() = (Scalar)1;
   } else {  // computing both
     if (static_cast<std::size_t>(Jfirst.rows()) != ndx_ || static_cast<std::size_t>(Jfirst.cols()) != ndx_) {
       throw_pretty("Invalid argument: "
@@ -635,6 +721,7 @@ void DifferentialActionModelKinoDynamicsTpl<Scalar>::calc(
   const Eigen::VectorBlock<const Eigen::Ref<const VectorXs>, Eigen::Dynamic> q = x.head(state_->get_nq());
   const Eigen::VectorBlock<const Eigen::Ref<const VectorXs>, Eigen::Dynamic> v = x.segment(state_->get_nq(),state_->get_nv());
   const Eigen::VectorBlock<const Eigen::Ref<const VectorXs>, Eigen::Dynamic> x_state = x.tail(4);
+  const Eigen::VectorBlock<const Eigen::Ref<const VectorXs>, Eigen::Dynamic> a = u.head(state_->get_nv());
 
   actuation_->calc(d->multibody.actuation, x, u);
 
@@ -655,7 +742,7 @@ void DifferentialActionModelKinoDynamicsTpl<Scalar>::calc(
 
   //d->xout = d->multibody.actuation->tau;
   d->xout =  d->multibody.actuation->tau.segment(0,state_->get_nv());
-  d->xout2 << x_state[1], 10 * x_state[0] - 10 * x_state[2] - x_state[3] * 1.0/ 70.0, d->multibody.actuation->u_x[0], d->multibody.actuation->u_x[1]; 
+  d->xout2 << x_state[1], 10 * x_state[0] - 10 * x_state[2] - d->multibody.actuation->u_x[1] * 1.0/ 70.0, d->multibody.actuation->u_x[0], d->multibody.actuation->u_x[1];//d->dhg; 
   
   // Computing the cost value and residuals
   costs_->calc(d->costs, x, u);
@@ -695,6 +782,7 @@ void DifferentialActionModelKinoDynamicsTpl<Scalar>::calcDiff(
   const std::size_t nv = state_->get_nv();
   const Eigen::VectorBlock<const Eigen::Ref<const VectorXs>, Eigen::Dynamic> q = x.head(state_->get_nq());
   const Eigen::VectorBlock<const Eigen::Ref<const VectorXs>, Eigen::Dynamic> v = x.segment(state_->get_nq(),nv);
+  const Eigen::VectorBlock<const Eigen::Ref<const VectorXs>, Eigen::Dynamic> a = u.head(state_->get_nv());
   const Eigen::VectorBlock<const Eigen::Ref<const VectorXs>, Eigen::Dynamic> x_state = x.tail(4);
 
   Data* d = static_cast<Data*>(data.get());
@@ -713,11 +801,10 @@ void DifferentialActionModelKinoDynamicsTpl<Scalar>::calcDiff(
     d->Fu.topLeftCorner(nv,nu_).noalias() = d->Minv * d->multibody.actuation->dtau_du;
   }*/
 
-  
-  d->Fx.bottomRightCorner(4,4) << 0.0, 1.0, 0.0, 0.0, 10.0, 0.0, -10.0, -1.0/70.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0;
+  d->Fx.bottomRightCorner(4,4) << 0.0, 1.0, 0.0, 0.0, 10.0, 0.0, -10.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0;
   d->Fx.block(0, state_->get_nv(), state_->get_nv(), state_->get_nv()).setIdentity();
   d->Fu.topLeftCorner(nu_, nu_).setIdentity();
-  d->Fu.bottomRightCorner(4,2) << 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0;
+  d->Fu.bottomRightCorner(4,2) << 0.0, 0.0, 0.0, -1.0/ 70.0, 1.0, 0.0, 0.0, 1.0;
 /*
   std::cout << "d->Fx" << std::endl;
   std::cout << d->Fx << std::endl;
@@ -1006,8 +1093,9 @@ void ResidualModelCentroidalAngularMomentumTpl<Scalar>::calc(const boost::shared
   const Eigen::VectorBlock<const Eigen::Ref<const VectorXs>, Eigen::Dynamic> v = x.segment(state_->get_nq(),state_->get_nv());
   const Eigen::VectorBlock<const Eigen::Ref<const VectorXs>, Eigen::Dynamic> a = u.head(state_->get_nv());
   const Eigen::VectorBlock<const Eigen::Ref<const VectorXs>, Eigen::Dynamic> x_state = x.tail(4);
-  pinocchio::computeCentroidalMomentumTimeVariation(*pin_model_.get(), *d->pinocchio, q, v, a);
-  data->r(0) = d->pinocchio->dhg.toVector()(4) - x_state(3);
+  const Eigen::VectorBlock<const Eigen::Ref<const VectorXs>, Eigen::Dynamic> u_state = u.tail(2);
+  pinocchio::computeCentroidalMomentum(*pin_model_.get(), *d->pinocchio, q, v);
+  data->r(0) = d->pinocchio->hg.toVector()(4) - x_state(3);
 
 }
 
@@ -1021,11 +1109,10 @@ void ResidualModelCentroidalAngularMomentumTpl<Scalar>::calcDiff(const boost::sh
   const Eigen::VectorBlock<const Eigen::Ref<const VectorXs>, Eigen::Dynamic> v = x.segment(state_->get_nq(),state_->get_nv());
   const Eigen::VectorBlock<const Eigen::Ref<const VectorXs>, Eigen::Dynamic> a = u.head(state_->get_nv());
   pinocchio::computeRNEADerivatives(*pin_model_.get(), *d->pinocchio, q, v, a);
-  pinocchio::getCentroidalDynamicsDerivatives(*pin_model_.get(), *d->pinocchio, d->dh_dq, d->dhd_dq, d->dhd_dv, d->dhd_da);
-  data->Rx.leftCols(nv) = d->dhd_dq.block(4,0, 1, nv);
-  data->Rx.block(0,nv,1,nv) = d->dhd_dv.block(4,0, 1, nv);
-  data->Rx.block(0,2*nv,1,4) << 0, 0, 0, -1;
-  data->Ru.leftCols(nv) =  d->dhd_da.block(4,0, 1, nv);
+  pinocchio::getCentroidalDynamicsDerivatives(*pin_model_.get(), *d->pinocchio,  d->dh_dq, d->dhd_dq, d->dhd_dv,  d->dhd_da);
+  data->Rx.rightCols(1)(0) = -1;
+  data->Rx.leftCols(nv) = d->dh_dq.block(4,0, 1, nv);
+  data->Rx.block(0,nv,1,nv) = d->dhd_da.block(4,0, 1, nv);
 }
 
 template <typename Scalar>
@@ -1201,3 +1288,251 @@ void ResidualModelCoMKinoPositionTpl<Scalar>::print(std::ostream& os) const {
   os << "ResidualModelCoMPosition {cref=" << cref_.transpose().format(fmt) << "}";
 }
 }  // namespace crocoddyl
+
+
+
+namespace crocoddyl {
+
+/**
+ * @brief State residual
+ *
+ * This residual function defines the state tracking as \f$\mathbf{r}=\mathbf{x}\ominus\mathbf{x}^*\f$, where
+ * \f$\mathbf{x},\mathbf{x}^*\in~\mathcal{X}\f$ are the current and reference states, respectively, which belong to the
+ * state manifold \f$\mathcal{X}\f$. Note that the dimension of the residual vector is obtained from
+ * `StateAbstract::get_ndx()`. Furthermore, the Jacobians of the residual function are
+ * computed analytically.
+ *
+ * As described in `ResidualModelAbstractTpl()`, the residual value and its derivatives are calculated by `calc` and
+ * `calcDiff`, respectively.
+ *
+ * \sa `ResidualModelAbstractTpl`, `calc()`, `calcDiff()`, `createData()`
+ */
+template <typename _Scalar>
+class ResidualFlyStateTpl : public ResidualModelAbstractTpl<_Scalar> {
+ public:
+  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+
+  typedef _Scalar Scalar;
+  typedef MathBaseTpl<Scalar> MathBase;
+  typedef ResidualModelAbstractTpl<Scalar> Base;
+  typedef StateMultibodyTpl<Scalar> StateMultibody;
+  typedef ResidualDataAbstractTpl<Scalar> ResidualDataAbstract;
+  typedef ActivationModelAbstractTpl<Scalar> ActivationModelAbstract;
+  typedef DataCollectorAbstractTpl<Scalar> DataCollectorAbstract;
+  typedef typename MathBase::VectorXs VectorXs;
+  typedef typename MathBase::MatrixXs MatrixXs;
+
+  /**
+   * @brief Initialize the state residual model
+   *
+   * @param[in] state       State of the multibody system
+   * @param[in] xref        Reference state
+   * @param[in] nu          Dimension of the control vector
+   */
+  ResidualFlyStateTpl(boost::shared_ptr<typename Base::StateAbstract> state, const VectorXs& xref,
+                        const std::size_t nu);
+
+  /**
+   * @brief Initialize the state residual model
+   *
+   * The default `nu` value is obtained from `StateAbstractTpl::get_nv()`.
+   *
+   * @param[in] state       State of the multibody system
+   * @param[in] xref        Reference state
+   */
+  ResidualFlyStateTpl(boost::shared_ptr<typename Base::StateAbstract> state, const VectorXs& xref);
+
+  /**
+   * @brief Initialize the state residual model
+   *
+   * The default reference state is obtained from `StateAbstractTpl::zero()`.
+   *
+   * @param[in] state  State of the multibody system
+   * @param[in] nu     Dimension of the control vector
+   */
+  ResidualFlyStateTpl(boost::shared_ptr<typename Base::StateAbstract> state, const std::size_t nu);
+
+  /**
+   * @brief Initialize the state residual model
+   *
+   * The default state reference is obtained from `StateAbstractTpl::zero()`, and `nu` from
+   * `StateAbstractTpl::get_nv()`.
+   *
+   * @param[in] state       State of the multibody system
+   * @param[in] activation  Activation model
+   */
+  ResidualFlyStateTpl(boost::shared_ptr<typename Base::StateAbstract> state);
+  virtual ~ResidualFlyStateTpl();
+
+  /**
+   * @brief Compute the state residual
+   *
+   * @param[in] data  State residual data
+   * @param[in] x     State point \f$\mathbf{x}\in\mathbb{R}^{ndx}\f$
+   * @param[in] u     Control input \f$\mathbf{u}\in\mathbb{R}^{nu}\f$
+   */
+  virtual void calc(const boost::shared_ptr<ResidualDataAbstract>& data, const Eigen::Ref<const VectorXs>& x,
+                    const Eigen::Ref<const VectorXs>& u);
+
+  /**
+   * @brief Compute the Jacobians of the state residual
+   *
+   * @param[in] data  State residual data
+   * @param[in] x     State point \f$\mathbf{x}\in\mathbb{R}^{ndx}\f$
+   * @param[in] u     Control input \f$\mathbf{u}\in\mathbb{R}^{nu}\f$
+   */
+  virtual void calcDiff(const boost::shared_ptr<ResidualDataAbstract>& data, const Eigen::Ref<const VectorXs>& x,
+                        const Eigen::Ref<const VectorXs>& u);
+
+  /**
+   * @brief Return the reference state
+   */
+  const VectorXs& get_reference() const;
+
+  /**
+   * @brief Modify the reference state
+   */
+  void set_reference(const VectorXs& reference);
+
+  /**
+   * @brief Print relevant information of the state residual
+   *
+   * @param[out] os  Output stream object
+   */
+  virtual void print(std::ostream& os) const;
+
+ protected:
+  using Base::nu_;
+  using Base::state_;
+  using Base::u_dependent_;
+  using Base::unone_;
+
+ private:
+  VectorXs xref_;  //!< Reference state
+};
+
+}  // namespace crocoddyl
+
+
+
+namespace crocoddyl {
+
+template <typename Scalar>
+ResidualFlyStateTpl<Scalar>::ResidualFlyStateTpl(boost::shared_ptr<typename Base::StateAbstract> state,
+                                                     const VectorXs& xref, const std::size_t nu)
+    : Base(state, state->get_ndx(), nu, false, false, true, false), xref_(xref) {
+  if (static_cast<std::size_t>(xref_.size()) != state_->get_nx() + 4) {
+    throw_pretty("Invalid argument: "
+                 << "xref has wrong dimension (it should be " + std::to_string(state_->get_nx()) + ")");
+  }
+}
+
+template <typename Scalar>
+ResidualFlyStateTpl<Scalar>::ResidualFlyStateTpl(boost::shared_ptr<typename Base::StateAbstract> state,
+                                                     const VectorXs& xref)
+    : Base(state, state->get_ndx(), false, false, true, false), xref_(xref) {
+  if (static_cast<std::size_t>(xref_.size()) != state_->get_nx() + 4) {
+    throw_pretty("Invalid argument: "
+                 << "xref has wrong dimension (it should be " + std::to_string(state_->get_nx()) + ")");
+  }
+}
+
+template <typename Scalar>
+ResidualFlyStateTpl<Scalar>::ResidualFlyStateTpl(boost::shared_ptr<typename Base::StateAbstract> state,
+                                                     const std::size_t nu)
+    : Base(state, state->get_ndx(), nu, false, false, true, false), xref_(state->zero()) {}
+
+template <typename Scalar>
+ResidualFlyStateTpl<Scalar>::ResidualFlyStateTpl(boost::shared_ptr<typename Base::StateAbstract> state)
+    : Base(state, state->get_ndx(), false, false, true, false), xref_(state->zero()) {}
+
+template <typename Scalar>
+ResidualFlyStateTpl<Scalar>::~ResidualFlyStateTpl() {}
+
+template <typename Scalar>
+void ResidualFlyStateTpl<Scalar>::calc(const boost::shared_ptr<ResidualDataAbstract>& data,
+                                         const Eigen::Ref<const VectorXs>& x, const Eigen::Ref<const VectorXs>& u) {
+  if (static_cast<std::size_t>(x.size()) != state_->get_nx() + 4) {
+    throw_pretty("Invalid argument: "
+                 << "x has wrong dimension (it should be " + std::to_string(state_->get_nx()) + ")");
+  }
+  state_->diff1(xref_, x, data->r);
+}
+
+template <typename Scalar>
+void ResidualFlyStateTpl<Scalar>::calcDiff(const boost::shared_ptr<ResidualDataAbstract>& data,
+                                             const Eigen::Ref<const VectorXs>& x, const Eigen::Ref<const VectorXs>& u) {
+  if (static_cast<std::size_t>(x.size()) != state_->get_nx() + 4) {
+    throw_pretty("Invalid argument: "
+                 << "x has wrong dimension (it should be " + std::to_string(state_->get_nx()) + ")");
+  }
+  state_->Jdiff1(xref_, x, data->Rx, data->Rx, second);
+}
+
+template <typename Scalar>
+void ResidualFlyStateTpl<Scalar>::print(std::ostream& os) const {
+  os << "ResidualFlyState";
+}
+
+template <typename Scalar>
+const typename MathBaseTpl<Scalar>::VectorXs& ResidualFlyStateTpl<Scalar>::get_reference() const {
+  return xref_;
+}
+
+template <typename Scalar>
+void ResidualFlyStateTpl<Scalar>::set_reference(const VectorXs& reference) {
+  xref_ = reference;
+}
+}  // namespace crocoddyl
+
+typedef crocoddyl::StateKinodynamicTpl<double> StateKinodynamic;
+typedef crocoddyl::ActuationModelFloatingKinoBaseTpl<double> ActuationModelFloatingKinoBase;
+typedef crocoddyl::DifferentialActionModelKinoDynamicsTpl<double> DifferentialActionModelContactKinoDynamics;
+typedef crocoddyl::DifferentialActionDataKinoDynamicsTpl<double> DifferentialActionDataKinoDynamics;
+typedef crocoddyl::ActivationModelWeightedQuadTpl<double> ActivationModelWeightedQuad;
+typedef crocoddyl::ResidualFlyStateTpl<double> ResidualFlyState;
+typedef crocoddyl::ResidualModelCentroidalAngularMomentumTpl<double> ResidualModelCentroidalAngularMomentum;
+typedef crocoddyl::ActivationModelQuadraticBarrierTpl<double> ActivationModelQuadraticBarrier;
+typedef crocoddyl::ActivationBoundsTpl<double> ActivationBounds;
+typedef crocoddyl::ResidualModelCoMKinoPositionTpl<double> ResidualModelCoMKinoPosition;
+typedef crocoddyl::MathBaseTpl<double> MathBase;
+typename MathBase::VectorXs VectorXs;
+
+std::vector<boost::shared_ptr<StateKinodynamic>> state_vector;
+std::vector<boost::shared_ptr<ActuationModelFloatingKinoBase>> actuation_vector;
+std::vector<boost::shared_ptr<crocoddyl::CostModelSum>> runningCostModel_vector;
+std::vector<boost::shared_ptr<DifferentialActionModelContactKinoDynamics>> runningDAM_vector;
+std::vector<boost::shared_ptr<crocoddyl::ActionModelAbstract>> runningModelWithRK4_vector;
+std::vector<boost::shared_ptr<crocoddyl::ActionDataAbstract>> runningModelWithRK4_data;
+std::vector<boost::shared_ptr<crocoddyl::CostModelAbstract>> xRegCost_vector;
+std::vector<boost::shared_ptr<crocoddyl::CostModelAbstract>> uRegCost_vector;
+std::vector<boost::shared_ptr<crocoddyl::CostModelAbstract>> stateBoundCost_vector;
+std::vector<boost::shared_ptr<crocoddyl::CostModelAbstract>> camBoundCost_vector;
+std::vector<boost::shared_ptr<crocoddyl::CostModelAbstract>> comBoundCost_vector;
+std::vector<boost::shared_ptr<ActivationModelQuadraticBarrier>> state_activations;
+std::vector<boost::shared_ptr<ActivationModelQuadraticBarrier>> state_activations2;
+std::vector<boost::shared_ptr<ActivationModelQuadraticBarrier>> state_activations3;
+std::vector<ActivationBounds> state_bounds;
+std::vector<ActivationBounds> state_bounds2;
+std::vector<ActivationBounds> state_bounds3;
+std::vector<boost::shared_ptr<crocoddyl::DifferentialActionDataAbstract>> runningDAM_data;
+
+boost::shared_ptr<StateKinodynamic> state;
+boost::shared_ptr<ActuationModelFloatingKinoBase> actuation;
+
+Eigen::VectorXd traj_, u_traj_, weight_quad, weight_quad_u;
+Eigen::MatrixXd lb_, ub_, lb_2, ub_2, lb_3, ub_3;
+
+boost::shared_ptr<DifferentialActionModelContactKinoDynamics> terminalDAM;
+boost::shared_ptr<crocoddyl::CostModelSum> terminalCostModel;
+boost::shared_ptr<crocoddyl::ActionModelAbstract> terminalModel;
+Eigen::VectorXd x0;
+Eigen::VectorXd u0;
+boost::shared_ptr<crocoddyl::ShootingProblem> problemWithRK4;
+std::vector<Eigen::VectorXd> xs, us;
+std::vector<boost::shared_ptr<crocoddyl::CallbackAbstract>> cbs;
+
+
+unsigned int N = 10; // number of nodes
+unsigned int T = 1;  // number of trials
+unsigned int MAXITER = 100;

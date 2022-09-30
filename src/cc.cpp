@@ -3,10 +3,7 @@
 #include "wholebody_functions.h"
 
 using namespace TOCABI;
-using namespace casadi_kin_dyn;
 using std::shared_ptr;
-
-casadi::Slice all;
 
 CustomController::CustomController(RobotData &rd) : rd_(rd) //, wbc_(dc.wbc_)
 {
@@ -208,29 +205,14 @@ CustomController::CustomController(RobotData &rd) : rd_(rd) //, wbc_(dc.wbc_)
     wlk_on = false;
     velEst_f = false;
 
-    unsigned int N = 10;  // number of nodes
-    unsigned int T = 1;  // number of trials
-    unsigned int MAXITER = 10;
-
-    typedef crocoddyl::StateKinodynamicTpl<double> StateKinodynamic;
-    typedef crocoddyl::ActuationModelFloatingKinoBaseTpl<double> ActuationModelFloatingKinoBase;
-    typedef crocoddyl::DifferentialActionModelKinoDynamicsTpl<double> DifferentialActionModelContactKinoDynamics;
-    typedef crocoddyl::DifferentialActionDataKinoDynamicsTpl<double> DifferentialActionDataKinoDynamics;
-    typedef crocoddyl::ActivationModelWeightedQuadTpl<double> ActivationModelWeightedQuad;
-    typedef crocoddyl::ResidualModelStateTpl<double> ResidualModelState;
-    typedef crocoddyl::ResidualModelCentroidalAngularMomentumTpl<double> ResidualModelCentroidalAngularMomentum;
-    typedef crocoddyl::ActivationModelQuadraticBarrierTpl<double> ActivationModelQuadraticBarrier;
-    typedef crocoddyl::ActivationBoundsTpl<double> ActivationBounds;
-    typedef crocoddyl::ResidualModelCoMKinoPositionTpl<double> ResidualModelCoMKinoPosition;
-
-    //DifferentialActionDataKinoDynamicss
+    // DifferentialActionDataKinoDynamicss
     pinocchio::Model model3;
     pinocchio::urdf::buildModel("/home/jhk/catkin_ws/src/tocabi_cc/robots/dyros_tocabi_with_redhands.urdf",
-                              pinocchio::JointModelFreeFlyer(), model3);
+                                pinocchio::JointModelFreeFlyer(), model3);
     pinocchio::Data data3(model3);
     Eigen::VectorXd q_3;
     q_3 = randomConfiguration(model3);
-    q_3 << 0, 0, 0.80783, 0, 0, 0, 1, 0.0, 0.0, -0.55 ,1.26, -0.71, 0.0, 0.0, 0.0, -0.55, 1.26, -0.71, 0.0;
+    q_3 << 0, 0, 0.80783, 0, 0, 0, 1, 0.0, 0.0, -0.55, 1.26, -0.71, 0.0, 0.0, 0.0, -0.55, 1.26, -0.71, 0.0;
     pinocchio::centerOfMass(model3, data3, q_3, false);
     model3.lowerPositionLimit.head<7>().array() = -1;
     model3.upperPositionLimit.head<7>().array() = 1.;
@@ -238,284 +220,245 @@ CustomController::CustomController(RobotData &rd) : rd_(rd) //, wbc_(dc.wbc_)
     const std::string RF = "R_AnkleRoll_Joint";
     const std::string LF = "L_AnkleRoll_Joint";
 
-    std::vector<boost::shared_ptr<StateKinodynamic>> state_vector;
-    std::vector<boost::shared_ptr<ActuationModelFloatingKinoBase>> actuation_vector;
-    std::vector<boost::shared_ptr<crocoddyl::CostModelSum>> runningCostModel_vector;
-    std::vector<boost::shared_ptr<DifferentialActionModelContactKinoDynamics>> runningDAM_vector;
-    std::vector<boost::shared_ptr<crocoddyl::ActionModelAbstract>> runningModelWithRK4_vector;
-    std::vector<boost::shared_ptr<crocoddyl::ActionDataAbstract>> runningModelWithRK4_data;
-    std::vector<boost::shared_ptr<crocoddyl::CostModelAbstract>> xRegCost_vector;
-    std::vector<boost::shared_ptr<crocoddyl::CostModelAbstract>> uRegCost_vector;
-    std::vector<boost::shared_ptr<crocoddyl::CostModelAbstract>> stateBoundCost_vector;
-    std::vector<boost::shared_ptr<crocoddyl::CostModelAbstract>> camBoundCost_vector;
-    std::vector<boost::shared_ptr<crocoddyl::CostModelAbstract>> comBoundCost_vector;
-    std::vector<boost::shared_ptr<ActivationModelQuadraticBarrier>> state_activations;
-    std::vector<boost::shared_ptr<ActivationModelQuadraticBarrier>> state_activations2;
-    std::vector<boost::shared_ptr<ActivationModelQuadraticBarrier>> state_activations3;
-    std::vector<ActivationBounds> state_bounds;
-    std::vector<ActivationBounds> state_bounds2;
-    std::vector<ActivationBounds> state_bounds3;
-    std::vector<boost::shared_ptr<crocoddyl::DifferentialActionDataAbstract>> runningDAM_data;
-
-    boost::shared_ptr<StateKinodynamic> state =
+    state =
         boost::make_shared<StateKinodynamic>(boost::make_shared<pinocchio::Model>(model3));
-
-    boost::shared_ptr<ActuationModelFloatingKinoBase> actuation =
+    actuation =
         boost::make_shared<ActuationModelFloatingKinoBase>(state);
 
-    Eigen::VectorXd traj_;
     traj_.resize(41);
     traj_.setZero();
-    traj_.head(19) << 0, 0, 0.80783, 0, 0, 0, 1, 0.0, 0.0, -0.55 ,1.26, -0.71, 0.0, 0.0, 0.0, -0.55, 1.26, -0.71, 0.0;
+    traj_.head(19) << 0, 0, 0.80783, 0, 0, 0, 1, 0.0, 0.0, -0.55, 1.26, -0.71, 0.0, 0.0, 0.0, -0.55, 1.26, -0.71, 0.0;
     traj_(37) = 0.08;
     traj_(38) = 0.0;
     traj_(39) = 0.0;
     traj_(40) = 0.00;
 
-    Eigen::VectorXd u_traj_;
     u_traj_.resize(20);
     u_traj_.setZero();
     u_traj_(18) = 10;
 
-    Eigen::MatrixXd lb_;
-    lb_.resize(40,N);
+    lb_.resize(40, N);
     lb_.setOnes();
     lb_ = -10 * lb_;
-    
-    Eigen::MatrixXd ub_;
-    ub_.resize(40,N);
+
+    ub_.resize(40, N);
     ub_.setOnes();
     ub_ = 10 * ub_;
 
-    for(int i = 0; i < N; i++)
+    for (int i = 0; i < N; i++)
     {
-        lb_(36,i) = -1.0;
-        ub_(36,i) = 1.0;
+        lb_(38, i) = 0.0;
+        ub_(38, i) = 0.5;
     }
 
-    Eigen::MatrixXd lb_2;
-    lb_2.resize(1,N);
+    lb_2.resize(1, N);
     lb_2.setZero();
-    
-    Eigen::MatrixXd ub_2;
-    ub_2.resize(1,N);
+
+    ub_2.resize(1, N);
     ub_2.setZero();
 
-    Eigen::MatrixXd lb_3;
-    lb_3.resize(1,N);
+    lb_3.resize(1, N);
     lb_3.setZero();
-    
-    Eigen::MatrixXd ub_3;
-    ub_3.resize(1,N);
+
+    ub_3.resize(1, N);
     ub_3.setZero();
-   
-    Eigen::VectorXd weight_quad;
+
     weight_quad.resize(state->get_ndx());
     weight_quad.setZero();
-    weight_quad(36) = 100;
+    weight_quad(36) = 10;
 
-    Eigen::VectorXd weight_quad_u;
     weight_quad_u.resize(20);
     weight_quad_u.setZero();
-    weight_quad_u(18) = 10;
+    weight_quad_u(18) = 1.0;
 
-    for(int i = 0; i < N; i++)
-    {  
-        state_vector.push_back(boost::make_shared<StateKinodynamic>(boost::make_shared<pinocchio::Model>(model3)));     
-        state_bounds.push_back(ActivationBounds(lb_.col(i), ub_.col(i)) );
-        state_bounds2.push_back(ActivationBounds(lb_2.col(i), ub_2.col(i)) );
-        state_bounds3.push_back(ActivationBounds(lb_3.col(i), ub_3.col(i)) );
-        state_activations.push_back(boost::make_shared<ActivationModelQuadraticBarrier>(state_bounds[i]));//bounds));//state_bounds[i]));
-        state_activations2.push_back(boost::make_shared<ActivationModelQuadraticBarrier>(state_bounds2[i]));//bounds));//state_bounds[i]));
-        state_activations3.push_back(boost::make_shared<ActivationModelQuadraticBarrier>(state_bounds3[i]));//bounds));//state_bounds[i]));
+    for (int i = 0; i < N; i++)
+    {
+        state_vector.push_back(boost::make_shared<StateKinodynamic>(boost::make_shared<pinocchio::Model>(model3)));
+        state_bounds.push_back(ActivationBounds(lb_.col(i), ub_.col(i)));
+        state_bounds2.push_back(ActivationBounds(lb_2.col(i), ub_2.col(i)));
+        state_bounds3.push_back(ActivationBounds(lb_3.col(i), ub_3.col(i)));
+        state_activations.push_back(boost::make_shared<ActivationModelQuadraticBarrier>(state_bounds[i]));
+        state_activations2.push_back(boost::make_shared<ActivationModelQuadraticBarrier>(state_bounds2[i]));
+        state_activations3.push_back(boost::make_shared<ActivationModelQuadraticBarrier>(state_bounds3[i]));
         actuation_vector.push_back(boost::make_shared<ActuationModelFloatingKinoBase>(state_vector[i]));
         xRegCost_vector.push_back(boost::make_shared<crocoddyl::CostModelResidual>(
             state, boost::make_shared<ActivationModelWeightedQuad>(weight_quad), boost::make_shared<crocoddyl::ResidualModelState>(state_vector[i], traj_, actuation_vector[i]->get_nu() + 2)));
         uRegCost_vector.push_back(boost::make_shared<crocoddyl::CostModelResidual>(
-            state,  boost::make_shared<ActivationModelWeightedQuad>(weight_quad_u), boost::make_shared<crocoddyl::ResidualModelControl>(state_vector[i], u_traj_)));//, actuation_vector[i]->get_nu() + 2)));
+            state, boost::make_shared<ActivationModelWeightedQuad>(weight_quad_u), boost::make_shared<crocoddyl::ResidualModelControl>(state_vector[i], u_traj_))); //, actuation_vector[i]->get_nu() + 1)));
         stateBoundCost_vector.push_back(boost::make_shared<crocoddyl::CostModelResidual>(
-            state_vector[i], state_activations[i], boost::make_shared<ResidualModelState>(state_vector[i], actuation_vector[i]->get_nu() + 2)));
+            state_vector[i], state_activations[i], boost::make_shared<ResidualFlyState>(state_vector[i], actuation_vector[i]->get_nu() + 2)));
         camBoundCost_vector.push_back(boost::make_shared<crocoddyl::CostModelResidual>(
             state_vector[i], state_activations2[i], boost::make_shared<ResidualModelCentroidalAngularMomentum>(state_vector[i], actuation_vector[i]->get_nu() + 2)));
         comBoundCost_vector.push_back(boost::make_shared<crocoddyl::CostModelResidual>(
             state_vector[i], state_activations3[i], boost::make_shared<ResidualModelCoMKinoPosition>(state_vector[i], actuation_vector[i]->get_nu() + 2)));
-    } 
+    }
 
     std::cout << "state->get_nv()" << std::endl;
-    std::cout << state->get_nv() << std::endl; ///nv_
+    std::cout << state->get_nv() << std::endl; /// nv_
 
     std::cout << "state->get_nq()" << std::endl;
-    std::cout << state->get_nq() << std::endl; //nq_
+    std::cout << state->get_nq() << std::endl; // nq_
 
     std::cout << "state->get_nx()" << std::endl;
-    std::cout << state->get_nx() << std::endl; //nx_
+    std::cout << state->get_nx() << std::endl; // nx_
 
     std::cout << "state->get_ndx()" << std::endl;
-    std::cout << state->get_ndx() << std::endl; //ndx_
+    std::cout << state->get_ndx() << std::endl; // ndx_
 
-    std::cout << "actuation->get_nu()" <<std::endl;
-    std::cout << actuation->get_nu() <<std::endl;
+    std::cout << "actuation->get_nu()" << std::endl;
+    std::cout << actuation->get_nu() << std::endl;
 
-    for(int i = 0; i < N-1; i++)
+    for (int i = 0; i < N - 1; i++)
     {
         runningCostModel_vector.push_back(boost::make_shared<crocoddyl::CostModelSum>(state_vector[i], actuation_vector[i]->get_nu() + 2));
-  //  runningCostModel_vector[i]->addCost("xReg", xRegCost_vector[i], 1e5);
-        runningCostModel_vector[i]->addCost("uReg", uRegCost_vector[i], 1e+10);
-       // runningCostModel_vector[i]->addCost("stateReg", stateBoundCost_vector[i], 1e5);
-        //runningCostModel_vector[i]->addCost("camReg", camBoundCost_vector[i], 1e5);
-        runningCostModel_vector[i]->addCost("comReg", comBoundCost_vector[i], 1e5);
-    }    
+        // runningCostModel_vector[i]->addCost("xReg", xRegCost_vector[i], 1e1);
+        runningCostModel_vector[i]->addCost("uReg", uRegCost_vector[i], 1e0);
+        runningCostModel_vector[i]->addCost("stateReg", stateBoundCost_vector[i], 2e2);
+        runningCostModel_vector[i]->addCost("camReg", camBoundCost_vector[i], 2e2);
+        runningCostModel_vector[i]->addCost("comReg", comBoundCost_vector[i], 2e2);
+    }
 
-    boost::shared_ptr<crocoddyl::CostModelSum> terminalCostModel =
-            boost::make_shared<crocoddyl::CostModelSum>(state_vector[N-1], actuation_vector[N-1]->get_nu() + 2);
-   // terminalCostModel->addCost("xReg", xRegCost_vector[N-1], 1e5);
-    terminalCostModel->addCost("uReg", uRegCost_vector[N-1], 1e+10);
-    //terminalCostModel->addCost("stateReg", stateBoundCost_vector[N-1], 1e3);
-    //terminalCostModel->addCost("camReg", camBoundCost_vector[N-1], 1e3);
-    terminalCostModel->addCost("comReg", comBoundCost_vector[N-1], 1e5);
+    terminalCostModel =
+        boost::make_shared<crocoddyl::CostModelSum>(state_vector[N - 1], actuation_vector[N - 1]->get_nu() + 2);
+    // terminalCostModel->addCost("xReg", xRegCost_vector[N-1], 1e1);
+    terminalCostModel->addCost("uReg", uRegCost_vector[N - 1], 1e0);
+    terminalCostModel->addCost("stateReg", stateBoundCost_vector[N - 1], 2e2);
+    terminalCostModel->addCost("camReg", camBoundCost_vector[N - 1], 2e2);
+    terminalCostModel->addCost("comReg", comBoundCost_vector[N - 1], 2e2);
 
-    boost::shared_ptr<DifferentialActionModelContactKinoDynamics> terminalDAM =
-      boost::make_shared<DifferentialActionModelContactKinoDynamics>(state_vector[N-1], actuation_vector[N-1],
-                                                                               terminalCostModel);
-    
-    for(int i = 0; i < N-1; i++)
+    terminalDAM =
+        boost::make_shared<DifferentialActionModelContactKinoDynamics>(state_vector[N - 1], actuation_vector[N - 1],
+                                                                       terminalCostModel);
+
+    for (int i = 0; i < N - 1; i++)
     {
         runningDAM_vector.push_back(boost::make_shared<DifferentialActionModelContactKinoDynamics>(state_vector[i], actuation_vector[i],
-                                                                               runningCostModel_vector[i]));
+                                                                                                   runningCostModel_vector[i]));
         runningModelWithRK4_vector.push_back(boost::make_shared<crocoddyl::IntegratedActionModelRK>(runningDAM_vector[i], crocoddyl::RKType::four, 1e-2));
     }
-    
-    Eigen::VectorXd x0(state->get_nx() + 4);
-    Eigen::VectorXd u0(actuation->get_nu() + 2);
+
+    x0.resize(state->get_nx() + 4);
+    u0.resize(actuation->get_nu() + 2);
     u0.setZero();
     x0.setZero();
 
-    //x0.segment<7>(0) << 0, 0, 0, 0, 0, 0, 1;
-    x0.segment<19>(0) << 0, 0, 0.80783, 0, 0, 0, 1, 0.0, 0.0, -0.55 ,1.26, -0.71, 0.0, 0.0, 0.0, -0.55, 1.26, -0.71, 0.0;
+    x0.segment<19>(0) << 0, 0, 0.80783, 0, 0, 0, 1, 0.0, 0.0, -0.55, 1.26, -0.71, 0.0, 0.0, 0.0, -0.55, 1.26, -0.71, 0.0;
     x0.tail(4)(0) = data3.com[0](0);
     x0.tail(4)(2) = data3.com[0](0);
-    boost::shared_ptr<crocoddyl::ActionModelAbstract> terminalModel =
+    terminalModel =
         boost::make_shared<crocoddyl::IntegratedActionModelEuler>(terminalDAM, 1e-2);
-    boost::shared_ptr<crocoddyl::ShootingProblem> problemWithRK4 =
+    problemWithRK4 =
         boost::make_shared<crocoddyl::ShootingProblem>(x0, runningModelWithRK4_vector, terminalModel);
- 
-    for(int i = 0; i < N-1; i++)
+
+    for (int i = 0; i < N - 1; i++)
     {
         runningModelWithRK4_data.push_back(runningModelWithRK4_vector[i]->createData());
-     //   runningDAM_data.push_back(
         runningDAM_vector[i]->createData();
     }
-    std::cout << "aaaaa" << std::endl;
-    problemWithRK4->set_nthreads(2);
-    std::cout << "thread " << problemWithRK4->get_nthreads()  <<std::endl;// " " << problemWithRK4->enableMultithreading()<< std::endl;
+
+    problemWithRK4->set_nthreads(4);
+    std::cout << "thread " << problemWithRK4->get_nthreads() << std::endl; // " " << problemWithRK4->enableMultithreading()<< std::endl;
 
     crocoddyl::SolverBoxFDDP ddp(problemWithRK4);
-    std::cout << "bbbb" << std::endl;
-    
-    std::vector<Eigen::VectorXd> xs(N, x0);
-    std::vector<Eigen::VectorXd> us(N-1, u0);
-/*     crocoddyl::DifferentialActionDataKinoDynamics* d =
-      static_cast<crocoddyl::DifferentialActionDataKinoDynamics*>(runningDAM_data[i].get());
-  boost::shared_ptr<crocoddyl::ActuationDataAbstract> actuation_data = actuation->createData();
-*/
-    bool CALLBACKS = false;
-    if (CALLBACKS) {
-    std::vector<boost::shared_ptr<crocoddyl::CallbackAbstract> > cbs;
-    cbs.push_back(boost::make_shared<crocoddyl::CallbackVerbose>());
-    ddp.setCallbacks(cbs);
+
+    for(int i = 0; i < N; i++)
+    {
+        xs.push_back(x0);
+        if(i != N-1)
+            us.push_back(u0);
     }
 
-std::cout << "cccc" << std::endl;
-        typedef crocoddyl::MathBaseTpl<double> MathBase;
-    typename MathBase::VectorXs VectorXs;
+    bool CALLBACKS = false;
+    if (CALLBACKS)
+    {
+        cbs.push_back(boost::make_shared<crocoddyl::CallbackVerbose>());
+        ddp.setCallbacks(cbs);
+    }
+
     int css;
     Eigen::ArrayXd duration(T);
-    for (unsigned int i = 0; i < T; ++i) {
-       /* std::cout << "aaa" <<std::endl;
-        
-        std::cout << "aa" << std::endl;
-        ddp.setCandidate(xs, us, true);
-
-        std::cout << "bb" << std::endl;
-        ddp.computeDirection(true);
-
-        std::cout << "cc" << std::endl;
-        ddp.increaseRegularization();
-
-        std::cout << "dd" << std::endl;
-        ddp.updateExpectedImprovement();
-
-        std::cout << "ee" << std::endl;
-        ddp.tryStep();
-
-                std::cout << "ff" << std::endl;
-        ddp.expectedImprovement();
-
-                        std::cout << "gg" << std::endl;
-        ddp.decreaseRegularization();
-
-                        std::cout << "hh" << std::endl;
-        ddp.stoppingCriteria();
-        */
-
+    for (unsigned int i = 0; i < T; ++i)
+    {
         std::cout << "beforesolve" << std::endl;
         crocoddyl::Timer timer;
         css = ddp.solve(xs, us, MAXITER);
-
         std::cout << "aftersolve" << std::endl;
-        //problemWithRK4->get_runningDatas()
-        std::cout << "sss " << us[0].size() << "  " << css <<std::endl;
-        //terminalModel->calc(terminalModel->createData(),xs[0], u0);
-       // runningModelWithRK4_vector[0]->calc(runningModelWithRK4_data[0], xs[0], u0);
+        std::cout << "sss " << ddp.get_iter() << "  " << css << std::endl;
         duration[i] = timer.get_duration();
     }
     xs = ddp.get_xs();
     us = ddp.get_us();
 
-    for(int i = 0; i < N- 1; i ++)
-    {    
+    for (int i = 0; i < N - 1; i++)
+    {
         std::cout << "q " << i << std::endl;
-        for(int j = 0 /*xs[i].size()-4*/; j < 19; j ++)
+        for (int j = 0; j < 19; j++)
         {
             std::cout << xs[i][j] << ", ";
         }
         std::cout << "qdot " << i << std::endl;
         {
-            for(int j = 19 /*xs[i].size()-4*/; j < 37; j ++)
+            for (int j = 19; j < 37; j++)
             {
                 std::cout << xs[i][j] << ", ";
             }
         }
         std::cout << "x_state " << i << std::endl;
         {
-            for(int j = 37 /*xs[i].size()-4*/; j < 41; j ++)
+            for (int j = 37; j < 41; j++)
             {
                 std::cout << xs[i][j] << ", ";
             }
         }
         std::cout << std::endl;
         std::cout << "u " << i << std::endl;
-        for(int j = 0; j < actuation->get_nu(); j ++)
+        for (int j = 0; j < actuation->get_nu(); j++)
         {
             std::cout << us[i][j] << ", ";
         }
-        std::cout <<"ustate" << std::endl;
-        for(int j =actuation->get_nu() ; j < actuation->get_nu() + 2; j ++)
+        std::cout << "ustate" << std::endl;
+        for (int j = actuation->get_nu(); j < actuation->get_nu() + 2; j++)
         {
             std::cout << us[i][j] << ", ";
         }
         std::cout << std::endl;
     }
-   
-    std::cout << "css " <<ddp.get_cost() <<" " << ddp.get_is_feasible()<<std::endl;
+
+    std::cout << "css " << ddp.get_iter() << " " << ddp.get_is_feasible() << std::endl;
 
     double avrg_duration = duration.sum() / T;
     double min_duration = duration.minCoeff();
     double max_duration = duration.maxCoeff();
+
     std::cout << "  DDP.solve [ms]: " << avrg_duration << " (" << min_duration << "-" << max_duration << ")"
-               << std::endl; 
-    //for(int i = 0; i < N ; i ++)
-    //    std::cout << us[i][0] << "\t"<< us[i][1]  << std::endl;
+              << std::endl;
+    /*
+        Eigen::ArrayXd duration(T);
+        Eigen::ArrayXd avg(4);
+        Eigen::ArrayXd stddev(4);
+        double avrg_duration = duration.sum() / T;
+        double min_duration = duration.minCoeff();
+        double max_duration = duration.maxCoeff();
+
+        for (int ithread = 0; ithread < 4; ++ithread) {
+        duration.setZero();
+        for (unsigned int i = 0; i < T; ++i) {
+          crocoddyl::Timer timer;
+        #ifdef CROCODDYL_WITH_MULTITHREADING
+        #pragma omp parallel for num_threads(ithread + 1)
+        #endif
+          for (unsigned int j = 0; j < N - 1; ++j) {
+            runningModelWithRK4_vector[j]->calcDiff(problemWithRK4->get_runningDatas()[j], xs[j], us[j]);
+          }
+          duration[i] = timer.get_duration();
+        }
+        avg[ithread] = AVG(duration);
+        stddev[ithread] = STDDEV(duration);
+        std::cout << ithread + 1 << " threaded calcDiff [us]:\t" << avg[ithread] << " +- " << stddev[ithread]
+                  << " (max: " << duration.maxCoeff() << ", min: " << duration.minCoeff()
+                  << ", per nodes: " << avg[ithread] * (ithread + 1) / N << " +- " << stddev[ithread] * (ithread + 1) / N
+                  << ")" << std::endl;
+        }*/
 }
 
 Eigen::VectorQd CustomController::getControl()
