@@ -205,6 +205,10 @@ CustomController::CustomController(RobotData &rd) : rd_(rd) //, wbc_(dc.wbc_)
     wlk_on = false;
     velEst_f = false;
 
+    N = 10; // number of nodes
+    T = 1;  // number of trials
+    MAXITER = 100;
+
     // DifferentialActionDataKinoDynamicss
     pinocchio::Model model3;
     pinocchio::urdf::buildModel("/home/jhk/catkin_ws/src/tocabi_cc/robots/dyros_tocabi_with_redhands.urdf",
@@ -341,7 +345,6 @@ CustomController::CustomController(RobotData &rd) : rd_(rd) //, wbc_(dc.wbc_)
     u0.resize(actuation->get_nu() + 2);
     u0.setZero();
     x0.setZero();
-
     x0.segment<19>(0) << 0, 0, 0.80783, 0, 0, 0, 1, 0.0, 0.0, -0.55, 1.26, -0.71, 0.0, 0.0, 0.0, -0.55, 1.26, -0.71, 0.0;
     x0.tail(4)(0) = data3.com[0](0);
     x0.tail(4)(2) = data3.com[0](0);
@@ -432,6 +435,27 @@ CustomController::CustomController(RobotData &rd) : rd_(rd) //, wbc_(dc.wbc_)
 
     std::cout << "  DDP.solve [ms]: " << avrg_duration << " (" << min_duration << "-" << max_duration << ")"
               << std::endl;
+/*
+    std::cout << "lb" << std::endl;
+    std::cout << state_bounds[2].lb.transpose() << std::endl;
+    
+    Eigen::VectorXd x_1;
+    x_1.resize(stateBoundCost_vector[2]->get_activation()->get_nr());
+
+
+    std::cout << "b" << std::endl;
+    stateBoundCost_vector[2]->get_activation()->calc(stateBoundCost_vector[2]->get_activation()->createData(),x_1);
+
+    state_bounds[2].lb.setZero();
+    std::cout << "lb_a" << std::endl;
+    std::cout << state_bounds[2].lb.transpose() << std::endl;
+    
+    std::cout << "sss" << std::endl;
+    state_activations[2]->set_bounds(state_bounds[2]);
+
+    std::cout << "aaa" << std::endl;
+    stateBoundCost_vector[2]->get_activation()->calc(stateBoundCost_vector[2]->get_activation()->createData(),x_1);
+*/    
     /*
         Eigen::ArrayXd duration(T);
         Eigen::ArrayXd avg(4);
@@ -786,18 +810,6 @@ void CustomController::computeFast()
 
                     zmp_delx = 0.0;
                     zmp_dely = 0.0;
-
-                    if (walking_tick > 500)
-                    {
-                        PELV_trajectory_float.translation()(0) = com_mpcx;
-                    }
-                    else
-                    {
-                        PELV_trajectory_float.translation()(0) = COM_float_init.translation()(0);
-                    }
-                    PELV_trajectory_float.translation()(1) = com_mpcy;
-                    PELV_trajectory_float.translation()(2) = PELV_float_init.translation()(2);
-                    PELV_trajectory_float.linear() = PELV_float_init.linear();
                 }
 
                 walkingCompute(rd_);
@@ -967,7 +979,6 @@ void CustomController::computeFast()
         }
     }
 }
-
 void CustomController::computePlanner()
 {
     if (rd_.tc_.mode == 10)
@@ -977,7 +988,88 @@ void CustomController::computePlanner()
     {
         if (rd_.tc_.walking_enable == 1.0)
         {
-            /*
+            if(walking_tick == 1)
+            {
+                std::cout <<"qqqqqqaa" << std::endl;
+            }
+            x0.segment<19>(0) << 0, 0, 0.80783, 0, 0, 0, 1, 0.0, 0.0, -0.55, 1.26, -0.71, 0.0, 0.0, 0.0, -0.55, 1.26, -0.71, 0.0;
+            x0.tail(4)(0) = rd_.link_[COM_id].xpos(0);
+            x0.tail(4)(2) = ZMP_FT(0);
+            //DDPSOLVE
+
+           /* int css;
+            crocoddyl::SolverBoxFDDP ddp(problemWithRK4);
+            Eigen::ArrayXd duration(T);
+            for (unsigned int i = 0; i < T; ++i)
+            {
+                std::cout << "beforesolve" << std::endl;
+                crocoddyl::Timer timer;
+                css = ddp.solve(xs, us, MAXITER);
+                std::cout << "aftersolve" << std::endl;
+                std::cout << "sss " << ddp.get_iter() << "  " << css << std::endl;
+                duration[i] = timer.get_duration();
+            }
+            xs = ddp.get_xs();
+            us = ddp.get_us();
+
+            for (int i = 0; i < N - 1; i++)
+            {
+                std::cout << "q " << i << std::endl;
+                for (int j = 0; j < 19; j++)
+                {
+                    std::cout << xs[i][j] << ", ";
+                }
+                std::cout << "qdot " << i << std::endl;
+                {
+                    for (int j = 19; j < 37; j++)
+                    {
+                        std::cout << xs[i][j] << ", ";
+                    }
+                }
+                std::cout << "x_state " << i << std::endl;
+                {
+                    for (int j = 37; j < 41; j++)
+                    {
+                        std::cout << xs[i][j] << ", ";
+                    }
+                }
+                std::cout << std::endl;
+                std::cout << "u " << i << std::endl;
+                for (int j = 0; j < actuation->get_nu(); j++)
+                {
+                    std::cout << us[i][j] << ", ";
+                }
+                std::cout << "ustate" << std::endl;
+                for (int j = actuation->get_nu(); j < actuation->get_nu() + 2; j++)
+                {
+                    std::cout << us[i][j] << ", ";
+                }
+                std::cout << std::endl;
+            }
+
+            std::cout << "css " << ddp.get_iter() << " " << ddp.get_is_feasible() << std::endl;
+
+            double avrg_duration = duration.sum() / T;
+            double min_duration = duration.minCoeff();
+            double max_duration = duration.maxCoeff();
+
+            std::cout << "  DDP.solve [ms]: " << avrg_duration << " (" << min_duration << "-" << max_duration << ")"
+                    << std::endl;
+*/
+        }
+    }
+}
+
+/*void CustomController::computePlanner()
+{
+    if (rd_.tc_.mode == 10)
+    {
+    }
+    else if (rd_.tc_.mode == 11)
+    {
+        if (rd_.tc_.walking_enable == 1.0)
+        {
+            
             if (wlk_on == true && mpc_on == false && rd_.tc_.MPC == true)
             {
                 mpcModelSetup();
@@ -1165,10 +1257,10 @@ void CustomController::computePlanner()
                     mpc_cycle++;
                 }
             }
-            mpc_s = true;*/
+            mpc_s = true;
         }
     }
-}
+}*/
 
 void CustomController::mpc_variablex()
 {

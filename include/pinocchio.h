@@ -1532,7 +1532,9 @@ boost::shared_ptr<crocoddyl::ShootingProblem> problemWithRK4;
 std::vector<Eigen::VectorXd> xs, us;
 std::vector<boost::shared_ptr<crocoddyl::CallbackAbstract>> cbs;
 
-
+/*
 unsigned int N = 10; // number of nodes
 unsigned int T = 1;  // number of trials
-unsigned int MAXITER = 100;
+unsigned int MAXITER = 100;*/
+
+int N, T, MAXITER;

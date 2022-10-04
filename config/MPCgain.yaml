@@ -1,100 +1,83 @@
-Qx1 : 150000
+Qx1 : 50000000.0
 Qx2 : 0.0
-Qx3 : 150000
+Qx3 : 100.0
 Qx4 : 0.0
 Qx5 : 0.0
 
-Rx1 : 40.0
-Rx2 : 0.0
+Rx1 : 0.5
+Rx2 : 0.1
 
 Zl0x : 0.0
 Zu0x : 0.0
 zl0x : 0.0
 zu0x : 0.0
 
-Zl1x : 30.0
-Zu1x : 30.0
+Zl1x : 0.0
+Zu1x : 0.0
 zl1x : 0.0
 zu1x : 0.0
 
-Zl1x1 : 0.0
-Zu1x1 : 0.0
-zl1x1 : 0.0
-zu1x1 : 0.0
-
 ZlNx : 0.0
 ZuNx : 0.0
 zlNx : 0
 zuNx : 0
 
-lmom : 0.0
+lmom : 0
 
-ZlNx : 0.0
-ZuNx : 0.0
-zlNx : 0
-zuNx : 0
-
-lmom : 0.0
-
-Qy1 : 150000
+Qy1 : 0.0
 Qy2 : 0.0
-Qy3 : 100000
+Qy3 : 10000.0
 Qy4 : 0.0
-Qy5 : 0.00
+Qy5 : 0.0
 
-Ry1 : 80.0
-Ry2 : 0.0
+Ry1 : 5.0
+Ry2 : 0.1
 
 Zl0y : 0.0
 Zu0y : 0.0
 zl0y : 0.0
 zu0y : 0.0
 
-Zl1y : 80.0
-Zu1y : 80.0
+Zl1y : 0.0
+Zu1y : 0.0
 zl1y : 0.0
 zu1y : 0.0
-
-Zl1y1 : 2000000.0
-Zu1y1 : 2000000.0
-zl1y1 : 0.0
-zu1y1 : 0.0
 
 ZlNy : 0.0
 ZuNy : 0.0
 zlNy : 0
 zuNy : 0
 
-kc_r : 5
-tc_r : 0.5
+kc_r : 20
+tc_r : 10
 
-kc_p : 5
-tc_p : 0.5
+kc_p : 20
+tc_p : 10
 
-arp_dl : 5
-ark_dl : 0.04
-app_dl : 5
-apk_dl : 0.04
+arp_dl : 20
+ark_dl : 0.02
+app_dl : 20
+apk_dl : 0.02
 
-arp_sl : 5
-ark_sl : 0.03
-app_sl : 5
-apk_sl : 0.03
+arp_sl : 30
+ark_sl : 0.02
+app_sl : 30
+apk_sl : 0.02
 
-arp_dr : 5
-ark_dr : 0.04
-app_dr : 5
-apk_dr : 0.04
+arp_dr : 20
+ark_dr : 0.02
+app_dr : 20
+apk_dr : 0.02
 
-arp_sr : 5
-ark_sr : 0.03
-app_sr : 5
-apk_sr : 0.03
+arp_sr : 30
+ark_sr : 0.02
+app_sr : 30
+apk_sr : 0.02
 
 com_gain : 0.5
 
-pelv_xp : 150.0 #-0.4
-pelv_yp : 150.0 #-0.4
+pelv_xp : -0.8
+pelv_yp : -0.8
 zmp_xp : 0.0
 zmp_yp : 0.0
 
@@ -114,7 +97,7 @@ mobgain4 : 60
 mobgain5 : 40
 mobgain6 : 40
 
-q4 : 1.4
-
 ft : 0
 dist : 0
+
+q4 : 1.4
