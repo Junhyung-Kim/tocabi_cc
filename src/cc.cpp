@@ -178,7 +178,7 @@ CustomController::CustomController(RobotData &rd) : rd_(rd) //, wbc_(dc.wbc_)
     pinocchio::JointIndex LFjoint_id = model2.getJointId("L_AnkleRoll_Joint");
     int LFframe_id = model2.getFrameId("L_Foot_Link");
     int RFframe_id = model2.getFrameId("R_Foot_Link");
-
+     
     rd_.ee_[0].contact_point << 0.03, 0, -0.1585;
     rd_.ee_[1].contact_point << 0.03, 0, -0.1585;
     Eigen::Matrix3d I3;
@@ -188,7 +188,6 @@ CustomController::CustomController(RobotData &rd) : rd_(rd) //, wbc_(dc.wbc_)
     frame_pos.translation() = rd_.ee_[0].contact_point;
     model2.addBodyFrame("LF_contact", LFjoint_id, frame_pos, LFframe_id);
     frame_pos.translation() = rd_.ee_[1].contact_point;
-
     model2.addBodyFrame("RF_contact", RFjoint_id, frame_pos, RFframe_id);
     pinocchio::Data data1(model2);
 
@@ -217,9 +216,20 @@ CustomController::CustomController(RobotData &rd) : rd_(rd) //, wbc_(dc.wbc_)
     Eigen::VectorXd q_3;
     q_3 = randomConfiguration(model3);
     q_3 << 0, 0, 0.80783, 0, 0, 0, 1, 0.0, 0.0, -0.55, 1.26, -0.71, 0.0, 0.0, 0.0, -0.55, 1.26, -0.71, 0.0;
+    pinocchio::forwardKinematics(model3, data3, q_3);
     pinocchio::centerOfMass(model3, data3, q_3, false);
+    pinocchio::updateFramePlacements(model3, data3);
     model3.lowerPositionLimit.head<7>().array() = -1;
     model3.upperPositionLimit.head<7>().array() = 1.;
+    std::cout << "Rf " << std::endl;
+    ///std::cout << data3.oMi[RFjoint_id].translation << std::endl;
+    const pinocchio::SE3 rf_foot_pos0 = data3.oMf[RFframe_id];
+    Eigen::Vector3d rf_foot_pos = rf_foot_pos0.translation();
+    const pinocchio::SE3 lf_foot_pos0 = data3.oMf[LFframe_id];
+    Eigen::Vector3d lf_foot_pos = lf_foot_pos0.translation();
+
+    std::cout << rf_foot_pos0.translation() << std::endl;
+   // const pinocchio::SE3::Vector3& lf_foot_pos0 = data3.oMi[LFjoint_id].translation;
 
     const std::string RF = "R_AnkleRoll_Joint";
     const std::string LF = "L_AnkleRoll_Joint";
@@ -239,7 +249,7 @@ CustomController::CustomController(RobotData &rd) : rd_(rd) //, wbc_(dc.wbc_)
 
     u_traj_.resize(20);
     u_traj_.setZero();
-    u_traj_(18) = 10;
+    u_traj_(18) = 1.0;
 
     lb_.resize(40, N);
     lb_.setOnes();
@@ -248,11 +258,17 @@ CustomController::CustomController(RobotData &rd) : rd_(rd) //, wbc_(dc.wbc_)
     ub_.resize(40, N);
     ub_.setOnes();
     ub_ = 10 * ub_;
-
-    for (int i = 0; i < N; i++)
+    //N-4가 하고싶으면 N-5부터?
+    for (int i = 0; i < N-5; i++)
     {
         lb_(38, i) = 0.0;
-        ub_(38, i) = 0.5;
+        ub_(38, i) = 0.2;
+    }
+
+    for (int i = N-5; i < N; i++)
+    {
+        lb_(38, i) = 0.15;
+        ub_(38, i) = 0.4;
     }
 
     lb_2.resize(1, N);
@@ -275,6 +291,8 @@ CustomController::CustomController(RobotData &rd) : rd_(rd) //, wbc_(dc.wbc_)
     weight_quad_u.setZero();
     weight_quad_u(18) = 1.0;
 
+    dt_ = 1e-1;
+
     for (int i = 0; i < N; i++)
     {
         state_vector.push_back(boost::make_shared<StateKinodynamic>(boost::make_shared<pinocchio::Model>(model3)));
@@ -295,6 +313,10 @@ CustomController::CustomController(RobotData &rd) : rd_(rd) //, wbc_(dc.wbc_)
             state_vector[i], state_activations2[i], boost::make_shared<ResidualModelCentroidalAngularMomentum>(state_vector[i], actuation_vector[i]->get_nu() + 2)));
         comBoundCost_vector.push_back(boost::make_shared<crocoddyl::CostModelResidual>(
             state_vector[i], state_activations3[i], boost::make_shared<ResidualModelCoMKinoPosition>(state_vector[i], actuation_vector[i]->get_nu() + 2)));
+        foot_trackR.push_back(boost::make_shared<crocoddyl::CostModelResidual>(state_vector[i], boost::make_shared<ResidualKinoFrameTranslation>(
+                      state_vector[i], RFframe_id, rf_foot_pos, actuation_vector[i]->get_nu() + 2)));
+        foot_trackL.push_back(boost::make_shared<crocoddyl::CostModelResidual>(state_vector[i], boost::make_shared<ResidualKinoFrameTranslation>(
+                      state_vector[i], LFframe_id, lf_foot_pos, actuation_vector[i]->get_nu() + 2)));
     }
 
     std::cout << "state->get_nv()" << std::endl;
@@ -315,20 +337,24 @@ CustomController::CustomController(RobotData &rd) : rd_(rd) //, wbc_(dc.wbc_)
     for (int i = 0; i < N - 1; i++)
     {
         runningCostModel_vector.push_back(boost::make_shared<crocoddyl::CostModelSum>(state_vector[i], actuation_vector[i]->get_nu() + 2));
-        // runningCostModel_vector[i]->addCost("xReg", xRegCost_vector[i], 1e1);
-        runningCostModel_vector[i]->addCost("uReg", uRegCost_vector[i], 1e0);
-        runningCostModel_vector[i]->addCost("stateReg", stateBoundCost_vector[i], 2e2);
-        runningCostModel_vector[i]->addCost("camReg", camBoundCost_vector[i], 2e2);
-        runningCostModel_vector[i]->addCost("comReg", comBoundCost_vector[i], 2e2);
+        //runningCostModel_vector[i]->addCost("xReg", xRegCost_vector[i], 0.1);
+        //runningCostModel_vector[i]->addCost("uReg", uRegCost_vector[i], 0.1);
+        runningCostModel_vector[i]->addCost("stateReg", stateBoundCost_vector[i], 1e2);
+        runningCostModel_vector[i]->addCost("camReg", camBoundCost_vector[i], 1e0);
+        runningCostModel_vector[i]->addCost("comReg", comBoundCost_vector[i], 1e0);
+        runningCostModel_vector[i]->addCost("footReg1", foot_trackR[i], 1e0);
+        runningCostModel_vector[i]->addCost("footReg2", foot_trackL[i], 1e0);
     }
-
+    //2e2
     terminalCostModel =
         boost::make_shared<crocoddyl::CostModelSum>(state_vector[N - 1], actuation_vector[N - 1]->get_nu() + 2);
-    // terminalCostModel->addCost("xReg", xRegCost_vector[N-1], 1e1);
-    terminalCostModel->addCost("uReg", uRegCost_vector[N - 1], 1e0);
-    terminalCostModel->addCost("stateReg", stateBoundCost_vector[N - 1], 2e2);
-    terminalCostModel->addCost("camReg", camBoundCost_vector[N - 1], 2e2);
-    terminalCostModel->addCost("comReg", comBoundCost_vector[N - 1], 2e2);
+    //terminalCostModel->addCost("xReg", xRegCost_vector[N-1], 0.1);
+    //terminalCostModel->addCost("uReg", uRegCost_vector[N - 1], 0.1);
+    terminalCostModel->addCost("stateReg", stateBoundCost_vector[N - 1], 1e2);
+    terminalCostModel->addCost("camReg", camBoundCost_vector[N - 1], 1e0);
+    terminalCostModel->addCost("comReg", comBoundCost_vector[N - 1], 1e0);
+    terminalCostModel->addCost("footReg1", foot_trackR[N - 1], 1e0);
+    terminalCostModel->addCost("footReg2", foot_trackL[N - 1], 1e0);
 
     terminalDAM =
         boost::make_shared<DifferentialActionModelContactKinoDynamics>(state_vector[N - 1], actuation_vector[N - 1],
@@ -338,7 +364,7 @@ CustomController::CustomController(RobotData &rd) : rd_(rd) //, wbc_(dc.wbc_)
     {
         runningDAM_vector.push_back(boost::make_shared<DifferentialActionModelContactKinoDynamics>(state_vector[i], actuation_vector[i],
                                                                                                    runningCostModel_vector[i]));
-        runningModelWithRK4_vector.push_back(boost::make_shared<crocoddyl::IntegratedActionModelRK>(runningDAM_vector[i], crocoddyl::RKType::four, 1e-2));
+        runningModelWithRK4_vector.push_back(boost::make_shared<crocoddyl::IntegratedActionModelRK>(runningDAM_vector[i], crocoddyl::RKType::four, dt_));
     }
 
     x0.resize(state->get_nx() + 4);
@@ -349,7 +375,7 @@ CustomController::CustomController(RobotData &rd) : rd_(rd) //, wbc_(dc.wbc_)
     x0.tail(4)(0) = data3.com[0](0);
     x0.tail(4)(2) = data3.com[0](0);
     terminalModel =
-        boost::make_shared<crocoddyl::IntegratedActionModelEuler>(terminalDAM, 1e-2);
+        boost::make_shared<crocoddyl::IntegratedActionModelEuler>(terminalDAM, dt_);
     problemWithRK4 =
         boost::make_shared<crocoddyl::ShootingProblem>(x0, runningModelWithRK4_vector, terminalModel);
 
@@ -361,6 +387,9 @@ CustomController::CustomController(RobotData &rd) : rd_(rd) //, wbc_(dc.wbc_)
 
     problemWithRK4->set_nthreads(4);
     std::cout << "thread " << problemWithRK4->get_nthreads() << std::endl; // " " << problemWithRK4->enableMultithreading()<< std::endl;
+
+    std::cout << "get_state" << std::endl;
+    std::cout << state_activations[N-5]->get_bounds().lb<< std::endl;
 
     crocoddyl::SolverBoxFDDP ddp(problemWithRK4);
 
@@ -391,8 +420,8 @@ CustomController::CustomController(RobotData &rd) : rd_(rd) //, wbc_(dc.wbc_)
     }
     xs = ddp.get_xs();
     us = ddp.get_us();
-
-    for (int i = 0; i < N - 1; i++)
+    std::cout << "final " << N-4 << std::endl;
+    for (int i = 0; i < N -1; i++)
     {
         std::cout << "q " << i << std::endl;
         for (int j = 0; j < 19; j++)
@@ -426,6 +455,26 @@ CustomController::CustomController(RobotData &rd) : rd_(rd) //, wbc_(dc.wbc_)
         }
         std::cout << std::endl;
     }
+
+    std::cout << "q " << N-1 << std::endl;
+        for (int j = 0; j < 19; j++)
+        {
+            std::cout << xs[N-1][j] << ", ";
+        }
+        std::cout << "qdot " << N-1 << std::endl;
+        {
+            for (int j = 19; j < 37; j++)
+            {
+                std::cout << xs[N-1][j] << ", ";
+            }
+        }
+        std::cout << "x_state " << N-1 << std::endl;
+        {
+            for (int j = 37; j < 41; j++)
+            {
+                std::cout << xs[N-1][j] << ", ";
+            }
+        }
 
     std::cout << "css " << ddp.get_iter() << " " << ddp.get_is_feasible() << std::endl;
 
@@ -664,7 +713,6 @@ void CustomController::computeSlow()
                     rd_.torque_desired_walk = TorqueGrav + TorqueContact;
                 }
                 fc_redis = rd_.fc_redist_;
-                //  file[1]<<walking_tick<<"\t"<<rd_.q_desired[1]<<"\t"<<q_init_ik(1) << "\t" << rd_.q_(1) << "\t"<< q_init_ik(2) << "\t" << rd_.q_(2) << "\t"<< q_init_ik(3) << "\t" << rd_.q_(3) << "\t"<< q_init_ik(4) << "\t" <<  rd_.q_(4) << "\t"<< q_init_ik(5) << "\t" <<  rd_.q_(5) << "\t"<<q_ddot_ik(9)<< "\t"<<q_ddot_ik(10)<< "\t"<<q_ddot_ik(11)<<std::endl;// << desired_leg_q_dot(2) << "\t" <<desired_leg_q_dot(3)<< "\t" <<desired_leg_q_dot(4)<< "\t" <<desired_leg_q_dot(5)<<"\t" << err_com(0)<<"\t" << err_com(1)<<"\t" << err_com(2)<<"\t" << err_foot(0)<<"\t" << err_foot(1)<<"\t" << err_foot(2)<<"\t"<<P_e(0)<<std::endl;
             }
             else
             {
@@ -917,10 +965,6 @@ void CustomController::computeFast()
                     rd_.mujoco_dist = false;
                 }
 
-                //  file[1] << PELV_trajectory_float_c.translation()(0) << "\t" << PELV_trajectory_float_c.translation()(1) << "\t" << PELV_trajectory_float_c.translation()(2) << "\t" << RF_trajectory_float.translation()(0)<< "\t" << RF_trajectory_float.translation()(1)<< "\t" << RF_trajectory_float.translation()(2)<<std::endl;
-                // if (walking_tick % 5 == 0)
-                //     file[1] << walking_tick << "\t"<< mpc_cycle << "\t" << zmp_refx(walking_tick) <<"\t" << rd_.link_[COM_id].xpos(0) << "\t" << com_mpcx << "\t" << ZMP_FT_l(0) << "\t" << zmp_mpcx << "\t" <<xL[walking_tick][0]<<"\t" << xU[walking_tick][0] <<"\t"<< rd_.link_[COM_id].v(1) << "\t" << rd_.link_[COM_id].xpos(1) << "\t" <<hpipm_statusy<<"\t" << com_mpcy << "\t" << ZMP_FT_l(1) << "\t" << ZMP_FT(1) << "\t" << zmp_mpcy << "\t" << rd_.link_[COM_id].xpos(2) << "\t" << H_data(3) << "\t" << mom_mpcy << "\t" << H_data(4) << "\t" << mom_mpcx << "\t" << control_input(0) << "\t" << control_input(1) <<std::endl;
-
                 if (walking_tick != walking_tick_prev)
                 {
                     walking_tick_prev = walking_tick;
@@ -959,12 +1003,12 @@ void CustomController::computeFast()
         {
             wk_Hz = 1000;
             wk_dt = 1 / wk_Hz;
-            setInitPose(rd_, desired_init_q);
+            setInitPose(rd_, desired_init_q, motion_sequence);
 
             cc_mutex.lock();
             for (int i = 0; i < 12; i++)
             {
-                rd_.q_desired(i) = desired_leg_q(i);
+                rd_.q_desired(i) = desired_init_q(i);
             }
             if (walking_tick == 0)
             {
@@ -974,7 +1018,6 @@ void CustomController::computeFast()
                 }
             }
             cc_mutex.unlock();
-
             // file[1] << rd_.link_[COM_id].xpos(0) << "\t" << rd_.link_[COM_id].xpos(1) << "\t" << rd_.link_[COM_id].v(0) << "\t" << rd_.link_[COM_id].v(1) << "\t" << ZMP_FT_l(0) << "\t" << ZMP_FT_l(1) << "\t" << COM_float_current.translation()(0) << "\t" << COM_float_current.translation()(1) << "\t" << COM_float_current.translation()(2) << "\t" << rd_.total_mass_ << "\t" << std::endl;
         }
     }
@@ -988,7 +1031,7 @@ void CustomController::computePlanner()
     {
         if (rd_.tc_.walking_enable == 1.0)
         {
-            if(walking_tick == 1)
+            if(walking_tick == 5)
             {
                 std::cout <<"qqqqqqaa" << std::endl;
             }

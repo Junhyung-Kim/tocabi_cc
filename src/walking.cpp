@@ -2156,25 +2156,45 @@ t_rest_init = 0.1 * wk_Hz;
     t_start_real = t_start + t_rest_init;
 }
 
-void WalkingController::setInitPose(RobotData &Robot, Eigen::VectorQd &leg_q)
+void WalkingController::setInitPose(RobotData &Robot, Eigen::VectorQd &leg_q, int sequence)
 {
+    std::cout << walking_init_tick << std::endl;
     if (walking_init_tick == 0)
     {
         Eigen::VectorQd q_temp;
-        //q_temp << 0.0, 0.00, -0.595, 1.24, -0.65, 0.00, 0.0, 0.00, -0.595, 1.24, -0.65, 0.00, 0.0, 0.0, 0.0, 0.2, 0.5, 1.5, -1.27, -1, 0, -1, 0, 0, 0, -0.2, -0.5, -1.5, 1.27, 1.0, 0, 1.0, 0;
         q_temp = Robot.q_;
-        //q_temp.setZero();
-        //q_target = Robot.q_;
+        q_init = q_temp;
+
+        if(motion_sequence == 0)
+        {
+            q_temp(21) = -1.0;
+        }
+        else if(motion_sequence == 1)
+        {
+            q_temp(21) = 0.5708;
+        }
+        
         q_target = q_temp;
+        std::cout << q_target.transpose() << std::endl;
         walkingInitialize(Robot);
-
-        COM_float_current.translation() = Robot.link_[COM_id].xpos;
     }
-
+    
     for (int i = 0; i < MODEL_DOF; i++)
     {
         leg_q(i) = DyrosMath::QuinticSpline(walking_init_tick, 0.0, 3.0 * wk_Hz, q_init(i), 0.0, 0.0, q_target(i), 0.0, 0.0)(0);
     }
+            walking_init_tick = walking_init_tick + 1;
+        if(walking_init_tick == 3.0*wk_Hz)
+        {
+            if(motion_sequence == 6)
+            {
+                motion_sequence = 0;    
+            }
+            walking_init_tick = 0;
+            std::cout << "motion sequence : " << motion_sequence << std::endl;
+            motion_sequence++;
+            Robot.tc_.walking_enable = 0.0;
+        }
 }
 
 void WalkingController::setIKparam(RobotData &Robot)

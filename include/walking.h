@@ -135,7 +135,7 @@ public:
     void inverseKinematicsdob(RobotData &Robot);
     void updateNextStepTime(RobotData &rd);
     void setWalkingParameter();
-    void setInitPose(RobotData &Robot, Eigen::VectorQd &leg_q);
+    void setInitPose(RobotData &Robot, Eigen::VectorQd &leg_q, int sequence);
     void walkingInitialize(RobotData &Robot);
     void comController(RobotData &Robot);
     void supportToFloatPattern(RobotData &Robot);
@@ -377,5 +377,8 @@ public:
     bool vib_est = false;
     bool sim_mode;
     double dob_gain;
+
+    int motion_sequence = 0;
+    Eigen::VectorQd leg_q_sequence;
 private:
 };
