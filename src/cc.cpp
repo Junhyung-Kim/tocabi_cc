@@ -138,7 +138,7 @@ CustomController::CustomController(RobotData &rd) : rd_(rd) //, wbc_(dc.wbc_)
     mobgain.push_back(mobgain6);
 
     nh.getParam("/tocabi_controller/ft", ft_ok);
-
+    N_ = 100;
     x11x_temp.resize(5, 100);
     x11y_temp.resize(5, 100);
 
@@ -204,9 +204,9 @@ CustomController::CustomController(RobotData &rd) : rd_(rd) //, wbc_(dc.wbc_)
     wlk_on = false;
     velEst_f = false;
 
-    N = 10; // number of nodes
+    N = 8; // number of nodes
     T = 1;  // number of trials
-    MAXITER = 100;
+    MAXITER = 300;
 
     // DifferentialActionDataKinoDynamicss
     pinocchio::Model model3;
@@ -277,10 +277,10 @@ CustomController::CustomController(RobotData &rd) : rd_(rd) //, wbc_(dc.wbc_)
     ub_2.resize(1, N);
     ub_2.setZero();
 
-    lb_3.resize(1, N);
+    lb_3.resize(3, N);
     lb_3.setZero();
 
-    ub_3.resize(1, N);
+    ub_3.resize(3, N);
     ub_3.setZero();
 
     weight_quad.resize(state->get_ndx());
@@ -313,10 +313,17 @@ CustomController::CustomController(RobotData &rd) : rd_(rd) //, wbc_(dc.wbc_)
             state_vector[i], state_activations2[i], boost::make_shared<ResidualModelCentroidalAngularMomentum>(state_vector[i], actuation_vector[i]->get_nu() + 2)));
         comBoundCost_vector.push_back(boost::make_shared<crocoddyl::CostModelResidual>(
             state_vector[i], state_activations3[i], boost::make_shared<ResidualModelCoMKinoPosition>(state_vector[i], actuation_vector[i]->get_nu() + 2)));
-        foot_trackR.push_back(boost::make_shared<crocoddyl::CostModelResidual>(state_vector[i], boost::make_shared<ResidualKinoFrameTranslation>(
+/*        foot_trackR.push_back(boost::make_shared<crocoddyl::CostModelResidual>(state_vector[i], boost::make_shared<ResidualKinoFrameTranslation>(
                       state_vector[i], RFframe_id, rf_foot_pos, actuation_vector[i]->get_nu() + 2)));
         foot_trackL.push_back(boost::make_shared<crocoddyl::CostModelResidual>(state_vector[i], boost::make_shared<ResidualKinoFrameTranslation>(
                       state_vector[i], LFframe_id, lf_foot_pos, actuation_vector[i]->get_nu() + 2)));
+*/
+        rf_foot_pos_vector.push_back(rf_foot_pos);
+        lf_foot_pos_vector.push_back(lf_foot_pos);
+        residual_FrameRF.push_back(boost::make_shared<ResidualKinoFrameTranslation>(state_vector[i], RFframe_id, rf_foot_pos_vector[i], actuation_vector[i]->get_nu() + 2));
+        residual_FrameLF.push_back(boost::make_shared<ResidualKinoFrameTranslation>(state_vector[i], LFframe_id, lf_foot_pos_vector[i], actuation_vector[i]->get_nu() + 2));
+        foot_trackR.push_back(boost::make_shared<crocoddyl::CostModelResidual>(state_vector[i], residual_FrameRF[i]));
+        foot_trackL.push_back(boost::make_shared<crocoddyl::CostModelResidual>(state_vector[i], residual_FrameLF[i]));    
     }
 
     std::cout << "state->get_nv()" << std::endl;
@@ -339,22 +346,24 @@ CustomController::CustomController(RobotData &rd) : rd_(rd) //, wbc_(dc.wbc_)
         runningCostModel_vector.push_back(boost::make_shared<crocoddyl::CostModelSum>(state_vector[i], actuation_vector[i]->get_nu() + 2));
         //runningCostModel_vector[i]->addCost("xReg", xRegCost_vector[i], 0.1);
         //runningCostModel_vector[i]->addCost("uReg", uRegCost_vector[i], 0.1);
+       
         runningCostModel_vector[i]->addCost("stateReg", stateBoundCost_vector[i], 1e2);
-        runningCostModel_vector[i]->addCost("camReg", camBoundCost_vector[i], 1e0);
-        runningCostModel_vector[i]->addCost("comReg", comBoundCost_vector[i], 1e0);
-        runningCostModel_vector[i]->addCost("footReg1", foot_trackR[i], 1e0);
-        runningCostModel_vector[i]->addCost("footReg2", foot_trackL[i], 1e0);
+        runningCostModel_vector[i]->addCost("camReg", camBoundCost_vector[i], 3e0);
+        runningCostModel_vector[i]->addCost("comReg", comBoundCost_vector[i], 6e0);
+        runningCostModel_vector[i]->addCost("footReg1", foot_trackR[i], 5e0);
+        runningCostModel_vector[i]->addCost("footReg2", foot_trackL[i], 5e0);
     }
-    //2e2
+    
     terminalCostModel =
         boost::make_shared<crocoddyl::CostModelSum>(state_vector[N - 1], actuation_vector[N - 1]->get_nu() + 2);
     //terminalCostModel->addCost("xReg", xRegCost_vector[N-1], 0.1);
     //terminalCostModel->addCost("uReg", uRegCost_vector[N - 1], 0.1);
+  
     terminalCostModel->addCost("stateReg", stateBoundCost_vector[N - 1], 1e2);
-    terminalCostModel->addCost("camReg", camBoundCost_vector[N - 1], 1e0);
-    terminalCostModel->addCost("comReg", comBoundCost_vector[N - 1], 1e0);
-    terminalCostModel->addCost("footReg1", foot_trackR[N - 1], 1e0);
-    terminalCostModel->addCost("footReg2", foot_trackL[N - 1], 1e0);
+    terminalCostModel->addCost("camReg", camBoundCost_vector[N - 1], 3e0);
+    terminalCostModel->addCost("comReg", comBoundCost_vector[N - 1], 6e0);
+    terminalCostModel->addCost("footReg1", foot_trackR[N - 1], 5e0);
+    terminalCostModel->addCost("footReg2", foot_trackL[N - 1], 5e0);
 
     terminalDAM =
         boost::make_shared<DifferentialActionModelContactKinoDynamics>(state_vector[N - 1], actuation_vector[N - 1],
@@ -1031,74 +1040,132 @@ void CustomController::computePlanner()
     {
         if (rd_.tc_.walking_enable == 1.0)
         {
-            if(walking_tick == 5)
+            /*  if(walking_tick == 5)
+                {
+                    std::cout <<"qqqqqqaa" << std::endl;
+                }
+                x0.segment<19>(0) << 0, 0, 0.80783, 0, 0, 0, 1, 0.0, 0.0, -0.55, 1.26, -0.71, 0.0, 0.0, 0.0, -0.55, 1.26, -0.71, 0.0;
+                x0.tail(4)(0) = rd_.link_[COM_id].xpos(0);
+                x0.tail(4)(2) = ZMP_FT(0);
+            */
+            // DDPSOLVE
+            if (walking_tick == t_temp + t_total + t_double1 + t_rest_temp && wlk_on == true)
             {
-                std::cout <<"qqqqqqaa" << std::endl;
-            }
-            x0.segment<19>(0) << 0, 0, 0.80783, 0, 0, 0, 1, 0.0, 0.0, -0.55, 1.26, -0.71, 0.0, 0.0, 0.0, -0.55, 1.26, -0.71, 0.0;
-            x0.tail(4)(0) = rd_.link_[COM_id].xpos(0);
-            x0.tail(4)(2) = ZMP_FT(0);
-            //DDPSOLVE
+             /*   x0.segment<6>(0) = rd_.q_virtual_.segment<6>(0);
+                x0(6) = rd_.q_virtual_(39));
+                x0.segment<12>(7) = rd_.q_virtual_.segment<12>(6);
+                std::cout << rd_.q_virtual_.transpose() << std::endl;
+                x0.tail(4)(0) = data4.com[0](0);
+                x0.tail(4)(2) = data4.com[0](0);
+            */
+           std::cout << "lipm " << lipm_w << std::endl;
+                for (int i = 0; i < N; i++)
+                {
+                    std::cout << "xL " << walking_tick << " " << t_temp + t_total + t_double1 + t_rest_temp <<std::endl; 
+                    std::cout <<  xL[0][2] << std::endl;
+                    state_bounds[i].lb(2) = xL[100*i + walking_tick][2];
+                    state_bounds[i].ub(2) = xU[100*i + walking_tick][2];
+                    state_activations[i]->set_bounds(state_bounds[i]);  
+                    rf_foot_pos_vector[i] << RFt[100*i + walking_tick ][0] + 0.001, RFt[100*i + walking_tick ][1], RFt[100*i + walking_tick ][2] - (0.158487 - 0.14152);
+                    lf_foot_pos_vector[i] << LFt[100*i + walking_tick ][0] + 0.001, LFt[100*i + walking_tick ][1], LFt[100*i + walking_tick ][2] - (0.158487 - 0.14152);
+                    residual_FrameRF[i]->set_reference(rf_foot_pos_vector[i]);
+                    residual_FrameLF[i]->set_reference(lf_foot_pos_vector[i]);
+                    std::cout << i  << " lb " << state_bounds[i].lb(2) << "ub " << state_bounds[i].ub(2) << " " << residual_FrameRF[i]->get_reference().transpose()<< " " << residual_FrameLF[i]->get_reference().transpose() <<  std::endl;
+                }
+                problemWithRK4->set_x0(x0);
+                crocoddyl::SolverBoxFDDP ddp(problemWithRK4);
 
-           /* int css;
-            crocoddyl::SolverBoxFDDP ddp(problemWithRK4);
-            Eigen::ArrayXd duration(T);
-            for (unsigned int i = 0; i < T; ++i)
-            {
-                std::cout << "beforesolve" << std::endl;
-                crocoddyl::Timer timer;
-                css = ddp.solve(xs, us, MAXITER);
-                std::cout << "aftersolve" << std::endl;
-                std::cout << "sss " << ddp.get_iter() << "  " << css << std::endl;
-                duration[i] = timer.get_duration();
-            }
-            xs = ddp.get_xs();
-            us = ddp.get_us();
+                for (int i = 0; i < N; i++)
+                {
+                    xs[i] = x0;
+                    if (i != N - 1)
+                        us[i] = u0;
+                }
 
-            for (int i = 0; i < N - 1; i++)
-            {
-                std::cout << "q " << i << std::endl;
+                bool CALLBACKS = false;
+                if (CALLBACKS)
+                {
+                    ddp.setCallbacks(cbs);
+                }
+
+                int css;
+                Eigen::ArrayXd duration(T);
+                for (unsigned int i = 0; i < T; ++i)
+                {
+                    std::cout << "beforesolve" << std::endl;
+                    crocoddyl::Timer timer;
+                    css = ddp.solve(xs, us, MAXITER);
+                    std::cout << "aftersolve" << std::endl;
+                    std::cout << "sss " << ddp.get_iter() << "  " << css << std::endl;
+                    duration[i] = timer.get_duration();
+                }
+                xs = ddp.get_xs();
+                us = ddp.get_us();
+
+                for (int i = 0; i < N - 1; i++)
+                {
+                    std::cout << "q " << i << std::endl;
+                    for (int j = 0; j < 19; j++)
+                    {
+                        std::cout << xs[i][j] << ", ";
+                    }
+                    std::cout << "qdot " << i << std::endl;
+                    {
+                        for (int j = 19; j < 37; j++)
+                        {
+                            std::cout << xs[i][j] << ", ";
+                        }
+                    }
+                    std::cout << "x_state " << i << std::endl;
+                    {
+                        for (int j = 37; j < 41; j++)
+                        {
+                            std::cout << xs[i][j] << ", ";
+                        }
+                    }
+                    std::cout << std::endl;
+                    std::cout << "u " << i << std::endl;
+                    for (int j = 0; j < actuation->get_nu(); j++)
+                    {
+                        std::cout << us[i][j] << ", ";
+                    }
+                    std::cout << "ustate" << std::endl;
+                    for (int j = actuation->get_nu(); j < actuation->get_nu() + 2; j++)
+                    {
+                        std::cout << us[i][j] << ", ";
+                    }
+                    std::cout << std::endl;
+                }
+
+                std::cout << "q " << N - 1 << std::endl;
                 for (int j = 0; j < 19; j++)
                 {
-                    std::cout << xs[i][j] << ", ";
+                    std::cout << xs[N - 1][j] << ", ";
                 }
-                std::cout << "qdot " << i << std::endl;
+                std::cout << "qdot " << N - 1 << std::endl;
                 {
                     for (int j = 19; j < 37; j++)
                     {
-                        std::cout << xs[i][j] << ", ";
+                        std::cout << xs[N - 1][j] << ", ";
                     }
                 }
-                std::cout << "x_state " << i << std::endl;
+                std::cout << "x_state " << N - 1 << std::endl;
                 {
                     for (int j = 37; j < 41; j++)
                     {
-                        std::cout << xs[i][j] << ", ";
+                        std::cout << xs[N - 1][j] << ", ";
                     }
                 }
-                std::cout << std::endl;
-                std::cout << "u " << i << std::endl;
-                for (int j = 0; j < actuation->get_nu(); j++)
-                {
-                    std::cout << us[i][j] << ", ";
-                }
-                std::cout << "ustate" << std::endl;
-                for (int j = actuation->get_nu(); j < actuation->get_nu() + 2; j++)
-                {
-                    std::cout << us[i][j] << ", ";
-                }
-                std::cout << std::endl;
+
+                std::cout << "css " << ddp.get_iter() << " " << ddp.get_is_feasible() << std::endl;
+
+                double avrg_duration = duration.sum() / T;
+                double min_duration = duration.minCoeff();
+                double max_duration = duration.maxCoeff();
+
+                std::cout << "  DDP.solve [ms]: " << avrg_duration << " (" << min_duration << "-" << max_duration << ")"
+                          << std::endl;
             }
-
-            std::cout << "css " << ddp.get_iter() << " " << ddp.get_is_feasible() << std::endl;
-
-            double avrg_duration = duration.sum() / T;
-            double min_duration = duration.minCoeff();
-            double max_duration = duration.maxCoeff();
-
-            std::cout << "  DDP.solve [ms]: " << avrg_duration << " (" << min_duration << "-" << max_duration << ")"
-                    << std::endl;
-*/
         }
     }
 }
@@ -1112,7 +1179,7 @@ void CustomController::computePlanner()
     {
         if (rd_.tc_.walking_enable == 1.0)
         {
-            
+
             if (wlk_on == true && mpc_on == false && rd_.tc_.MPC == true)
             {
                 mpcModelSetup();

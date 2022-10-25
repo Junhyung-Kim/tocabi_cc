@@ -749,7 +749,7 @@ void DifferentialActionModelKinoDynamicsTpl<Scalar>::calc(
 
   //d->xout = d->multibody.actuation->tau;
   d->xout =  d->multibody.actuation->tau.segment(0,state_->get_nv());
-  d->xout2 << x_state[1], 10 * x_state[0] - 10 * x_state[2] - d->multibody.actuation->u_x[1] * 1.0/ 70.0, d->multibody.actuation->u_x[0], d->multibody.actuation->u_x[1];//d->dhg; 
+  d->xout2 << x_state[1], 6.59308329 * x_state[0] - 6.59308329 * x_state[2] - d->multibody.actuation->u_x[1] * 1.0/ 50.0, d->multibody.actuation->u_x[0], d->multibody.actuation->u_x[1];//d->dhg; 
   
   // Computing the cost value and residuals
   costs_->calc(d->costs, x, u);
@@ -808,17 +808,18 @@ void DifferentialActionModelKinoDynamicsTpl<Scalar>::calcDiff(
     d->Fu.topLeftCorner(nv,nu_).noalias() = d->Minv * d->multibody.actuation->dtau_du;
   }*/
 
-  d->Fx.bottomRightCorner(4,4) << 0.0, 1.0, 0.0, 0.0, 10.0, 0.0, -10.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0;
+  d->Fx.bottomRightCorner(4,4) << 0.0, 1.0, 0.0, 0.0, 6.59308329, 0.0, -6.59308329, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0;
   d->Fx.block(0, state_->get_nv(), state_->get_nv(), state_->get_nv()).setIdentity();
   d->Fu.topLeftCorner(nu_, nu_).setIdentity();
-  d->Fu.bottomRightCorner(4,2) << 0.0, 0.0, 0.0, -1.0/ 70.0, 1.0, 0.0, 0.0, 1.0;
+  d->Fu.bottomRightCorner(4,2) << 0.0, 0.0, 0.0, -1.0/ 50.0, 1.0, 0.0, 0.0, 1.0;
+
 /*
   std::cout << "d->Fx" << std::endl;
   std::cout << d->Fx << std::endl;
   
   std::cout << "d->Fu" << std::endl;
   std::cout << d->Fu << std::endl;
-  */
+*/  
   costs_->calcDiff(d->costs, x,  u);
 }
 
@@ -1080,12 +1081,12 @@ template <typename Scalar>
 ResidualModelCentroidalAngularMomentumTpl<Scalar>::ResidualModelCentroidalAngularMomentumTpl(boost::shared_ptr<StateKinodynamic> state,
                                                                                const Vector6s& href,
                                                                                const std::size_t nu)
-    : Base(state, 1, nu, true, true, true, false), href_(href), pin_model_(state->get_pinocchio()) {}
+    : Base(state, 1, nu, true, true, true, false, false), href_(href), pin_model_(state->get_pinocchio()) {}
 
 template <typename Scalar>
 ResidualModelCentroidalAngularMomentumTpl<Scalar>::ResidualModelCentroidalAngularMomentumTpl(boost::shared_ptr<StateKinodynamic> state,
                                                                                const std::size_t nu)
-    : Base(state, 1, nu, true, true, true, false), pin_model_(state->get_pinocchio()) {}
+    : Base(state, 1, nu, true, true, true, false, false), pin_model_(state->get_pinocchio()) {}
 
 template <typename Scalar>
 ResidualModelCentroidalAngularMomentumTpl<Scalar>::~ResidualModelCentroidalAngularMomentumTpl() {}
@@ -1135,8 +1136,8 @@ void ResidualModelCentroidalAngularMomentumTpl<Scalar>::print(std::ostream& os) 
 }
 }  // namespace crocoddyl
 
-namespace crocoddyl {
-template <typename _Scalar>
+  namespace crocoddyl {
+  template <typename _Scalar>
 class ResidualModelCoMKinoPositionTpl : public ResidualModelAbstractTpl<_Scalar> {
  public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
@@ -1246,11 +1247,11 @@ namespace crocoddyl {
 
 template <typename Scalar>
 ResidualModelCoMKinoPositionTpl<Scalar>::ResidualModelCoMKinoPositionTpl(boost::shared_ptr<StateKinodynamic> state, const std::size_t nu)
-    : Base(state, 1, nu, true, false, true, false), pin_model_(state->get_pinocchio())  {}
+    : Base(state, 3, nu, true, false, true, false, false), pin_model_(state->get_pinocchio())  {}
 
 template <typename Scalar>
 ResidualModelCoMKinoPositionTpl<Scalar>::ResidualModelCoMKinoPositionTpl(boost::shared_ptr<StateKinodynamic> state)
-    : Base(state, 1, true, false, true, false), pin_model_(state->get_pinocchio())  {}
+    : Base(state, 3, true, false, true, false, false), pin_model_(state->get_pinocchio())  {}
 
 template <typename Scalar>
 ResidualModelCoMKinoPositionTpl<Scalar>::~ResidualModelCoMKinoPositionTpl() {}
@@ -1264,6 +1265,8 @@ void ResidualModelCoMKinoPositionTpl<Scalar>::calc(const boost::shared_ptr<Resid
   const Eigen::VectorBlock<const Eigen::Ref<const VectorXs>, Eigen::Dynamic> x_state = x.tail(4);
   pinocchio::centerOfMass(*pin_model_.get(), *d->pinocchio, q, false);
   data->r(0) = d->pinocchio->com[0](0) - x_state(0);
+  data->r(1) = d->pinocchio->com[0](1);
+  data->r(2) = d->pinocchio->com[0](2) - 5.11307390e-01;
 }
 
 template <typename Scalar>
@@ -1277,9 +1280,9 @@ void ResidualModelCoMKinoPositionTpl<Scalar>::calcDiff(const boost::shared_ptr<R
 
   // Compute the derivatives of the frame placement
   const std::size_t nv = state_->get_nv();
-  data->Rx.leftCols(nv) = d->pinocchio->Jcom.block(0,0,1,nv);
-  (data->Rx.rightCols(4)).leftCols(1).setOnes();
-  (data->Rx.rightCols(4)).leftCols(1) = -1 * (data->Rx.rightCols(4)).leftCols(1);
+  data->Rx.leftCols(nv) = d->pinocchio->Jcom.block(0,0,3,nv);
+  (data->Rx.rightCols(4)).leftCols(1)(0) = -1.0;
+  //(data->Rx.rightCols(4)).leftCols(1) = -1 * (data->Rx.rightCols(4)).leftCols(1);
 }
 
 template <typename Scalar>
@@ -1424,7 +1427,7 @@ namespace crocoddyl {
 template <typename Scalar>
 ResidualFlyStateTpl<Scalar>::ResidualFlyStateTpl(boost::shared_ptr<typename Base::StateAbstract> state,
                                                      const VectorXs& xref, const std::size_t nu)
-    : Base(state, state->get_ndx(), nu, false, false, false, false, true), xref_(xref) {
+    : Base(state, state->get_ndx(), nu, true, true, true, false, false)/*false, false, false, false, true)*/, xref_(xref) {
   if (static_cast<std::size_t>(xref_.size()) != state_->get_nx() + 4) {
     throw_pretty("Invalid argument: "
                  << "xref has wrong dimension (it should be " + std::to_string(state_->get_nx()) + ")");
@@ -1434,7 +1437,7 @@ ResidualFlyStateTpl<Scalar>::ResidualFlyStateTpl(boost::shared_ptr<typename Base
 template <typename Scalar>
 ResidualFlyStateTpl<Scalar>::ResidualFlyStateTpl(boost::shared_ptr<typename Base::StateAbstract> state,
                                                      const VectorXs& xref)
-    : Base(state, state->get_ndx(), false, false, false, false, true), xref_(xref) {
+    : Base(state, state->get_ndx(),true, true, true, false, false)/*false, false, false, false, true)*/, xref_(xref) {
   if (static_cast<std::size_t>(xref_.size()) != state_->get_nx() + 4) {
     throw_pretty("Invalid argument: "
                  << "xref has wrong dimension (it should be " + std::to_string(state_->get_nx()) + ")");
@@ -1444,11 +1447,11 @@ ResidualFlyStateTpl<Scalar>::ResidualFlyStateTpl(boost::shared_ptr<typename Base
 template <typename Scalar>
 ResidualFlyStateTpl<Scalar>::ResidualFlyStateTpl(boost::shared_ptr<typename Base::StateAbstract> state,
                                                      const std::size_t nu)
-    : Base(state, state->get_ndx(), nu, false, false, false, false, true), xref_(state->zero()) {}
+    : Base(state, state->get_ndx(), nu, true, true, true, false, false)/*false, false, false, false, true)*/, xref_(state->zero()) {}
 
 template <typename Scalar>
 ResidualFlyStateTpl<Scalar>::ResidualFlyStateTpl(boost::shared_ptr<typename Base::StateAbstract> state)
-    : Base(state, state->get_ndx(), false, false, false, false, true), xref_(state->zero()) {}
+    : Base(state, state->get_ndx(), true, true, true, false, false)/*false, false, false, false, true)*/, xref_(state->zero()) {}
 
 template <typename Scalar>
 ResidualFlyStateTpl<Scalar>::~ResidualFlyStateTpl() {}
@@ -1616,13 +1619,13 @@ template <typename Scalar>
 ResidualKinoFrameTranslationTpl<Scalar>::ResidualKinoFrameTranslationTpl(boost::shared_ptr<StateKinodynamic> state,
                                                                            const pinocchio::FrameIndex id,
                                                                            const Vector3s& xref, const std::size_t nu)
-    : Base(state, 3, nu, true, false, false, false), id_(id), xref_(xref), pin_model_(state->get_pinocchio()) {}
+    : Base(state, 3, nu, true, false, false, false, false), id_(id), xref_(xref), pin_model_(state->get_pinocchio()) {}
 
 template <typename Scalar>
 ResidualKinoFrameTranslationTpl<Scalar>::ResidualKinoFrameTranslationTpl(boost::shared_ptr<StateKinodynamic> state,
                                                                            const pinocchio::FrameIndex id,
                                                                            const Vector3s& xref)
-    : Base(state, 3, true, false, false, false), id_(id), xref_(xref), pin_model_(state->get_pinocchio()) {}
+    : Base(state, 3, true, false, false, false, false), id_(id), xref_(xref), pin_model_(state->get_pinocchio()) {}
 
 template <typename Scalar>
 ResidualKinoFrameTranslationTpl<Scalar>::~ResidualKinoFrameTranslationTpl() {}
@@ -1709,6 +1712,8 @@ std::vector<boost::shared_ptr<crocoddyl::CostModelSum>> runningCostModel_vector;
 std::vector<boost::shared_ptr<DifferentialActionModelContactKinoDynamics>> runningDAM_vector;
 std::vector<boost::shared_ptr<crocoddyl::ActionModelAbstract>> runningModelWithRK4_vector;
 std::vector<boost::shared_ptr<crocoddyl::ActionDataAbstract>> runningModelWithRK4_data;
+std::vector<boost::shared_ptr<ResidualKinoFrameTranslation>> residual_FrameRF;
+std::vector<boost::shared_ptr<ResidualKinoFrameTranslation>> residual_FrameLF;
 std::vector<boost::shared_ptr<crocoddyl::CostModelAbstract>> xRegCost_vector;
 std::vector<boost::shared_ptr<crocoddyl::CostModelAbstract>> uRegCost_vector;
 std::vector<boost::shared_ptr<crocoddyl::CostModelAbstract>> stateBoundCost_vector;
@@ -1716,6 +1721,8 @@ std::vector<boost::shared_ptr<crocoddyl::CostModelAbstract>> camBoundCost_vector
 std::vector<boost::shared_ptr<crocoddyl::CostModelAbstract>> comBoundCost_vector;
 std::vector<boost::shared_ptr<crocoddyl::CostModelAbstract>> foot_trackR;
 std::vector<boost::shared_ptr<crocoddyl::CostModelAbstract>> foot_trackL;
+std::vector<Eigen::VectorXd> rf_foot_pos_vector;
+std::vector<Eigen::VectorXd> lf_foot_pos_vector;
 std::vector<boost::shared_ptr<ActivationModelQuadraticBarrier>> state_activations;
 std::vector<boost::shared_ptr<ActivationModelQuadraticBarrier>> state_activations2;
 std::vector<boost::shared_ptr<ActivationModelQuadraticBarrier>> state_activations3;
@@ -1740,10 +1747,9 @@ std::vector<Eigen::VectorXd> xs, us;
 std::vector<boost::shared_ptr<crocoddyl::CallbackAbstract>> cbs;
 
 double dt_;
+pinocchio::Data data4;
 
-/*
+  /*
 unsigned int N = 10; // number of nodes
 unsigned int T = 1;  // number of trials
-unsigned int MAXITER = 100;*/
-
-int N, T, MAXITER;
+unsigned int MAXITER = 100;*/0.11583, -0.028924, 0.149998, 0.00177017, 

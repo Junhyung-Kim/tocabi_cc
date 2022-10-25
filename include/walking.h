@@ -306,12 +306,12 @@ public:
     double pelv_tmp;
 
     //MPC variable
-    double **softBoundx, **softBoundy, *softBoundx1, *softBoundy1, *softBoundx2, *softBoundy2, **softCx, **softCy, **xL, **xU, **yL, **yU, **zmpx, **zmpy;
+    double **softBoundx, **softBoundy, *softBoundx1, *softBoundy1, *softBoundx2, *softBoundy2, **softCx, **softCy, **xL, **xU, **yL, **yU, **zmpx, **zmpy, **RFt, **LFt;
     double **softCx_s, **softCy_s, **softBoundx_s, **softBoundy_s, **softCx_s1, **softCy_s1, **softBoundx_s1, **softBoundy_s1, **zmpx_s, **zmpy_s, **xL_s, **xU_s, **yL_s, **yU_s, **zmpx_s1, **zmpy_s1, **xL_s1, **xU_s1, **yL_s1, **yU_s1;
     double RF_mass, LF_mass;
     double Qx1_mpc, Qx2_mpc, Qx3_mpc, Qx4_mpc, Qx5_mpc, Rx1_mpc, Rx2_mpc, Zl0x_mpc, Zu0x_mpc, zl0x_mpc, zu0x_mpc, Zl1x_mpc, Zu1x_mpc, zl1x_mpc, zu1x_mpc, Zl1x_mpc1, Zu1x_mpc1, zl1x_mpc1, zu1x_mpc1, ZlNx_mpc, ZuNx_mpc, zlNx_mpc, zuNx_mpc;
     double Qy1_mpc, Qy2_mpc, Qy3_mpc, Qy4_mpc, Qy5_mpc, Ry1_mpc, Ry2_mpc, Zl0y_mpc, Zu0y_mpc, zl0y_mpc, zu0y_mpc, Zl1y_mpc, Zu1y_mpc, zl1y_mpc, zu1y_mpc, Zl1y_mpc1, Zu1y_mpc1, zl1y_mpc1, zu1y_mpc1, ZlNy_mpc, ZuNy_mpc, zlNy_mpc, zuNy_mpc;
-    std::atomic<int> N;
+    std::atomic<int> N_;
     Eigen::Vector12d dob_hat;
     Eigen::Vector12d dob_hat_prev;
     Eigen::Vector12d desired_leg_q;
