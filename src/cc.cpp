@@ -346,12 +346,18 @@ CustomController::CustomController(RobotData &rd) : rd_(rd) //, wbc_(dc.wbc_)
         runningCostModel_vector.push_back(boost::make_shared<crocoddyl::CostModelSum>(state_vector[i], actuation_vector[i]->get_nu() + 2));
         //runningCostModel_vector[i]->addCost("xReg", xRegCost_vector[i], 0.1);
         //runningCostModel_vector[i]->addCost("uReg", uRegCost_vector[i], 0.1);
-       
-        runningCostModel_vector[i]->addCost("stateReg", stateBoundCost_vector[i], 1e2);
+
+        /*        runningCostModel_vector[i]->addCost("stateReg", stateBoundCost_vector[i], 1e2);
         runningCostModel_vector[i]->addCost("camReg", camBoundCost_vector[i], 3e0);
         runningCostModel_vector[i]->addCost("comReg", comBoundCost_vector[i], 6e0);
         runningCostModel_vector[i]->addCost("footReg1", foot_trackR[i], 5e0);
         runningCostModel_vector[i]->addCost("footReg2", foot_trackL[i], 5e0);
+       */
+        runningCostModel_vector[i]->addCost("stateReg", stateBoundCost_vector[i], 1e2);
+        runningCostModel_vector[i]->addCost("camReg", camBoundCost_vector[i], 3e0);
+        runningCostModel_vector[i]->addCost("comReg", comBoundCost_vector[i], 6e0);
+        runningCostModel_vector[i]->addCost("footReg1", foot_trackR[i], 8e0);
+        runningCostModel_vector[i]->addCost("footReg2", foot_trackL[i], 8e0);
     }
     
     terminalCostModel =
@@ -362,8 +368,8 @@ CustomController::CustomController(RobotData &rd) : rd_(rd) //, wbc_(dc.wbc_)
     terminalCostModel->addCost("stateReg", stateBoundCost_vector[N - 1], 1e2);
     terminalCostModel->addCost("camReg", camBoundCost_vector[N - 1], 3e0);
     terminalCostModel->addCost("comReg", comBoundCost_vector[N - 1], 6e0);
-    terminalCostModel->addCost("footReg1", foot_trackR[N - 1], 5e0);
-    terminalCostModel->addCost("footReg2", foot_trackL[N - 1], 5e0);
+    terminalCostModel->addCost("footReg1", foot_trackR[N - 1], 8e0);
+    terminalCostModel->addCost("footReg2", foot_trackL[N - 1], 8e0);
 
     terminalDAM =
         boost::make_shared<DifferentialActionModelContactKinoDynamics>(state_vector[N - 1], actuation_vector[N - 1],

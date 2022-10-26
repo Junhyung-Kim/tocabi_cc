@@ -1632,25 +1632,28 @@ ResidualKinoFrameTranslationTpl<Scalar>::~ResidualKinoFrameTranslationTpl() {}
 
 template <typename Scalar>
 void ResidualKinoFrameTranslationTpl<Scalar>::calc(const boost::shared_ptr<ResidualDataAbstract>& data,
-                                                    const Eigen::Ref<const VectorXs>&,
-                                                    const Eigen::Ref<const VectorXs>&) {
+                                                    const Eigen::Ref<const VectorXs>& x,
+                                                    const Eigen::Ref<const VectorXs>& u) {
   // Compute the frame translation w.r.t. the reference frame
   Data* d = static_cast<Data*>(data.get());
+  const Eigen::VectorBlock<const Eigen::Ref<const VectorXs>, Eigen::Dynamic> q = x.head(state_->get_nq());
+  //pinocchio::forwardKinematics(*pin_model_.get(), *d->pinocchio, q);
   pinocchio::updateFramePlacement(*pin_model_.get(), *d->pinocchio, id_);
   data->r = d->pinocchio->oMf[id_].translation() - xref_;
 }
 
 template <typename Scalar>
 void ResidualKinoFrameTranslationTpl<Scalar>::calcDiff(const boost::shared_ptr<ResidualDataAbstract>& data,
-                                                        const Eigen::Ref<const VectorXs>&,
-                                                        const Eigen::Ref<const VectorXs>&) {
+                                                        const Eigen::Ref<const VectorXs>& x,
+                                                        const Eigen::Ref<const VectorXs>& ) {
   Data* d = static_cast<Data*>(data.get());
 
   // Compute the derivatives of the frame translation
   const std::size_t nv = state_->get_nv();
+  const Eigen::VectorBlock<const Eigen::Ref<const VectorXs>, Eigen::Dynamic> q = x.head(state_->get_nq());
+ // pinocchio::computeJointJacobians(*pin_model_.get(), *d->pinocchio, q);
   pinocchio::getFrameJacobian(*pin_model_.get(), *d->pinocchio, id_, pinocchio::LOCAL, d->fJf);
   d->Rx.leftCols(nv).noalias() = d->pinocchio->oMf[id_].rotation() * d->fJf.template topRows<3>();
-  ;
 }
 
 template <typename Scalar>
@@ -1749,7 +1752,7 @@ std::vector<boost::shared_ptr<crocoddyl::CallbackAbstract>> cbs;
 double dt_;
 pinocchio::Data data4;
 
-  /*
+
 unsigned int N = 10; // number of nodes
 unsigned int T = 1;  // number of trials
-unsigned int MAXITER = 100;*/0.11583, -0.028924, 0.149998, 0.00177017, 
+unsigned int MAXITER = 100;
