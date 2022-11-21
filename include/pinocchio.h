@@ -207,7 +207,7 @@ namespace crocoddyl {
 
 template <typename Scalar>
 StateKinodynamicTpl<Scalar>::StateKinodynamicTpl(boost::shared_ptr<PinocchioModel> model)
-    : Base(model->nq + model->nv, 2 * model->nv), pinocchio_(model), x0_(VectorXs::Zero(model->nq + model->nv + 4)) {
+    : Base(model->nq + model->nv, 2 * model->nv), pinocchio_(model), x0_(VectorXs::Zero(model->nq + model->nv + 8)) {
   
   const std::size_t nq0 = model->joints[1].nq();
   x0_.head(nq_) = pinocchio::neutral(*pinocchio_.get());
@@ -225,8 +225,8 @@ StateKinodynamicTpl<Scalar>::StateKinodynamicTpl(boost::shared_ptr<PinocchioMode
   ub_.segment(nq0, nq_ - nq0) = pinocchio_->upperPositionLimit.tail(nq_ - nq0);
   lb_.segment(nq_, nv_) = -pinocchio_->velocityLimit;
   ub_.segment(nq_, nv_) = pinocchio_->velocityLimit;
-  lb_.tail(4) = -std::numeric_limits<Scalar>::infinity() * VectorXs::Ones(4);
-  ub_.tail(4) = std::numeric_limits<Scalar>::infinity() * VectorXs::Ones(4);
+  lb_.tail(8) = -std::numeric_limits<Scalar>::infinity() * VectorXs::Ones(8);
+  ub_.tail(8) = std::numeric_limits<Scalar>::infinity() * VectorXs::Ones(8);
   Base::update_has_limits();
 }
 
@@ -254,11 +254,11 @@ void StateKinodynamicTpl<Scalar>::diff(const Eigen::Ref<const VectorXs>& x0, con
  // std::cout << "diff " << x0.tail(4).transpose() << std::endl;
  // std::cout << "diffx " << x1.tail(4).transpose() << std::endl;
 
-  if (static_cast<std::size_t>(x0.size()) != nx_ + 4) {
+  if (static_cast<std::size_t>(x0.size()) != nx_ + 8) {
     throw_pretty("Invalid argument: "
                  << "x0 has wrong dimension (it should be " + std::to_string(nx_) + ")");
   }
-  if (static_cast<std::size_t>(x1.size()) != nx_ + 4) {
+  if (static_cast<std::size_t>(x1.size()) != nx_ + 8) {
     throw_pretty("Invalid argument: "
                  << "x1 has wrong dimension (it should be " + std::to_string(nx_) + ")");
   }
@@ -268,7 +268,7 @@ void StateKinodynamicTpl<Scalar>::diff(const Eigen::Ref<const VectorXs>& x0, con
   }
   pinocchio::difference(*pinocchio_.get(), x0.head(nq_), x1.head(nq_), dxout.head(nv_));
   dxout.segment(nq_,nv_) = x1.segment(nq_,nv_) - x0.segment(nq_,nv_);
-  dxout.tail(4) = x1.tail(4) - x0.tail(4);
+  dxout.tail(8) = x1.tail(8) - x0.tail(8);
 }
 
 template <typename Scalar>
@@ -276,34 +276,34 @@ void StateKinodynamicTpl<Scalar>::diff1(const Eigen::Ref<const VectorXs>& x0, co
                                      Eigen::Ref<VectorXs> dxout) const {
  // std::cout << "diff " << x0.tail(4).transpose() << std::endl;
  // std::cout << "diffx " << x1.tail(4).transpose() << std::endl;
-  if (static_cast<std::size_t>(x0.size()) != nx_ + 4) {
+  if (static_cast<std::size_t>(x0.size()) != nx_ + 8) {
     throw_pretty("Invalid argument: "
                  << "x0 has wrong dimension (it should be " + std::to_string(nx_) + ")");
   }
-  if (static_cast<std::size_t>(x1.size()) != nx_ + 4) {
+  if (static_cast<std::size_t>(x1.size()) != nx_ + 8) {
     throw_pretty("Invalid argument: "
                  << "x1 has wrong dimension (it should be " + std::to_string(nx_) + ")");
   }
-  if (static_cast<std::size_t>(dxout.size()) != ndx_) {
+  if (static_cast<std::size_t>(dxout.size()) != 2) {
     throw_pretty("Invalid argument: "
                  << "dxout has wrong dimension (it should be " + std::to_string(ndx_) + ")");
   }
 
   dxout.setZero();
-  dxout.tail(2) = x1.tail(2) - x0.tail(2);
-  dxout.tail(1).setZero();
+  dxout.head(1) = x1.tail(6).head(1) - x0.tail(6).head(1);
+  dxout.tail(1) = x1.tail(2).head(1) - x0.tail(2).head(1);
 }
 
 template <typename Scalar>
 void StateKinodynamicTpl<Scalar>::integrate(const Eigen::Ref<const VectorXs>& x, const Eigen::Ref<const VectorXs>& dx,
                                           Eigen::Ref<VectorXs> xout) const {
-  if (static_cast<std::size_t>(x.size()) != nx_ + 4) {
+  if (static_cast<std::size_t>(x.size()) != nx_ + 8) {
     throw_pretty("Invalid argument: "
                  << "x has wrong dimension (it should be " + std::to_string(nx_) + ")");
   }
   pinocchio::integrate(*pinocchio_.get(), x.head(nq_), dx.head(nv_), xout.head(nq_));
   xout.segment(nq_,nv_) = x.segment(nq_,nv_) + dx.segment(nq_ - 1, nv_); 
-  xout.tail(4) = x.tail(4) + dx.tail(4);
+  xout.tail(8) = x.tail(8) + dx.tail(8);
 }
 
 template <typename Scalar>
@@ -311,11 +311,11 @@ void StateKinodynamicTpl<Scalar>::Jdiff(const Eigen::Ref<const VectorXs>& x0, co
                                       Eigen::Ref<MatrixXs> Jfirst, Eigen::Ref<MatrixXs> Jsecond,
                                       const Jcomponent firstsecond) const {
   assert_pretty(is_a_Jcomponent(firstsecond), ("firstsecond must be one of the Jcomponent {both, first, second}"));
-  if (static_cast<std::size_t>(x0.size()) != nx_ + 4) {
+  if (static_cast<std::size_t>(x0.size()) != nx_ + 8) {
     throw_pretty("Invalid argument: "
                  << "x0 has wrong dimension (it should be " + std::to_string(nx_) + ")");
   }
-  if (static_cast<std::size_t>(x1.size()) != nx_ + 4) {
+  if (static_cast<std::size_t>(x1.size()) != nx_ + 8) {
     throw_pretty("Invalid argument: "
                  << "x1 has wrong dimension (it should be " + std::to_string(nx_) + ")");
   }
@@ -330,7 +330,7 @@ void StateKinodynamicTpl<Scalar>::Jdiff(const Eigen::Ref<const VectorXs>& x0, co
     pinocchio::dDifference(*pinocchio_.get(), x0.head(nq_), x1.head(nq_), Jfirst.topLeftCorner(nv_, nv_),
                            pinocchio::ARG0);
     Jfirst.block(nv_, nv_, nv_, nv_).diagonal().array() = (Scalar)-1;
-    Jfirst.bottomRightCorner(4,4).diagonal().array() = (Scalar)-1;
+    Jfirst.bottomRightCorner(8,8).diagonal().array() = (Scalar)-1;
   } else if (firstsecond == second) {
     if (static_cast<std::size_t>(Jsecond.rows()) != ndx_ || static_cast<std::size_t>(Jsecond.cols()) != ndx_) {
       throw_pretty("Invalid argument: "
@@ -340,7 +340,7 @@ void StateKinodynamicTpl<Scalar>::Jdiff(const Eigen::Ref<const VectorXs>& x0, co
     pinocchio::dDifference(*pinocchio_.get(), x0.head(nq_), x1.head(nq_), Jsecond.topLeftCorner(nv_, nv_),
                            pinocchio::ARG1);
     Jsecond.block(nv_, nv_, nv_, nv_).diagonal().array() = (Scalar)1;
-    Jsecond.bottomRightCorner(4,4).diagonal().array() = (Scalar)1;
+    Jsecond.bottomRightCorner(8,8).diagonal().array() = (Scalar)1;
   } else {  // computing both
     if (static_cast<std::size_t>(Jfirst.rows()) != ndx_ || static_cast<std::size_t>(Jfirst.cols()) != ndx_) {
       throw_pretty("Invalid argument: "
@@ -358,8 +358,8 @@ void StateKinodynamicTpl<Scalar>::Jdiff(const Eigen::Ref<const VectorXs>& x0, co
                            pinocchio::ARG1);
     Jfirst.block(nv_, nv_, nv_, nv_).diagonal().array() = (Scalar)-1;
     Jsecond.block(nv_, nv_, nv_, nv_).diagonal().array() = (Scalar)1;
-    Jfirst.bottomRightCorner(4,4).diagonal().array() = (Scalar)-1;
-    Jsecond.bottomRightCorner(4,4).diagonal().array() = (Scalar)1;
+    Jfirst.bottomRightCorner(8,8).diagonal().array() = (Scalar)-1;
+    Jsecond.bottomRightCorner(8,8).diagonal().array() = (Scalar)1;
   }
 }
 template <typename Scalar>
@@ -367,11 +367,11 @@ void StateKinodynamicTpl<Scalar>::Jdiff1(const Eigen::Ref<const VectorXs>& x0, c
                                       Eigen::Ref<MatrixXs> Jfirst, Eigen::Ref<MatrixXs> Jsecond,
                                       const Jcomponent firstsecond) const {
   assert_pretty(is_a_Jcomponent(firstsecond), ("firstsecond must be one of the Jcomponent {both, first, second}"));
-  if (static_cast<std::size_t>(x0.size()) != nx_ + 4) {
+  if (static_cast<std::size_t>(x0.size()) != nx_ + 8) {
     throw_pretty("Invalid argument: "
                  << "x0 has wrong dimension (it should be " + std::to_string(nx_) + ")");
   }
-  if (static_cast<std::size_t>(x1.size()) != nx_ + 4) {
+  if (static_cast<std::size_t>(x1.size()) != nx_ + 8) {
     throw_pretty("Invalid argument: "
                  << "x1 has wrong dimension (it should be " + std::to_string(nx_) + ")");
   }
@@ -386,19 +386,18 @@ void StateKinodynamicTpl<Scalar>::Jdiff1(const Eigen::Ref<const VectorXs>& x0, c
     pinocchio::dDifference(*pinocchio_.get(), x0.head(nq_), x1.head(nq_), Jfirst.topLeftCorner(nv_, nv_),
                            pinocchio::ARG0);
     Jfirst.block(nv_, nv_, nv_, nv_).diagonal().array() = (Scalar)-1;
-    Jfirst.bottomRightCorner(4,4).diagonal().array() = (Scalar)-1;
+    Jfirst.bottomRightCorner(8,8).diagonal().array() = (Scalar)-1;
   } else if (firstsecond == second) {
-    if (static_cast<std::size_t>(Jsecond.rows()) != ndx_ || static_cast<std::size_t>(Jsecond.cols()) != ndx_) {
-      throw_pretty("Invalid argument: "
-                   << "Jsecond has wrong dimension (it should be " + std::to_string(ndx_) + "," +
-                          std::to_string(ndx_) + ")");
-    }
+
    // pinocchio::dDifference(*pinocchio_.get(), x0.head(nq_), x1.head(nq_), Jsecond.topLeftCorner(nv_, nv_),
                           // pinocchio::ARG1);
    // Jsecond.block(nv_, nv_, nv_, nv_).diagonal().array() = (Scalar)1;
+    //Jsecond.setIdentity();
     Jsecond.setZero();
-    Jsecond.bottomRightCorner(2,2).diagonal().array() = (Scalar)1;
-    Jsecond.bottomRightCorner(1,1).setZero();
+    Jsecond.bottomRightCorner(2,6).topLeftCorner(1,1).diagonal().array() = (Scalar)1;
+    Jsecond.bottomRightCorner(2,2).bottomLeftCorner(1,1).diagonal().array() = (Scalar)1;
+    //Jsecond.bottomRightCorner(2,2).topLeftCorner(1,1).diagonal().array() = (Scalar)1;
+    //Jsecond.bottomRightCorner(6,6).topLeftCorner(1,1).diagonal().array() = (Scalar)1;
   } else {  // computing both
     if (static_cast<std::size_t>(Jfirst.rows()) != ndx_ || static_cast<std::size_t>(Jfirst.cols()) != ndx_) {
       throw_pretty("Invalid argument: "
@@ -416,8 +415,8 @@ void StateKinodynamicTpl<Scalar>::Jdiff1(const Eigen::Ref<const VectorXs>& x0, c
                            pinocchio::ARG1);
     Jfirst.block(nv_, nv_, nv_, nv_).diagonal().array() = (Scalar)-1;
     Jsecond.block(nv_, nv_, nv_, nv_).diagonal().array() = (Scalar)1;
-    Jfirst.bottomRightCorner(4,4).diagonal().array() = (Scalar)-1;
-    Jsecond.bottomRightCorner(4,4).diagonal().array() = (Scalar)1;
+    Jfirst.bottomRightCorner(8,8).diagonal().array() = (Scalar)-1;
+    Jsecond.bottomRightCorner(8,8).diagonal().array() = (Scalar)1;
   }
 }
 
@@ -438,17 +437,17 @@ void StateKinodynamicTpl<Scalar>::Jintegrate(const Eigen::Ref<const VectorXs>& x
       case setto:
         pinocchio::dIntegrate(*pinocchio_.get(), x.head(nq_), dx.head(nv_), Jfirst.topLeftCorner(nv_, nv_),
                               pinocchio::ARG0, pinocchio::SETTO);
-        Jfirst.bottomRightCorner(nv_ + 4, nv_ + 4).diagonal().array() = (Scalar)1;
+        Jfirst.bottomRightCorner(nv_ + 8, nv_ + 8).diagonal().array() = (Scalar)1;
         break;
       case addto:
         pinocchio::dIntegrate(*pinocchio_.get(), x.head(nq_), dx.head(nv_), Jfirst.topLeftCorner(nv_, nv_),
                               pinocchio::ARG0, pinocchio::ADDTO);
-        Jfirst.bottomRightCorner(nv_ + 4, nv_ + 4).diagonal().array() += (Scalar)1;
+        Jfirst.bottomRightCorner(nv_ + 8, nv_ + 8).diagonal().array() += (Scalar)1;
         break;
       case rmfrom:
         pinocchio::dIntegrate(*pinocchio_.get(), x.head(nq_), dx.head(nv_), Jfirst.topLeftCorner(nv_, nv_),
                               pinocchio::ARG0, pinocchio::RMTO);
-        Jfirst.bottomRightCorner(nv_ + 4, nv_ + 4).diagonal().array() -= (Scalar)1;
+        Jfirst.bottomRightCorner(nv_ + 8, nv_ + 8).diagonal().array() -= (Scalar)1;
         break;
       default:
         throw_pretty("Invalid argument: allowed operators: setto, addto, rmfrom");
@@ -466,20 +465,20 @@ void StateKinodynamicTpl<Scalar>::Jintegrate(const Eigen::Ref<const VectorXs>& x
         pinocchio::dIntegrate(*pinocchio_.get(), x.head(nq_), dx.head(nv_), Jsecond.topLeftCorner(nv_, nv_),
                               pinocchio::ARG1, pinocchio::SETTO);
          Jsecond.setZero();
-        Jsecond.bottomRightCorner(nv_+4, nv_+4).diagonal().array() = (Scalar)1;
+        Jsecond.bottomRightCorner(nv_+8, nv_+8).diagonal().array() = (Scalar)1;
         break;
       case addto:
         pinocchio::dIntegrate(*pinocchio_.get(), x.head(nq_), dx.head(nv_), Jsecond.topLeftCorner(nv_, nv_),
                               pinocchio::ARG1, pinocchio::ADDTO);
         Jsecond.setZero();
-        Jsecond.bottomRightCorner(nv_+4, nv_+4).diagonal().array() += (Scalar)1;
+        Jsecond.bottomRightCorner(nv_+8, nv_+8).diagonal().array() += (Scalar)1;
         break;
       case rmfrom:
         pinocchio::dIntegrate(*pinocchio_.get(), x.head(nq_), dx.head(nv_), Jsecond.topLeftCorner(nv_, nv_),
                               pinocchio::ARG1, pinocchio::RMTO);
          Jsecond.setZero();
                              
-        Jsecond.bottomRightCorner(nv_+4, nv_+4).diagonal().array() -= (Scalar)1;
+        Jsecond.bottomRightCorner(nv_+8, nv_+8).diagonal().array() -= (Scalar)1;
         break;
       default:
         throw_pretty("Invalid argument: allowed operators: setto, addto, rmfrom");
@@ -560,12 +559,12 @@ class ActuationModelFloatingKinoBaseTpl : public ActuationModelAbstractTpl<_Scal
    */
   virtual void calc(const boost::shared_ptr<Data>& data, const Eigen::Ref<const VectorXs>& x,
                     const Eigen::Ref<const VectorXs>& u) {
-    if (static_cast<std::size_t>(u.size()) != nu_ + 2) {
+    if (static_cast<std::size_t>(u.size()) != nu_ + 4) {
       throw_pretty("Invalid argument: "
                    << "u has wrong dimension (it should be " + std::to_string(nu_) + ")");
     }
     data->tau.segment(0,nu_) = u.head(nu_);
-    data->u_x = u.tail(2);
+    data->u_x = u.tail(4);
   };
 
     /**
@@ -694,16 +693,18 @@ DifferentialActionModelKinoDynamicsTpl<Scalar>::DifferentialActionModelKinoDynam
       pinocchio_(*state->get_pinocchio().get()),
       without_armature_(true),
       armature_(VectorXs::Zero(state->get_nv())) {
-  if (costs_->get_nu() != nu_ + 2) {
+  if (costs_->get_nu() != nu_ + 4) {
     throw_pretty("Invalid argument: "
                  << "Costs doesn't have the same control dimension (it should be " + std::to_string(nu_) + ")");
   }
   VectorXs temp;
-  temp.resize(actuation->get_nu() + 2);
+  temp.resize(actuation->get_nu() + 4);
   temp.setZero();
   temp.head(nu_) = pinocchio_.effortLimit.head(nu_);
-  temp(nu_+1) = 1000000;
   temp(nu_) = 1000000;
+  temp(nu_+1) = 1000000;
+  temp(nu_+2) = 1000000;
+  temp(nu_+3) = 1000000;
   Base::set_u_lb(Scalar(-1.) * temp);
   Base::set_u_ub(Scalar(+1.) * temp);
 }
@@ -715,11 +716,11 @@ template <typename Scalar>
 void DifferentialActionModelKinoDynamicsTpl<Scalar>::calc(
     const boost::shared_ptr<DifferentialActionDataAbstract>& data, const Eigen::Ref<const VectorXs>& x,
     const Eigen::Ref<const VectorXs>& u) {
-  if (static_cast<std::size_t>(x.size()) != state_->get_nx() + 4) {
+  if (static_cast<std::size_t>(x.size()) != state_->get_nx() + 8) {
     throw_pretty("Invalid argument: "
                  << "x has wrong dimension (it should be " + std::to_string(state_->get_nx()) + ")");
   }
-  if (static_cast<std::size_t>(u.size()) != nu_ + 2) {
+  if (static_cast<std::size_t>(u.size()) != nu_ + 4) {
     throw_pretty("Invalid argument: "
                  << "u has wrong dimension (it should be " + std::to_string(nu_) + ")");
   }
@@ -727,7 +728,7 @@ void DifferentialActionModelKinoDynamicsTpl<Scalar>::calc(
   Data* d = static_cast<Data*>(data.get());
   const Eigen::VectorBlock<const Eigen::Ref<const VectorXs>, Eigen::Dynamic> q = x.head(state_->get_nq());
   const Eigen::VectorBlock<const Eigen::Ref<const VectorXs>, Eigen::Dynamic> v = x.segment(state_->get_nq(),state_->get_nv());
-  const Eigen::VectorBlock<const Eigen::Ref<const VectorXs>, Eigen::Dynamic> x_state = x.tail(4);
+  const Eigen::VectorBlock<const Eigen::Ref<const VectorXs>, Eigen::Dynamic> x_state = x.tail(8);
   const Eigen::VectorBlock<const Eigen::Ref<const VectorXs>, Eigen::Dynamic> a = u.head(state_->get_nv());
 
   actuation_->calc(d->multibody.actuation, x, u);
@@ -749,7 +750,7 @@ void DifferentialActionModelKinoDynamicsTpl<Scalar>::calc(
 
   //d->xout = d->multibody.actuation->tau;
   d->xout =  d->multibody.actuation->tau.segment(0,state_->get_nv());
-  d->xout2 << x_state[1], 6.59308329 * x_state[0] - 6.59308329 * x_state[2] - d->multibody.actuation->u_x[1] * 1.0/ 50.0, d->multibody.actuation->u_x[0], d->multibody.actuation->u_x[1];//d->dhg; 
+  d->xout2 << x_state[1], 6.59308329 * x_state[0] - 6.59308329 * x_state[2] - d->multibody.actuation->u_x[1] * 1.0/ 50.0, d->multibody.actuation->u_x[0], d->multibody.actuation->u_x[1], x_state[5], 6.59308329 * x_state[4] - 6.59308329 * x_state[6] + d->multibody.actuation->u_x[3] * 1.0/ 50.0, d->multibody.actuation->u_x[2], d->multibody.actuation->u_x[3];//d->dhg; 
   
   // Computing the cost value and residuals
   costs_->calc(d->costs, x, u);
@@ -759,15 +760,14 @@ void DifferentialActionModelKinoDynamicsTpl<Scalar>::calc(
 template <typename Scalar>
 void DifferentialActionModelKinoDynamicsTpl<Scalar>::calc(
     const boost::shared_ptr<DifferentialActionDataAbstract>& data, const Eigen::Ref<const VectorXs>& x) {
-  if (static_cast<std::size_t>(x.size()) != state_->get_nx() + 4) {
+  if (static_cast<std::size_t>(x.size()) != state_->get_nx() + 8) {
     throw_pretty("Invalid argument: "
                  << "x has wrong dimension (it should be " + std::to_string(state_->get_nx()) + ")");
   }
   Data* d = static_cast<Data*>(data.get());
-  const Eigen::VectorBlock<const Eigen::Ref<const VectorXs>, Eigen::Dynamic> q = x.head(state_->get_nq());
-  const Eigen::VectorBlock<const Eigen::Ref<const VectorXs>, Eigen::Dynamic> v = x.segment(state_->get_nq(),state_->get_nv());
-  const Eigen::VectorBlock<const Eigen::Ref<const VectorXs>, Eigen::Dynamic> x_state = x.tail(4);
-  //pinocchio::computeAllTerms(pinocchio_, d->pinocchio, q, v);
+ // const Eigen::VectorBlock<const Eigen::Ref<const VectorXs>, Eigen::Dynamic> q = x.head(state_->get_nq());
+ // const Eigen::VectorBlock<const Eigen::Ref<const VectorXs>, Eigen::Dynamic> v = x.segment(state_->get_nq(),state_->get_nv());
+ // const Eigen::VectorBlock<const Eigen::Ref<const VectorXs>, Eigen::Dynamic> x_state = x.tail(4);
 
   costs_->calc(d->costs, x);
   d->cost = d->costs->cost;
@@ -777,41 +777,31 @@ template <typename Scalar>
 void DifferentialActionModelKinoDynamicsTpl<Scalar>::calcDiff(
     const boost::shared_ptr<DifferentialActionDataAbstract>& data, const Eigen::Ref<const VectorXs>& x,
     const Eigen::Ref<const VectorXs>& u) {
-  if (static_cast<std::size_t>(x.size()) != state_->get_nx() + 4) {
+  if (static_cast<std::size_t>(x.size()) != state_->get_nx() + 8) {
     throw_pretty("Invalid argument: "
                  << "x has wrong dimension (it should be " + std::to_string(state_->get_nx()) + ")");
   }
-  if (static_cast<std::size_t>(u.size()) != nu_ + 2) {
+  if (static_cast<std::size_t>(u.size()) != nu_ + 4) {
     throw_pretty("Invalid argument: "
                  << "u has wrong dimension (it should be " + std::to_string(nu_) + ")");
   }
 
   const std::size_t nv = state_->get_nv();
-  const Eigen::VectorBlock<const Eigen::Ref<const VectorXs>, Eigen::Dynamic> q = x.head(state_->get_nq());
-  const Eigen::VectorBlock<const Eigen::Ref<const VectorXs>, Eigen::Dynamic> v = x.segment(state_->get_nq(),nv);
-  const Eigen::VectorBlock<const Eigen::Ref<const VectorXs>, Eigen::Dynamic> a = u.head(state_->get_nv());
-  const Eigen::VectorBlock<const Eigen::Ref<const VectorXs>, Eigen::Dynamic> x_state = x.tail(4);
+ // const Eigen::VectorBlock<const Eigen::Ref<const VectorXs>, Eigen::Dynamic> q = x.head(state_->get_nq());
+ // const Eigen::VectorBlock<const Eigen::Ref<const VectorXs>, Eigen::Dynamic> v = x.segment(state_->get_nq(),nv);
+  //const Eigen::VectorBlock<const Eigen::Ref<const VectorXs>, Eigen::Dynamic> a = u.head(state_->get_nv());
+  //onst Eigen::VectorBlock<const Eigen::Ref<const VectorXs>, Eigen::Dynamic> x_state = x.tail(4);
 
   Data* d = static_cast<Data*>(data.get());
   actuation_->calcDiff(d->multibody.actuation, x, u);
-  // Computing the dynamics derivatives
- /* if (without_armature_) {
-    pinocchio::computeABADerivatives(pinocchio_, d->pinocchio, q, v, d->multibody.actuation->tau, d->Fx.topLeftCorner(nv,nv),
-                                     d->Fx.topLeftCorner(nv,nv), d->pinocchio.Minv);   
-    d->Fx.topLeftCorner(nv,state_->get_ndx()).noalias() += d->pinocchio.Minv * d->multibody.actuation->dtau_dx;
-    d->Fu.topLeftCorner(nv,nu_).noalias() = (d->pinocchio.Minv * d->multibody.actuation->dtau_du);
-  } else {
-    pinocchio::computeRNEADerivatives(pinocchio_, d->pinocchio, q, v, d->xout);
-    d->dtau_dx.leftCols(nv) = d->multibody.actuation->dtau_dx.leftCols(nv) - d->pinocchio.dtau_dq;
-    d->dtau_dx.rightCols(nv) = d->multibody.actuation->dtau_dx.rightCols(nv) - d->pinocchio.dtau_dv;
-    d->Fx.topLeftCorner(nv,state_->get_ndx()).noalias() = d->Minv * d->dtau_dx;
-    d->Fu.topLeftCorner(nv,nu_).noalias() = d->Minv * d->multibody.actuation->dtau_du;
-  }*/
 
-  d->Fx.bottomRightCorner(4,4) << 0.0, 1.0, 0.0, 0.0, 6.59308329, 0.0, -6.59308329, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0;
+  d->Fx.bottomRightCorner(8,8).topLeftCorner(4,4) << 0.0, 1.0, 0.0, 0.0, 6.59308329, 0.0, -6.59308329, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0;
+  d->Fx.bottomLeftCorner(4,4) << 0.0, 1.0, 0.0, 0.0, 6.59308329, 0.0, -6.59308329, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0;
+  
   d->Fx.block(0, state_->get_nv(), state_->get_nv(), state_->get_nv()).setIdentity();
   d->Fu.topLeftCorner(nu_, nu_).setIdentity();
-  d->Fu.bottomRightCorner(4,2) << 0.0, 0.0, 0.0, -1.0/ 50.0, 1.0, 0.0, 0.0, 1.0;
+  d->Fu.bottomRightCorner(8,4).topLeftCorner(4,2) << 0.0, 0.0, 0.0, -1.0/ 50.0, 1.0, 0.0, 0.0, 1.0;
+  d->Fu.bottomRightCorner(4,2) << 0.0, 0.0, 0.0, 1.0/ 50.0, 1.0, 0.0, 0.0, 1.0;
 
 /*
   std::cout << "d->Fx" << std::endl;
@@ -826,7 +816,7 @@ void DifferentialActionModelKinoDynamicsTpl<Scalar>::calcDiff(
 template <typename Scalar>
 void DifferentialActionModelKinoDynamicsTpl<Scalar>::calcDiff(
     const boost::shared_ptr<DifferentialActionDataAbstract>& data, const Eigen::Ref<const VectorXs>& x) {
-  if (static_cast<std::size_t>(x.size()) != state_->get_nx() + 4) {
+  if (static_cast<std::size_t>(x.size()) != state_->get_nx() + 8) {
     throw_pretty("Invalid argument: "
                  << "x has wrong dimension (it should be " + std::to_string(state_->get_nx()) + ")");
   }
@@ -854,11 +844,11 @@ template <typename Scalar>
 void DifferentialActionModelKinoDynamicsTpl<Scalar>::quasiStatic(
     const boost::shared_ptr<DifferentialActionDataAbstract>& data, Eigen::Ref<VectorXs> u,
     const Eigen::Ref<const VectorXs>& x, const std::size_t, const Scalar) {
-  if (static_cast<std::size_t>(u.size()) != nu_ + 2) {
+  if (static_cast<std::size_t>(u.size()) != nu_ + 4) {
     throw_pretty("Invalid argument: "
                  << "u has wrong dimension (it should be " + std::to_string(nu_) + ")");
   }
-  if (static_cast<std::size_t>(x.size()) != state_->get_nx() + 4) {
+  if (static_cast<std::size_t>(x.size()) != state_->get_nx() + 8) {
     throw_pretty("Invalid argument: "
                  << "x has wrong dimension (it should be " + std::to_string(state_->get_nx()) + ")");
   }
@@ -1081,12 +1071,12 @@ template <typename Scalar>
 ResidualModelCentroidalAngularMomentumTpl<Scalar>::ResidualModelCentroidalAngularMomentumTpl(boost::shared_ptr<StateKinodynamic> state,
                                                                                const Vector6s& href,
                                                                                const std::size_t nu)
-    : Base(state, 1, nu, true, true, true, false, false), href_(href), pin_model_(state->get_pinocchio()) {}
+    : Base(state, 2, nu, true, true, true, false, false), href_(href), pin_model_(state->get_pinocchio()) {}
 
 template <typename Scalar>
 ResidualModelCentroidalAngularMomentumTpl<Scalar>::ResidualModelCentroidalAngularMomentumTpl(boost::shared_ptr<StateKinodynamic> state,
                                                                                const std::size_t nu)
-    : Base(state, 1, nu, true, true, true, false, false), pin_model_(state->get_pinocchio()) {}
+    : Base(state, 2, nu, true, true, true, false, false), pin_model_(state->get_pinocchio()) {}
 
 template <typename Scalar>
 ResidualModelCentroidalAngularMomentumTpl<Scalar>::~ResidualModelCentroidalAngularMomentumTpl() {}
@@ -1100,11 +1090,11 @@ void ResidualModelCentroidalAngularMomentumTpl<Scalar>::calc(const boost::shared
   const Eigen::VectorBlock<const Eigen::Ref<const VectorXs>, Eigen::Dynamic> q = x.head(state_->get_nq());
   const Eigen::VectorBlock<const Eigen::Ref<const VectorXs>, Eigen::Dynamic> v = x.segment(state_->get_nq(),state_->get_nv());
   const Eigen::VectorBlock<const Eigen::Ref<const VectorXs>, Eigen::Dynamic> a = u.head(state_->get_nv());
-  const Eigen::VectorBlock<const Eigen::Ref<const VectorXs>, Eigen::Dynamic> x_state = x.tail(4);
-  const Eigen::VectorBlock<const Eigen::Ref<const VectorXs>, Eigen::Dynamic> u_state = u.tail(2);
+  const Eigen::VectorBlock<const Eigen::Ref<const VectorXs>, Eigen::Dynamic> x_state = x.tail(8);
+  const Eigen::VectorBlock<const Eigen::Ref<const VectorXs>, Eigen::Dynamic> u_state = u.tail(4);
   pinocchio::computeCentroidalMomentum(*pin_model_.get(), *d->pinocchio, q, v);
-  data->r(0) = d->pinocchio->hg.toVector()(4) - x_state(3);
-
+  data->r(0) = d->pinocchio->hg.toVector()(3) - x_state(7);
+  data->r(1) = d->pinocchio->hg.toVector()(4) - x_state(3);
 }
 
 template <typename Scalar>
@@ -1119,8 +1109,9 @@ void ResidualModelCentroidalAngularMomentumTpl<Scalar>::calcDiff(const boost::sh
   pinocchio::computeRNEADerivatives(*pin_model_.get(), *d->pinocchio, q, v, a);
   pinocchio::getCentroidalDynamicsDerivatives(*pin_model_.get(), *d->pinocchio,  d->dh_dq, d->dhd_dq, d->dhd_dv,  d->dhd_da);
   data->Rx.rightCols(1)(0) = -1;
-  data->Rx.leftCols(nv) = d->dh_dq.block(4,0, 1, nv);
-  data->Rx.block(0,nv,1,nv) = d->dhd_da.block(4,0, 1, nv);
+  data->Rx.rightCols(5).leftCols(1)(1) = -1;
+  data->Rx.leftCols(nv) = d->dh_dq.block(3,0, 2, nv);
+  data->Rx.block(0,nv,2,nv) = d->dhd_da.block(3,0, 2, nv);
 }
 
 template <typename Scalar>
@@ -1262,10 +1253,10 @@ void ResidualModelCoMKinoPositionTpl<Scalar>::calc(const boost::shared_ptr<Resid
   // Compute the residual residual give the reference CoMPosition position
   Data* d = static_cast<Data*>(data.get());
   const Eigen::VectorBlock<const Eigen::Ref<const VectorXs>, Eigen::Dynamic> q = x.head(state_->get_nq());
-  const Eigen::VectorBlock<const Eigen::Ref<const VectorXs>, Eigen::Dynamic> x_state = x.tail(4);
+  const Eigen::VectorBlock<const Eigen::Ref<const VectorXs>, Eigen::Dynamic> x_state = x.tail(8);
   pinocchio::centerOfMass(*pin_model_.get(), *d->pinocchio, q, false);
   data->r(0) = d->pinocchio->com[0](0) - x_state(0);
-  data->r(1) = d->pinocchio->com[0](1);
+  data->r(1) = d->pinocchio->com[0](1) - x_state(4);
   data->r(2) = d->pinocchio->com[0](2) - 5.11307390e-01;
 }
 
@@ -1281,7 +1272,8 @@ void ResidualModelCoMKinoPositionTpl<Scalar>::calcDiff(const boost::shared_ptr<R
   // Compute the derivatives of the frame placement
   const std::size_t nv = state_->get_nv();
   data->Rx.leftCols(nv) = d->pinocchio->Jcom.block(0,0,3,nv);
-  (data->Rx.rightCols(4)).leftCols(1)(0) = -1.0;
+  (data->Rx.rightCols(8)).leftCols(1)(0) = -1.0;
+  (data->Rx.rightCols(4)).leftCols(1)(1) = -1.0;
   //(data->Rx.rightCols(4)).leftCols(1) = -1 * (data->Rx.rightCols(4)).leftCols(1);
 }
 
@@ -1427,8 +1419,8 @@ namespace crocoddyl {
 template <typename Scalar>
 ResidualFlyStateTpl<Scalar>::ResidualFlyStateTpl(boost::shared_ptr<typename Base::StateAbstract> state,
                                                      const VectorXs& xref, const std::size_t nu)
-    : Base(state, state->get_ndx(), nu, true, true, true, false, false)/*false, false, false, false, true)*/, xref_(xref) {
-  if (static_cast<std::size_t>(xref_.size()) != state_->get_nx() + 4) {
+    : Base(state, 2, nu, false, false, false, false, true), xref_(xref) {
+  if (static_cast<std::size_t>(xref_.size()) != state_->get_nx() + 8) {
     throw_pretty("Invalid argument: "
                  << "xref has wrong dimension (it should be " + std::to_string(state_->get_nx()) + ")");
   }
@@ -1437,8 +1429,8 @@ ResidualFlyStateTpl<Scalar>::ResidualFlyStateTpl(boost::shared_ptr<typename Base
 template <typename Scalar>
 ResidualFlyStateTpl<Scalar>::ResidualFlyStateTpl(boost::shared_ptr<typename Base::StateAbstract> state,
                                                      const VectorXs& xref)
-    : Base(state, state->get_ndx(),true, true, true, false, false)/*false, false, false, false, true)*/, xref_(xref) {
-  if (static_cast<std::size_t>(xref_.size()) != state_->get_nx() + 4) {
+    : Base(state, 2, false, false, false, false, true), xref_(xref) {
+  if (static_cast<std::size_t>(xref_.size()) != state_->get_nx() + 8) {
     throw_pretty("Invalid argument: "
                  << "xref has wrong dimension (it should be " + std::to_string(state_->get_nx()) + ")");
   }
@@ -1447,11 +1439,11 @@ ResidualFlyStateTpl<Scalar>::ResidualFlyStateTpl(boost::shared_ptr<typename Base
 template <typename Scalar>
 ResidualFlyStateTpl<Scalar>::ResidualFlyStateTpl(boost::shared_ptr<typename Base::StateAbstract> state,
                                                      const std::size_t nu)
-    : Base(state, state->get_ndx(), nu, true, true, true, false, false)/*false, false, false, false, true)*/, xref_(state->zero()) {}
+    : Base(state, 2, nu, false, false, false, false, true), xref_(state->zero()) {}
 
 template <typename Scalar>
 ResidualFlyStateTpl<Scalar>::ResidualFlyStateTpl(boost::shared_ptr<typename Base::StateAbstract> state)
-    : Base(state, state->get_ndx(), true, true, true, false, false)/*false, false, false, false, true)*/, xref_(state->zero()) {}
+    : Base(state, 2, false, false, false, false, true), xref_(state->zero()) {}
 
 template <typename Scalar>
 ResidualFlyStateTpl<Scalar>::~ResidualFlyStateTpl() {}
@@ -1459,7 +1451,7 @@ ResidualFlyStateTpl<Scalar>::~ResidualFlyStateTpl() {}
 template <typename Scalar>
 void ResidualFlyStateTpl<Scalar>::calc(const boost::shared_ptr<ResidualDataAbstract>& data,
                                          const Eigen::Ref<const VectorXs>& x, const Eigen::Ref<const VectorXs>& u) {
-  if (static_cast<std::size_t>(x.size()) != state_->get_nx() + 4) {
+  if (static_cast<std::size_t>(x.size()) != state_->get_nx() + 8) {
     throw_pretty("Invalid argument: "
                  << "x has wrong dimension (it should be " + std::to_string(state_->get_nx()) + ")");
   }
@@ -1469,7 +1461,7 @@ void ResidualFlyStateTpl<Scalar>::calc(const boost::shared_ptr<ResidualDataAbstr
 template <typename Scalar>
 void ResidualFlyStateTpl<Scalar>::calcDiff(const boost::shared_ptr<ResidualDataAbstract>& data,
                                              const Eigen::Ref<const VectorXs>& x, const Eigen::Ref<const VectorXs>& u) {
-  if (static_cast<std::size_t>(x.size()) != state_->get_nx() + 4) {
+  if (static_cast<std::size_t>(x.size()) != state_->get_nx() + 8) {
     throw_pretty("Invalid argument: "
                  << "x has wrong dimension (it should be " + std::to_string(state_->get_nx()) + ")");
   }
@@ -1737,7 +1729,8 @@ std::vector<boost::shared_ptr<crocoddyl::DifferentialActionDataAbstract>> runnin
 boost::shared_ptr<StateKinodynamic> state;
 boost::shared_ptr<ActuationModelFloatingKinoBase> actuation;
 
-Eigen::VectorXd traj_, u_traj_, weight_quad, weight_quad_u;
+Eigen::VectorXd traj_, u_traj_, weight_quad, weight_quad_u, weight_quad_zmp, weight_quad_cam, weight_quad_com, weight_quad_rf, weight_quad_lf;
+double weight_quad_zmpx, weight_quad_zmpy, weight_quad_comx, weight_quad_comy, weight_quad_comz, weight_quad_camx, weight_quad_camy, weight_quad_rfx, weight_quad_rfy, weight_quad_rfz, weight_quad_lfx, weight_quad_lfy, weight_quad_lfz;
 Eigen::MatrixXd lb_, ub_, lb_2, ub_2, lb_3, ub_3;
 
 boost::shared_ptr<DifferentialActionModelContactKinoDynamics> terminalDAM;

@@ -101,3 +101,17 @@ ft : 0
 dist : 0
 
 q4 : 1.4
+
+weight_quad_zmpx : 7.0 
+weight_quad_zmpy : 7.0 
+weight_quad_comx : 5.0
+weight_quad_comy : 5.0 
+weight_quad_comz : 0.9 
+weight_quad_camx : 0.5 
+weight_quad_camy : 0.5 
+weight_quad_rfx : 5.0 
+weight_quad_rfy : 0.1 
+weight_quad_rfz : 10.0 
+weight_quad_lfx : 5.0 
+weight_quad_lfy : 0.1 
+weight_quad_lfz : 10.0
