@@ -253,11 +253,11 @@ CustomController::CustomController(RobotData &rd) : rd_(rd) //, wbc_(dc.wbc_)
 
     lb_.resize(2, N);
     lb_.setOnes();
-    lb_ = -10 * lb_;
+    lb_ = -3.2 * lb_;
 
     ub_.resize(2, N);
     ub_.setOnes();
-    ub_ = 10 * ub_;
+    ub_ = 3.2 * ub_;
     //N-4가 하고싶으면 N-5부터?
     for (int i = 0; i < N-5; i++)
     {
@@ -418,7 +418,9 @@ CustomController::CustomController(RobotData &rd) : rd_(rd) //, wbc_(dc.wbc_)
     {
         runningDAM_vector.push_back(boost::make_shared<DifferentialActionModelContactKinoDynamics>(state_vector[i], actuation_vector[i],
                                                                                                    runningCostModel_vector[i]));
-        runningModelWithRK4_vector.push_back(boost::make_shared<crocoddyl::IntegratedActionModelRK>(runningDAM_vector[i], crocoddyl::RKType::four, dt_));
+        runningModelWithRK4_vector.push_back(boost::make_shared<crocoddyl::IntegratedActionModelEuler>(runningDAM_vector[i], dt_));
+
+        //runningModelWithRK4_vector.push_back(boost::make_shared<crocoddyl::IntegratedActionModelRK>(runningDAM_vector[i], crocoddyl::RKType::two, dt_));
     }
 
     x0.resize(state->get_nx() + 8);
@@ -439,11 +441,8 @@ CustomController::CustomController(RobotData &rd) : rd_(rd) //, wbc_(dc.wbc_)
         runningDAM_vector[i]->createData();
     }
 
-    problemWithRK4->set_nthreads(4);
+    problemWithRK4->set_nthreads(6);
     std::cout << "thread " << problemWithRK4->get_nthreads() << std::endl; // " " << problemWithRK4->enableMultithreading()<< std::endl;
-
-    std::cout << "get_state" << std::endl;
-    std::cout << state_activations[N-5]->get_bounds().lb<< std::endl;
 
     crocoddyl::SolverBoxFDDP ddp(problemWithRK4);
 

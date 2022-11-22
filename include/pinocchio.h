@@ -701,10 +701,10 @@ DifferentialActionModelKinoDynamicsTpl<Scalar>::DifferentialActionModelKinoDynam
   temp.resize(actuation->get_nu() + 4);
   temp.setZero();
   temp.head(nu_) = pinocchio_.effortLimit.head(nu_);
-  temp(nu_) = 1000000;
-  temp(nu_+1) = 1000000;
-  temp(nu_+2) = 1000000;
-  temp(nu_+3) = 1000000;
+  temp(nu_) = 10;
+  temp(nu_+1) = 10;
+  temp(nu_+2) = 10;
+  temp(nu_+3) = 10;
   Base::set_u_lb(Scalar(-1.) * temp);
   Base::set_u_ub(Scalar(+1.) * temp);
 }
@@ -748,7 +748,7 @@ void DifferentialActionModelKinoDynamicsTpl<Scalar>::calc(
     d->xout.noalias() = d->Minv * d->u_drift;
   }*/
 
-  //d->xout = d->multibody.actuation->tau;
+  d->xout = d->multibody.actuation->tau;
   d->xout =  d->multibody.actuation->tau.segment(0,state_->get_nv());
   d->xout2 << x_state[1], 6.59308329 * x_state[0] - 6.59308329 * x_state[2] - d->multibody.actuation->u_x[1] * 1.0/ 50.0, d->multibody.actuation->u_x[0], d->multibody.actuation->u_x[1], x_state[5], 6.59308329 * x_state[4] - 6.59308329 * x_state[6] + d->multibody.actuation->u_x[3] * 1.0/ 50.0, d->multibody.actuation->u_x[2], d->multibody.actuation->u_x[3];//d->dhg; 
   
@@ -796,9 +796,9 @@ void DifferentialActionModelKinoDynamicsTpl<Scalar>::calcDiff(
   actuation_->calcDiff(d->multibody.actuation, x, u);
 
   d->Fx.bottomRightCorner(8,8).topLeftCorner(4,4) << 0.0, 1.0, 0.0, 0.0, 6.59308329, 0.0, -6.59308329, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0;
-  d->Fx.bottomLeftCorner(4,4) << 0.0, 1.0, 0.0, 0.0, 6.59308329, 0.0, -6.59308329, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0;
+  d->Fx.bottomRightCorner(4,4) << 0.0, 1.0, 0.0, 0.0, 6.59308329, 0.0, -6.59308329, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0;
   
-  d->Fx.block(0, state_->get_nv(), state_->get_nv(), state_->get_nv()).setIdentity();
+ // d->Fx.block(0, state_->get_nv(), state_->get_nv(), state_->get_nv()).setIdentity();
   d->Fu.topLeftCorner(nu_, nu_).setIdentity();
   d->Fu.bottomRightCorner(8,4).topLeftCorner(4,2) << 0.0, 0.0, 0.0, -1.0/ 50.0, 1.0, 0.0, 0.0, 1.0;
   d->Fu.bottomRightCorner(4,2) << 0.0, 0.0, 0.0, 1.0/ 50.0, 1.0, 0.0, 0.0, 1.0;
