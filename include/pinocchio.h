@@ -396,7 +396,7 @@ void StateKinodynamicTpl<Scalar>::Jdiff1(const Eigen::Ref<const VectorXs>& x0, c
     Jsecond.setZero();
     Jsecond.bottomRightCorner(2,6).topLeftCorner(1,1).diagonal().array() = (Scalar)1;
     Jsecond.bottomRightCorner(2,2).bottomLeftCorner(1,1).diagonal().array() = (Scalar)1;
-    //Jsecond.bottomRightCorner(2,2).topLeftCorner(1,1).diagonal().array() = (Scalar)1;
+    //Jsecond.bottomRightCorner(2,2).topLefFtCorner(1,1).diagonal().array() = (Scalar)1;
     //Jsecond.bottomRightCorner(6,6).topLeftCorner(1,1).diagonal().array() = (Scalar)1;
   } else {  // computing both
     if (static_cast<std::size_t>(Jfirst.rows()) != ndx_ || static_cast<std::size_t>(Jfirst.cols()) != ndx_) {
@@ -959,20 +959,6 @@ struct ResidualDataCentroidalAngularMomentumTpl : public ResidualDataAbstractTpl
 
 
 namespace crocoddyl {
-
-/**
- * @brief Centroidal momentum residual
- *
- * This residual function defines the centroidal momentum tracking as \f$\mathbf{r}=\mathbf{h}-\mathbf{h}^*\f$, where
- * \f$\mathbf{h},\mathbf{h}^*\in~\mathcal{X}\f$ are the current and reference centroidal momenta, respectively. Note
- * that the dimension of the residual vector is 6.
- * Furthermore, the Jacobians of the residual function are computed analytically.
- *
- * As described in `ResidualModelAbstractTpl()`, the residual value and its Jacobians are calculated by `calc` and
- * `calcDiff`, respectively.
- *
- * \sa `ResidualModelAbstractTpl`, `calc()`, `calcDiff()`, `createData()`
- */
 template <typename _Scalar>
 class ResidualModelCentroidalAngularMomentumTpl : public ResidualModelAbstractTpl<_Scalar> {
  public:
@@ -1455,7 +1441,10 @@ void ResidualFlyStateTpl<Scalar>::calc(const boost::shared_ptr<ResidualDataAbstr
     throw_pretty("Invalid argument: "
                  << "x has wrong dimension (it should be " + std::to_string(state_->get_nx()) + ")");
   }
-  state_->diff1(xref_, x, data->r); //diff1
+  //state_->diff1(xref_, x, data->r); //diff1
+  data->r.setZero();
+  data->r.head(1) = x.tail(6).head(1);
+  data->r.tail(1) = x.tail(2).head(1);
 } 
 
 template <typename Scalar>
@@ -1465,7 +1454,11 @@ void ResidualFlyStateTpl<Scalar>::calcDiff(const boost::shared_ptr<ResidualDataA
     throw_pretty("Invalid argument: "
                  << "x has wrong dimension (it should be " + std::to_string(state_->get_nx()) + ")");
   }
-  state_->Jdiff1(xref_, x, data->Rx, data->Rx, second);//diff1
+  //state_->Jdiff1(xref_, x, data->Rx, data->Rx, second);//diff1
+
+  data->Rx.setZero();
+  data->Rx.bottomRightCorner(2,6).topLeftCorner(1,1).diagonal().array() = (Scalar)1;
+  data->Rx.bottomRightCorner(2,2).bottomLeftCorner(1,1).diagonal().array() = (Scalar)1;
 }
 
 template <typename Scalar>
@@ -1644,7 +1637,7 @@ void ResidualKinoFrameTranslationTpl<Scalar>::calcDiff(const boost::shared_ptr<R
   const std::size_t nv = state_->get_nv();
   const Eigen::VectorBlock<const Eigen::Ref<const VectorXs>, Eigen::Dynamic> q = x.head(state_->get_nq());
  // pinocchio::computeJointJacobians(*pin_model_.get(), *d->pinocchio, q);
-  pinocchio::getFrameJacobian(*pin_model_.get(), *d->pinocchio, id_, pinocchio::LOCAL, d->fJf);
+  pinocchio::getFrameJacobian(*pin_model_.get(), *d->pinocchio, id_, pinocchio::WORLD, d->fJf);
   d->Rx.leftCols(nv).noalias() = d->pinocchio->oMf[id_].rotation() * d->fJf.template topRows<3>();
 }
 
@@ -1683,9 +1676,254 @@ void ResidualKinoFrameTranslationTpl<Scalar>::set_reference(const Vector3s& tran
 
 }  // namespace crocoddyl
 
+namespace crocoddyl {
 
+/**
+ * @brief Frame placement residual
+ *
+ * This residual function defines the frame placement tracking as \f$\mathbf{r}=\mathbf{p}\ominus\mathbf{p}^*\f$, where
+ * \f$\mathbf{p},\mathbf{p}^*\in~\mathbb{SE(3)}\f$ are the current and reference frame placements, respectively. Note
+ * that the dimension of the residual vector is 6. Furthermore, the Jacobians of the residual function are
+ * computed analytically.
+ *
+ * As described in `ResidualModelAbstractTpl()`, the residual value and its Jacobians are calculated by `calc` and
+ * `calcDiff`, respectively.
+ *
+ * \sa `ResidualModelAbstractTpl`, `calc()`, `calcDiff()`, `createData()`
+ */
 
+template <typename _Scalar>
+struct ResidualDataKinoFramePlacementTpl : public ResidualDataAbstractTpl<_Scalar> {
+  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
+  typedef _Scalar Scalar;
+  typedef MathBaseTpl<Scalar> MathBase;
+  typedef ResidualDataAbstractTpl<Scalar> Base;
+  typedef DataCollectorAbstractTpl<Scalar> DataCollectorAbstract;
+  typedef typename MathBase::Matrix6xs Matrix6xs;
+  typedef typename MathBase::Matrix6s Matrix6s;
+  typedef typename MathBase::Vector6s Vector6s;
+
+  template <template <typename Scalar> class Model>
+  ResidualDataKinoFramePlacementTpl(Model<Scalar>* const model, DataCollectorAbstract* const data)
+      : Base(model, data), rJf(6, 6), fJf(6, model->get_state()->get_nv()) {
+    r.setZero();
+    rJf.setZero();
+    fJf.setZero();
+    // Check that proper shared data has been passed
+    DataCollectorMultibodyTpl<Scalar>* d = dynamic_cast<DataCollectorMultibodyTpl<Scalar>*>(shared);
+    if (d == NULL) {
+      throw_pretty("Invalid argument: the shared data should be derived from DataCollectorMultibody");
+    }
+
+    // Avoids data casting at runtime
+    pinocchio = d->pinocchio;
+  }
+
+  pinocchio::DataTpl<Scalar>* pinocchio;  //!< Pinocchio data
+  pinocchio::SE3Tpl<Scalar> rMf;          //!< Error frame placement of the frame
+  Matrix6s rJf;                           //!< Error Jacobian of the frame
+  Matrix6xs fJf;                          //!< Local Jacobian of the frame
+
+  using Base::r;
+  using Base::Ru;
+  using Base::Rx;
+  using Base::shared;
+};
+
+template <typename _Scalar>
+class ResidualKinoFramePlacementTpl : public ResidualModelAbstractTpl<_Scalar> {
+ public:
+  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+
+  typedef _Scalar Scalar;
+  typedef MathBaseTpl<Scalar> MathBase;
+  typedef ResidualModelAbstractTpl<Scalar> Base;
+  typedef ResidualDataKinoFramePlacementTpl<Scalar> Data;
+  typedef StateKinodynamicTpl<Scalar> StateKinodynamic;
+  typedef ResidualDataAbstractTpl<Scalar> ResidualDataAbstract;
+  typedef DataCollectorAbstractTpl<Scalar> DataCollectorAbstract;
+  typedef typename MathBase::VectorXs VectorXs;
+  typedef pinocchio::SE3Tpl<Scalar> SE3;
+
+  /**
+   * @brief Initialize the frame placement residual model
+   *
+   * @param[in] state  State of the multibody system
+   * @param[in] id     Reference frame id
+   * @param[in] pref   Reference frame placement
+   * @param[in] nu     Dimension of the control vector
+   */
+  ResidualKinoFramePlacementTpl(boost::shared_ptr<StateKinodynamic> state, const pinocchio::FrameIndex id,
+                                 const SE3& pref, const std::size_t nu);
+
+  /**
+   * @brief Initialize the frame placement residual model
+   *
+   * The default `nu` is obtained from `StateAbstractTpl::get_nv()`.
+   *
+   * @param[in] state  State of the multibody system
+   * @param[in] id     Reference frame id
+   * @param[in] pref   Reference frame placement
+   */
+  ResidualKinoFramePlacementTpl(boost::shared_ptr<StateKinodynamic> state, const pinocchio::FrameIndex id,
+                                 const SE3& pref);
+  virtual ~ResidualKinoFramePlacementTpl();
+
+  /**
+   * @brief Compute the frame placement residual
+   *
+   * @param[in] data  Frame placement residual data
+   * @param[in] x     State point \f$\mathbf{x}\in\mathbb{R}^{ndx}\f$
+   * @param[in] u     Control input \f$\mathbf{u}\in\mathbb{R}^{nu}\f$
+   */
+  virtual void calc(const boost::shared_ptr<ResidualDataAbstract>& data, const Eigen::Ref<const VectorXs>& x,
+                    const Eigen::Ref<const VectorXs>& u);
+
+  /**
+   * @brief Compute the derivatives of the frame placement residual
+   *
+   * @param[in] data  Frame-placement residual data
+   * @param[in] x     State point \f$\mathbf{x}\in\mathbb{R}^{ndx}\f$
+   * @param[in] u     Control input \f$\mathbf{u}\in\mathbb{R}^{nu}\f$
+   */
+  virtual void calcDiff(const boost::shared_ptr<ResidualDataAbstract>& data, const Eigen::Ref<const VectorXs>& x,
+                        const Eigen::Ref<const VectorXs>& u);
+
+  /**
+   * @brief Create the frame placement residual data
+   */
+  virtual boost::shared_ptr<ResidualDataAbstract> createData(DataCollectorAbstract* const data);
+
+  /**
+   * @brief Return the reference frame id
+   */
+  pinocchio::FrameIndex get_id() const;
+
+  /**
+   * @brief Return the reference frame placement
+   */
+  const SE3& get_reference() const;
+
+  /**
+   * @brief Modify the reference frame id
+   */
+  void set_id(const pinocchio::FrameIndex id);
+
+  /**
+   * @brief Modify the reference frame placement
+   */
+  void set_reference(const SE3& reference);
+
+  /**
+   * @brief Print relevant information of the frame-placement residual
+   *
+   * @param[out] os  Output stream object
+   */
+  virtual void print(std::ostream& os) const;
+
+ protected:
+  using Base::nu_;
+  using Base::state_;
+  using Base::u_dependent_;
+  using Base::unone_;
+  using Base::v_dependent_;
+
+ private:
+  pinocchio::FrameIndex id_;                                              //!< Reference frame id
+  SE3 pref_;                                                              //!< Reference frame placement
+  pinocchio::SE3Tpl<Scalar> oMf_inv_;                                     //!< Inverse reference placement
+  boost::shared_ptr<typename StateKinodynamic::PinocchioModel> pin_model_;  //!< Pinocchio model
+};
+}  // namespace crocoddyl
+
+namespace crocoddyl {
+
+template <typename Scalar>
+ResidualKinoFramePlacementTpl<Scalar>::ResidualKinoFramePlacementTpl(boost::shared_ptr<StateKinodynamic> state,
+                                                                       const pinocchio::FrameIndex id, const SE3& pref,
+                                                                       const std::size_t nu)
+    : Base(state, 6, nu, true, false, false, false, false),
+      id_(id),
+      pref_(pref),
+      oMf_inv_(pref.inverse()),
+      pin_model_(state->get_pinocchio()) {}
+
+template <typename Scalar>
+ResidualKinoFramePlacementTpl<Scalar>::ResidualKinoFramePlacementTpl(boost::shared_ptr<StateKinodynamic> state,
+                                                                       const pinocchio::FrameIndex id, const SE3& pref)
+    : Base(state, 6, true, false, false, false, false),
+      id_(id),
+      pref_(pref),
+      oMf_inv_(pref.inverse()),
+      pin_model_(state->get_pinocchio()) {}
+
+template <typename Scalar>
+ResidualKinoFramePlacementTpl<Scalar>::~ResidualKinoFramePlacementTpl() {}
+
+template <typename Scalar>
+void ResidualKinoFramePlacementTpl<Scalar>::calc(const boost::shared_ptr<ResidualDataAbstract>& data,
+                                                  const Eigen::Ref<const VectorXs>&,
+                                                  const Eigen::Ref<const VectorXs>&) {
+  Data* d = static_cast<Data*>(data.get());
+
+  // Compute the frame placement w.r.t. the reference frame
+  pinocchio::updateFramePlacement(*pin_model_.get(), *d->pinocchio, id_);
+  d->rMf = oMf_inv_ * d->pinocchio->oMf[id_];
+  data->r = pinocchio::log6(d->rMf).toVector();
+}
+
+template <typename Scalar>
+void ResidualKinoFramePlacementTpl<Scalar>::calcDiff(const boost::shared_ptr<ResidualDataAbstract>& data,
+                                                      const Eigen::Ref<const VectorXs>&,
+                                                      const Eigen::Ref<const VectorXs>&) {
+  Data* d = static_cast<Data*>(data.get());
+
+  // Compute the derivatives of the frame placement
+  const std::size_t nv = state_->get_nv();
+  pinocchio::Jlog6(d->rMf, d->rJf);
+  pinocchio::getFrameJacobian(*pin_model_.get(), *d->pinocchio, id_, pinocchio::LOCAL, d->fJf);
+  data->Rx.leftCols(nv).noalias() = d->rJf * d->fJf;
+}
+
+template <typename Scalar>
+boost::shared_ptr<ResidualDataAbstractTpl<Scalar> > ResidualKinoFramePlacementTpl<Scalar>::createData(
+    DataCollectorAbstract* const data) {
+  return boost::allocate_shared<Data>(Eigen::aligned_allocator<Data>(), this, data);
+}
+
+template <typename Scalar>
+void ResidualKinoFramePlacementTpl<Scalar>::print(std::ostream& os) const {
+  const Eigen::IOFormat fmt(2, Eigen::DontAlignCols, ", ", ";\n", "", "", "[", "]");
+  typename SE3::Quaternion qref;
+  pinocchio::quaternion::assignQuaternion(qref, pref_.rotation());
+  os << "ResidualKinoFramePlacement {frame=" << pin_model_->frames[id_].name
+     << ", tref=" << pref_.translation().transpose().format(fmt) << ", qref=" << qref.coeffs().transpose().format(fmt)
+     << "}";
+}
+
+template <typename Scalar>
+pinocchio::FrameIndex ResidualKinoFramePlacementTpl<Scalar>::get_id() const {
+  return id_;
+}
+
+template <typename Scalar>
+const pinocchio::SE3Tpl<Scalar>& ResidualKinoFramePlacementTpl<Scalar>::get_reference() const {
+  return pref_;
+}
+
+template <typename Scalar>
+void ResidualKinoFramePlacementTpl<Scalar>::set_id(const pinocchio::FrameIndex id) {
+  id_ = id;
+}
+
+template <typename Scalar>
+void ResidualKinoFramePlacementTpl<Scalar>::set_reference(const SE3& placement) {
+  pref_ = placement;
+  oMf_inv_ = placement.inverse();
+}
+
+}  // namespace crocoddyl
 
 typedef crocoddyl::StateKinodynamicTpl<double> StateKinodynamic;
 typedef crocoddyl::ActuationModelFloatingKinoBaseTpl<double> ActuationModelFloatingKinoBase;
@@ -1698,6 +1936,7 @@ typedef crocoddyl::ActivationModelQuadraticBarrierTpl<double> ActivationModelQua
 typedef crocoddyl::ActivationBoundsTpl<double> ActivationBounds;
 typedef crocoddyl::ResidualModelCoMKinoPositionTpl<double> ResidualModelCoMKinoPosition;
 typedef crocoddyl::ResidualKinoFrameTranslationTpl<double> ResidualKinoFrameTranslation;
+typedef crocoddyl::ResidualKinoFramePlacementTpl<double> ResidualKinoFramePlacement;
 typedef crocoddyl::MathBaseTpl<double> MathBase;
 typename MathBase::VectorXs VectorXs;
 
@@ -1707,8 +1946,10 @@ std::vector<boost::shared_ptr<crocoddyl::CostModelSum>> runningCostModel_vector;
 std::vector<boost::shared_ptr<DifferentialActionModelContactKinoDynamics>> runningDAM_vector;
 std::vector<boost::shared_ptr<crocoddyl::ActionModelAbstract>> runningModelWithRK4_vector;
 std::vector<boost::shared_ptr<crocoddyl::ActionDataAbstract>> runningModelWithRK4_data;
-std::vector<boost::shared_ptr<ResidualKinoFrameTranslation>> residual_FrameRF;
-std::vector<boost::shared_ptr<ResidualKinoFrameTranslation>> residual_FrameLF;
+//std::vector<boost::shared_ptr<ResidualKinoFrameTranslation>> residual_FrameRF;
+//std::vector<boost::shared_ptr<ResidualKinoFrameTranslation>> residual_FrameLF;
+std::vector<boost::shared_ptr<ResidualKinoFramePlacement>> residual_FrameRF;
+std::vector<boost::shared_ptr<ResidualKinoFramePlacement>> residual_FrameLF;
 std::vector<boost::shared_ptr<crocoddyl::CostModelAbstract>> xRegCost_vector;
 std::vector<boost::shared_ptr<crocoddyl::CostModelAbstract>> uRegCost_vector;
 std::vector<boost::shared_ptr<crocoddyl::CostModelAbstract>> stateBoundCost_vector;
@@ -1716,8 +1957,11 @@ std::vector<boost::shared_ptr<crocoddyl::CostModelAbstract>> camBoundCost_vector
 std::vector<boost::shared_ptr<crocoddyl::CostModelAbstract>> comBoundCost_vector;
 std::vector<boost::shared_ptr<crocoddyl::CostModelAbstract>> foot_trackR;
 std::vector<boost::shared_ptr<crocoddyl::CostModelAbstract>> foot_trackL;
-std::vector<Eigen::VectorXd> rf_foot_pos_vector;
-std::vector<Eigen::VectorXd> lf_foot_pos_vector;
+//std::vector<Eigen::VectorXd> rf_foot_pos_vector;
+//std::vector<Eigen::VectorXd> lf_foot_pos_vector;
+std::vector<pinocchio::SE3> rf_foot_pos_vector;
+std::vector<pinocchio::SE3> lf_foot_pos_vector;
+
 std::vector<boost::shared_ptr<ActivationModelQuadraticBarrier>> state_activations;
 std::vector<boost::shared_ptr<ActivationModelQuadraticBarrier>> state_activations2;
 std::vector<boost::shared_ptr<ActivationModelQuadraticBarrier>> state_activations3;
@@ -1730,7 +1974,7 @@ boost::shared_ptr<StateKinodynamic> state;
 boost::shared_ptr<ActuationModelFloatingKinoBase> actuation;
 
 Eigen::VectorXd traj_, u_traj_, weight_quad, weight_quad_u, weight_quad_zmp, weight_quad_cam, weight_quad_com, weight_quad_rf, weight_quad_lf;
-double weight_quad_zmpx, weight_quad_zmpy, weight_quad_comx, weight_quad_comy, weight_quad_comz, weight_quad_camx, weight_quad_camy, weight_quad_rfx, weight_quad_rfy, weight_quad_rfz, weight_quad_lfx, weight_quad_lfy, weight_quad_lfz;
+double weight_quad_zmpx, weight_quad_zmpy, weight_quad_comx, weight_quad_comy, weight_quad_comz, weight_quad_camx, weight_quad_camy, weight_quad_rfx, weight_quad_rfy, weight_quad_rfz, weight_quad_lfx, weight_quad_lfy, weight_quad_lfz, weight_quad_rfroll, weight_quad_lfroll, weight_quad_rfpitch, weight_quad_lfpitch, weight_quad_rfyaw, weight_quad_lfyaw;
 Eigen::MatrixXd lb_, ub_, lb_2, ub_2, lb_3, ub_3;
 
 boost::shared_ptr<DifferentialActionModelContactKinoDynamics> terminalDAM;
