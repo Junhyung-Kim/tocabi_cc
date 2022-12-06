@@ -7,6 +7,105 @@ using std::shared_ptr;
 
 CustomController::CustomController(RobotData &rd) : rd_(rd) //, wbc_(dc.wbc_)
 {
+    std::fstream read_file("/home/jhk/data/mpc/1_tocabi_1.txt");
+    std::string string_test;
+    double jointvalue;
+    int ticktest, squencetest;
+    std::vector<int> walkingtick;
+    std::vector<double> jointtick, jointdottick, xstatetick, utick, ustatetick;
+
+    if (read_file.is_open()) {
+        while(!read_file.eof())
+        {
+            read_file >> string_test;
+            if(string_test == "walking_tick")
+            {
+                read_file >> ticktest;
+                walkingtick.push_back(ticktest);
+            }
+            if(string_test == "q")
+            {
+                read_file >> squencetest;
+                for(int i = 0; i < 19; i++)
+                {
+                    read_file >> string_test;
+                    string_test.erase(find(string_test.begin(), string_test.end(),','));
+                    jointvalue = atof(string_test.c_str());
+                    jointtick.push_back(jointvalue);
+                }     
+            }
+            if(string_test == "qdot")
+            {
+                read_file >> squencetest;
+                for(int i = 0; i < 18; i++)
+                {
+                    read_file >> string_test;
+                    string_test.erase(find(string_test.begin(), string_test.end(),','));
+                    jointvalue = atof(string_test.c_str());
+                    jointdottick.push_back(jointvalue);
+                }     
+            }
+            if(string_test == "x_state")
+            {
+                read_file >> squencetest;
+                for(int i = 0; i < 8; i++)
+                {
+                    read_file >> string_test;
+                    string_test.erase(find(string_test.begin(), string_test.end(),','));
+                    jointvalue = atof(string_test.c_str());
+                    xstatetick.push_back(jointvalue);
+                }     
+            }
+            if(string_test == "u")
+            {
+                read_file >> squencetest;
+                for(int i = 0; i < 18; i++)
+                {
+                    read_file >> string_test;
+                    string_test.erase(find(string_test.begin(), string_test.end(),','));
+                    jointvalue = atof(string_test.c_str());
+                    utick.push_back(jointvalue);
+                }     
+            }
+            if(string_test == "ustate")
+            {
+                for(int i = 0; i < 4; i++)
+                {
+                    read_file >> string_test;
+                    string_test.erase(find(string_test.begin(), string_test.end(),','));
+                    jointvalue = atof(string_test.c_str());
+                    ustatetick.push_back(jointvalue);
+                }     
+            }
+        }   
+    }
+
+    jointtick_.resize(walkingtick.size() * 40, 19);
+    jointdottick_.resize(walkingtick.size() * 40, 18);
+    xstatetick_.resize(walkingtick.size() * 40, 8);
+    utick_.resize(walkingtick.size() * 39, 18);
+    ustatetick_.resize(walkingtick.size() * 39, 4);
+
+    for (int i = 0; i < walkingtick.size() * 40; i++)
+    {
+        for(int j = 0; j < 19; j++)
+            jointtick_.row(i)(j) =  jointtick[19*i+j];
+        
+        for(int j = 0; j < 18; j++)
+            jointdottick_.row(i)(j) =  jointdottick[18*i+j];
+        for(int j = 0; j < 8; j++)
+            xstatetick_.row(i)(j) =  xstatetick[8*i+j];
+    }
+
+    for (int i = 0; i < walkingtick.size() * 39; i++)
+    {
+        for(int j = 0; j < 18; j++)
+            utick_.row(i)(j) =  utick[18*i+j];
+
+        for(int j = 0; j < 4; j++)
+            ustatetick_.row(i)(j) =  ustatetick[4*i+j];
+    }
+
     for (int i = 0; i < 2; i++)
     {
         file[i].open(FILE_NAMES[i].c_str(), std::ios_base::out);
@@ -178,7 +277,7 @@ CustomController::CustomController(RobotData &rd) : rd_(rd) //, wbc_(dc.wbc_)
     pinocchio::JointIndex LFjoint_id = model2.getJointId("L_AnkleRoll_Joint");
     int LFframe_id = model2.getFrameId("L_Foot_Link");
     int RFframe_id = model2.getFrameId("R_Foot_Link");
-     
+
     rd_.ee_[0].contact_point << 0.03, 0, -0.1585;
     rd_.ee_[1].contact_point << 0.03, 0, -0.1585;
     Eigen::Matrix3d I3;
@@ -204,7 +303,7 @@ CustomController::CustomController(RobotData &rd) : rd_(rd) //, wbc_(dc.wbc_)
     wlk_on = false;
     velEst_f = false;
 
-    N = 10; // number of nodes
+    N = 40; // number of nodes
     T = 1;  // number of trials
     MAXITER = 300;
 
@@ -222,14 +321,14 @@ CustomController::CustomController(RobotData &rd) : rd_(rd) //, wbc_(dc.wbc_)
     model3.lowerPositionLimit.head<7>().array() = -1;
     model3.upperPositionLimit.head<7>().array() = 1.;
     std::cout << "Rf " << std::endl;
-    ///std::cout << data3.oMi[RFjoint_id].translation << std::endl;
+    /// std::cout << data3.oMi[RFjoint_id].translation << std::endl;
     const pinocchio::SE3 rf_foot_pos0 = data3.oMf[RFframe_id];
     Eigen::Vector3d rf_foot_pos = rf_foot_pos0.translation();
     const pinocchio::SE3 lf_foot_pos0 = data3.oMf[LFframe_id];
     Eigen::Vector3d lf_foot_pos = lf_foot_pos0.translation();
 
     std::cout << rf_foot_pos0.translation() << std::endl;
-   // const pinocchio::SE3::Vector3& lf_foot_pos0 = data3.oMi[LFjoint_id].translation;
+    // const pinocchio::SE3::Vector3& lf_foot_pos0 = data3.oMi[LFjoint_id].translation;
 
     const std::string RF = "R_AnkleRoll_Joint";
     const std::string LF = "L_AnkleRoll_Joint";
@@ -258,26 +357,26 @@ CustomController::CustomController(RobotData &rd) : rd_(rd) //, wbc_(dc.wbc_)
     ub_.resize(2, N);
     ub_.setOnes();
     ub_ = 3.2 * ub_;
-    //N-4가 하고싶으면 N-5부터?
-    for (int i = 0; i < N-5; i++)
+    // N-4가 하고싶으면 N-5부터?
+    for (int i = 0; i < N - 5; i++)
     {
         lb_(0, i) = 0.0;
         ub_(0, i) = 0.2;
     }
 
-    for (int i = N-5; i < N; i++)
+    for (int i = N - 5; i < N; i++)
     {
         lb_(0, i) = 0.15;
         ub_(0, i) = 0.4;
     }
 
-    for (int i = 0; i < N-4; i++)
+    for (int i = 0; i < N - 4; i++)
     {
         lb_(1, i) = -0.2;
         ub_(1, i) = 0.2;
     }
 
-    for (int i = N-4; i < N; i++)
+    for (int i = N - 4; i < N; i++)
     {
         lb_(1, i) = 0.05;
         ub_(1, i) = 0.2;
@@ -328,11 +427,11 @@ CustomController::CustomController(RobotData &rd) : rd_(rd) //, wbc_(dc.wbc_)
     weight_quad_u(18) = 1.0;
 
     weight_quad_zmp.resize(2);
-    weight_quad_cam.resize(2); 
+    weight_quad_cam.resize(2);
     weight_quad_com.resize(3);
-    weight_quad_rf.resize(6); 
+    weight_quad_rf.resize(6);
     weight_quad_lf.resize(6);
-    
+
     weight_quad_zmp.setOnes();
     weight_quad_cam.setOnes();
     weight_quad_com.setOnes();
@@ -345,7 +444,7 @@ CustomController::CustomController(RobotData &rd) : rd_(rd) //, wbc_(dc.wbc_)
     weight_quad_rf << weight_quad_rfx, weight_quad_rfy, weight_quad_rfz, weight_quad_rfroll, weight_quad_rfpitch, weight_quad_rfyaw;
     weight_quad_lf << weight_quad_lfx, weight_quad_lfy, weight_quad_lfz, weight_quad_lfroll, weight_quad_lfpitch, weight_quad_lfyaw;
 
-    dt_ = 1e-1;
+    dt_ = 1.2 / double(N);
 
     for (int i = 0; i < N; i++)
     {
@@ -361,8 +460,7 @@ CustomController::CustomController(RobotData &rd) : rd_(rd) //, wbc_(dc.wbc_)
             state, boost::make_shared<ActivationModelWeightedQuad>(weight_quad), boost::make_shared<crocoddyl::ResidualModelState>(state_vector[i], traj_, actuation_vector[i]->get_nu() + 4)));
         uRegCost_vector.push_back(boost::make_shared<crocoddyl::CostModelResidual>(
             state, boost::make_shared<ActivationModelWeightedQuad>(weight_quad_u), boost::make_shared<crocoddyl::ResidualModelControl>(state_vector[i], u_traj_))); //, actuation_vector[i]->get_nu() + 1)));
-        
-        
+
         stateBoundCost_vector.push_back(boost::make_shared<crocoddyl::CostModelResidual>(
             state_vector[i], state_activations[i], boost::make_shared<ResidualFlyState>(state_vector[i], actuation_vector[i]->get_nu() + 4)));
         camBoundCost_vector.push_back(boost::make_shared<crocoddyl::CostModelResidual>(
@@ -373,14 +471,14 @@ CustomController::CustomController(RobotData &rd) : rd_(rd) //, wbc_(dc.wbc_)
         pinocchio::SE3 lf_foot_temp(Matrix3d::Identity(), lf_foot_pos);
         rf_foot_pos_vector.push_back(rf_foot_temp);
         lf_foot_pos_vector.push_back(lf_foot_temp);
-      //  rf_foot_pos_vector.push_back(rf_foot_pos);
-      //  lf_foot_pos_vector.push_back(lf_foot_pos);
-    //    residual_FrameRF.push_back(boost::make_shared<ResidualKinoFrameTranslation>(state_vector[i], RFframe_id, rf_foot_pos_vector[i], actuation_vector[i]->get_nu() + 4));
-    //    residual_FrameLF.push_back(boost::make_shared<ResidualKinoFrameTranslation>(state_vector[i], LFframe_id, lf_foot_pos_vector[i], actuation_vector[i]->get_nu() + 4));
+        //  rf_foot_pos_vector.push_back(rf_foot_pos);
+        //  lf_foot_pos_vector.push_back(lf_foot_pos);
+        //    residual_FrameRF.push_back(boost::make_shared<ResidualKinoFrameTranslation>(state_vector[i], RFframe_id, rf_foot_pos_vector[i], actuation_vector[i]->get_nu() + 4));
+        //    residual_FrameLF.push_back(boost::make_shared<ResidualKinoFrameTranslation>(state_vector[i], LFframe_id, lf_foot_pos_vector[i], actuation_vector[i]->get_nu() + 4));
         residual_FrameRF.push_back(boost::make_shared<ResidualKinoFramePlacement>(state_vector[i], RFframe_id, rf_foot_pos_vector[i], actuation_vector[i]->get_nu() + 4));
         residual_FrameLF.push_back(boost::make_shared<ResidualKinoFramePlacement>(state_vector[i], LFframe_id, lf_foot_pos_vector[i], actuation_vector[i]->get_nu() + 4));
         foot_trackR.push_back(boost::make_shared<crocoddyl::CostModelResidual>(state_vector[i], boost::make_shared<ActivationModelWeightedQuad>(weight_quad_rf), residual_FrameRF[i]));
-        foot_trackL.push_back(boost::make_shared<crocoddyl::CostModelResidual>(state_vector[i], boost::make_shared<ActivationModelWeightedQuad>(weight_quad_lf), residual_FrameLF[i]));    
+        foot_trackL.push_back(boost::make_shared<crocoddyl::CostModelResidual>(state_vector[i], boost::make_shared<ActivationModelWeightedQuad>(weight_quad_lf), residual_FrameLF[i]));
     }
 
     std::cout << "state->get_nv()" << std::endl;
@@ -401,7 +499,7 @@ CustomController::CustomController(RobotData &rd) : rd_(rd) //, wbc_(dc.wbc_)
     for (int i = 0; i < N - 1; i++)
     {
         runningCostModel_vector.push_back(boost::make_shared<crocoddyl::CostModelSum>(state_vector[i], actuation_vector[i]->get_nu() + 4));
-      
+
         /*runningCostModel_vector[i]->addCost("stateReg", stateBoundCost_vector[i], 1e2);
         runningCostModel_vector[i]->addCost("camReg", camBoundCost_vector[i], 3e0);
         runningCostModel_vector[i]->addCost("comReg", comBoundCost_vector[i], 6e0);
@@ -414,7 +512,7 @@ CustomController::CustomController(RobotData &rd) : rd_(rd) //, wbc_(dc.wbc_)
         runningCostModel_vector[i]->addCost("footReg1", foot_trackR[i], 1e0);
         runningCostModel_vector[i]->addCost("footReg2", foot_trackL[i], 1e0);
     }
-    
+
     terminalCostModel =
         boost::make_shared<crocoddyl::CostModelSum>(state_vector[N - 1], actuation_vector[N - 1]->get_nu() + 4);
 
@@ -434,7 +532,7 @@ CustomController::CustomController(RobotData &rd) : rd_(rd) //, wbc_(dc.wbc_)
                                                                                                    runningCostModel_vector[i]));
         runningModelWithRK4_vector.push_back(boost::make_shared<crocoddyl::IntegratedActionModelEuler>(runningDAM_vector[i], dt_));
 
-        //runningModelWithRK4_vector.push_back(boost::make_shared<crocoddyl::IntegratedActionModelRK>(runningDAM_vector[i], crocoddyl::RKType::two, dt_));
+        // runningModelWithRK4_vector.push_back(boost::make_shared<crocoddyl::IntegratedActionModelRK>(runningDAM_vector[i], crocoddyl::RKType::two, dt_));
     }
 
     x0.resize(state->get_nx() + 8);
@@ -455,15 +553,15 @@ CustomController::CustomController(RobotData &rd) : rd_(rd) //, wbc_(dc.wbc_)
         runningDAM_vector[i]->createData();
     }
 
-    problemWithRK4->set_nthreads(6);
+    problemWithRK4->set_nthreads(4);
     std::cout << "thread " << problemWithRK4->get_nthreads() << std::endl; // " " << problemWithRK4->enableMultithreading()<< std::endl;
 
     crocoddyl::SolverBoxFDDP ddp(problemWithRK4);
 
-    for(int i = 0; i < N; i++)
+    for (int i = 0; i < N; i++)
     {
         xs.push_back(x0);
-        if(i != N-1)
+        if (i != N - 1)
             us.push_back(u0);
     }
 
@@ -475,83 +573,84 @@ CustomController::CustomController(RobotData &rd) : rd_(rd) //, wbc_(dc.wbc_)
     }
 
     int css;
+    T = 10;
     Eigen::ArrayXd duration(T);
     for (unsigned int i = 0; i < T; ++i)
     {
         std::cout << "beforesolve" << std::endl;
         crocoddyl::Timer timer;
-        css = ddp.solve(xs, us, MAXITER);
+        css = ddp.solve(xs, us, MAXITER, 0.5);
+        duration[i] = timer.get_duration();
         std::cout << "aftersolve" << std::endl;
         std::cout << "sss " << ddp.get_iter() << "  " << css << std::endl;
-        duration[i] = timer.get_duration();
+
+        xs = ddp.get_xs();
+        us = ddp.get_us();
+        /*    std::cout << "final " << N - 4 << std::endl;
+            for (int i = 0; i < N - 1; i++)
+            {
+                std::cout << "q " << i << std::endl;
+                for (int j = 0; j < 19; j++)
+                {
+                    std::cout << xs[i][j] << ", ";
+                }
+                std::cout << "qdot " << i << std::endl;
+                {
+                    for (int j = 19; j < 37; j++)
+                    {
+                        std::cout << xs[i][j] << ", ";
+                    }
+                }
+                std::cout << "x_state " << i << std::endl;
+                {
+                    for (int j = 37; j < 45; j++)
+                    {
+                        std::cout << xs[i][j] << ", ";
+                    }
+                }
+                std::cout << std::endl;
+                std::cout << "u " << i << std::endl;
+                for (int j = 0; j < actuation->get_nu(); j++)
+                {
+                    std::cout << us[i][j] << ", ";
+                }
+                std::cout << "ustate" << std::endl;
+                for (int j = actuation->get_nu(); j < actuation->get_nu() + 4; j++)
+                {
+                    std::cout << us[i][j] << ", ";
+                }
+                std::cout << std::endl;
+            }
+
+            std::cout << "q " << N - 1 << std::endl;
+            for (int j = 0; j < 19; j++)
+            {
+                std::cout << xs[N - 1][j] << ", ";
+            }
+            std::cout << "qdot " << N - 1 << std::endl;
+            {
+                for (int j = 19; j < 37; j++)
+                {
+                    std::cout << xs[N - 1][j] << ", ";
+                }
+            }
+            std::cout << "x_state " << N - 1 << std::endl;
+            {
+                for (int j = 37; j < 45; j++)
+                {
+                    std::cout << xs[N - 1][j] << ", ";
+                }
+            }
+            */
+        std::cout << "css " << ddp.get_iter() << " " << ddp.get_is_feasible() << std::endl;
+
+        double avrg_duration = duration[i];
+        double min_duration = duration.minCoeff();
+        double max_duration = duration.maxCoeff();
+
+        std::cout << "  DDP.solve [ms]: " << avrg_duration << " (" << min_duration << "-" << max_duration << ")"
+                  << std::endl;
     }
-
-    xs = ddp.get_xs();
-    us = ddp.get_us();
-    std::cout << "final " << N-4 << std::endl;
-    for (int i = 0; i < N -1; i++)
-    {
-        std::cout << "q " << i << std::endl;
-        for (int j = 0; j < 19; j++)
-        {
-            std::cout << xs[i][j] << ", ";
-        }
-        std::cout << "qdot " << i << std::endl;
-        {
-            for (int j = 19; j < 37; j++)
-            {
-                std::cout << xs[i][j] << ", ";
-            }
-        }
-        std::cout << "x_state " << i << std::endl;
-        {
-            for (int j = 37; j < 45; j++)
-            {
-                std::cout << xs[i][j] << ", ";
-            }
-        }
-        std::cout << std::endl;
-        std::cout << "u " << i << std::endl;
-        for (int j = 0; j < actuation->get_nu(); j++)
-        {
-            std::cout << us[i][j] << ", ";
-        }
-        std::cout << "ustate" << std::endl;
-        for (int j = actuation->get_nu(); j < actuation->get_nu() + 4; j++)
-        {
-            std::cout << us[i][j] << ", ";
-        }
-        std::cout << std::endl;
-    }
-
-    std::cout << "q " << N-1 << std::endl;
-        for (int j = 0; j < 19; j++)
-        {
-            std::cout << xs[N-1][j] << ", ";
-        }
-        std::cout << "qdot " << N-1 << std::endl;
-        {
-            for (int j = 19; j < 37; j++)
-            {
-                std::cout << xs[N-1][j] << ", ";
-            }
-        }
-        std::cout << "x_state " << N-1 << std::endl;
-        {
-            for (int j = 37; j < 45; j++)
-            {
-                std::cout << xs[N-1][j] << ", ";
-            }
-        }
-
-    std::cout << "css " << ddp.get_iter() << " " << ddp.get_is_feasible() << std::endl;
-
-    double avrg_duration = duration.sum() / T;
-    double min_duration = duration.minCoeff();
-    double max_duration = duration.maxCoeff();
-
-    std::cout << "  DDP.solve [ms]: " << avrg_duration << " (" << min_duration << "-" << max_duration << ")"
-              << std::endl;
 }
 
 Eigen::VectorQd CustomController::getControl()
@@ -875,6 +974,7 @@ void CustomController::computeFast()
                     zmp_dely = 0.0;
                 }
 
+                /*
                 walkingCompute(rd_);
 
                 zmpCalc(rd_);
@@ -971,47 +1071,47 @@ void CustomController::computeFast()
                          rd_.mujoco_dist = false;
                      }
      */
-                if (walking_tick >= 4205 && walking_tick < 4255 && dist == 1)
-                {
-                    rd_.mujoco_dist = true;
-                }
-                else
-                {
-                    rd_.mujoco_dist = false;
-                }
-
-                if (walking_tick != walking_tick_prev)
-                {
-                    walking_tick_prev = walking_tick;
-                    if (rd_.tc_.MPC == true)
+                /*    if (walking_tick >= 4205 && walking_tick < 4255 && dist == 1)
                     {
-                        if (mpc_cycle > 1)
-                        {
-                            double q1, q2, q3;
-                            q1 = RF_mass / q4 * ((rd_.link_[Right_Foot].xipos(2) - rd_.link_[COM_id].xpos(2)) * rd_.link_[Right_Foot].v(0) - (-rd_.link_[Right_Foot].xipos(0)) * rd_.link_[Right_Foot].v(2)) + LF_mass / q4 * ((rd_.link_[Left_Foot].xipos(2) - rd_.link_[COM_id].xpos(2)) * rd_.link_[Left_Foot].v(0) - (-rd_.link_[Left_Foot].xipos(0)) * rd_.link_[Left_Foot].v(2));
-                            q2 = RF_mass / q4 * rd_.link_[Right_Foot].v(2) + LF_mass / q4 * rd_.link_[Left_Foot].v(2);
-                            q3 = -RF_mass / q4 * (rd_.link_[Right_Foot].xipos(2) - rd_.link_[COM_id].xpos(2)) - LF_mass / q4 * (rd_.link_[Left_Foot].xipos(2) - rd_.link_[COM_id].xpos(2));
-
-                            // file[0] <<hpipm_statusy<<"\t"<< walking_tick  <<"\t"<< com_mpcy <<"\t" << rd_.link_[COM_id].xpos(1)<< "\t" << mpc_cycle << "\t" <<rd_.link_[Pelvis].xipos(1) << "\t" << zmp_mpcy <<"\t" << ZMP_FT_l(1) << "\t"<< yL[walking_tick][2] << "\t" << yU[walking_tick][2] << "\t"<<ZMP_FT_l(1)<<"\t"<<zmp_mpcy<<"\t"<<mom_mpcy<<"\t"<<H_roll<<"\t"<<(softBoundy_s[mpc_cycle][0] - softCy_s[mpc_cycle][0] * com_mpcy - softCy_s[mpc_cycle][2] * com_mpcdy - softCy_s[mpc_cycle][4] * zmp_mpcy - softCy_s[mpc_cycle][6] * mom_mpcy)/softCy_s[mpc_cycle][8] << "\t" <<soft[walking_tick] << "\t" <<hpipm_statusy <<"\t"<<sly[0] << "\t" << suy[0]<< "\t" << com_mpcdy << "\t" << rd_.link_[COM_id].v(1)<<std::endl;
-                            file[1] << hpipm_statusx << "\t" << mpc_cycle << "\t" << rd_.link_[Pelvis].xipos(0) << "\t" << com_mpcx << "\t" << rd_.link_[COM_id].xpos(0) << "\t" << zmp_mpcx << "\t" << ZMP_FT_l(0) << "\t" << xL[walking_tick][2] << "\t" << xU[walking_tick][2] << "\t" << ZMP_FT_l(0) << "\t" << zmp_mpcx << "\t" << mom_mpcx << "\t" << H_pitch << "\t" << (softBoundx_s[mpc_cycle][0] - softCx_s[mpc_cycle][0] * com_mpcx - softCx_s[mpc_cycle][2] * com_mpcdx) / softCx_s[mpc_cycle][8] << "\t" << (q1 + q2 * rd_.link_[COM_id].xpos(0) + q3 * rd_.link_[COM_id].v(0)) << "\t" << H_lower(1) << std::endl; //<<mom_mpcIx<<"\t"<<soft[walking_tick]<<"\t"<<slx[0] << "\t" <<sux[0]<< "\t" <<slx[1]<<"\t"<<sux[1]<<"\t"<<hpipm_statusx<< "\t" << RF_float_current.translation()(0)<<"\t" << RFx_trajectory_float(walking_tick)<<"\t"<<RF_sup(0)<<"\t"<<RF_supd(0)<<"\t"<<walking_tick <<std::endl;
-                        }
+                        rd_.mujoco_dist = true;
                     }
                     else
                     {
-                        Eigen::Vector3d L_e, R_e, P_e;
-                        L_e = DyrosMath::rot2Euler(rd_.link_[Left_Foot].rotm);
-                        R_e = DyrosMath::rot2Euler(rd_.link_[Right_Foot].rotm);
-                        P_e = DyrosMath::rot2Euler(rd_.link_[Pelvis].rotm);
-
-                        // file[1]<<desired_acceleration(0) << "\t"<<desired_acceleration(1) << "\t"<<desired_acceleration(2) << "\t"<<desired_acceleration(3) << "\t"<<desired_acceleration(4) << "\t"<<desired_acceleration(5) << "\t"<<desired_acceleration(6) << "\t"<<desired_acceleration(7) << "\t"<<desired_acceleration(8) << "\t"<<q_init_ik(0) << "\t"<<q_init_ik(1) << "\t"<<q_init_ik(2) << "\t"<<qv_dot_qp(6) << "\t"<<qv_dot_qp(7) << "\t"<<qv_dot_qp(8) << "\t"<<qv_dot_qp(9) << "\t"<<qv_dot_qp(10) << "\t"<<qv_dot_qp(11) << "\t"<<qv_dot_qp(12)<< "\t"<<qv_dot_qp(13)<< "\t"<<qv_dot_qp(14)<< "\t"<<qv_dot_qp(15)<< "\t"<<qv_dot_qp(10)<< std::endl;
-                        file[1] << rd_.q_desired(0) << "\t" << rd_.q_(0) << "\t" << rd_.q_desired(1) << "\t" << rd_.q_(1) << "\t" << rd_.q_desired(2) << "\t" << rd_.q_(2) << "\t" << rd_.q_desired(3) << "\t" << rd_.q_(3) << "\t" << rd_.q_desired(4) << "\t" << rd_.q_(4) << "\t" << rd_.q_desired(5) << "\t" << rd_.q_(5) << "\t" << rd_.q_desired(6) << "\t" << rd_.q_(6) << "\t" << rd_.q_desired(7) << "\t" << rd_.q_(7) << "\t" << rd_.q_desired(8) << "\t" << rd_.q_(8) << "\t" << rd_.q_desired(9) << "\t" << rd_.q_(9) << "\t" << rd_.q_desired(10) << "\t" << rd_.q_(10) << "\t" << rd_.q_desired(11) << "\t" << rd_.q_(11) << "\t" << rd_.q_desired(12) << "\t" << rd_.q_(12) << "\t" << rd_.q_desired(13) << "\t" << rd_.q_(13) << "\t" << rd_.q_desired(14) << "\t" << rd_.q_(14) << "\t" << rd_.q_desired(15) << "\t" << rd_.q_(15) << "\t" << rd_.q_desired(16) << "\t" << rd_.q_(16) << "\t" << rd_.q_desired(17) << "\t" << rd_.q_(17) << "\t" << rd_.q_desired(18) << "\t" << rd_.q_(18) << std::endl;
-                        // file[1]<<desired_acceleration(0) << "\t" <<desired_acceleration(1) << "\t"<< desired_acceleration(2) << "\t"<<desired_acceleration(3) << "\t"<<desired_acceleration(4) << "\t"<<desired_acceleration(5) << "\t"<<desired_acceleration(6) << "\t"<<desired_acceleration(7) << "\t"<<desired_acceleration(8) << "\t"<<drift_terms(0) << "\t"<<drift_terms(1) << "\t"<<drift_terms(2) << "\t"<<drift_terms(3) << "\t"<<drift_terms(4) << "\t"<<drift_terms(5) << "\t"<<drift_terms(6) << "\t"<<drift_terms(7) << "\t"<<drift_terms(8) << "\t"<<qv_dot_qp(6)<< "\t"<<qv_dot_qp(7)<< "\t"<<qv_dot_qp(8)<< "\t"<<qv_dot_qp(9)<< "\t"<<qv_dot_qp(10)<< std::endl;
-                        // file[0] << q_init_ik(6) << "\t"<< q_init_ik(7) << "\t"<< q_init_ik(8) << "\t" << q_init_ik(9) << "\t"<< q_init_ik(10) << "\t"<< q_init_ik(11)<< "\t"<< q_init_ik(12) << "\t"<<rd_.q_dot_virtual_(0) << "\t"<<rd_.q_dot_virtual_(1) << "\t"<<rd_.q_dot_virtual_(2)<< "\t"<<rd_.q_dot_virtual_(3)<< "\t"<<rd_.q_dot_virtual_(4) << "\t"<<rd_.q_dot_virtual_(5) <<  std::endl;
-                        //  file[0]<<-(rd_.ee_[0].jac_contact.cast<double>().block<1, 12>(1, 6) * rd_.q_dot_virtual_.segment<12>(6))(0)<<"\t"<<rd_.q_dot_virtual_(1)<<"\t"<<q_ddot_ik(1)<<"\t"<<(Ag_.block(0,0,3,18) * rd_.q_dot_virtual_.segment<18>(0))(1) <<"\t"<<(Ag_.block(0,0,3,18) * q_ddot_ik)(1) << "\t"<<total_mass*com_refdy(walking_tick) <<"\t"<<total_mass*rd_.link_[COM_id].v(1)<<"\t"<<com_refy(walking_tick)<<"\t"<<COM_float_current.translation()(1)<<std::endl;//<<"\t"<<q_ddot_ik(0)<<"\t"<<-(rd_.ee_[0].jac_contact.cast<double>().block<1, 12>(0, 6) * q_ddot_ik.segment<12>(6))(0)-(dJ_l.block<1, 12>(0, 6) * qv_dot_qp.segment<12>(6))(0)<<"\t"<<(rd_.ee_[0].jac_contact.cast<double>().block<1, 6>(0, 6) * rd_.q_dot_virtual_.segment<6>(6))(0)<<"\t" <<rd_.ee_[1].jac_contact.cast<double>().block<1, 6>(0, 12) * rd_.q_dot_virtual_.segment<6>(12)<<"\t"<<(rd_.q_dot_virtual_)(0) <<"\t" <<(qv_dot_qp)(0)<<"\t"<< (Ag_ * qv_dot_qp)(0) << "\t"<<total_mass*com_refdx(walking_tick) << "\t" << PELV_float_current.translation()(0)<< "\t"<< com_refx(walking_tick) << "\t" << COM_float_current.translation()(0) << "\t"<< com_refy(walking_tick) << "\t" << COM_float_current.translation()(1) << "\t" << com_sup(2) << "\t" << comR_sup(2) << "\t" << PELV_trajectory_float.translation()(0) << "\t"  << zmp_refx(walking_tick) << "\t" << ZMP_FT_l(0) << "\t" << LFx_trajectory_float(walking_tick) << "\t" << rd_.link_[Left_Foot].xpos(0) << "\t" << LFvz_trajectory_float(walking_tick) << "\t"<< LFz_trajectory_float(walking_tick) << "\t" << rd_.link_[Left_Foot].xpos(2) << "\t" << foot_step(current_step_num,6) <<"\t"<<P_e(0)<<"\t"<< P_e(1)<< "\t" << P_e(2)<< std::endl;;
-                        file[0] << com_refx(walking_tick) << "\t" << COM_float_current.translation()(0) << "\t" << com_refy(walking_tick) << "\t" << COM_float_current.translation()(1) << "\t" << com_sup(2) << "\t" << comR_sup(2) << "\t" << P_e(0) << "\t" << P_e(1) << "\t" << P_e(2) << "\t" << R_e(2) << "\t" << L_e(2) << std::endl;
-                        // file[1] <<c_dot_psem_(1)<<"\t"<<comv_temp(1)<<"\t"<< com_refdy(walking_tick)<<"\t"<< desired_u_dot(1) <<"\t"<< rd_.link_[COM_id].v(1) <<"\t"<< com_refy(walking_tick) << "\t" << COM_float_current.translation()(1) << "\t" << rd_.link_[Pelvis].xipos(1) << "\t" << PELV_trajectory_float.translation()(1) << "\t"  << zmp_refy(walking_tick) << "\t" << ZMP_FT_l(1) <<"\t" << rd_.link_[Right_Foot].xipos(2) <<"\t"<< RFz_trajectory_float(walking_tick) << "\t"<<L_e(0)<<"\t"<<R_e(0)<<"\t"<<P_e(0)<<"\t"<<com_refdy(walking_tick)<<std::endl;
+                        rd_.mujoco_dist = false;
                     }
-                }
+
+                    if (walking_tick != walking_tick_prev)
+                    {
+                        walking_tick_prev = walking_tick;
+                        if (rd_.tc_.MPC == true)
+                        {
+                            if (mpc_cycle > 1)
+                            {
+                                double q1, q2, q3;
+                                q1 = RF_mass / q4 * ((rd_.link_[Right_Foot].xipos(2) - rd_.link_[COM_id].xpos(2)) * rd_.link_[Right_Foot].v(0) - (-rd_.link_[Right_Foot].xipos(0)) * rd_.link_[Right_Foot].v(2)) + LF_mass / q4 * ((rd_.link_[Left_Foot].xipos(2) - rd_.link_[COM_id].xpos(2)) * rd_.link_[Left_Foot].v(0) - (-rd_.link_[Left_Foot].xipos(0)) * rd_.link_[Left_Foot].v(2));
+                                q2 = RF_mass / q4 * rd_.link_[Right_Foot].v(2) + LF_mass / q4 * rd_.link_[Left_Foot].v(2);
+                                q3 = -RF_mass / q4 * (rd_.link_[Right_Foot].xipos(2) - rd_.link_[COM_id].xpos(2)) - LF_mass / q4 * (rd_.link_[Left_Foot].xipos(2) - rd_.link_[COM_id].xpos(2));
+
+                                // file[0] <<hpipm_statusy<<"\t"<< walking_tick  <<"\t"<< com_mpcy <<"\t" << rd_.link_[COM_id].xpos(1)<< "\t" << mpc_cycle << "\t" <<rd_.link_[Pelvis].xipos(1) << "\t" << zmp_mpcy <<"\t" << ZMP_FT_l(1) << "\t"<< yL[walking_tick][2] << "\t" << yU[walking_tick][2] << "\t"<<ZMP_FT_l(1)<<"\t"<<zmp_mpcy<<"\t"<<mom_mpcy<<"\t"<<H_roll<<"\t"<<(softBoundy_s[mpc_cycle][0] - softCy_s[mpc_cycle][0] * com_mpcy - softCy_s[mpc_cycle][2] * com_mpcdy - softCy_s[mpc_cycle][4] * zmp_mpcy - softCy_s[mpc_cycle][6] * mom_mpcy)/softCy_s[mpc_cycle][8] << "\t" <<soft[walking_tick] << "\t" <<hpipm_statusy <<"\t"<<sly[0] << "\t" << suy[0]<< "\t" << com_mpcdy << "\t" << rd_.link_[COM_id].v(1)<<std::endl;
+                                file[1] << hpipm_statusx << "\t" << mpc_cycle << "\t" << rd_.link_[Pelvis].xipos(0) << "\t" << com_mpcx << "\t" << rd_.link_[COM_id].xpos(0) << "\t" << zmp_mpcx << "\t" << ZMP_FT_l(0) << "\t" << xL[walking_tick][2] << "\t" << xU[walking_tick][2] << "\t" << ZMP_FT_l(0) << "\t" << zmp_mpcx << "\t" << mom_mpcx << "\t" << H_pitch << "\t" << (softBoundx_s[mpc_cycle][0] - softCx_s[mpc_cycle][0] * com_mpcx - softCx_s[mpc_cycle][2] * com_mpcdx) / softCx_s[mpc_cycle][8] << "\t" << (q1 + q2 * rd_.link_[COM_id].xpos(0) + q3 * rd_.link_[COM_id].v(0)) << "\t" << H_lower(1) << std::endl; //<<mom_mpcIx<<"\t"<<soft[walking_tick]<<"\t"<<slx[0] << "\t" <<sux[0]<< "\t" <<slx[1]<<"\t"<<sux[1]<<"\t"<<hpipm_statusx<< "\t" << RF_float_current.translation()(0)<<"\t" << RFx_trajectory_float(walking_tick)<<"\t"<<RF_sup(0)<<"\t"<<RF_supd(0)<<"\t"<<walking_tick <<std::endl;
+                            }
+                        }
+                        else
+                        {
+                            Eigen::Vector3d L_e, R_e, P_e;
+                            L_e = DyrosMath::rot2Euler(rd_.link_[Left_Foot].rotm);
+                            R_e = DyrosMath::rot2Euler(rd_.link_[Right_Foot].rotm);
+                            P_e = DyrosMath::rot2Euler(rd_.link_[Pelvis].rotm);
+
+                            // file[1]<<desired_acceleration(0) << "\t"<<desired_acceleration(1) << "\t"<<desired_acceleration(2) << "\t"<<desired_acceleration(3) << "\t"<<desired_acceleration(4) << "\t"<<desired_acceleration(5) << "\t"<<desired_acceleration(6) << "\t"<<desired_acceleration(7) << "\t"<<desired_acceleration(8) << "\t"<<q_init_ik(0) << "\t"<<q_init_ik(1) << "\t"<<q_init_ik(2) << "\t"<<qv_dot_qp(6) << "\t"<<qv_dot_qp(7) << "\t"<<qv_dot_qp(8) << "\t"<<qv_dot_qp(9) << "\t"<<qv_dot_qp(10) << "\t"<<qv_dot_qp(11) << "\t"<<qv_dot_qp(12)<< "\t"<<qv_dot_qp(13)<< "\t"<<qv_dot_qp(14)<< "\t"<<qv_dot_qp(15)<< "\t"<<qv_dot_qp(10)<< std::endl;
+                            file[1] << rd_.q_desired(0) << "\t" << rd_.q_(0) << "\t" << rd_.q_desired(1) << "\t" << rd_.q_(1) << "\t" << rd_.q_desired(2) << "\t" << rd_.q_(2) << "\t" << rd_.q_desired(3) << "\t" << rd_.q_(3) << "\t" << rd_.q_desired(4) << "\t" << rd_.q_(4) << "\t" << rd_.q_desired(5) << "\t" << rd_.q_(5) << "\t" << rd_.q_desired(6) << "\t" << rd_.q_(6) << "\t" << rd_.q_desired(7) << "\t" << rd_.q_(7) << "\t" << rd_.q_desired(8) << "\t" << rd_.q_(8) << "\t" << rd_.q_desired(9) << "\t" << rd_.q_(9) << "\t" << rd_.q_desired(10) << "\t" << rd_.q_(10) << "\t" << rd_.q_desired(11) << "\t" << rd_.q_(11) << "\t" << rd_.q_desired(12) << "\t" << rd_.q_(12) << "\t" << rd_.q_desired(13) << "\t" << rd_.q_(13) << "\t" << rd_.q_desired(14) << "\t" << rd_.q_(14) << "\t" << rd_.q_desired(15) << "\t" << rd_.q_(15) << "\t" << rd_.q_desired(16) << "\t" << rd_.q_(16) << "\t" << rd_.q_desired(17) << "\t" << rd_.q_(17) << "\t" << rd_.q_desired(18) << "\t" << rd_.q_(18) << std::endl;
+                            // file[1]<<desired_acceleration(0) << "\t" <<desired_acceleration(1) << "\t"<< desired_acceleration(2) << "\t"<<desired_acceleration(3) << "\t"<<desired_acceleration(4) << "\t"<<desired_acceleration(5) << "\t"<<desired_acceleration(6) << "\t"<<desired_acceleration(7) << "\t"<<desired_acceleration(8) << "\t"<<drift_terms(0) << "\t"<<drift_terms(1) << "\t"<<drift_terms(2) << "\t"<<drift_terms(3) << "\t"<<drift_terms(4) << "\t"<<drift_terms(5) << "\t"<<drift_terms(6) << "\t"<<drift_terms(7) << "\t"<<drift_terms(8) << "\t"<<qv_dot_qp(6)<< "\t"<<qv_dot_qp(7)<< "\t"<<qv_dot_qp(8)<< "\t"<<qv_dot_qp(9)<< "\t"<<qv_dot_qp(10)<< std::endl;
+                            // file[0] << q_init_ik(6) << "\t"<< q_init_ik(7) << "\t"<< q_init_ik(8) << "\t" << q_init_ik(9) << "\t"<< q_init_ik(10) << "\t"<< q_init_ik(11)<< "\t"<< q_init_ik(12) << "\t"<<rd_.q_dot_virtual_(0) << "\t"<<rd_.q_dot_virtual_(1) << "\t"<<rd_.q_dot_virtual_(2)<< "\t"<<rd_.q_dot_virtual_(3)<< "\t"<<rd_.q_dot_virtual_(4) << "\t"<<rd_.q_dot_virtual_(5) <<  std::endl;
+                            //  file[0]<<-(rd_.ee_[0].jac_contact.cast<double>().block<1, 12>(1, 6) * rd_.q_dot_virtual_.segment<12>(6))(0)<<"\t"<<rd_.q_dot_virtual_(1)<<"\t"<<q_ddot_ik(1)<<"\t"<<(Ag_.block(0,0,3,18) * rd_.q_dot_virtual_.segment<18>(0))(1) <<"\t"<<(Ag_.block(0,0,3,18) * q_ddot_ik)(1) << "\t"<<total_mass*com_refdy(walking_tick) <<"\t"<<total_mass*rd_.link_[COM_id].v(1)<<"\t"<<com_refy(walking_tick)<<"\t"<<COM_float_current.translation()(1)<<std::endl;//<<"\t"<<q_ddot_ik(0)<<"\t"<<-(rd_.ee_[0].jac_contact.cast<double>().block<1, 12>(0, 6) * q_ddot_ik.segment<12>(6))(0)-(dJ_l.block<1, 12>(0, 6) * qv_dot_qp.segment<12>(6))(0)<<"\t"<<(rd_.ee_[0].jac_contact.cast<double>().block<1, 6>(0, 6) * rd_.q_dot_virtual_.segment<6>(6))(0)<<"\t" <<rd_.ee_[1].jac_contact.cast<double>().block<1, 6>(0, 12) * rd_.q_dot_virtual_.segment<6>(12)<<"\t"<<(rd_.q_dot_virtual_)(0) <<"\t" <<(qv_dot_qp)(0)<<"\t"<< (Ag_ * qv_dot_qp)(0) << "\t"<<total_mass*com_refdx(walking_tick) << "\t" << PELV_float_current.translation()(0)<< "\t"<< com_refx(walking_tick) << "\t" << COM_float_current.translation()(0) << "\t"<< com_refy(walking_tick) << "\t" << COM_float_current.translation()(1) << "\t" << com_sup(2) << "\t" << comR_sup(2) << "\t" << PELV_trajectory_float.translation()(0) << "\t"  << zmp_refx(walking_tick) << "\t" << ZMP_FT_l(0) << "\t" << LFx_trajectory_float(walking_tick) << "\t" << rd_.link_[Left_Foot].xpos(0) << "\t" << LFvz_trajectory_float(walking_tick) << "\t"<< LFz_trajectory_float(walking_tick) << "\t" << rd_.link_[Left_Foot].xpos(2) << "\t" << foot_step(current_step_num,6) <<"\t"<<P_e(0)<<"\t"<< P_e(1)<< "\t" << P_e(2)<< std::endl;;
+                            file[0] << com_refx(walking_tick) << "\t" << COM_float_current.translation()(0) << "\t" << com_refy(walking_tick) << "\t" << COM_float_current.translation()(1) << "\t" << com_sup(2) << "\t" << comR_sup(2) << "\t" << P_e(0) << "\t" << P_e(1) << "\t" << P_e(2) << "\t" << R_e(2) << "\t" << L_e(2) << std::endl;
+                            // file[1] <<c_dot_psem_(1)<<"\t"<<comv_temp(1)<<"\t"<< com_refdy(walking_tick)<<"\t"<< desired_u_dot(1) <<"\t"<< rd_.link_[COM_id].v(1) <<"\t"<< com_refy(walking_tick) << "\t" << COM_float_current.translation()(1) << "\t" << rd_.link_[Pelvis].xipos(1) << "\t" << PELV_trajectory_float.translation()(1) << "\t"  << zmp_refy(walking_tick) << "\t" << ZMP_FT_l(1) <<"\t" << rd_.link_[Right_Foot].xipos(2) <<"\t"<< RFz_trajectory_float(walking_tick) << "\t"<<L_e(0)<<"\t"<<R_e(0)<<"\t"<<P_e(0)<<"\t"<<com_refdy(walking_tick)<<std::endl;
+                        }
+                    }*/
             }
         }
         else if (rd_.tc_.walking_enable == 3.0)
@@ -1055,40 +1155,41 @@ void CustomController::computePlanner()
                 x0.tail(4)(2) = ZMP_FT(0);
             */
             // DDPSOLVE
-            if (walking_tick == t_temp + t_total + t_rest_temp - 200 && wlk_on == true)
+
+            if (walking_ti <= 5000 && walking_ti >= 1800 && walking_ti % 30 == 0 && wlk_on == true)
             {
-             /*   x0.segment<6>(0) = rd_.q_virtual_.segment<6>(0);
-                x0(6) = rd_.q_virtual_(39));
-                x0.segment<12>(7) = rd_.q_virtual_.segment<12>(6);
-                std::cout << rd_.q_virtual_.transpose() << std::endl;
-                x0.tail(4)(0) = data4.com[0](0);
-                x0.tail(4)(2) = data4.com[0](0);
-            */
+                int N_temp;
+                N_temp = 1200 / N;
+
                 for (int i = 0; i < N; i++)
                 {
-                    std::cout << "xL " << walking_tick << " " << t_temp + t_total + t_double1 + t_rest_temp <<std::endl; 
-                    std::cout <<  xL[0][2] << std::endl;
-                    state_bounds[i].lb(0) = xL[100*i + walking_tick][2];
-                    state_bounds[i].ub(0) = xU[100*i + walking_tick][2];
-                    state_bounds[i].lb(1) = yL[100*i + walking_tick][2];
-                    state_bounds[i].ub(1) = yU[100*i + walking_tick][2];
-                    state_activations[i]->set_bounds(state_bounds[i]);   
+                    // std::cout << "xL " << walking_ti << " " << t_temp + t_total + t_double1 + t_rest_temp << std::endl;
+                    // std::cout << xL[0][2] << std::endl;
+                    state_bounds[i].lb(0) = xL[N_temp * (i+1) + walking_ti][2];
+                    state_bounds[i].ub(0) = xU[N_temp * (i+1) + walking_ti][2];
+                    state_bounds[i].lb(1) = yL[N_temp * (i+1) + walking_ti][2];
+                    state_bounds[i].ub(1) = yU[N_temp * (i+1) + walking_ti][2];
+                    state_activations[i]->set_bounds(state_bounds[i]);
 
-                    rf_foot_pos_vector[i].translation() << RFt[100*i + walking_tick ][0] + 0.001, RFt[100*i + walking_tick ][1], RFt[100*i + walking_tick ][2] - (0.158487 - 0.14152);
-                    lf_foot_pos_vector[i].translation() << LFt[100*i + walking_tick ][0] + 0.001, LFt[100*i + walking_tick ][1], LFt[100*i + walking_tick ][2] - (0.158487 - 0.14152);
+                    rf_foot_pos_vector[i].translation() << RFt[N_temp * (i+1) + walking_ti][0] + 0.001, RFt[N_temp * (i+1) + walking_ti][1], RFt[N_temp * (i+1) + walking_ti][2] - (0.158487 - 0.14152);
+                    lf_foot_pos_vector[i].translation() << LFt[N_temp * (i+1) + walking_ti][0] + 0.001, LFt[N_temp * (i+1) + walking_ti][1], LFt[N_temp * (i+1) + walking_ti][2] - (0.158487 - 0.14152);
                     residual_FrameRF[i]->set_reference(rf_foot_pos_vector[i]);
                     residual_FrameLF[i]->set_reference(lf_foot_pos_vector[i]);
-                    std::cout << i  << " lb " << state_bounds[i].lb(0) << "ub " << state_bounds[i].ub(0) << " "  << " lb " << state_bounds[i].lb(1) << "ub " << state_bounds[i].ub(1) << " " << residual_FrameRF[i]->get_reference().translation().transpose()<< " " << residual_FrameLF[i]->get_reference().translation().transpose() <<  std::endl;
+
+                    //file[0] << i << " lb " << state_bounds[i].lb(0) << "ub " << state_bounds[i].ub(0) << " "
+                     //             << " lb " << state_bounds[i].lb(1) << "ub " << state_bounds[i].ub(1) << " " << residual_FrameRF[i]->get_reference().translation().transpose() << " " << residual_FrameLF[i]->get_reference().translation().transpose() << std::endl;
                 }
-                problemWithRK4->set_x0(x0);
+
+                //if(walking_ti >= 1500)
+                problemWithRK4->set_x0(xs[1]);
                 crocoddyl::SolverBoxFDDP ddp(problemWithRK4);
 
-                for (int i = 0; i < N; i++)
+                /*for (int i = 0; i < N; i++)
                 {
                     xs[i] = x0;
                     if (i != N - 1)
                         us[i] = u0;
-                }
+                }*/
 
                 bool CALLBACKS = false;
                 if (CALLBACKS)
@@ -1097,83 +1198,189 @@ void CustomController::computePlanner()
                 }
 
                 int css;
-                Eigen::ArrayXd duration(T);
-                for (unsigned int i = 0; i < T; ++i)
+                Eigen::ArrayXd duration(15);
+                for (unsigned int i = 0; i < 15; ++i)
                 {
                     std::cout << "beforesolve" << std::endl;
+                    /*if (i == 0 && walking_ti < 1500)
+                    {
+                        for(int j = 0; j < N-1; j++)
+                        {    
+                            xs[j] = xs[j + 1];
+                            if(j != N-2)
+                                us[j] = us[j + 1];
+                        }
+                        us[N-2].setZero();
+                    }*/
                     crocoddyl::Timer timer;
-                    css = ddp.solve(xs, us, MAXITER);
-                    std::cout << "aftersolve" << std::endl;
-                    std::cout << "iter :  " << ddp.get_iter() << "  " << css << std::endl;
+                    css = ddp.solve(xs, us, MAXITER, 0.5);
                     duration[i] = timer.get_duration();
-                }
-                xs = ddp.get_xs();
-                us = ddp.get_us();
+                    std::cout << "aftersolve1" << std::endl;
+                    std::cout << "iter :  " << ddp.get_iter() << "  " << css << std::endl;
 
+                    if(css == 0 && ddp.get_iter() != MAXITER)
+                    {
+                        xs = xs_save;
+                        us = us_save;
+                        problemWithRK4->set_x0(xs[1]);
+
+                        for (int j = 0; j < N; j++)
+                        {
+                            file[0] <<walking_ti << " " << i << " lb " << state_bounds[j].lb(0) << "ub " << state_bounds[j].ub(0) << " "
+                                        << " lb " << state_bounds[j].lb(1) << "ub " << state_bounds[j].ub(1) << " " << residual_FrameRF[j]->get_reference().translation().transpose() << " " << residual_FrameLF[j]->get_reference().translation().transpose() << std::endl;
+                        }
+                    }
+                    else
+                    {
+                        xs = ddp.get_xs();
+                        us = ddp.get_us();
+                    }
+
+                    std::cout << "css " << ddp.get_iter() << " " << ddp.get_is_feasible() << std::endl;
+
+                    double duration_dis;
+                    if (i == 0)
+                    {
+                        duration_dis = duration[i];
+                        xs_save = xs;
+                        us_save = us;
+                    }
+                    else if (duration_dis - duration[i] > 0)
+                    {
+                        duration_dis = duration[i];
+                        xs_save = xs;
+                        us_save = us;
+                    }
+
+                    double avrg_duration = duration[i]; //.sum() / T;
+                    double min_duration = duration.minCoeff();
+                    double max_duration = duration.maxCoeff();
+
+                    std::cout << "  DDP.solve [ms]: " << avrg_duration << " (" << min_duration << "-" << max_duration << ")"
+                              << std::endl;
+                }
+
+                if (css == 0)
+                {
+                    /*    for (int i = 0; i < N - 2; i++)
+                        {
+                            std::cout << "q " << i << std::endl;
+                            for (int j = 0; j < 19; j++)
+                            {
+                                std::cout << xs[i][j] << ", ";
+                            }
+                            std::cout << "qdot " << i << std::endl;
+                            {
+                                for (int j = 19; j < 37; j++)
+                                {
+                                    std::cout << xs[i][j] << ", ";
+                                }
+                            }
+                            std::cout << "x_state " << i << std::endl;
+                            {
+                                for (int j = 37; j < 45; j++)
+                                {
+                                    std::cout << xs[i][j] << ", ";
+                                }
+                            }
+                            std::cout << std::endl;
+                            std::cout << "u " << i << std::endl;
+                            for (int j = 0; j < actuation->get_nu(); j++)
+                            {
+                                std::cout << us[i][j] << ", ";
+                            }
+                            std::cout << "ustate" << std::endl;
+                            for (int j = actuation->get_nu(); j < actuation->get_nu() + 4; j++)
+                            {
+                                std::cout << us[i][j] << ", ";
+                            }
+                            std::cout << std::endl;
+                        }
+
+                        std::cout << "q " << N - 1 << std::endl;
+                        for (int j = 0; j < 19; j++)
+                        {
+                            std::cout << xs[N - 1][j] << ", ";
+                        }
+                        std::cout << "qdot " << N - 1 << std::endl;
+                        {
+                            for (int j = 19; j < 37; j++)
+                            {
+                                std::cout << xs[N - 1][j] << ", ";
+                            }
+                        }
+                        std::cout << "x_state " << N - 1 << std::endl;
+                        {
+                            for (int j = 37; j < 45; j++)
+                            {
+                                std::cout << xs[N - 1][j] << ", ";
+                            }
+                        }*/
+                    css_count = css_count + 1;
+                }
+                std::cout << "walking_tick " << walking_ti<< " css_count : " << css_count << std::endl;
+                file[1] << "walking_tick " << walking_ti << " css " << ddp.get_iter() << " " << css << " " << ddp.get_is_feasible() << std::endl;
                 for (int i = 0; i < N - 1; i++)
                 {
-                    std::cout << "q " << i << std::endl;
+                    file[1] << "q " << i << std::endl;
                     for (int j = 0; j < 19; j++)
                     {
-                        std::cout << xs[i][j] << ", ";
+                        file[1] << xs_save[i][j] << ", ";
                     }
-                    std::cout << "qdot " << i << std::endl;
+                    file[1] << "qdot " << i << std::endl;
                     {
                         for (int j = 19; j < 37; j++)
                         {
-                            std::cout << xs[i][j] << ", ";
+                            file[1] << xs_save[i][j] << ", ";
                         }
                     }
-                    std::cout << "x_state " << i << std::endl;
+                    file[1] << "x_state " << i << std::endl;
                     {
                         for (int j = 37; j < 45; j++)
                         {
-                            std::cout << xs[i][j] << ", ";
+                            file[1] << xs_save[i][j] << ", ";
                         }
                     }
-                    std::cout << std::endl;
-                    std::cout << "u " << i << std::endl;
+                    file[1] << std::endl;
+                    file[1] << "u " << i << std::endl;
                     for (int j = 0; j < actuation->get_nu(); j++)
                     {
-                        std::cout << us[i][j] << ", ";
+                        file[1] << us_save[i][j] << ", ";
                     }
-                    std::cout << "ustate" << std::endl;
+                    file[1] << "ustate" << std::endl;
                     for (int j = actuation->get_nu(); j < actuation->get_nu() + 4; j++)
                     {
-                        std::cout << us[i][j] << ", ";
+                        file[1] << us_save[i][j] << ", ";
                     }
-                    std::cout << std::endl;
+                    file[1] << std::endl;
                 }
 
-                std::cout << "q " << N - 1 << std::endl;
+                file[1] << "q " << N - 1 << std::endl;
                 for (int j = 0; j < 19; j++)
                 {
-                    std::cout << xs[N - 1][j] << ", ";
+                    file[1] << xs_save[N - 1][j] << ", ";
                 }
-                std::cout << "qdot " << N - 1 << std::endl;
+                file[1] << "qdot " << N - 1 << std::endl;
                 {
                     for (int j = 19; j < 37; j++)
                     {
-                        std::cout << xs[N - 1][j] << ", ";
+                        file[1] << xs_save[N - 1][j] << ", ";
                     }
                 }
-                std::cout << "x_state " << N - 1 << std::endl;
+                file[1] << "x_state " << N - 1 << std::endl;
                 {
                     for (int j = 37; j < 45; j++)
                     {
-                        std::cout << xs[N - 1][j] << ", ";
+                        file[1] << xs_save[N - 1][j] << ", ";
                     }
                 }
+                file[1] << std::endl;
+            //    file[0] << walking_ti << "\t" << state_bounds[0].lb(0) << "\t" << state_bounds[0].ub(0) << " "
+            //            << "\t" << state_bounds[0].lb(1) << "\t" << state_bounds[0].ub(1) << " " << residual_FrameRF[0]->get_reference().translation().transpose() << " " << residual_FrameLF[0]->get_reference().translation().transpose() << std::endl;
 
-                std::cout << "css " << ddp.get_iter() << " " << ddp.get_is_feasible() << std::endl;
-
-                double avrg_duration = duration.sum() / T;
-                double min_duration = duration.minCoeff();
-                double max_duration = duration.maxCoeff();
-
-                std::cout << "  DDP.solve [ms]: " << avrg_duration << " (" << min_duration << "-" << max_duration << ")"
-                          << std::endl;
             }
+                
+            walking_ti = walking_ti + 1;
         }
     }
 }
@@ -1508,7 +1715,7 @@ void CustomController::walking_x()
             d_ocp_qp_sol_get_x(i, &qp_solx, x11x);
             d_ocp_qp_sol_get_sl(i, &qp_solx, slx);
             d_ocp_qp_sol_get_su(i, &qp_solx, sux);
-            file[0] << x11x[0] << "\t" << x11x[2] << "\t" << x11x[3] << "\t" << x11x[4] << "\t" << sux[0] << "\t" << slx[0] << "\t" << slx[1] << "\t" << sux[1] << "\t" << hd_lbxx[i][2] << "\t" << hd_ubxx[i][2] << std::endl; //(hd_lgx[i][0] - hCx[i][0] * x11x[0] - hCx[i][2] * x11x[1] - hCx[i][4] * x11x[2] - hCx[i][6] * x11x[3])/hCx[i][8] <<"\t"<<hCx[i][0] * x11x[0] + hCx[i][2] * x11x[1] + hCx[i][4] * x11x[2] + hCx[i][6] * x11x[3] + hCx[i][8] * x11x[4]<<"\t"/*<<hd_lgx[i][0]<<"\t"<<hd_ugx[i][0]<<"\t"*/<<hd_lgx[i][0]-1 * slx[0] << "\t" <<hd_lgx[i][0] + sux[0]<< "\t" <<hd_lgx[i][1]-slx[1]<<"\t"<<hd_lgx[i][1]+sux[1]<<"\t"<<hpipm_statusx<< "\t"<<hCx[i][7]<<std::endl;
+            //            file[0] << x11x[0] << "\t" << x11x[2] << "\t" << x11x[3] << "\t" << x11x[4] << "\t" << sux[0] << "\t" << slx[0] << "\t" << slx[1] << "\t" << sux[1] << "\t" << hd_lbxx[i][2] << "\t" << hd_ubxx[i][2] << std::endl; //(hd_lgx[i][0] - hCx[i][0] * x11x[0] - hCx[i][2] * x11x[1] - hCx[i][4] * x11x[2] - hCx[i][6] * x11x[3])/hCx[i][8] <<"\t"<<hCx[i][0] * x11x[0] + hCx[i][2] * x11x[1] + hCx[i][4] * x11x[2] + hCx[i][6] * x11x[3] + hCx[i][8] * x11x[4]<<"\t"/*<<hd_lgx[i][0]<<"\t"<<hd_ugx[i][0]<<"\t"*/<<hd_lgx[i][0]-1 * slx[0] << "\t" <<hd_lgx[i][0] + sux[0]<< "\t" <<hd_lgx[i][1]-slx[1]<<"\t"<<hd_lgx[i][1]+sux[1]<<"\t"<<hpipm_statusx<< "\t"<<hCx[i][7]<<std::endl;
         }
     }
 

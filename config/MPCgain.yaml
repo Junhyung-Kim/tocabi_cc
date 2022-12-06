@@ -104,21 +104,21 @@ q4 : 1.4
 
 weight_quad_zmpx : 100.0 
 weight_quad_zmpy : 7.0 
-weight_quad_comx : 5.0
-weight_quad_comy : 5.0 
-weight_quad_comz : 0.9 
-weight_quad_camx : 0.5 
-weight_quad_camy : 0.5 
-weight_quad_rfx : 5.0 
-weight_quad_rfy : 0.1 
-weight_quad_rfz : 50.0 
-weight_quad_lfx : 5.0 
-weight_quad_lfy : 0.1 
-weight_quad_lfz : 50.0
+weight_quad_comx : 10.0
+weight_quad_comy : 10.0 
+weight_quad_comz : 5.0 
+weight_quad_camx : 1.8
+weight_quad_camy : 1.8
+weight_quad_rfx : 10.0 
+weight_quad_rfy : 10.0
+weight_quad_rfz : 99.0 
+weight_quad_lfx : 10.0 
+weight_quad_lfy : 10.0 
+weight_quad_lfz : 99.0
 
-weight_quad_rfroll : 0.001 
-weight_quad_rfpitch : 0.001 
+weight_quad_rfroll : 0.01 
+weight_quad_rfpitch : 0.01 
 weight_quad_rfyaw : 0.001
-weight_quad_lfroll : 0.001 
-weight_quad_lfpitch : 0.001 
+weight_quad_lfroll : 0.01 
+weight_quad_lfpitch : 0.01 
 weight_quad_lfyaw : 0.001

@@ -1081,6 +1081,8 @@ void ResidualModelCentroidalAngularMomentumTpl<Scalar>::calc(const boost::shared
   pinocchio::computeCentroidalMomentum(*pin_model_.get(), *d->pinocchio, q, v);
   data->r(0) = d->pinocchio->hg.toVector()(3) - x_state(7);
   data->r(1) = d->pinocchio->hg.toVector()(4) - x_state(3);
+  //std::cout << "data_>r" << std::endl;
+  //std::cout << data->r(0) <<" " << data->r(1)<< std::endl;
 }
 
 template <typename Scalar>
@@ -1916,7 +1918,6 @@ template <typename Scalar>
 void ResidualKinoFramePlacementTpl<Scalar>::set_id(const pinocchio::FrameIndex id) {
   id_ = id;
 }
-
 template <typename Scalar>
 void ResidualKinoFramePlacementTpl<Scalar>::set_reference(const SE3& placement) {
   pref_ = placement;
@@ -1984,12 +1985,18 @@ Eigen::VectorXd x0;
 Eigen::VectorXd u0;
 boost::shared_ptr<crocoddyl::ShootingProblem> problemWithRK4;
 std::vector<Eigen::VectorXd> xs, us;
+std::vector<Eigen::VectorXd> xs_save, us_save;
 std::vector<boost::shared_ptr<crocoddyl::CallbackAbstract>> cbs;
 
 double dt_;
 pinocchio::Data data4;
 
 
+Eigen::MatrixXd jointtick_, jointdottick_, xstatetick_, utick_, ustatetick_;
+
 unsigned int N = 10; // number of nodes
 unsigned int T = 1;  // number of trials
 unsigned int MAXITER = 100;
+
+int walking_ti = 1050;
+int css_count = 0;

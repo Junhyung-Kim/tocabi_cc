@@ -1422,7 +1422,7 @@ void WalkingController::mpcStateContraint(RobotData &Robot)
     xU = (double **)malloc((t_total * (total_step_num + 1) + t_temp - 1 + 30 * N_) * sizeof(double *));
     yL = (double **)malloc((t_total * (total_step_num + 1) + t_temp - 1 + 30 * N_) * sizeof(double *));
     yU = (double **)malloc((t_total * (total_step_num + 1) + t_temp - 1 + 30 * N_) * sizeof(double *));
-    RFt = (double **)malloc((t_total * (total_step_num + 1) + t_temp - 1 + 30 * N_) * sizeof(double *));\
+    RFt = (double **)malloc((t_total * (total_step_num + 1) + t_temp - 1 + 30 * N_) * sizeof(double *));
     LFt = (double **)malloc((t_total * (total_step_num + 1) + t_temp - 1 + 30 * N_) * sizeof(double *));
     zmpx = (double **)malloc((t_total * (total_step_num + 1) + t_temp - 1 + 30 * N_) * sizeof(double *));
     zmpy = (double **)malloc((t_total * (total_step_num + 1) + t_temp - 1 + 30 * N_) * sizeof(double *));
