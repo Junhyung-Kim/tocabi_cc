@@ -88,7 +88,7 @@ public:
 
     //FT
     Eigen::Vector2d RT, LT, RT_prev, LT_prev, RT_l, LT_l, RT_mu, LT_mu;
-    Eigen::Vector3d RF_d, LF_d, z_ctrl;
+    Eigen::Vector3d RF_d, LF_d, z_ctrl, z_ctrl_prev, zd_ctrl;
     double K_fx, T_fx, K_fy, T_fy, K_fz, T_fz;
     Eigen::Isometry3d pelv_yaw;
     double pelv_init_sup;

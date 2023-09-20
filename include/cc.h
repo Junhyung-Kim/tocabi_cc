@@ -41,8 +41,10 @@ public:
     void computePlanner();
     void copyRobotData(RobotData &rd_l);
     void GuiCommandCallback(const std_msgs::StringConstPtr &msg);
-    void momentumControl(RobotData &Robot, Eigen::Vector3d comd,  Eigen::Vector2d ang_, Eigen::Vector3d rfootd, Eigen::Vector3d lfootd, Eigen::Vector2d upperd);
-    
+    void momentumControl(RobotData &Robot, Eigen::Vector3d comd,  Eigen::Vector2d ang_, Eigen::Vector3d rfootd, Eigen::Vector3d lfootd, Eigen::Vector2d upperd, Eigen::Vector3d rfootori, Eigen::Vector3d lfootori);
+    void zmpControl(RobotData &rd_l);
+    void dspForceControl(RobotData &Robot, double alpha);
+
     std::future<void> solverx;
     std::future<void> solvery;
 
@@ -137,11 +139,16 @@ public:
     Eigen::MatrixXd RF_matrix;
     Eigen::MatrixXd LF_matrix;
     Eigen::MatrixXd ZMP_bound_matrix;
+    Eigen::MatrixXd RF_matrix_ssp2;
+    Eigen::MatrixXd LF_matrix_ssp2;
+    Eigen::MatrixXd ZMP_bound_matrix_ssp2;
     Eigen::Vector3d ZMP_measured;
     Eigen::VectorXd COMX, MOMX;
     Eigen::Vector3d comd_;
     Eigen::Vector2d angd_;
-
+    Eigen::Vector4d control_input, control_input1, control_input1prev;
+    Eigen::Vector2d LT, RT, LT_l, RT_l, LT_prev, RT_prev;
+    Eigen::Vector3d F_diff, F_diff_m;
 private:
     Eigen::VectorQd ControlVal_;
 };
