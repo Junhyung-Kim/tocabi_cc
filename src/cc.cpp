@@ -651,7 +651,7 @@ void CustomController::computeSlow()
                 TorqueContact = WBC::ContactForceRedistributionTorqueWalking(rd_, TorqueGrav, fc_ratio, rate, 1);
                 rd_.torque_desired_walk = TorqueContact;
             }
-            else if(mpc_cycle > 67)
+            else if(mpc_cycle > 67 && mpc_cycle < 94)
             {
                 rd_.ee_[0].contact = 1.0;
                 rd_.ee_[1].contact = 0.0;
@@ -660,6 +660,16 @@ void CustomController::computeSlow()
                 //TorqueContact = WBC::ContactForceRedistributionTorqueWalking(rd_, TorqueGrav, fc_ratio, rate, 1);
                 rd_.torque_desired_walk = TorqueGrav;// + TorqueContact;
                 //rd_.torque_desired_walk = WBC::ContactForceRedistributionTorque(rd_, WBC::GravityCompensationTorque(rd_));
+            }
+            else if(mpc_cycle == 94 || mpc_cycle == 95)
+            {
+                rd_.ee_[0].contact = 1.0;
+                rd_.ee_[1].contact = 1.0;
+                WBC::SetContact(rd_, rd_.ee_[0].contact, rd_.ee_[1].contact);
+                rate = DyrosMath::cubic(walking_tick + 40*(mpc_cycle - 94), 0 , 80, 0, 1, 0, 0);
+                TorqueGrav = WBC::GravityCompensationTorque(rd_);
+                TorqueContact = WBC::ContactForceRedistributionTorqueWalking(rd_, TorqueGrav, fc_ratio, rate, 1);
+                rd_.torque_desired_walk = TorqueContact;
             }
             else
             {
@@ -810,7 +820,7 @@ void CustomController::computeFast()
             {
                 wk_Hz = 2000;
                 wk_dt = 1 / wk_Hz;
-                controlwalk_time = 97;
+                controlwalk_time = 98;
                
                 //std::cout << " aaa" << std::endl;
                 if (walking_tick == 0)
@@ -1297,13 +1307,13 @@ void CustomController::computeFast()
                     if(mpc_cycle < controlwalk_time-1)
                     {
                         
-                        /*if(mpc_cycle < 50)
+                       /* if(mpc_cycle < 50)
                             file[1]  <<  mpc_cycle << " " << RF_matrix(mpc_cycle+1,2)<< " " << LF_matrix(mpc_cycle+1,2) << " " << rd_.link_[Right_Foot].xipos(0) << " "<<  RF_matrix(mpc_cycle+1,1) << " " << rd_.link_[Right_Foot].xipos(1) << " "<<  RF_matrix(mpc_cycle+1,2) << " " << rd_.link_[Right_Foot].xipos(2) -0.07236<< " " << com_mpc[0] << " " << rd_.link_[COM_id].xpos(0) << " " << com_mpc[1] << " " << rd_.link_[COM_id].xpos(1) << std::endl;
                         else
                             file[1]  <<  mpc_cycle << " " << RF_matrix_ssp2(mpc_cycle-48,2) << " " << LF_matrix_ssp2(mpc_cycle-48,2) << " " << rd_.link_[Right_Foot].xipos(0) << " "<<  RF_matrix_ssp2(mpc_cycle-48,1) << " " << rd_.link_[Right_Foot].xipos(1) << " "<<  RF_matrix_ssp2(mpc_cycle-48,2) << " " << rd_.link_[Right_Foot].xipos(2) << " " << com_mpc[0] << " " << rd_.link_[COM_id].xpos(0) << " " << com_mpc[1] << " " << rd_.link_[COM_id].xpos(1) << std::endl;
                         */
 
-                        file[1] << mpc_cycle << " "<<  com_mpc[0] << " " << rd_.link_[COM_id].xpos(0) << " " << com_mpc[1] << " " << rd_.link_[COM_id].xpos(1) << " " << zmp_mpcx << " " << ZMP_FT_law(0) << " " << zmp_mpcy << " " <<ZMP_FT_law(1)<<" " << q_pinocchio_desired(20) << " " << rd_.q_(13)<< " " << q_pinocchio_desired(21) << " " << rd_.q_(14)<< std::endl;
+                        file[1] << mpc_cycle << " "<<  com_mpc[0] << " " << rd_.link_[COM_id].xpos(0) << " " << com_mpc[1] << " " << rd_.link_[COM_id].xpos(1) << " " << zmp_mpcx << " " << ZMP_FT_law(0) << " " << zmp_mpcy << " " <<ZMP_FT_law(1)<< " " << control_input1(0)<< " " << control_input1(1)<< " " << control_input1(2)<< " " << control_input1(3)<<std::endl;//" "<< q_pinocchio_desired(20) << " " << rd_.q_(13)<< " " << q_pinocchio_desired(21) << " " << rd_.q_(14)<< std::endl;
                     }
                     auto elapsed = std::chrono::duration_cast<std::chrono::microseconds>(endTime - startTime);
                     auto elapsed1 = std::chrono::duration_cast<std::chrono::microseconds>(endTime1 - startTime1);
@@ -1577,12 +1587,12 @@ void CustomController::zmpControl(RobotData &Robot)
         app_dr = 65;
         apk_dr = 0.04;
 
-        arp_sl = 75;
-        ark_sl = 0.03;
+        arp_sl = 30;
+        ark_sl = 0.05;
         app_sl = 20;
         apk_sl = 0.05;
 
-        arp_sr = 75;
+        arp_sr = 30;
         ark_sr = 0.05;
         app_sr = 20;
         apk_sr = 0.05;//0.06
