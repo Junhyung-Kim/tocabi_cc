@@ -149,6 +149,8 @@ public:
     Eigen::Vector4d control_input, control_input1, control_input1prev;
     Eigen::Vector2d LT, RT, LT_l, RT_l, LT_prev, RT_prev;
     Eigen::Vector3d F_diff, F_diff_m;
+
+    int controlwalk_time;
 private:
     Eigen::VectorQd ControlVal_;
 };
