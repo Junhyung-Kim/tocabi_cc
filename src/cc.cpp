@@ -242,7 +242,7 @@ CustomController::CustomController(RobotData &rd) : rd_(rd) //, wbc_(dc.wbc_)
     statemachine.setKey(3);
     statemachine.setupSharedMemoryRead(sizeof(int) * 3);
     statemachine.attachSharedMemoryint();
-    std::cout << "SHAREDMEMORY Third  OK"<< std::endl;
+    std::cout << "SHAREDMEMORY Th2ird  OK"<< std::endl;
     desired_val.setKey(4);
     desired_val.setupSharedMemoryRead(sizeof(double) * 49);
     desired_val.attachSharedMemory();
@@ -820,7 +820,7 @@ void CustomController::computeFast()
             {
                 wk_Hz = 2000;
                 wk_dt = 1 / wk_Hz;
-                controlwalk_time = 98;
+                controlwalk_time = 99;
                
                 //std::cout << " aaa" << std::endl;
                 if (walking_tick == 0)
@@ -1141,13 +1141,13 @@ void CustomController::computeFast()
                         {   
                             if(mpc_cycle <= 50)
                             {
-                                    rfootd[0] = (RF_matrix(mpc_cycle+1,0)-RF_matrix(mpc_cycle,0))/0.02;
-                                    rfootd[1] = (RF_matrix(mpc_cycle+1,1)-RF_matrix(mpc_cycle,1))/0.02;
-                                    rfootd[2] = (RF_matrix(mpc_cycle+1,2)-RF_matrix(mpc_cycle,2))/0.02;
+                                rfootd[0] = (RF_matrix(mpc_cycle+1,0)-RF_matrix(mpc_cycle,0))/0.02;
+                                rfootd[1] = (RF_matrix(mpc_cycle+1,1)-RF_matrix(mpc_cycle,1))/0.02;
+                                rfootd[2] = (RF_matrix(mpc_cycle+1,2)-RF_matrix(mpc_cycle,2))/0.02;
 
-                                    lfootd[0] = (LF_matrix(mpc_cycle+1,0)-LF_matrix(mpc_cycle,0))/0.02;
-                                    lfootd[1] = (LF_matrix(mpc_cycle+1,1)-LF_matrix(mpc_cycle,1))/0.02;
-                                    lfootd[2] = (LF_matrix(mpc_cycle+1,2)-LF_matrix(mpc_cycle,2))/0.02;
+                                lfootd[0] = (LF_matrix(mpc_cycle+1,0)-LF_matrix(mpc_cycle,0))/0.02;
+                                lfootd[1] = (LF_matrix(mpc_cycle+1,1)-LF_matrix(mpc_cycle,1))/0.02;
+                                lfootd[2] = (LF_matrix(mpc_cycle+1,2)-LF_matrix(mpc_cycle,2))/0.02;
                             }
                             else
                             {
@@ -1689,26 +1689,26 @@ void CustomController::zmpControl(RobotData &Robot)
             {
                 if (i == 1 || i == 3)
                 {
-                    if (control_input1(i) > 0.1500)
+                    if (control_input1(i) > 0.3000)
                     {
-                        control_input1(i) = 0.1500;
+                        control_input1(i) = 0.3000;
                     }
 
-                    if (control_input1(i) < -0.1500)
+                    if (control_input1(i) < -0.3000)
                     {
-                        control_input1(i) = -0.1500;
+                        control_input1(i) = -0.3000;
                     }
                 }
                 else
                 {
-                    if (control_input1(i) > 0.1500)
+                    if (control_input1(i) > 0.3000)
                     {
-                        control_input1(i) = 0.1500;
+                        control_input1(i) = 0.3000;
                     }
 
-                    if (control_input1(i) < -0.1500)
+                    if (control_input1(i) < -0.3000)
                     {
-                        control_input1(i) = -0.1500;
+                        control_input1(i) = -0.3000;
                     }
                 }
             }
@@ -1716,26 +1716,26 @@ void CustomController::zmpControl(RobotData &Robot)
             {
                 if (i == 1 || i == 3)
                 {
-                    if (control_input1(i) > 0.1500)
+                    if (control_input1(i) > 0.3000)
                     {
-                        control_input1(i) = 0.1500;
+                        control_input1(i) = 0.3000;
                     }
 
-                    if (control_input1(i) < -0.1500)
+                    if (control_input1(i) < -0.3000)
                     {
-                        control_input1(i) = -0.1500;
+                        control_input1(i) = -0.3000;
                     }
                 }
                 else
                 {
-                    if (control_input1(i) > 0.1500)
+                    if (control_input1(i) > 0.3000)
                     {
-                        control_input1(i) = 0.1500;
+                        control_input1(i) = 0.3000;
                     }
 
-                    if (control_input1(i) < -0.1500)
+                    if (control_input1(i) < -0.3000)
                     {
-                        control_input1(i) = -0.1500;
+                        control_input1(i) = -0.3000;
                     }
                 }
             }
