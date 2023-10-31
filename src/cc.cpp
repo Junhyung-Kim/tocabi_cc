@@ -40,7 +40,7 @@ CustomController::CustomController(RobotData &rd) : rd_(rd) //, wbc_(dc.wbc_)
     nh.setCallbackQueue(&queue_cc_);
     gui_sub_ = nh.subscribe("/chatter", 1, &CustomController::GuiCommandCallback, this);
 
-    
+   
     nh.getParam("/tocabi_controller/Qx1", Qx1_mpc);
     nh.getParam("/tocabi_controller/Qx2", Qx2_mpc);
     nh.getParam("/tocabi_controller/Qx3", Qx3_mpc);
@@ -190,7 +190,7 @@ CustomController::CustomController(RobotData &rd) : rd_(rd) //, wbc_(dc.wbc_)
     wlk_on = false;
     walking_tick = 0;
     q_dm.resize(18);
-    
+   
     int shm_id_;
     if ((shm_id_ = shmget(key_t(1), sizeof(sizeof(int) * 3), IPC_CREAT | 0666)) == -1)
     {
@@ -258,13 +258,16 @@ CustomController::CustomController(RobotData &rd) : rd_(rd) //, wbc_(dc.wbc_)
     std::fstream read_file3("/home/jhk/walkingdata/beforedata/ssp2/lfoot1.txt");
     std::fstream read_file4("/home/jhk/walkingdata/beforedata/ssp2/rfoot2.txt");
     std::fstream read_file5("/home/jhk/walkingdata/beforedata/ssp2/zmp3.txt");
-    
-    std::vector<double> RF_tran, LF_tran, ZMP_bound, RF_tran_ssp2, LF_tran_ssp2, ZMP_bound_ssp2;
+    std::fstream read_file6("/home/jhk/walkingdata/beforedata/ssp1/lfoot2.txt");
+    std::fstream read_file7("/home/jhk/walkingdata/beforedata/ssp1/rfoot2.txt");
+    std::fstream read_file8("/home/jhk/walkingdata/beforedata/ssp1/zmp3.txt");
+   
+    std::vector<double> RF_tran, LF_tran, ZMP_bound, RF_tran_ssp2, LF_tran_ssp2, ZMP_bound_ssp2, RF_tran_ssp1, LF_tran_ssp1, ZMP_bound_ssp1;
     std::string string_test;
     double jointvalue;
     control_input.setZero();
 
-    if (read_file.is_open() && read_file3.is_open())
+    if (read_file.is_open() && read_file3.is_open() && read_file6.is_open())
     {
         while (!read_file.eof())
         {  
@@ -293,21 +296,35 @@ CustomController::CustomController(RobotData &rd) : rd_(rd) //, wbc_(dc.wbc_)
                 }
             }
         }
+
+        while (!read_file6.eof())
+        {  
+            for (int i = 0; i < 3; i++)
+            {
+                read_file6 >> string_test;
+                //string_test.erase(find(string_test.begin(), string_test.end(), ','));
+                jointvalue = atof(string_test.c_str());
+                if (abs(jointvalue) >= 0.0)
+                {  
+                    LF_tran_ssp1.push_back(jointvalue);
+                }
+            }
+        }
     }
     else
     {
         std::cout << "LF OPEN FAIL" << std::endl;
     }
 
-    if (read_file1.is_open() && read_file4.is_open())
+    if (read_file1.is_open() && read_file4.is_open() && read_file7.is_open())
     {
         while (!read_file1.eof())
-        {   
+        {  
             for (int i = 0; i < 3; i++)
             {
                 read_file1 >> string_test;
                 //string_test.erase(find(string_test.begin(), string_test.end(), ','));
-                
+               
                 jointvalue = atof(string_test.c_str());
                 if (abs(jointvalue) >= 0.0)
                 {  
@@ -328,13 +345,27 @@ CustomController::CustomController(RobotData &rd) : rd_(rd) //, wbc_(dc.wbc_)
                 }
             }
         }
+
+        while (!read_file7.eof())
+        {  
+            for (int i = 0; i < 3; i++)
+            {
+                read_file7 >> string_test;
+                //string_test.erase(find(string_test.begin(), string_test.end(), ','));
+                jointvalue = atof(string_test.c_str());
+                if (abs(jointvalue) >= 0.0)
+                {  
+                    RF_tran_ssp1.push_back(jointvalue);
+                }
+            }
+        }
     }
     else
     {
         std::cout << "RF OPEN FAIL" << std::endl;
     }
 
-    if (read_file2.is_open() && read_file5.is_open())
+    if (read_file2.is_open() && read_file5.is_open() && read_file8.is_open())
     {
         while (!read_file2.eof())
         {  
@@ -363,12 +394,33 @@ CustomController::CustomController(RobotData &rd) : rd_(rd) //, wbc_(dc.wbc_)
                 }
             }
         }
+
+        while (!read_file8.eof())
+        {  
+            for (int i = 0; i < 4; i++)
+            {
+                read_file8 >> string_test;
+                //string_test.erase(find(string_test.begin(), string_test.end(), ','));
+                jointvalue = atof(string_test.c_str());
+                if (abs(jointvalue) >= 0.0)
+                {  
+                    ZMP_bound_ssp1.push_back(jointvalue);
+                }
+            }
+        }
     }
     else
     {
         std::cout << "ZMP OPEN FAIL" << std::endl;
     }
-    
+
+    std::cout << "ZMP" << std::endl;
+    std::cout << ZMP_bound_ssp1.size() << std::endl;
+    std::cout << "RF_tran_ssp1" << std::endl;
+    std::cout << RF_tran_ssp1.size() << std::endl;
+    std::cout << "LF_tran_ssp1" << std::endl;
+    std::cout << LF_tran_ssp1.size() << std::endl;
+
     std::cout << "ZMP" << std::endl;
     std::cout << ZMP_bound_ssp2.size() << std::endl;
     std::cout << "RF_tran_ssp2" << std::endl;
@@ -382,7 +434,7 @@ CustomController::CustomController(RobotData &rd) : rd_(rd) //, wbc_(dc.wbc_)
     std::cout << RF_tran.size() << std::endl;
     std::cout << "LF_tran" << std::endl;
     std::cout << LF_tran.size() << std::endl;
-    
+   
     double *RF_tran1 = &RF_tran[0];
     double *LF_tran1 = &LF_tran[0];
     double *ZMP_bound1 = &ZMP_bound[0];
@@ -391,11 +443,18 @@ CustomController::CustomController(RobotData &rd) : rd_(rd) //, wbc_(dc.wbc_)
     Eigen::MatrixXd ZMP_bound_temp = Eigen::Map<Eigen::MatrixXd>(ZMP_bound1, 4, 110);
     double *RF_tran1_ssp2 = &RF_tran_ssp2[0];
     double *LF_tran1_ssp2 = &LF_tran_ssp2[0];
-    double *ZMP_bound1_ssp2 = &ZMP_bound_ssp2[0]; 
+    double *ZMP_bound1_ssp2 = &ZMP_bound_ssp2[0];
     Eigen::MatrixXd LF_matrix_temp_ssp2 = Eigen::Map<Eigen::MatrixXd>(RF_tran1_ssp2, 3, 133);
     Eigen::MatrixXd RF_matrix_temp_ssp2 = Eigen::Map<Eigen::MatrixXd>(LF_tran1_ssp2, 3, 133);
     Eigen::MatrixXd ZMP_bound_temp_ssp2 = Eigen::Map<Eigen::MatrixXd>(ZMP_bound1_ssp2, 4, 168);
-    
+   
+    double *RF_tran1_ssp1 = &RF_tran_ssp1[0];
+    double *LF_tran1_ssp1 = &LF_tran_ssp1[0];
+    double *ZMP_bound1_ssp1 = &ZMP_bound_ssp1[0];
+    Eigen::MatrixXd LF_matrix_temp_ssp1 = Eigen::Map<Eigen::MatrixXd>(RF_tran1_ssp1, 3, 133);
+    Eigen::MatrixXd RF_matrix_temp_ssp1 = Eigen::Map<Eigen::MatrixXd>(LF_tran1_ssp1, 3, 140);
+    Eigen::MatrixXd ZMP_bound_temp_ssp1 = Eigen::Map<Eigen::MatrixXd>(ZMP_bound1_ssp1, 4, 168);
+   
     Eigen::MatrixXd RF_matrix1, LF_matrix1;
 
     RF_matrix1 = RF_matrix_temp.transpose();
@@ -407,6 +466,9 @@ CustomController::CustomController(RobotData &rd) : rd_(rd) //, wbc_(dc.wbc_)
     RF_matrix_ssp2 = RF_matrix_temp_ssp2.transpose();
     LF_matrix_ssp2 = LF_matrix_temp_ssp2.transpose();
 
+    RF_matrix_ssp1 = RF_matrix_temp_ssp1.transpose();
+    LF_matrix_ssp1 = LF_matrix_temp_ssp1.transpose();
+    
     for(int i = 0; i < RF_matrix.rows(); i++)
     {
         RF_matrix.row(i) = RF_matrix1.row(i);
@@ -430,7 +492,7 @@ Eigen::VectorQd CustomController::getControl()
 void CustomController::computeSlow()
 {
     auto startTime1 = std::chrono::system_clock::now();
-                        
+                       
     queue_cc_.callAvailable(ros::WallDuration());
     //struct timeval start_time, final_time;
     //gettimeofday(&start_time, NULL);
@@ -440,36 +502,63 @@ void CustomController::computeSlow()
     ZMP_l(1) = rd_.LF_CF_FT(3)/rd_.LF_CF_FT(2);
     ZMP_r(0) = -rd_.RF_CF_FT(4)/rd_.RF_CF_FT(2);
     ZMP_r(1) = rd_.RF_CF_FT(3)/rd_.RF_CF_FT(2);
-
-    if(LF_matrix(mpc_cycle+1,2) == 0.0 && RF_matrix(mpc_cycle+1,2) == 0.0)
-    { 
-        contactMode = 1;
-        ZMP(0) = ((ZMP_l(0) + LF_matrix(mpc_cycle+1,0))*rd_.LF_CF_FT(2) + (ZMP_r(0) + RF_matrix(mpc_cycle+1,0))*rd_.RF_CF_FT(2))/(rd_.RF_CF_FT(2) + rd_.LF_CF_FT(2));
-        ZMP(1) = ((ZMP_l(1) + LF_matrix(mpc_cycle+1,1))*rd_.LF_CF_FT(2) + (ZMP_r(1) + RF_matrix(mpc_cycle+1,1))*rd_.RF_CF_FT(2))/(rd_.RF_CF_FT(2) + rd_.LF_CF_FT(2));
-    }
-    else if(LF_matrix(mpc_cycle+1,2) == 0.0)
+    if(mpc_cycle <= 97)
     {
-        contactMode = 2;
-        ZMP(0) = ZMP_l(0)+ LF_matrix(mpc_cycle+1,0);
-        ZMP(1) = ZMP_l(1)+ LF_matrix(mpc_cycle+1,1);
-        ZMP_r(0) = 0.0;
-        ZMP_r(1) = 0.0;
+        if(LF_matrix(mpc_cycle+1,2) == 0.0 && RF_matrix(mpc_cycle+1,2) == 0.0)
+        {
+            contactMode = 1;
+            ZMP(0) = ((ZMP_l(0) + LF_matrix(mpc_cycle+1,0))*rd_.LF_CF_FT(2) + (ZMP_r(0) + RF_matrix(mpc_cycle+1,0) )*rd_.RF_CF_FT(2))/(rd_.RF_CF_FT(2) + rd_.LF_CF_FT(2));
+            ZMP(1) = ((ZMP_l(1) + LF_matrix(mpc_cycle+1,1) )*rd_.LF_CF_FT(2) + (ZMP_r(1) + RF_matrix(mpc_cycle+1,1))*rd_.RF_CF_FT(2))/(rd_.RF_CF_FT(2) + rd_.LF_CF_FT(2));
+        }
+        else if(LF_matrix(mpc_cycle+1,2) == 0.0)
+        {
+            contactMode = 2;
+            ZMP(0) = ZMP_l(0)+ LF_matrix(mpc_cycle+1,0);
+            ZMP(1) = ZMP_l(1)+ LF_matrix(mpc_cycle+1,1);
+            ZMP_r(0) = 0.0;
+            ZMP_r(1) = 0.0;
+        }
+        else if(RF_matrix(mpc_cycle+1,2) == 0.0)
+        {
+            contactMode = 3;
+            ZMP(0) = ZMP_r(0)+ RF_matrix(mpc_cycle+1,0);
+            ZMP(1) = ZMP_r(1)+ RF_matrix(mpc_cycle+1,1);
+            ZMP_l(0) = 0.0;
+            ZMP_l(1) = 0.0;
+        }
     }
-    else if(RF_matrix(mpc_cycle+1,2) == 0.0)
+    else
     {
-        contactMode = 3;
-        ZMP(0) = ZMP_r(0)+ RF_matrix(mpc_cycle+1,0);
-        ZMP(1) = ZMP_r(1)+ RF_matrix(mpc_cycle+1,1);
-        ZMP_l(0) = 0.0;
-        ZMP_l(1) = 0.0;
+        if(LF_matrix_ssp1(mpc_cycle-96,2) == 0.0 && RF_matrix_ssp1(mpc_cycle-96,2) == 0.0)
+        {
+            contactMode = 1;
+            ZMP(0) = ((ZMP_l(0) + LF_matrix_ssp1(mpc_cycle-96,0)+0.04957 + 0.1)*rd_.LF_CF_FT(2) + (ZMP_r(0) + RF_matrix_ssp1(mpc_cycle-96,0)+0.04957 + 0.1)*rd_.RF_CF_FT(2))/(rd_.RF_CF_FT(2) + rd_.LF_CF_FT(2));
+            ZMP(1) = ((ZMP_l(1) + LF_matrix_ssp1(mpc_cycle-96,1))*rd_.LF_CF_FT(2) + (ZMP_r(1) + RF_matrix_ssp1(mpc_cycle-97,1))*rd_.RF_CF_FT(2))/(rd_.RF_CF_FT(2) + rd_.LF_CF_FT(2));
+        }
+        else if(LF_matrix_ssp1(mpc_cycle-96,2) == 0.0)
+        {
+            contactMode = 2;
+            ZMP(0) = ZMP_l(0)+ LF_matrix_ssp1(mpc_cycle-96,0)+0.04957 + 0.1;
+            ZMP(1) = ZMP_l(1)+ LF_matrix_ssp1(mpc_cycle-96,1);
+            ZMP_r(0) = 0.0;
+            ZMP_r(1) = 0.0;
+        }
+        else if(RF_matrix_ssp1(mpc_cycle-96,2) == 0.0)
+        {
+            contactMode = 3;
+            ZMP(0) = ZMP_r(0)+ RF_matrix_ssp1(mpc_cycle-96,0)+0.04957 + 0.1;
+            ZMP(1) = ZMP_r(1)+ RF_matrix_ssp1(mpc_cycle-96,1);
+            ZMP_l(0) = 0.0;
+            ZMP_l(1) = 0.0;
+        }
     }
-    
+   
     if(walking_tick == 0 && mpc_cycle == 1)
     {
         ZMP_FT_law(0) = ZMP(0);
         ZMP_FT_law(1) = ZMP(1);
     }
-    
+   
     cc_mutex.lock();
     for (int i = 0; i < 6; i++)
         q_pinocchio[i] = rd_.q_virtual_[i];
@@ -478,7 +567,7 @@ void CustomController::computeSlow()
 
     for (int i = 6; i < MODEL_DOF_VIRTUAL; i ++)
         q_pinocchio[i+1] = rd_.q_virtual_[i];
-    
+   
     ZMP_FT_law(0) = DyrosMath::lpf(ZMP(0), ZMP_FT_law(0), 2000, 15);
     ZMP_FT_law(1) = DyrosMath::lpf(ZMP(1), ZMP_FT_law(1), 2000, 15);
     ZMP_FT(0) = ZMP(0);
@@ -498,7 +587,7 @@ void CustomController::computeSlow()
         q_virtual_111(i+20) = desired_val.m_shared_memory[i+18];
         //std::cout << "i " << i << std::endl;
     }
-  
+ 
 
     for (int i = 0; i < 18; i ++)
     {
@@ -511,18 +600,75 @@ void CustomController::computeSlow()
         //std::cout << "i " << i << std::endl;
     }*/
 
-    
+   
     //for (int i = 0; i < MODEL_DOF_VIRTUAL + 1; i ++)
     //    q_dot_virtual_11(i) = desired_val.m_shared_memory[i];
-    
+   
     pinocchio::computeCentroidalMomentum(model, model_data1, q_pinocchio, rd_.q_dot_virtual_);
     CMM = pinocchio::computeCentroidalMap(model, model_data1, q_pinocchio);  
     pinocchio::forwardKinematics(model, model_data1, q_pinocchio);
     pinocchio::updateFramePlacements(model,model_data1);
     pinocchio::centerOfMass(model, model_data1, q_pinocchio, rd_.q_dot_virtual_);
-    
+    pinocchio::computeAllTerms(model, model_data1, q_pinocchio, rd_.q_dot_virtual_);
     //pinocchio::centerOfMass(model, model_data1, q_virtual_111, q_dot_virtual_11);
+    Eigen::MatrixXd RFj, LFj, M_;
+    Eigen::VectorXd nle;
+    RFj.resize(6, MODEL_DOF_VIRTUAL);
+    LFj.resize(6, MODEL_DOF_VIRTUAL);
+    pinocchio::getFrameJacobian(model, model_data1, RFcframe_id,WORLD,RFj);
+    pinocchio::getFrameJacobian(model, model_data1, LFcframe_id,WORLD,LFj);
     cc_mutex.unlock();
+
+    //Eigen::VectorVQd tau_;
+    Eigen::VectorXd Fc, tau_;
+    tau_.resize(6+MODEL_DOF_VIRTUAL);
+    tau_.setZero();
+    if(contactMode  == 1)
+    {
+        Eigen::MatrixXd J_, J1_;
+        Fc.resize(12);
+        Fc.setZero();
+        J_.resize(MODEL_DOF_VIRTUAL+6, MODEL_DOF_VIRTUAL);
+        J1_.resize(12, MODEL_DOF_VIRTUAL);
+        Fc[2] = RFz;
+        Fc[3] = RTroll;
+        Fc[4] = RTpitch;
+        Fc[8] = LFz;
+        Fc[9] = LTroll;
+        Fc[10] = LTpitch;
+        M_.resize(6, MODEL_DOF_VIRTUAL);
+        nle.resize(MODEL_DOF_VIRTUAL);
+        M_ = model_data1.M;
+        nle = model_data1.nle;
+        /*
+        J1_.block(0,0,1,MODEL_DOF_VIRTUAL) = RFj.block(0,0,1,MODEL_DOF_VIRTUAL);
+        J1_.block(1,0,1,MODEL_DOF_VIRTUAL) = RFj.block(1,0,1,MODEL_DOF_VIRTUAL);
+        J1_.block(2,0,1,MODEL_DOF_VIRTUAL) = RFj.block(5,0,1,MODEL_DOF_VIRTUAL);
+        J1_.block(3,0,1,MODEL_DOF_VIRTUAL) = LFj.block(0,0,1,MODEL_DOF_VIRTUAL);
+        J1_.block(4,0,1,MODEL_DOF_VIRTUAL) = LFj.block(1,0,1,MODEL_DOF_VIRTUAL);
+        J1_.block(5,0,1,MODEL_DOF_VIRTUAL) = LFj.block(5,0,1,MODEL_DOF_VIRTUAL);
+        J1_.block(6,0,MODEL_DOF_VIRTUAL,MODEL_DOF_VIRTUAL).setIdentity();
+        */
+        J1_.block(0,0,6,MODEL_DOF_VIRTUAL) = RFj;
+        J1_.block(6,0,6,MODEL_DOF_VIRTUAL) = LFj;
+
+        J_.block(0,0,1,MODEL_DOF_VIRTUAL) = RFj.block(0,0,1,MODEL_DOF_VIRTUAL);
+        J_.block(1,0,1,MODEL_DOF_VIRTUAL) = RFj.block(1,0,1,MODEL_DOF_VIRTUAL);
+        J_.block(2,0,1,MODEL_DOF_VIRTUAL) = RFj.block(5,0,1,MODEL_DOF_VIRTUAL);
+        J_.block(3,0,1,MODEL_DOF_VIRTUAL) = LFj.block(0,0,1,MODEL_DOF_VIRTUAL);
+        J_.block(4,0,1,MODEL_DOF_VIRTUAL) = LFj.block(1,0,1,MODEL_DOF_VIRTUAL);
+        J_.block(5,0,1,MODEL_DOF_VIRTUAL) = LFj.block(5,0,1,MODEL_DOF_VIRTUAL);
+        J_.block(6,0,MODEL_DOF_VIRTUAL,MODEL_DOF_VIRTUAL).setIdentity();
+
+        Eigen::MatrixXd J_temp = J_.transpose();
+        
+        Eigen::MatrixXd J_temp1 = J_temp.completeOrthogonalDecomposition().pseudoInverse();
+        tau_.resize(MODEL_DOF_VIRTUAL); 
+        tau_ =  J_temp1 * (M_ * rd_.q_ddot_virtual_ + nle - J1_.transpose()*Fc);
+
+        if (mpc_cycle <= controlwalk_time-1 && mpc_cycle >= 2)
+            file[0] << mpc_cycle << " " << walking_tick <<  " " << tau_(0) << " "<< tau_(1) << " "<< tau_(2) << " "<< tau_(3) << " "<< tau_(4) << " "<< tau_(5) << " "<< tau_(6) << " "  << RFz << " " << LFz << " " << tau_(0)/RFz << " " << tau_(1)/RFz<< " " << tau_(3)/LFz << " " << tau_(4)/LFz << std::endl;
+    }
     /*
     if(state_init_ == true)
     {
@@ -671,6 +817,47 @@ void CustomController::computeSlow()
                 TorqueContact = WBC::ContactForceRedistributionTorqueWalking(rd_, TorqueGrav, fc_ratio, rate, 1);
                 rd_.torque_desired_walk = TorqueContact;
             }
+            else if(mpc_cycle == 116 || mpc_cycle == 117)
+            {
+                rd_.ee_[0].contact = 1.0;
+                rd_.ee_[1].contact = 1.0;
+                WBC::SetContact(rd_, rd_.ee_[0].contact, rd_.ee_[1].contact);
+                rate = DyrosMath::cubic(walking_tick + 40*(mpc_cycle - 116), 0 , 80, 1, 0, 0, 0);
+                TorqueGrav = WBC::GravityCompensationTorque(rd_);
+                //std::cout << rate << std::endl;
+                TorqueContact = WBC::ContactForceRedistributionTorqueWalking(rd_, TorqueGrav, fc_ratio, rate, 0);
+                rd_.torque_desired_walk = TorqueContact;
+            }
+            else if(mpc_cycle > 117 && mpc_cycle < 143)
+            {
+                rd_.ee_[0].contact = 0.0;
+                rd_.ee_[1].contact = 1.0;
+                WBC::SetContact(rd_, rd_.ee_[0].contact, rd_.ee_[1].contact);
+                TorqueGrav = WBC::GravityCompensationTorque(rd_);
+                //TorqueContact = WBC::ContactForceRedistributionTorqueWalking(rd_, TorqueGrav, fc_ratio, rate, 1);
+                rd_.torque_desired_walk = TorqueGrav;// + TorqueContact;
+                //rd_.torque_desired_walk = WBC::ContactForceRedistributionTorque(rd_, WBC::GravityCompensationTorque(rd_));
+            }
+            else if(mpc_cycle == 143 || mpc_cycle == 144)
+            {
+                rd_.ee_[0].contact = 1.0;
+                rd_.ee_[1].contact = 1.0;
+                WBC::SetContact(rd_, rd_.ee_[0].contact, rd_.ee_[1].contact);
+                rate = DyrosMath::cubic(walking_tick + 40*(mpc_cycle - 143), 0 , 80, 0, 1, 0, 0);
+                TorqueGrav = WBC::GravityCompensationTorque(rd_);
+                TorqueContact = WBC::ContactForceRedistributionTorqueWalking(rd_, TorqueGrav, fc_ratio, rate, 0);
+                rd_.torque_desired_walk = TorqueContact;
+            }
+            else if(mpc_cycle >= 145)
+            {
+                rd_.ee_[0].contact = 1.0;
+                rd_.ee_[1].contact = 1.0;
+                WBC::SetContact(rd_, rd_.ee_[0].contact, rd_.ee_[1].contact);
+                rate = 1;//DyrosMath::cubic(walking_tick + 40*(mpc_cycle - 49), 0 , 80, 0, 1, 0, 0);
+                TorqueGrav = WBC::GravityCompensationTorque(rd_);
+                TorqueContact = WBC::ContactForceRedistributionTorqueWalking(rd_, TorqueGrav, fc_ratio, rate, 0);
+                rd_.torque_desired_walk =  TorqueContact;
+            }
             else
             {
                 WBC::SetContact(rd_, 1, 1);
@@ -708,7 +895,7 @@ void CustomController::computeSlow()
                     rd_.ee_[0].contact = 0.0;
                     rd_.ee_[1].contact = 1.0;
                 }
-                
+               
                 if (phaseChange == true && phaseChange1 == false)
                 {
                     WBC::SetContact(rd_, rd_.ee_[0].contact, rd_.ee_[1].contact);
@@ -756,13 +943,12 @@ void CustomController::computeSlow()
                     rd_.torque_desired_walk = TorqueGrav + TorqueContact;
                 }
                 fc_redis = rd_.fc_redist_;
-                
+               
             }*/
 
             for (int i = 0; i < MODEL_DOF; i++)
             { // 0, 3
                 //rd_.torque_desired[i] = rd_.pos_kp_v[i] * 0.8* (rd_.q_desired[i] - rd_.q_[i]) + rd_.pos_kv_v[i]*5 * (qd_pinocchio_[i+6] - rd_.q_dot_[i]) + rd_.torque_desired_walk[i];
-                
                 if(i == 0 && i == 6)
                 {
                     rd_.torque_desired[i] = rd_.pos_kp_v[i] * 30 * (rd_.q_desired[i] - rd_.q_[i]) + rd_.pos_kv_v[i] * 4 * (qd_pinocchio_[i+6] - rd_.q_dot_[i]) + rd_.torque_desired_walk[i];
@@ -773,14 +959,14 @@ void CustomController::computeSlow()
                     rd_.torque_desired[i] = rd_.pos_kp_v[i] * 0.8 * (rd_.q_desired[i] - rd_.q_[i]) + rd_.pos_kv_v[i] * 2 * (qd_pinocchio_[i+6] - rd_.q_dot_[i]) + rd_.torque_desired_walk[i];
 
                 }
-                
+               
             }
-            if (mpc_cycle <= controlwalk_time-1) 
-                    file[0] <<mpc_cycle << " " <<rd_.torque_desired_walk[2]<< " " << rd_.torque_desired_walk[3]<< " " << rd_.torque_desired_walk[4]<< " " << rd_.torque_desired_walk[8]<< " " << rd_.torque_desired_walk[9]<< " " << rd_.torque_desired_walk[10]<< std::endl;
-                
-            
+            //if (mpc_cycle <= controlwalk_time-1)
+            //        file[0] <<mpc_cycle << " " << contactMode<< " " <<rd_.torque_desired_walk[2]<< " " << rd_.torque_desired_walk[3]<< " " << rd_.torque_desired_walk[4]<< " " << rd_.torque_desired_walk[8]<< " " << rd_.torque_desired_walk[9]<< " " << rd_.torque_desired_walk[10]<< std::endl;
+               
+           
             auto endTime1 = std::chrono::system_clock::now();
-            
+           
             if(walking_tick == 1)
             {
                 auto elapsed2 = std::chrono::duration_cast<std::chrono::microseconds>(endTime1 - startTime1);
@@ -789,7 +975,7 @@ void CustomController::computeSlow()
             else
             {
                 mpc_latency = 0.0;
-            }       
+            }      
 
         }
         else if (rd_.tc_.walking_enable == 3.0 || rd_.tc_.walking_enable == 2.0)
@@ -820,7 +1006,7 @@ void CustomController::computeFast()
             {
                 wk_Hz = 2000;
                 wk_dt = 1 / wk_Hz;
-                controlwalk_time = 99;
+                controlwalk_time = 37;//148;
                
                 //std::cout << " aaa" << std::endl;
                 if (walking_tick == 0)
@@ -886,7 +1072,7 @@ void CustomController::computeFast()
                     zmp_refy_mu = zmp_refy;
                     //std::cout << com_refx(0) << " " << com_refy(0) <<std::endl;
                     cc_mutex.unlock();
-                    
+                   
                     walking_tick = 0;
                     q_init = rd_.q_;
                     q_desired.resize(15);
@@ -918,37 +1104,37 @@ void CustomController::computeFast()
                     walking_tick = walking_tick + 1;
                 }
                 else
-                {   
+                {  
                     wlk_on = true;
                     walking_tick = 0;
                     mpc_start_init.m_shared_memory_int[0] = 4;
                     std::cout << "Start" << std::endl;
                 }
             }
-            
+           
             if(stateestimation == true)
-            {   
+            {  
                 for (int i = 0; i < 6; i ++)
                     state_init.m_shared_memory[i] = rd_.q_virtual_[i];
 
                 state_init.m_shared_memory[6] = rd_.q_virtual_[39];
-                
+               
                 for (int i = 6; i < 18; i ++)
                     state_init.m_shared_memory[i+1] = rd_.q_virtual_[i];
 
                 for (int i = 0; i < 18; i ++)
                     state_init.m_shared_memory[i+21] = rd_.q_dot_virtual_[i];
-                
+               
                 state_init.m_shared_memory[20] = rd_.q_virtual_[19];
                 state_init.m_shared_memory[21] = rd_.q_virtual_[20];
 
                 state_init.m_shared_memory[41] = rd_.link_[COM_id].xpos(0);
                 state_init.m_shared_memory[42] = rd_.link_[COM_id].v(0);//rd_.link_[COM_id].xpos(0);
-                
+               
                 state_init.m_shared_memory[45] = rd_.link_[COM_id].xpos(1);
                 state_init.m_shared_memory[46] = rd_.link_[COM_id].v(1);//rd_.link_[COM_id].xpos(0);
-                
-                
+               
+               
                 if(mpc_cycle == 1)
                 {
                     state_init.m_shared_memory[43] = rd_.link_[COM_id].xpos(0);
@@ -964,7 +1150,7 @@ void CustomController::computeFast()
                     state_init.m_shared_memory[44] = desired_val.m_shared_memory[44];
                     state_init.m_shared_memory[48] = desired_val.m_shared_memory[48];*/
                 }
-                
+               
                 for (int i = 0; i < 49; i++)
                     std::cout << state_init.m_shared_memory[i] << " " << std::endl;
 
@@ -972,14 +1158,14 @@ void CustomController::computeFast()
                 stateestimation = false;
                 std::cout << " state esimation" << std::endl;
             }
-            
+           
             if(walking_tick != 0)
             {
                 for (int i = 0; i < 6; i ++)
                     state_init.m_shared_memory[i] = rd_.q_virtual_[i];
 
                 state_init.m_shared_memory[6] = rd_.q_virtual_[39];
-                
+               
                 for (int i = 6; i < 18; i ++)
                     state_init.m_shared_memory[i+1] = rd_.q_virtual_[i];
                 state_init.m_shared_memory[19] = rd_.q_virtual_[19];
@@ -987,31 +1173,30 @@ void CustomController::computeFast()
 
                 for (int i = 0; i < 18; i ++)
                     state_init.m_shared_memory[i+21] = rd_.q_dot_virtual_[i];//rd_.q_dot_virtual_[i];
-                
+               
                 state_init.m_shared_memory[39] =  rd_.q_dot_virtual_[19];//rd_.q_dot_virtual_[19];
                 state_init.m_shared_memory[40] =  rd_.q_dot_virtual_[20];//rd_.q_dot_virtual_[20];
-                
+               
                 state_init.m_shared_memory[41] = rd_.link_[COM_id].xpos(0);
                 state_init.m_shared_memory[45] = rd_.link_[COM_id].xpos(1);
                 state_init.m_shared_memory[42] = rd_.link_[COM_id].v(0);
                 state_init.m_shared_memory[46] = rd_.link_[COM_id].v(1);
-
-                state_init.m_shared_memory[43] = ZMP_FT(0);//desired_val.m_shared_memory[43];
-                state_init.m_shared_memory[47] = ZMP_FT(1);//desired_val.m_shared_memory[47];
-
+                
+                if(mpc_cycle <= 101)
+                {
+                    state_init.m_shared_memory[43] = ZMP_FT(0);//desired_val.m_shared_memory[43];
+                    state_init.m_shared_memory[47] = ZMP_FT(1);//desired_val.m_shared_memory[47];
+                }
+                else
+                {
+                    state_init.m_shared_memory[43] = desired_val.m_shared_memory[43];
+                    state_init.m_shared_memory[47] = desired_val.m_shared_memory[47];
+                }
+                
                 state_init.m_shared_memory[44] = model_data1.hg.angular()(1);
                 state_init.m_shared_memory[48] = model_data1.hg.angular()(0);
             }
-            
-            /*if(!(mpc_cycle == ㄹ1 and walking_tick == 0))
-            {
-                for (int i = 0; i < 6; i ++)
-                    state_init.m_shared_memory[i] = desired_val.m_shared_memory[i];//rd_.q_virtual_[i];
-                for(int i = 6; i < 49; i ++)
-                    state_init.m_shared_memory[i] = desired_val.m_shared_memory[i];
-                //std::cout <<" aaaaaa" << std::endl;
-            }*/
-            
+           
             if(statemachine.m_shared_memory_int[0] == 1 || statemachine.m_shared_memory_int[0] == 2)
             {
                 if (walking_tick == 0)
@@ -1024,23 +1209,14 @@ void CustomController::computeFast()
                     if (walking_tick == 0)
                     {  
                         mpc_start_init.m_shared_memory_int[0] = 2;
-                        std::cout << "mpc : " << mpc_cycle << " " << walking_tick << " " << RF_matrix(mpc_cycle+1,2)+0.15842<< " " << LF_matrix(mpc_cycle+1,2) + 0.15842<< std::endl;
+                        std::cout << "mpc : " << mpc_cycle << " " << walking_tick << " " << std::endl;// << RF_matrix(mpc_cycle+1,2)+0.15842<< " " << LF_matrix(mpc_cycle+1,2) + 0.15842<< std::endl;
                         std::cout << rd_.roll <<  " " <<  rd_.pitch <<  std::endl;
                         walking_tick_stop = false;
 
-                        /*std::cout << "desired x" << std::endl;
-                        for(int i = 0; i < 49; i++)
-                        {
-                            std::cout << i << " : " << std::endl;
-                            std::cout << desired_val.m_shared_memory[i] << " ";
-                        }*/
                         if (mpc_cycle == 1)
                             q_init = rd_.q_;
                         else
-                            q_init = rd_.q_;//q_pinocchio_desired.segment<MODEL_DOF>(7);
-                        
-                        //qd_pinocchio.setZero();
-                        
+                            q_init = rd_.q_;
 
                         if(mpc_cycle <= controlwalk_time)
                         {
@@ -1062,7 +1238,7 @@ void CustomController::computeFast()
                                     }
                                 }
                                 else if(desired_val.m_shared_memory[19] > 0.1300)
-                                {   
+                                {  
                                     std::cout << "Roll over" << std::endl;
                                     if(desired_val.m_shared_memory[39] > 0.0)
                                     {
@@ -1076,7 +1252,7 @@ void CustomController::computeFast()
                                     }
                                 }
                                 else
-                                {   
+                                {  
                                     qd_pinocchio(19) = desired_val.m_shared_memory[39];
                                     upperd[0] = desired_val.m_shared_memory[39];
                                 }
@@ -1095,7 +1271,7 @@ void CustomController::computeFast()
                                         upperd[1] = desired_val.m_shared_memory[40];
                                     }
                                 }
-                                else if(desired_val.m_shared_memory[20] > 0.1300) 
+                                else if(desired_val.m_shared_memory[20] > 0.1300)
                                 {
                                     if(desired_val.m_shared_memory[40] > 0.0)
                                     {
@@ -1114,12 +1290,11 @@ void CustomController::computeFast()
                                     upperd[1] = desired_val.m_shared_memory[40];
                                 }
                             }
-                            
+                           
 
                             comd[0] = desired_val.m_shared_memory[42];
                             comd[1] = desired_val.m_shared_memory[46];
                             comd[2] = 0.0;
-
                             angm[0] = desired_val.m_shared_memory[48];
                             angm[1] = desired_val.m_shared_memory[44];
                             com_mpc[0] = desired_val.m_shared_memory[41];
@@ -1138,7 +1313,7 @@ void CustomController::computeFast()
                             lfootd.setZero();
                         }
                         else
-                        {   
+                        {  
                             if(mpc_cycle <= 50)
                             {
                                 rfootd[0] = (RF_matrix(mpc_cycle+1,0)-RF_matrix(mpc_cycle,0))/0.02;
@@ -1149,7 +1324,7 @@ void CustomController::computeFast()
                                 lfootd[1] = (LF_matrix(mpc_cycle+1,1)-LF_matrix(mpc_cycle,1))/0.02;
                                 lfootd[2] = (LF_matrix(mpc_cycle+1,2)-LF_matrix(mpc_cycle,2))/0.02;
                             }
-                            else
+                            else if(mpc_cycle <= 98)
                             {
                                 rfootd[0] = (RF_matrix_ssp2(mpc_cycle-48,0)-RF_matrix_ssp2(mpc_cycle-49,0))/0.02;
                                 rfootd[1] = (RF_matrix_ssp2(mpc_cycle-48,1)-RF_matrix_ssp2(mpc_cycle-49,1))/0.02;
@@ -1159,62 +1334,65 @@ void CustomController::computeFast()
                                 lfootd[1] = (LF_matrix_ssp2(mpc_cycle-48,1)-LF_matrix_ssp2(mpc_cycle-49,1))/0.02;
                                 lfootd[2] = (LF_matrix_ssp2(mpc_cycle-48,2)-LF_matrix_ssp2(mpc_cycle-49,2))/0.02;
                             }
+                            else
+                            {
+                                rfootd[0] = (RF_matrix_ssp1(mpc_cycle-96,0)-RF_matrix_ssp1(mpc_cycle-97,0))/0.02;
+                                rfootd[1] = (RF_matrix_ssp1(mpc_cycle-96,1)-RF_matrix_ssp1(mpc_cycle-97,1))/0.02;
+                                rfootd[2] = (RF_matrix_ssp1(mpc_cycle-96,2)-RF_matrix_ssp1(mpc_cycle-97,2))/0.02;
+
+                                lfootd[0] = (LF_matrix_ssp1(mpc_cycle-96,0)-LF_matrix_ssp1(mpc_cycle-97,0))/0.02;
+                                lfootd[1] = (LF_matrix_ssp1(mpc_cycle-96,1)-LF_matrix_ssp1(mpc_cycle-97,1))/0.02;
+                                lfootd[2] = (LF_matrix_ssp1(mpc_cycle-96,2)-LF_matrix_ssp1(mpc_cycle-97,2))/0.02;
+                            
+                                if(walking_tick == 0)
+                                {
+                                    std::cout <<"RF" << RF_matrix_ssp1(mpc_cycle-96,0) << " " << LF_matrix_ssp1(mpc_cycle-96,0)<<std::endl;
+                                }
+                            }
                         }
-                        if(mpc_cycle > 48)
-                        {
-                            zmp_mpcx = desired_val.m_shared_memory[43] + 0.0522;
-                            zmp_mpcy = desired_val.m_shared_memory[47];
-                        }
-                        else
-                        {
-                            zmp_mpcx = desired_val.m_shared_memory[43];
-                            zmp_mpcy = desired_val.m_shared_memory[47];
-                        }
+                        zmp_mpcx = desired_val.m_shared_memory[43];
+                        zmp_mpcy = desired_val.m_shared_memory[47];
                     }
                 }
 
-                //ZMP_measured = WBC::GetZMPpos_fromFT(rd_);
 
-                if ((walking_tick == 0) && (walking_tick_stop == false))// && mpc_cycle < 50)
+                if ((walking_tick == 0) && (walking_tick_stop == false))
                 {
                 }
                 else
                 {
                     if(walking_tick_stop == false && mpc_cycle <= controlwalk_time)
                     {
-                        zmpControl(rd_);
                         //std::cout << "CONTROL" << std::endl;
                         startTime1 = std::chrono::system_clock::now();
-                        
-                        comd_(0) = comd(0)+ 3.0 * (comd(0) - rd_.link_[COM_id].v(0));// + 3.0 * (com_mpc(0) - rd_.link_[COM_id].xpos(0));//+ 0.05 * (comd(0) - rd_.link_[COM_id].v(0));
-                        comd_(1) = comd(1)+ 3.0 * (comd(1) - rd_.link_[COM_id].v(1));;// + 3.0 * (com_mpc(1) - rd_.link_[COM_id].xpos(1));//+ 0.05 * (comd(1) - rd_.link_[COM_id].v(1));
+                        comd_(0) = comd(0) + 2.0 * (comd(0) - rd_.link_[COM_id].v(0));// + 3.0 * (com_mpc(0) - rd_.link_[COM_id].xpos(0));//+ 0.05 * (comd(0) - rd_.link_[COM_id].v(0));
+                        comd_(1) = comd(1) + 2.0 * (comd(1) - rd_.link_[COM_id].v(1));;// + 3.0 * (com_mpc(1) - rd_.link_[COM_id].xpos(1));//+ 0.05 * (comd(1) - rd_.link_[COM_id].v(1));
                         comd_(2) = comd(2);
 
                         angd_(0) = angm(0);// + 0.5 * (angm(0) - model_data1.hg.angular()(1));//+ 0.05 * (comd(0) - rd_.link_[COM_id].v(0));
                         angd_(1) = angm(1);// + 0.5 * (angm(1) - model_data1.hg.angular()(0));//+ 0.05 * (comd(1) - rd_.link_[COM_id].v(1));
-                        
-                        //comd_(2) = comd(2) + 0.3 * (comd(2) - rd_.link_[COM_id].v(2));
-                        //upperd.setZero();
-                        //qd_pinocchio.setZero();
-
-                        //RF_trajectory_float.linear() = RF_trajectory_float.linear() * DyrosMath::rotateWithY(control_input(2)) * DyrosMath::rotateWithX(control_input(3));
-                        //LF_trajectory_float.linear() = LF_trajectory_float.linear() * DyrosMath::rotateWithY(control_input(0)) * DyrosMath::rotateWithX(control_input(1));
+                       
                         Eigen::Vector3d rfoot_ori, lfoot_ori, rfootd1, lfootd1;
                         rfoot_ori.setZero();
                         lfoot_ori.setZero();
+                        
+                        zmpControl(rd_);
                         rfoot_ori(0) = (control_input(3));
                         rfoot_ori(1) = (control_input(2));
                         lfoot_ori(0) = (control_input(1));
                         lfoot_ori(1) = (control_input(0));
-
+                        
                         rfootd1 = rfootd;
                         lfootd1 = lfootd;
-                        if(contactMode == 1)
+                        //if(contactMode == 1)
+                        //{
+                        if(mpc_cycle != 119)
                         {
                             rfootd1(2) = rfootd(2) - 2.0 * zd_ctrl(2);
                             lfootd1(2) = lfootd(2) + 2.0 * zd_ctrl(2);
                         }
-                        
+                        //}
+                    
                         momentumControl(rd_, comd_, angd_, rfootd1, lfootd1, upperd, rfoot_ori, lfoot_ori);
                         endTime1 = std::chrono::system_clock::now();
                         auto elapsed2 = std::chrono::duration_cast<std::chrono::microseconds>(endTime1 - startTime1);
@@ -1227,13 +1405,13 @@ void CustomController::computeFast()
                         {
                             q_pinocchio_desired = q_pinocchio_temp;
                         }
-                        
-                                                
+                       
+                                               
                         if(mpc_cycle == 1)
                             q_pinocchio_desired = pinocchio::integrate(model, q_pinocchio_temp, qd_pinocchio * 0.0005);
                         else
                             q_pinocchio_desired = pinocchio::integrate(model, q_pinocchio_desired, qd_pinocchio * 0.0005);
-                        
+                       
                         qd_pinocchio_ = qd_pinocchio;
 
                     }
@@ -1245,18 +1423,10 @@ void CustomController::computeFast()
                     cc_mutex.lock();
                     for (int i = 0; i < MODEL_DOF; i++)
                     {
-                        rd_.q_desired(i) = q_pinocchio_desired(i+7) + 0.5 * (q_pinocchio_desired(i+7) - rd_.q_(i));//(q_init(i)*(40-walking_tick) + q_pinocchio_desired(i+7) * walking_tick)/40.0;
+                        rd_.q_desired(i) = q_pinocchio_desired(i+7) + 0.2 * (q_pinocchio_desired(i+7) - rd_.q_(i));//(q_init(i)*(40-walking_tick) + q_pinocchio_desired(i+7) * walking_tick)/40.0;
                     }
                     cc_mutex.unlock();
                 }
-
-                /*if(mpc_cycle == 32)
-                {
-                    std::cout << "Rd" << walking_tick << std::endl;
-                    std::cout << rd_.q_desired.segment<18>(0).transpose() << std::endl;
-                    std::cout << rd_.q_.segment<18>(0).transpose() << std::endl;
-                }*/
-                    
 
                 if(walking_tick == 20)
                 {
@@ -1290,7 +1460,7 @@ void CustomController::computeFast()
 
                 auto endTime = std::chrono::system_clock::now();
                 if(mpc_cycle < controlwalk_time)
-                {   
+                {  
                     Eigen::Vector12d q_temp;
                     if(walking_tick_stop == false)
                     {
@@ -1299,30 +1469,36 @@ void CustomController::computeFast()
                             q_temp(i)  = q_pinocchio_desired(i+7);
                     }
                     else
-                    {       
+                    {      
                         for(int i = 0; i < 12; i ++)
                             q_temp(i)  = q_pinocchio_desired(i+7);
                     }
-                    
-                    if(mpc_cycle < controlwalk_time-1)
-                    {
+                   
+                    if(mpc_cycle <= controlwalk_time-1)
+                    {   
                         
-                       /* if(mpc_cycle < 50)
-                            file[1]  <<  mpc_cycle << " " << RF_matrix(mpc_cycle+1,2)<< " " << LF_matrix(mpc_cycle+1,2) << " " << rd_.link_[Right_Foot].xipos(0) << " "<<  RF_matrix(mpc_cycle+1,1) << " " << rd_.link_[Right_Foot].xipos(1) << " "<<  RF_matrix(mpc_cycle+1,2) << " " << rd_.link_[Right_Foot].xipos(2) -0.07236<< " " << com_mpc[0] << " " << rd_.link_[COM_id].xpos(0) << " " << com_mpc[1] << " " << rd_.link_[COM_id].xpos(1) << std::endl;
+                        /*if(mpc_cycle < 50)
+                            file[1] << mpc_cycle << " " << walking_tick << " " <<  com_mpc[0] << " " << zmp_mpcx << " " << rd_.link_[COM_id].xpos(0) << " " << com_mpc[1] << " " << rd_.link_[COM_id].xpos(1) << " " << zmp_mpcy << " " << ZMP_FT_law(0) << " " << zmp_mpcy << " " <<ZMP_FT_law(1)<< " " << control_input1(0)<< " " << control_input1(1)<< " " << control_input1(2)<< " " << control_input1(3)<<" " << abs(rd_.link_[Right_Foot].xipos(0) -rd_.link_[Left_Foot].xipos(0)) <<" " << rd_.link_[Right_Foot].xipos(0) << " " << rd_.link_[Left_Foot].xipos(0)<<" " << rd_.link_[Right_Foot].xipos(2) << " " << rd_.link_[Left_Foot].xipos(2)<< " " << rfootd[0] << " " << lfootd[0] << " " << RF_matrix(mpc_cycle,0)-0.037 << " " << LF_matrix(mpc_cycle,0)-0.037 << " "  <<contactMode<<" " << LF_matrix(mpc_cycle,2)<<" " << RF_matrix(mpc_cycle,2)<<std::endl;// " " << RF_matrix(mpc_cycle,0)-0.037 << " " <<LF_matrix(mpc_cycle,2) << " " <<LF_matrix(mpc_cycle,2)<< " " <<contactMode<<  " "  <<std::endl;//" "<< q_pinocchio_desired(20) << " " << rd_.q_(13)<< " " << q_pinocchio_desired(21) << " " << rd_.q_(14)<< std::endl;
+                        else if(mpc_cycle < 98)
+                            file[1] << mpc_cycle << " " << walking_tick << " " <<  com_mpc[0] << " " << zmp_mpcx << " " << rd_.link_[COM_id].xpos(0) << " " << com_mpc[1] << " " << rd_.link_[COM_id].xpos(1) << " " << zmp_mpcx << " " << ZMP_FT_law(0) << " " << zmp_mpcy << " " <<ZMP_FT_law(1)<< " " << control_input1(0)<< " " << control_input1(1)<< " " << control_input1(2)<< " " << control_input1(3)<<" " << abs(rd_.link_[Right_Foot].xipos(0) -rd_.link_[Left_Foot].xipos(0)) <<" " << rd_.link_[Right_Foot].xipos(0)<< " " << rd_.link_[Left_Foot].xipos(0)<<" " << rd_.link_[Right_Foot].xipos(2) << " " << rd_.link_[Left_Foot].xipos(2)<< " " << rfootd[0] << " " << lfootd[0] << " "<< RF_matrix_ssp2(mpc_cycle-48,0)-0.037+0.04957<< " " << LF_matrix_ssp2(mpc_cycle-48,0)-0.037+0.04957 <<  " " << contactMode<<" " << LF_matrix_ssp2(mpc_cycle-48,2)<<" " << RF_matrix_ssp2(mpc_cycle-48,2)<<std::endl; //RF_matrix_ssp2(mpc_cycle-48,0)-0.037+0.04957<< " " << LF_matrix_ssp2(mpc_cycle-48,0)-0.037+0.04957 << " "  << RF_matrix_ssp2(mpc_cycle-48,0)-0.037+0.04957 << " " <<LF_matrix_ssp2(mpc_cycle-48,2)<< " " <<RF_matrix_ssp2(mpc_cycle-48,2)<< " " <<contactMode <<std::endl;//" "<< q_pinocchio_desired(20) << " " << rd_.q_(13)<< " " << q_pinocchio_desired(21) << " " << rd_.q_(14)<< std::endl;
                         else
-                            file[1]  <<  mpc_cycle << " " << RF_matrix_ssp2(mpc_cycle-48,2) << " " << LF_matrix_ssp2(mpc_cycle-48,2) << " " << rd_.link_[Right_Foot].xipos(0) << " "<<  RF_matrix_ssp2(mpc_cycle-48,1) << " " << rd_.link_[Right_Foot].xipos(1) << " "<<  RF_matrix_ssp2(mpc_cycle-48,2) << " " << rd_.link_[Right_Foot].xipos(2) << " " << com_mpc[0] << " " << rd_.link_[COM_id].xpos(0) << " " << com_mpc[1] << " " << rd_.link_[COM_id].xpos(1) << std::endl;
+                            file[1] << mpc_cycle << " " << walking_tick << " " <<  com_mpc[0] << " " << zmp_mpcx << " " << rd_.link_[COM_id].xpos(0) << " " << com_mpc[1] << " " << rd_.link_[COM_id].xpos(1) << " " << zmp_mpcx << " " << ZMP_FT_law(0) << " " << zmp_mpcy << " " <<ZMP_FT_law(1)<< " " << control_input1(0)<< " " << control_input1(1)<< " " << control_input1(2)<< " " << control_input1(3)<<" " << abs(rd_.link_[Right_Foot].xipos(0) -rd_.link_[Left_Foot].xipos(0)) <<" " << rd_.link_[Right_Foot].xipos(0)<< " " << rd_.link_[Left_Foot].xipos(0)<<" " << rd_.link_[Right_Foot].xipos(2) << " " << rd_.link_[Left_Foot].xipos(2)<< " " << rfootd[0] << " " << lfootd[0] <<" " << RF_matrix_ssp1(mpc_cycle-96,0)-0.037+0.04957 + 0.1<< " " << LF_matrix_ssp1(mpc_cycle-96,0)-0.037+0.04957 + 0.1 << " " << contactMode<<" " << LF_matrix_ssp1(mpc_cycle-96,2)<<" " << RF_matrix_ssp1(mpc_cycle-96,2)<<std::endl; //<< " " << RF_matrix_ssp1(mpc_cycle-97,0)-0.037+0.04957 + 0.1 << " " <<LF_matrix_ssp1(mpc_cycle-97,2) << " " <<RF_matrix_ssp1(mpc_cycle-97,2)<< " " <<contactMode<<std::endl;//" "<< q_pinocchio_desired(20) << " " << rd_.q_(13)<< " " << q_pinocchio_desired(21) << " " << rd_.q_(14)<< std::endl;
                         */
 
-                        file[1] << mpc_cycle << " "<<  com_mpc[0] << " " << rd_.link_[COM_id].xpos(0) << " " << com_mpc[1] << " " << rd_.link_[COM_id].xpos(1) << " " << zmp_mpcx << " " << ZMP_FT_law(0) << " " << zmp_mpcy << " " <<ZMP_FT_law(1)<< " " << control_input1(0)<< " " << control_input1(1)<< " " << control_input1(2)<< " " << control_input1(3)<<std::endl;//" "<< q_pinocchio_desired(20) << " " << rd_.q_(13)<< " " << q_pinocchio_desired(21) << " " << rd_.q_(14)<< std::endl;
+                        file[1] << mpc_cycle << " " << walking_tick << " " <<  com_mpc[0] << " " << zmp_mpcx << " " << rd_.link_[COM_id].xpos(0) << " " << com_mpc[1] << " " << rd_.link_[COM_id].xpos(1) << " " << zmp_mpcy << " "<<ZMP_FT_law(0)<<" " << ZMP_FT_law(1) <<  " " << angm[0] << " " <<angm[1] << " "<<model_data1.hg.angular()(0) << " " << model_data1.hg.angular()(1) << std::endl;
+                        //file[1] << mpc_cycle << " " << walking_tick << " " << com_mpc[0]<< " " << com_mpc[1] << " " << zmp_mpcx << " " << zmp_mpcy << " "  << RT(0)<< " "  << RT(1)<< " "  << LT(0)<< " "  << LT(1) << " " << LF_d(2)<< " " << RF_d(2) << std::endl;
+
+                        //file[0] << q_pinocchio_desired(0) << " "<< q_pinocchio_desired(1) << " "<< q_pinocchio_desired(2) << " "<< q_pinocchio_desired(3) << " "<< q_pinocchio_desired(4) << " "<< q_pinocchio_desired(5) << " "<< q_pinocchio_desired(6) << " "<< q_pinocchio_desired(7) << " "<< q_pinocchio_desired(8) << " "<< q_pinocchio_desired(9) << " "<< q_pinocchio_desired(10) << " "<< q_pinocchio_desired(11) << " "<< q_pinocchio_desired(12) << " "<< q_pinocchio_desired(13) << " "<< q_pinocchio_desired(14) << " "<< q_pinocchio_desired(15) << " "<< q_pinocchio_desired(16) << " "<< qd_pinocchio(0) << " "<< qd_pinocchio(1) << " "<< qd_pinocchio(2) << " "<< qd_pinocchio(3) << " "<< qd_pinocchio(4) << " "<< qd_pinocchio(5) << " "<< qd_pinocchio(6) << " "<< qd_pinocchio(7) << " "<< qd_pinocchio(8) << " "<< qd_pinocchio(9) << " "<< qd_pinocchio(10) << " "<< qd_pinocchio(11) << " "<< qd_pinocchio(12) << " "<< qd_pinocchio(13) << " "<< qd_pinocchio(14) << " "<< qd_pinocchio(15) << " "<< qd_pinocchio(16) << std::endl;
+                        
                     }
                     auto elapsed = std::chrono::duration_cast<std::chrono::microseconds>(endTime - startTime);
                     auto elapsed1 = std::chrono::duration_cast<std::chrono::microseconds>(endTime1 - startTime1);
-                    
+                   
                     COM_prev1  <<rd_.link_[COM_id].xpos(0), rd_.link_[COM_id].xpos(1), 0.0;
                 }
             }
 
-            
+           
             /*
             else if(statemachine.m_shared_memory_int[0] == 1)
             {
@@ -1330,13 +1506,13 @@ void CustomController::computeFast()
                     state_init.m_shared_memory[i] = rd_.q_virtual_[i];
 
                 state_init.m_shared_memory[6] = rd_.q_virtual_[39];
-                
+               
                 for (int i = 6; i < 18; i ++)
                     state_init.m_shared_memory[i+1] = rd_.q_virtual_[i];
 
                 for (int i = 0; i < 18; i ++)
                     state_init.m_shared_memory[i+21] = rd_.q_dot_virtual_[i];
-                
+               
                 state_init.m_shared_memory[20] = rd_.q_virtual_[19];
                 state_init.m_shared_memory[21] = rd_.q_virtual_[20];
                 state_init.m_shared_memory[41] = rd_.link_[COM_id].xpos(0);
@@ -1352,7 +1528,7 @@ void CustomController::computeFast()
 void CustomController::GuiCommandCallback(const std_msgs::StringConstPtr &msg)
 {
     if (msg->data == "stateestimation")
-    {   
+    {  
         stateestimation_count = stateestimation_count + 1;
         if (stateestimation_count >= 3 && stateestimation_count % 2 == 1)
         {
@@ -1396,7 +1572,7 @@ void CustomController::momentumControl(RobotData &Robot, Eigen::Vector3d comd,  
         J.block(3,0,2,18) = CMM.block(3,0,2,18);
         J.block(5,0,6,18) = Robot.link_[Right_Foot].Jac().block(0,0,6,18);
         J.block(11,0,6,18) = Robot.link_[Left_Foot].Jac().block(0,0,6,18);
-    
+   
         X.segment<3>(0) = comd;
         X.segment<2>(3) = ang_;
         X.segment<3>(5) = rfootd;
@@ -1411,7 +1587,7 @@ void CustomController::momentumControl(RobotData &Robot, Eigen::Vector3d comd,  
 
         variable_size = 18;
         constraint_size = 17;
-  
+ 
         MatrixXd J;
         VectorXd X;
         X.setZero(constraint_size);
@@ -1427,7 +1603,7 @@ void CustomController::momentumControl(RobotData &Robot, Eigen::Vector3d comd,  
         J.block(3,0,2,18) = CMM.block(3,0,2,18);
         J.block(5,0,6,18) = Robot.link_[Right_Foot].Jac().block(0,0,6,18);
         J.block(11,0,6,18) = Robot.link_[Left_Foot].Jac().block(0,0,6,18);
-    
+   
         X.segment<3>(0) = comd - COMX;
         X.segment<2>(3) = ang_ - MOMX;
         X.segment<3>(5) = rfootd;
@@ -1458,7 +1634,7 @@ void CustomController::zmpControl(RobotData &Robot)
 
         Fl = rd_.LF_CF_FT;
         Fr = rd_.RF_CF_FT;
-        
+       
         for (int i = 0; i < 6; i++)
         {
             if(contactMode == 1)
@@ -1486,7 +1662,7 @@ void CustomController::zmpControl(RobotData &Robot)
         }
 
         double A, B, C, xi, yi, alpha, Lz, Lz1;
-        Eigen::Vector3d desired_ankle_torque, pr_temp, pl_temp;
+        
 
         int k;
         int zmp_delx = 0.0;
@@ -1554,38 +1730,30 @@ void CustomController::zmpControl(RobotData &Robot)
 
             desired_ankle_torque = -DyrosMath::skew(pr_temp) * Fr_l.segment<3>(0);
         }
-    
-        for (int i = 0; i < 2; i++)
-        {
-            if (desired_ankle_torque(i) > 300)
-            {
-                desired_ankle_torque(i) = 300;
-            }
-
-            if (desired_ankle_torque(i) < -300)
-            {
-                desired_ankle_torque(i) = -300;
-            }
-        }
-
+   
         LT(0) = (1 - alpha) * desired_ankle_torque(0);
         RT(0) = (alpha)*desired_ankle_torque(0);
 
         LT(1) = (1 - alpha) * desired_ankle_torque(1);
         RT(1) = (alpha)*desired_ankle_torque(1);
 
+        LTroll = LT(0);
+        RTroll = LT(1);
+        LTpitch = RT(0);
+        RTpitch = RT(1);
+
         dspForceControl(Robot, alpha);
 
         double arp_l, ark_l, app_l, apk_l, arp_r, ark_r, app_r, apk_r;
-        arp_dl = 70;
-        ark_dl = 0.03; //95 0.05 double
-        app_dl = 65;
-        apk_dl = 0.04; // 35 ㅐ0.04
+        arp_dl = 30;
+        ark_dl = 0.02; //95 0.05 double3
+        app_dl = 20;
+        apk_dl = 0.02; // 35 ㅐ0.04 4
 
-        arp_dr = 70;
-        ark_dr = 0.03;
-        app_dr = 65;
-        apk_dr = 0.04;
+        arp_dr = 30;
+        ark_dr = 0.02;
+        app_dr = 20;
+        apk_dr = 0.02;
 
         arp_sl = 30;
         ark_sl = 0.05;
@@ -1657,17 +1825,11 @@ void CustomController::zmpControl(RobotData &Robot)
             control_input1(3) = ark_r / 2000.0 * (RT(0) - Fr_l(3)) + (1 - arp_r / 2000.0) * control_input1(3);
         }
 
-        /*control_input(0) = apk_l/ 5.0 * (LT(1) - Fl_l(4)) + (- 1.0/app_l) * control_input(0); //pitch
-        control_input(1) = ark_l/ 5.0 * (LT(0) - Fl_l(3)) + ( - 1.0/arp_l) * control_input(1); //roll
-        control_input(2) = apk_r/ 5.0 * (RT(1) - Fr_l(4)) + (- 1.0/app_r) * control_input(2);
-        control_input(3) = ark_r/ 5.0 * (RT(0) - Fr_l(3)) + (- 1.0/arp_r) * control_input(3);
-        */
-        //std::cout << control_input(0) << " "<< control_input(2)  << " " << LT(1) << " " << LT(0)<< " " << Fl_l(4)<< " " << desired_ankle_torque(1)<< " " << apk_l<< std::endl; 
         if (contactMode == 2)
         {
             control_input1(0) = apk_l / 2000.0 * (LT(1) - Fl_l(4)) + (1 - app_l / 2000.0) * control_input1(0); //pitch
             control_input1(1) = ark_l / 2000.0 * (LT(0) - Fl_l(3)) + (1 - arp_l / 2000.0) * control_input1(1); //roll
-            
+           
             control_input1(2) = (1 - 50 / 2000.0) * control_input1(2);
             control_input1(3) = (1 - 50 / 2000.0) * control_input1(3);
         }
@@ -1751,7 +1913,8 @@ void CustomController::dspForceControl(RobotData &Robot, double alpha)
     LF_d.setZero();
     RF_d(2) = -1 * alpha * Robot.total_mass_ * GRAVITY;
     LF_d(2) = -1 * (1 - alpha) * Robot.total_mass_ * GRAVITY;
-
+    LFz = LF_d(2);
+    RFz = RF_d(2);
     double Kfx, Tfx, Kfy, Tfy, Kfz, Tfz;
     K_fx = 0.0001;
     T_fx = 3;
@@ -1817,7 +1980,7 @@ void CustomController::dspForceControl(RobotData &Robot, double alpha)
         }
         zd_ctrl(i) = (z_ctrl(i) - z_ctrl_prev(i)) * 2000.0;
     }
-    
+   
 
     z_ctrl_prev = z_ctrl;
 }

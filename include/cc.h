@@ -141,6 +141,8 @@ public:
     Eigen::MatrixXd ZMP_bound_matrix;
     Eigen::MatrixXd RF_matrix_ssp2;
     Eigen::MatrixXd LF_matrix_ssp2;
+    Eigen::MatrixXd RF_matrix_ssp1;
+    Eigen::MatrixXd LF_matrix_ssp1;
     Eigen::MatrixXd ZMP_bound_matrix_ssp2;
     Eigen::Vector3d ZMP_measured;
     Eigen::VectorXd COMX, MOMX;
@@ -149,6 +151,14 @@ public:
     Eigen::Vector4d control_input, control_input1, control_input1prev;
     Eigen::Vector2d LT, RT, LT_l, RT_l, LT_prev, RT_prev;
     Eigen::Vector3d F_diff, F_diff_m;
+    Eigen::Vector3d desired_ankle_torque, pr_temp, pl_temp;
+
+    std::atomic<double> LTroll;
+    std::atomic<double> RTroll;
+    std::atomic<double> LTpitch;
+    std::atomic<double> RTpitch;
+    std::atomic<double> LFz;
+    std::atomic<double> RFz;
 
     int controlwalk_time;
 private:
