@@ -62,14 +62,19 @@ public:
     Eigen::VectorQd qdot, qddot, qdot_, qddot_;
     Eigen::MatrixXd CMM;
     Eigen::MatrixQQd Cor_;
-    Eigen::MatrixQQd M_;
+    Eigen::MatrixVQVQd M_;
     Eigen::VectorQd G_;
     Eigen::VectorVQd q_dot_virtual_lpf_;
     Eigen::VectorXd q_dm; 
+    Eigen::VectorXd qddot_command; 
+    Eigen::VectorXd qddot_command_prev; 
+    Eigen::VectorXd qdot_command; 
+    Eigen::VectorXd q_command; 
 
     bool walking_tick_stop = false;
 
     bool mob_start = false;
+    bool control_start = false;
     bool stateestimation = false;
     bool stateestimation_mode = false;
     int stateestimation_count = 0;
@@ -79,6 +84,19 @@ public:
     Eigen::VectorQd TorqueGrav;
     Eigen::VectorQVQd q_pinocchio;
     Eigen::VectorQVQd q_pinocchio_desired;
+    Eigen::VectorQVQd q_pinocchio_desired1;
+    Eigen::VectorVQd qd_pinocchio_desired1;
+    Eigen::VectorVQd qd_pinocchio_desired1_prev;
+    Eigen::VectorVQd qd_pinocchio_prev;
+    Eigen::VectorVQd qdd_pinocchio_desired1;
+    Eigen::VectorVQd qdd_pinocchio_desired1_;
+    Eigen::VectorVQd qdd_virtual;
+    Eigen::VectorVQd qd_virtual_prev;
+    Eigen::VectorXd qp_result;
+
+    int solved = 0;
+        
+    int control_time = 0;
 
     //temp
     Eigen::VectorQVQd q_pinocchio_desired_prev;
@@ -104,12 +122,16 @@ public:
 
     double debug_temp;
     bool debug = false;
-
+    double com_alpha;
     int cycle = 0;
     double Ts = 0.01;
+    double KK_temp = 0.0;
 
     bool mpcxsol = true;
     bool mpcysol = true;
+
+    Eigen::Vector2d virtual_temp;
+    Eigen::Vector2d foot_temp;
 
     int nx_;
     int nu_;
@@ -126,7 +148,6 @@ public:
     bool state_init_ = true;
     Eigen::VectorVQd qd_pinocchio;
     Eigen::VectorVQd qd_pinocchio_;
-    Eigen::VectorVQd qd_pinocchio_prev;
     Eigen::Vector2d ZMP_FT_law;
 
 
@@ -159,6 +180,24 @@ public:
     std::atomic<double> RTpitch;
     std::atomic<double> LFz;
     std::atomic<double> RFz;
+    double ZMPx_prev;
+    std::atomic<double> ZMPx_test;
+    std::atomic<double> alpha_test;
+
+    std::atomic<double> xi_test;
+    std::atomic<double> yi_test;
+    std::atomic<double> LZ1_test;
+    std::atomic<double> LZ2_test;
+
+    double ZMPy_prev;
+    std::atomic<double> ZMPy_test;
+    std::atomic<bool> walk_start;
+
+    Eigen::VectorXd Fc, tau_, nle;
+
+
+    double zmpy, zmpx;
+    double forcex;
 
     int controlwalk_time;
 private:
@@ -188,6 +227,7 @@ public :
     key_t m_key;
     double *m_shared_memory;
     int *m_shared_memory_int;
+    
 };
  
  
