@@ -95,6 +95,7 @@ public:
     Eigen::VectorXd qp_result;
 
     int solved = 0;
+    double vector_tes = 0;
         
     int control_time = 0;
 
@@ -151,7 +152,8 @@ public:
     Eigen::Vector2d ZMP_FT_law;
 
 
-      bool upper_on;
+   bool upper_on;
+   bool state_esti = false;
     //WholebodyController &wbc_;
     //TaskCommand tc;
 
