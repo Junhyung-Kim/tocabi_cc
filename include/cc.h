@@ -132,6 +132,7 @@ public:
     bool mpcysol = true;
 
     Eigen::Vector2d virtual_temp;
+    Eigen::Vector2d virtual_temp1;
     Eigen::Vector2d foot_temp;
 
     int nx_;
@@ -159,6 +160,7 @@ public:
 
     Eigen::VectorXd q_desired;
     int aaa = 0;
+    bool qp_solved;
     Eigen::MatrixXd RF_matrix;
     Eigen::MatrixXd LF_matrix;
     Eigen::MatrixXd ZMP_bound_matrix;
