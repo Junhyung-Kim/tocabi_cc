@@ -93,6 +93,8 @@ public:
     Eigen::VectorVQd qdd_virtual;
     Eigen::VectorVQd qd_virtual_prev;
     Eigen::VectorXd qp_result;
+    
+    Eigen::Vector3d rfoot_mpc, lfoot_mpc;
 
     int solved = 0;
     double vector_tes = 0;
@@ -144,7 +146,7 @@ public:
 
     std::atomic<int> mpc_cycle;
     std::atomic<int> mpc_cycle_prev;
-    Eigen::Vector3d rfootd, lfootd, comd, com_mpc,vjoint_prev, vjoint_dot;
+    Eigen::Vector3d rfootd, lfootd,rfootd1, lfootd1, comd, com_mpc,vjoint_prev, vjoint_dot;
     Eigen::Vector2d angm, upperd;
     Eigen::VectorQd joint_prev, jointdot;
     bool state_init_ = true;
