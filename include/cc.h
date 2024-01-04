@@ -92,7 +92,7 @@ public:
     Eigen::VectorVQd qdd_pinocchio_desired1_;
     Eigen::VectorVQd qdd_virtual;
     Eigen::VectorVQd qd_virtual_prev;
-    Eigen::VectorXd qp_result;
+    Eigen::VectorXd qp_result, qp_result_prev;
     
     Eigen::Vector3d rfoot_mpc, lfoot_mpc;
 
