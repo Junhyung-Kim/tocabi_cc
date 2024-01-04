@@ -882,7 +882,7 @@ void CustomController::computeSlow()
         if(contactMode == 1)// && mpc_cycle != 49)
         {
             double lx, ly, mu;
-            ly = 0.10;
+            ly = 0.048;
             lx = 0.15;
             mu = 0.8;
 
@@ -968,7 +968,7 @@ void CustomController::computeSlow()
             
             MatrixXd G_temp, G_temp1;
             Vector12d g_temp, g_temp1;
-            double weight_resi = 10.0, weight_resi1 = 2.0;;
+            double weight_resi = 0.0, weight_resi1 = 2.0;;
             G_temp.setZero(12, MODEL_DOF_VIRTUAL);
             G_temp1.setIdentity(12,12);
             g_temp.setZero();
@@ -1202,7 +1202,7 @@ void CustomController::computeSlow()
         else if(contactMode == 2)
         {
             double lx, ly, mu;
-            ly = 0.10;
+            ly = 0.048;
             lx = 0.15;
             mu = 0.8;
 
@@ -1446,7 +1446,7 @@ void CustomController::computeSlow()
         else if(contactMode == 3)//|| mpc_cycle == 49)
         {
             double lx, ly, mu;
-            ly = 0.10;
+            ly = 0.048;
             lx = 0.15;
             mu = 0.8;
 
@@ -1702,8 +1702,8 @@ void CustomController::computeSlow()
                     //file[1] << q_pinocchio_desired1[i+7] << " " << rd_.q_[i] << " "  << qd_pinocchio_desired1[i+6] << " " << rd_.q_dot_[i] << " ";
             }
             //file[1] << std::endl;
-            file[0] << mpc_cycle <<  " " << walking_tick << " "<< solved<< " " <<qp_solved<<" " <<contactMode << " " <<rfoot_mpc(2) << " " <<model_data2.oMf[RFcframe_id].translation()(2) << " "<< lfoot_mpc(2)<< " " << model_data2.oMf[LFcframe_id].translation()(2) << " "<<RF_matrix(mpc_cycle,1)<< " " <<model_data2.oMf[RFcframe_id].translation()(1) + virtual_temp1(1) << " "<< LF_matrix(mpc_cycle,1) << " " << model_data2.oMf[LFcframe_id].translation()(1)+ virtual_temp1(1)<< " "<<rfoot_mpc(0)<< " " <<model_data2.oMf[RFcframe_id].translation()(0) + virtual_temp1(0) << " "<< lfoot_mpc(0) << " " << model_data2.oMf[LFcframe_id].translation()(0)+ virtual_temp1(0)<<" " <<qp_result(2) << " "<<qp_result_prev(2) << " " << qp_result(8)  <<" " << qp_result(13) << " " << qp_result(19) << " "  << -1 * rd_.LF_CF_FT(2) <<" "  << -1 * rd_.RF_CF_FT(2) << " "<< model_data2.oMf[RFcframe_id].translation()(0)+ virtual_temp(0) << " "  << ZMP_FT_law(0) << " " << zmpx<<  " " << ZMP_FT_law(1) << " " << zmpy<< " " <<zmpy_ << " " << virtual_temp(0)<< " " << virtual_temp(1) << " " << rd_.q_virtual_(1)<< " " <<rfootd1(0) << " " << lfootd1(0) << " " << " " <<rfootd1(1) << " " << lfootd1(1) <<rfootd1(2) << " " << lfootd1(2) <<std::endl;//<< " "  << -((model_data2.oMf[RFcframe_id].translation()(1) + model_data2.oMf[LFcframe_id].translation()(1))/2) << " "<< com_mpc[0] << " " << rd_.link_[COM_id].xpos(0)<< " " << com_mpc[1] << " " << rd_.link_[COM_id].xpos(1)<< " " << rd_.q_virtual_(1) << std::endl;
-            file[1] << mpc_cycle << " " << walking_tick << " " << RF_matrix(mpc_cycle,1)<< " " <<model_data2.oMf[RFcframe_id].translation()(1) + virtual_temp(1) << " "<< LF_matrix(mpc_cycle,1) << " " << model_data2.oMf[LFcframe_id].translation()(1)+ virtual_temp(1)<< " "<<rfoot_mpc(0)<< " " <<model_data2.oMf[RFcframe_id].translation()(0) + virtual_temp1(0) << " " << model_data2.oMf[RFcframe_id].translation()(2) << " " << model_data2.oMf[LFcframe_id].translation()(2) << " " << lfoot_mpc(0) << " " << model_data2.oMf[LFcframe_id].translation()(0)+ virtual_temp1(0)<< " " << virtual_temp1(0) << " " << virtual_temp1(1) << " " << virtual_temp(0) << " " << virtual_temp(1) << std::endl;
+            file[0] << mpc_cycle <<  " " << walking_tick << " "<< solved<< " " <<qp_solved<<" " <<contactMode << " " <<rfoot_mpc(2) << " " <<model_data2.oMf[RFcframe_id].translation()(2) << " "<< lfoot_mpc(2)<< " " << model_data2.oMf[LFcframe_id].translation()(2) << " "<<RF_matrix(mpc_cycle,1)<< " " <<model_data2.oMf[RFcframe_id].translation()(1) + virtual_temp1(1) << " "<< LF_matrix(mpc_cycle,1) << " " << model_data2.oMf[LFcframe_id].translation()(1)+ virtual_temp1(1)<< " "<<rfoot_mpc(0)<< " " <<model_data2.oMf[RFcframe_id].translation()(0) + virtual_temp1(0) << " "<< lfoot_mpc(0) << " " << model_data2.oMf[LFcframe_id].translation()(0)+ virtual_temp1(0)<<" " <<qp_result(2) << " "<<qp_result_prev(2) << " " << qp_result(8)  <<" " << qp_result(13) << " " << qp_result(19) << " "  << -1 * rd_.LF_CF_FT(2) <<" "  << -1 * rd_.RF_CF_FT(2) << " "<< model_data2.oMf[RFcframe_id].translation()(0)+ virtual_temp(0) << " "  << ZMP_FT_law(0) << " " << zmpx<<  " " << zmpx_<< " " << ZMP_FT_law(1) << " " << zmpy<< " " <<zmpy_ << std::endl;
+            file[1] << mpc_cycle << " " << walking_tick << " " << RF_matrix(mpc_cycle,1)<< " " <<model_data2.oMf[RFcframe_id].translation()(1) + virtual_temp(1) << " "<< LF_matrix(mpc_cycle,1) << " " << model_data2.oMf[LFcframe_id].translation()(1)+ virtual_temp(1)<< " "<<rfoot_mpc(0)<< " " <<model_data2.oMf[RFcframe_id].translation()(0) + virtual_temp1(0) << " " << model_data2.oMf[RFcframe_id].translation()(2) << " " << model_data2.oMf[LFcframe_id].translation()(2) << " " << lfoot_mpc(0) << " " << model_data2.oMf[LFcframe_id].translation()(0)+ virtual_temp1(0)<< " " << virtual_temp1(0) << " " << virtual_temp1(1) << " " << virtual_temp(0) << " " << virtual_temp(1) <<  " " << tau_[5] <<  " " << tau_[3] << std::endl;
     }
     
             if(mpc_cycle < controlwalk_time-2)
@@ -1816,7 +1816,7 @@ void CustomController::computeFast()
             {
                 wk_Hz = 2000;
                 wk_dt = 1 / wk_Hz;
-                controlwalk_time = 65;//148;
+                controlwalk_time = 67;//148;
                 
                 if (walking_tick == 0)
                 {
