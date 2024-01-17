@@ -146,13 +146,16 @@ public:
 
     std::atomic<int> mpc_cycle;
     std::atomic<int> mpc_cycle_prev;
-    Eigen::Vector3d rfootd, lfootd,rfootd1, lfootd1, comd, com_mpc,vjoint_prev, vjoint_dot;
-    Eigen::Vector2d angm, upperd;
+    Eigen::Vector3d rfootd, lfootd,rfootd1, lfootd1, comd, com_mpc,vjoint_prev, vjoint_dot, comprev;
+    Eigen::Vector2d angm, angm_prev, upperd, comdt_;
+
     Eigen::VectorQd joint_prev, jointdot;
     bool state_init_ = true;
     Eigen::VectorVQd qd_pinocchio;
     Eigen::VectorVQd qd_pinocchio_;
     Eigen::Vector2d ZMP_FT_law;
+
+     Eigen::Vector4d ang_de;
 
 
    bool upper_on;
