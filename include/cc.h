@@ -155,6 +155,8 @@ public:
     Eigen::VectorVQd qd_pinocchio_;
     Eigen::Vector2d ZMP_FT_law;
 
+   int mpc_cycle_int = 0;
+   int mpc_cycle_int1 = 0;
      Eigen::Vector4d ang_de;
 
 
