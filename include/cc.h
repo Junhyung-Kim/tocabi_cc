@@ -206,9 +206,16 @@ public:
 
     Eigen::VectorXd Fc, tau_, nle;
 
+    int variable_size1, constraint_size1;
+    int variable_size2, constraint_size2;
 
-    double zmpy, zmpx;
+
+   CQuadraticProgram qp_momentum_control;
+   CQuadraticProgram qp_torque_control;
+
+   double zmpy, zmpx;
     double forcex;
+    bool mpc_ok = true;
 
     int controlwalk_time;
 private:
