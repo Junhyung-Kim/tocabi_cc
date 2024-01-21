@@ -867,7 +867,7 @@ void CustomController::computeSlow()
             }
             else if(mpc_cycle == (mpc_cycle_int + 1) * 50)
             {
-                com_alpha = DyrosMath::cubic(walking_tick + 40*(mpc_cycle - ((mpc_cycle_int + 1) * 50) - 1), 0 , 80, 1, 0.5, 0, 0);   
+                com_alpha = DyrosMath::cubic(walking_tick + 40*(mpc_cycle - ((mpc_cycle_int + 1) * 50- 1)), 0 , 80, 1, 0.5, 0, 0);   
             }
         }
         else
@@ -882,7 +882,7 @@ void CustomController::computeSlow()
             }
             else if(mpc_cycle == (mpc_cycle_int + 1) * 50)
             {
-                com_alpha = DyrosMath::cubic(walking_tick + 40*(mpc_cycle - ((mpc_cycle_int + 1) * 50) - 1), 0 , 80, 1, 0.5, 0, 0);   
+                com_alpha = DyrosMath::cubic(walking_tick + 40*(mpc_cycle - ((mpc_cycle_int + 1) * 50 - 1) ), 0 , 80, 1, 0.5, 0, 0);   
             }
         }
     }
