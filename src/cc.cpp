@@ -1732,8 +1732,6 @@ void CustomController::computeSlow()
             lbA1(56) = -10-nle(38)-Mqddot(38);
             ubA1(56) = 10-nle(38)-Mqddot(38);
        
-            //FullPivLU<MatrixXd> lu_decomp(A1);
-            //auto rank = lu_decomp.rank();
             A1(57, 2) = 1.0;
             lbA1(57) = 800.0;
             ubA1(57) = 1000.0;
@@ -1776,11 +1774,11 @@ void CustomController::computeSlow()
     if(mpc_cycle >= 2 && mpc_cycle < controlwalk_time)
     {
         file[1] << mpc_cycle << " " << walking_tick << " " << "  ";
-        
-        file[1] << virtual_temp(0) << " " << virtual_temp1(0) << " " << virtual_temp(1) << " " << virtual_temp1(1) << " " << desired_val.m_shared_memory[43] << " " << ZMP_FT_law(0) << " " << zmpx_<< " " << rd_.q_(13) << " " << rd_.q_(14);
+        //file[1] << q_pinocchio_desired1(9) << " " << rd_.q_(2) << " "<< q_pinocchio_desired1(10) << " " << rd_.q_(3) << " "<< q_pinocchio_desired1(11) << " " << rd_.q_(4) << " "<< q_pinocchio_desired1(15) << " " << rd_.q_(8) << " "<< q_pinocchio_desired1(16) << " " << rd_.q_(9) << " "<< q_pinocchio_desired1(17) << " "<< rd_.q_(10) ;
+        file[1] << virtual_temp(0) << " " << virtual_temp1(0) << " " << virtual_temp(1) << " " << virtual_temp1(1) << " " << desired_val.m_shared_memory[43] << " " << ZMP_FT_law(0) << " " << zmpx_<< " " << rd_.q_(13) << " " << rd_.q_(14) << " " << desired_val.m_shared_memory[19] << " " << desired_val.m_shared_memory[20];
         file[1] << std::endl;
         //file[1] << virtual_temp(0) << " " << virtual_temp1(0) << " " << virtual_temp(1) << " " <<  virtual_temp1(1)<<" " << com_alpha << " " << qd_pinocchio(3) << " "<< qd_pinocchio(4) << " "<< angd_[0] << " " << angd_[1] << " "  <<ang_de(0) <<  " " << ang_de(1) << " " <<ang_de(2) << " " << ang_de(3) << std::endl;//<< rd_.roll << " "<< rd_.pitch<< " " << rd_.q_(14) << " " << rd_.q_(13)<< " " << desired_val.m_shared_memory[20] << " " << desired_val.m_shared_memory[19] <<std::endl;
-        file[0] << mpc_cycle <<  " " << com_alpha << " " << KK_temp << " " << solved<< " " <<qp_solved<<" " <<contactMode << " "  <<rfoot_mpc(2) << " " <<model_data2.oMf[RFcframe_id].translation()(2) << " "<< rfootd1(2) << " " << rfootd(2)<<  " " << lfoot_mpc(2)<< " " << model_data2.oMf[LFcframe_id].translation()(2) << " "<< lfootd1(2) << " "<< rfoot_mpc(1)<< " " <<model_data2.oMf[RFcframe_id].translation()(1) + virtual_temp1(1)<< " "<<rfootd1(1)<< " "<<  lfoot_mpc(1) << " " << model_data2.oMf[LFcframe_id].translation()(1) + virtual_temp1(1)<< " "<< lfootd1(1) << " "<<rfoot_mpc(0)<< " " <<model_data2.oMf[RFcframe_id].translation()(0) + virtual_temp1(0) << " "<< rfootd1(0) << " "<< lfoot_mpc(0) << " " << model_data2.oMf[LFcframe_id].translation()(0)+ virtual_temp1(0)<<" " <<rfootd1(0) << " " << lfootd1(0) << " " <<qp_result(2)  << " " << qp_result(8)  <<" " << qp_result(13) << " " << qp_result(19) << " "  << -1 * rd_.LF_CF_FT(2) <<" "  << -1 * rd_.RF_CF_FT(2) << " "<< model_data2.oMf[RFcframe_id].translation()(0)+ virtual_temp(0) << " "  << ZMP_FT_law(0) << " " << zmpx_<<  " " << zmp_mpcx<< " " << ZMP_FT_law(1) << " " << zmpy<< " " <<zmpy_ << " " << model_data1.hg.angular()[0] << " " << model_data1.hg.angular()[1] << " "<< angd_(0) << " " << angd_(1) << " " << comd(0) << " " << comd(1) << " " << rd_.link_[COM_id].v(0)<< " " << rd_.link_[COM_id].v(1)  << " " << rd_.link_[COM_id].xpos(0)<< " " << rd_.link_[COM_id].xpos(1) << " " << com_mpc[0]  << " " << com_mpc[1] << std::endl;
+        file[0] << mpc_cycle <<  " " << com_alpha << " " << KK_temp << " " << solved<< " " <<qp_solved<<" " <<contactMode << " "  <<rfoot_mpc(2) << " " <<model_data2.oMf[RFcframe_id].translation()(2) << " "<< rfootd1(2) << " " << rfootd(2)<<  " " << lfoot_mpc(2)<< " " << model_data2.oMf[LFcframe_id].translation()(2) << " "<< lfootd1(2) << " "<< rfoot_mpc(1)<< " " <<model_data2.oMf[RFcframe_id].translation()(1) + virtual_temp1(1)<< " "<<rfootd1(1)<< " "<<  lfoot_mpc(1) << " " << model_data2.oMf[LFcframe_id].translation()(1) + virtual_temp1(1)<< " "<< lfootd1(1) << " "<<rfoot_mpc(0)<< " " <<model_data2.oMf[RFcframe_id].translation()(0) + virtual_temp1(0) << " "<<rd_.link_[Right_Foot].xipos(0) + 0.0378 + virtual_temp1(0) <<  " " << rfootd1(0) << " "<< lfoot_mpc(0) << " " << model_data2.oMf[LFcframe_id].translation()(0)+ virtual_temp1(0)<<" " <<rfootd1(0) << " " << lfootd1(0) << " " <<qp_result(2)  << " " << qp_result(8)  <<" " << qp_result(13) << " " << qp_result(19) << " "  << -1 * rd_.LF_CF_FT(2) <<" "  << -1 * rd_.RF_CF_FT(2) << " "<< model_data2.oMf[RFcframe_id].translation()(0)+ virtual_temp(0) << " "  << ZMP_FT_law(0) << " " << zmpx_<<  " " << zmp_mpcx<< " " << desired_val.m_shared_memory[43] << " " << ZMP_FT_law(1) << " " << zmpy<< " " <<zmpy_ << " " << model_data1.hg.angular()[0] << " " << model_data1.hg.angular()[1] << " "<< angd_(0) << " " << angd_(1) << " " << comd(0) << " " << comd(1) << " " << rd_.link_[COM_id].v(0)<< " " << rd_.link_[COM_id].v(1)  << " " << rd_.link_[COM_id].xpos(0)<< " " << rd_.link_[COM_id].xpos(1) << " " << com_mpc[0]  << " " << com_mpc[1] << std::endl;
     }
    
     if(mpc_cycle <= controlwalk_time - 1)// && mpc_cycle <= 83)
@@ -1894,7 +1892,7 @@ void CustomController::computeFast()
             {
                 wk_Hz = 2000;
                 wk_dt = 1 / wk_Hz;
-                controlwalk_time = 260;////148;//148;//148;
+                controlwalk_time = 110;//260;////148;//148;//148;
                 
                 if (walking_tick == 0)
                 {
@@ -2223,6 +2221,7 @@ void CustomController::computeFast()
                         com_mpc[0] = rd_.link_[COM_id].xpos(0) + comd[0] * 0.02;//desired_val.m_shared_memory[41] - virtual_temp(0);
                         com_mpc[1] = rd_.link_[COM_id].xpos(1) + comd[1] * 0.02;//desired_val.m_shared_memory[45] - virtual_temp(1);
                     
+                        
                         if(mpc_cycle == 0)
                         {
                             rfootd.setZero();
@@ -2320,7 +2319,7 @@ void CustomController::computeFast()
 
                         rfoot_ori_c = DyrosMath::rot2Euler(rd_.link_[Right_Foot].rotm);
                         lfoot_ori_c = DyrosMath::rot2Euler(rd_.link_[Left_Foot].rotm);
-                       
+
                         rfootd1 = rfootd;
                         lfootd1 = lfootd;
                        
@@ -2337,24 +2336,27 @@ void CustomController::computeFast()
                             lfootd1(1) = 0.0;
                             if(rfoot_mpc(2)>0.0)
                             {
-                                //rfoot_ori(0) = 3.0 * (-rfoot_ori_c(0));
-                                //rfoot_ori(1) = 3.0 * (-rfoot_ori_c(1));
-                                //rfoot_ori(2) = 1.0 * (-rfoot_ori_c(2));
-                                rfootd1(2) = rfootd1(2)+ 30.00 * (rfoot_mpc(2) - rd_.link_[Right_Foot].xipos(2) + foot_temp(1));
-                                rfootd1(1) = rfootd1(1) + 30.00 * (-0.1025 - rd_.link_[Right_Foot].xipos(1)- virtual_temp1(1));
-                                rfootd1(0) = rfootd1(0)+ 30.00 * (rfoot_mpc(0) /*- virtual_temp1(0)*/ - rd_.link_[Right_Foot].xipos(0) - 0.0378);
+                                rfoot_ori(0) = 3.0 * (-rfoot_ori_c(0));
+                                rfoot_ori(1) = 3.0 * (-rfoot_ori_c(1));
+                                rfoot_ori(2) = 1.0 * (-rfoot_ori_c(2));
+                                rfootd1(2) = rfootd1(2)+ 10.00 * (rfoot_mpc(2) - rd_.link_[Right_Foot].xipos(2) + foot_temp(1));
+                                rfootd1(1) = rfootd1(1) + 10.00 * (-0.1025 - rd_.link_[Right_Foot].xipos(1)- virtual_temp1(1));
+                                rfootd1(0) = rfootd1(0)+ 10.00 * (rfoot_mpc(0) - rd_.link_[Right_Foot].xipos(0) - 0.0378);
                             }
                             else if(lfoot_mpc(2)>0.0)
                             {
-                                //lfoot_ori(0) = 3.0 * (-lfoot_ori_c(0));
-                                //lfoot_ori(1) = 3.0 * (-lfoot_ori_c(1));
-                                //lfoot_ori(2) = 1.0 * (-lfoot_ori_c(2));
-                                lfootd1(2) = lfootd1(2)+ 30.00 * (lfoot_mpc(2) - rd_.link_[Left_Foot].xipos(2) + foot_temp(1));
-                                lfootd1(1) = lfootd1(1) + 30.00 * (0.1025 - rd_.link_[Left_Foot].xipos(1)- virtual_temp1(1));
-                                lfootd1(0) = lfootd1(0)+ 30.00 * (lfoot_mpc(0)/* - virtual_temp1(0)*/- rd_.link_[Left_Foot].xipos(0) - 0.0378);
+                                lfoot_ori(0) = 3.0 * (-lfoot_ori_c(0));
+                                lfoot_ori(1) = 3.0 * (-lfoot_ori_c(1));
+                                lfoot_ori(2) = 1.0 * (-lfoot_ori_c(2));
+                                lfootd1(2) = lfootd1(2)+ 10.00 * (lfoot_mpc(2) - rd_.link_[Left_Foot].xipos(2) + foot_temp(1));
+                                lfootd1(1) = lfootd1(1) + 10.00 * (0.1025 - rd_.link_[Left_Foot].xipos(1)- virtual_temp1(1));
+                                lfootd1(0) = lfootd1(0)+ 10.00 * (lfoot_mpc(0) - rd_.link_[Left_Foot].xipos(0) - 0.0378);
                             }  
                             else
                             {
+                                rfootd1(2) = rfootd1(2)+ 10.00 * (rfoot_mpc(2) - rd_.link_[Right_Foot].xipos(2) + foot_temp(1));
+                                lfootd1(2) = lfootd1(2)+ 10.00 * (lfoot_mpc(2) - rd_.link_[Left_Foot].xipos(2) + foot_temp(1));
+                               
                                 rfoot_mpc(2) = 0.0;
                                 lfoot_mpc(2) = 0.0;
                             }
@@ -2371,28 +2373,30 @@ void CustomController::computeFast()
                            
                             rfootd1(1) = 0.0;
                             lfootd1(1) = 0.0;
+
                             if(rfoot_mpc(2)>0.0)
                             {
-                                //rfoot_ori(0) = 3.0 * (-rfoot_ori_c(0));
-                                //rfoot_ori(1) = 3.0 * (-rfoot_ori_c(1));
-                                //rfoot_ori(2) = 1.0 * (-rfoot_ori_c(2));
-                                rfootd1(2) = rfootd1(2)+ 30.00 * (rfoot_mpc(2) - rd_.link_[Right_Foot].xipos(2) + foot_temp(1));
-                                rfootd1(1) = rfootd1(1)+ 30.00 * (-0.1025 - rd_.link_[Right_Foot].xipos(1)- virtual_temp1(1));
-                                rfootd1(0) = rfootd1(0)+ 30.00 * (rfoot_mpc(0) - virtual_temp1(0)- rd_.link_[Right_Foot].xipos(0) - 0.0378);
-                                //rfootd1(0) =  1.2 * rfootd1(0);
-                                //rfootd1(2) =  1.0 * rfootd1(2);
+                                rfoot_ori(0) = 3.0 * (-rfoot_ori_c(0));
+                                rfoot_ori(1) = 3.0 * (-rfoot_ori_c(1));
+                                rfoot_ori(2) = 1.0 * (-rfoot_ori_c(2));
+                                rfootd1(2) = rfootd1(2)+ 10.00 * (rfoot_mpc(2) - rd_.link_[Right_Foot].xipos(2) + foot_temp(1));
+                                rfootd1(1) = rfootd1(1)+ 10.00 * (-0.1025 - rd_.link_[Right_Foot].xipos(1)- virtual_temp1(1));
+                                rfootd1(0) = rfootd1(0)+ 10.00 * (rfoot_mpc(0) - virtual_temp1(0)- rd_.link_[Right_Foot].xipos(0) - 0.0378);
                             }
                             else if(lfoot_mpc(2)>0.0)
                             {
-                                //lfoot_ori(0) = 3.0 * (-lfoot_ori_c(0));
-                                //lfoot_ori(1) = 3.0 * (-lfoot_ori_c(1));
-                                //lfoot_ori(2) = 1.0 * (-lfoot_ori_c(2));
-                                lfootd1(2) = lfootd1(2)+ 30.00 * (lfoot_mpc(2) - rd_.link_[Left_Foot].xipos(2) + foot_temp(1));
-                                lfootd1(1) = lfootd1(1) + 30.00 * (0.1025 - rd_.link_[Left_Foot].xipos(1) - virtual_temp1(1));
-                                lfootd1(0) = lfootd1(0)+ 30.00 * (lfoot_mpc(0) - virtual_temp1(0) - rd_.link_[Left_Foot].xipos(0) - 0.0378);
+                                lfoot_ori(0) = 3.0 * (-lfoot_ori_c(0));
+                                lfoot_ori(1) = 3.0 * (-lfoot_ori_c(1));
+                                lfoot_ori(2) = 1.0 * (-lfoot_ori_c(2));
+                                lfootd1(2) = lfootd1(2)+ 10.00 * (lfoot_mpc(2) - rd_.link_[Left_Foot].xipos(2) + foot_temp(1));
+                                lfootd1(1) = lfootd1(1) + 10.00 * (0.1025 - rd_.link_[Left_Foot].xipos(1) - virtual_temp1(1));
+                                lfootd1(0) = lfootd1(0)+ 10.00 * (lfoot_mpc(0) - virtual_temp1(0) - rd_.link_[Left_Foot].xipos(0) - 0.0378);
                             }
                             else
                             {
+                                rfootd1(2) = rfootd1(2)+ 10.00 * (rfoot_mpc(2) - rd_.link_[Right_Foot].xipos(2) + foot_temp(1));
+                                lfootd1(2) = lfootd1(2)+ 10.00 * (lfoot_mpc(2) - rd_.link_[Left_Foot].xipos(2) + foot_temp(1));
+                               
                                 rfoot_mpc(2) = 0.0;
                                 lfoot_mpc(2) = 0.0;
                             }
@@ -2410,18 +2414,27 @@ void CustomController::computeFast()
                             lfootd1(1) = 0.0;
                             if(rfoot_mpc(2)>0.0)
                             {
-                                rfootd1(2) = rfootd1(2)+ 30.00 * (rfoot_mpc(2) - rd_.link_[Right_Foot].xipos(2) + foot_temp(1));
-                                rfootd1(1) = rfootd1(1)+ 30.00 * (-0.1025 - rd_.link_[Right_Foot].xipos(1)- virtual_temp1(1));
-                                rfootd1(0) = rfootd1(0)+ 30.00 * (rfoot_mpc(0) - virtual_temp1(0)- rd_.link_[Right_Foot].xipos(0) - 0.0378);
+                                rfoot_ori(0) = 3.0 * (-rfoot_ori_c(0));
+                                rfoot_ori(1) = 3.0 * (-rfoot_ori_c(1));
+                                rfoot_ori(2) = 1.0 * (-rfoot_ori_c(2));
+                                rfootd1(2) = rfootd1(2)+ 10.00 * (rfoot_mpc(2) - rd_.link_[Right_Foot].xipos(2) + foot_temp(1));
+                                rfootd1(1) = rfootd1(1)+ 10.00 * (-0.1025 - rd_.link_[Right_Foot].xipos(1)- virtual_temp1(1));
+                                rfootd1(0) = rfootd1(0)+ 10.00 * (rfoot_mpc(0) - virtual_temp1(0)- rd_.link_[Right_Foot].xipos(0) - 0.0378);
                             }
                             else if(lfoot_mpc(2)>0.0)
                             {
-                                lfootd1(2) = lfootd1(2)+ 30.00 * (lfoot_mpc(2) - rd_.link_[Left_Foot].xipos(2) + foot_temp(1));
-                                lfootd1(1) = lfootd1(1) + 30.00 * (0.1025 - rd_.link_[Left_Foot].xipos(1)- virtual_temp1(1));
-                                lfootd1(0) = lfootd1(0)+ 30.00 * (lfoot_mpc(0) - virtual_temp1(0) - rd_.link_[Left_Foot].xipos(0) - 0.0378);
+                                lfoot_ori(0) = 3.0 * (-lfoot_ori_c(0));
+                                lfoot_ori(1) = 3.0 * (-lfoot_ori_c(1));
+                                lfoot_ori(2) = 1.0 * (-lfoot_ori_c(2));
+                                lfootd1(2) = lfootd1(2)+ 10.00 * (lfoot_mpc(2) - rd_.link_[Left_Foot].xipos(2) + foot_temp(1));
+                                lfootd1(1) = lfootd1(1) + 10.00 * (0.1025 - rd_.link_[Left_Foot].xipos(1)- virtual_temp1(1));
+                                lfootd1(0) = lfootd1(0)+ 10.00 * (lfoot_mpc(0) - virtual_temp1(0) - rd_.link_[Left_Foot].xipos(0) - 0.0378);
                             }
                             else
                             {
+                                rfootd1(2) = rfootd1(2)+ 10.00 * (rfoot_mpc(2) - rd_.link_[Right_Foot].xipos(2) + foot_temp(1));
+                                lfootd1(2) = lfootd1(2)+ 10.00 * (lfoot_mpc(2) - rd_.link_[Left_Foot].xipos(2) + foot_temp(1));
+                               
                                 rfoot_mpc(2) = 0.0;
                                 lfoot_mpc(2) = 0.0;
                             }
@@ -2441,21 +2454,27 @@ void CustomController::computeFast()
                                 lfootd1(1) = 0.0;
                                 if(rfoot_mpc(2)>0.0)
                                 {
-                                    rfootd1(2) = rfootd1(2)+ 30.00 * (rfoot_mpc(2) - rd_.link_[Right_Foot].xipos(2) + foot_temp(1));
-                                    rfootd1(1) = rfootd1(1)+ 30.00 * (-0.1025 - rd_.link_[Right_Foot].xipos(1)- virtual_temp1(1));
-                                    rfootd1(0) = rfootd1(0)+ 30.00 * (rfoot_mpc(0) - virtual_temp1(0)- rd_.link_[Right_Foot].xipos(0) - 0.0378);
+                                    rfoot_ori(0) = 3.0 * (-rfoot_ori_c(0));
+                                    rfoot_ori(1) = 3.0 * (-rfoot_ori_c(1));
+                                    rfoot_ori(2) = 1.0 * (-rfoot_ori_c(2));
+                                    rfootd1(2) = rfootd1(2)+ 10.00 * (rfoot_mpc(2) - rd_.link_[Right_Foot].xipos(2) + foot_temp(1));
+                                    rfootd1(1) = rfootd1(1)+ 10.00 * (-0.1025 - rd_.link_[Right_Foot].xipos(1)- virtual_temp1(1));
+                                    rfootd1(0) = rfootd1(0)+ 10.00 * (rfoot_mpc(0) - virtual_temp1(0)- rd_.link_[Right_Foot].xipos(0) - 0.0378);
                                 }
                                 else if(lfoot_mpc(2)>0.0)
                                 {
-                                    //lfoot_ori(0) = 3.0 * (-lfoot_ori_c(0));
-                                    //lfoot_ori(1) = 3.0 * (-lfoot_ori_c(1));
-                                    //lfoot_ori(2) = 1.0 * (-lfoot_ori_c(2));
-                                    lfootd1(2) = lfootd1(2)+ 30.00 * (lfoot_mpc(2) - rd_.link_[Left_Foot].xipos(2) + foot_temp(1));
-                                    lfootd1(1) = lfootd1(1) + 30.00 * (0.1025 - rd_.link_[Left_Foot].xipos(1) - virtual_temp1(1));
-                                    lfootd1(0) = lfootd1(0)+ 30.00 * (lfoot_mpc(0) - virtual_temp1(0) - rd_.link_[Left_Foot].xipos(0) - 0.0378);
+                                    lfoot_ori(0) = 3.0 * (-lfoot_ori_c(0));
+                                    lfoot_ori(1) = 3.0 * (-lfoot_ori_c(1));
+                                    lfoot_ori(2) = 1.0 * (-lfoot_ori_c(2));
+                                    lfootd1(2) = lfootd1(2)+ 10.00 * (lfoot_mpc(2) - rd_.link_[Left_Foot].xipos(2) + foot_temp(1));
+                                    lfootd1(1) = lfootd1(1) + 10.00 * (0.1025 - rd_.link_[Left_Foot].xipos(1) - virtual_temp1(1));
+                                    lfootd1(0) = lfootd1(0)+ 10.00 * (lfoot_mpc(0) - virtual_temp1(0) - rd_.link_[Left_Foot].xipos(0) - 0.0378);
                                 }
                                 else
                                 {
+                                    rfootd1(2) = rfootd1(2)+ 10.00 * (rfoot_mpc(2) - rd_.link_[Right_Foot].xipos(2) + foot_temp(1));
+                                    lfootd1(2) = lfootd1(2)+ 10.00 * (lfoot_mpc(2) - rd_.link_[Left_Foot].xipos(2) + foot_temp(1));
+                               
                                     rfoot_mpc(2) = 0.0;
                                     lfoot_mpc(2) = 0.0;
                                 }
@@ -2473,19 +2492,28 @@ void CustomController::computeFast()
                                 lfootd1(1) = 0.0;
                                 if(rfoot_mpc(2)>0.0)
                                 {
-                                    rfootd1(2) = rfootd1(2)+ 30.00 * (rfoot_mpc(2) - rd_.link_[Right_Foot].xipos(2) + foot_temp(1));
-                                    rfootd1(1) = rfootd1(1)+ 30.00 * (-0.1025 - rd_.link_[Right_Foot].xipos(1)- virtual_temp1(1));
-                                    rfootd1(0) = rfootd1(0)+ 30.00 * (rfoot_mpc(0) - virtual_temp1(0)- rd_.link_[Right_Foot].xipos(0) - 0.0378);
+                                    rfoot_ori(0) = 3.0 * (-rfoot_ori_c(0));
+                                    rfoot_ori(1) = 3.0 * (-rfoot_ori_c(1));
+                                    rfoot_ori(2) = 1.0 * (-rfoot_ori_c(2));
+                                    rfootd1(2) = rfootd1(2)+ 10.00 * (rfoot_mpc(2) - rd_.link_[Right_Foot].xipos(2) + foot_temp(1));
+                                    rfootd1(1) = rfootd1(1)+ 10.00 * (-0.1025 - rd_.link_[Right_Foot].xipos(1)- virtual_temp1(1));
+                                    rfootd1(0) = rfootd1(0)+ 10.00 * (rfoot_mpc(0) - virtual_temp1(0)- rd_.link_[Right_Foot].xipos(0) - 0.0378);
                       
                                 }
                                 else if(lfoot_mpc(2)>0.0)
                                 {
-                                    lfootd1(2) = lfootd1(2)+ 30.00 * (lfoot_mpc(2) - rd_.link_[Left_Foot].xipos(2) + foot_temp(1));
-                                    lfootd1(1) = lfootd1(1) + 30.00 * (0.1025 - rd_.link_[Left_Foot].xipos(1)- virtual_temp1(1));
-                                    lfootd1(0) = lfootd1(0)+ 30.00 * (lfoot_mpc(0) - virtual_temp1(0) - rd_.link_[Left_Foot].xipos(0) - 0.0378);
+                                    lfoot_ori(0) = 3.0 * (-lfoot_ori_c(0));
+                                    lfoot_ori(1) = 3.0 * (-lfoot_ori_c(1));
+                                    lfoot_ori(2) = 1.0 * (-lfoot_ori_c(2));
+                                    lfootd1(2) = lfootd1(2)+ 10.00 * (lfoot_mpc(2) - rd_.link_[Left_Foot].xipos(2) + foot_temp(1));
+                                    lfootd1(1) = lfootd1(1) + 10.00 * (0.1025 - rd_.link_[Left_Foot].xipos(1)- virtual_temp1(1));
+                                    lfootd1(0) = lfootd1(0)+ 10.00 * (lfoot_mpc(0) - virtual_temp1(0) - rd_.link_[Left_Foot].xipos(0) - 0.0378);
                                 }
                                 else
                                 {
+                                    rfootd1(2) = rfootd1(2)+ 10.00 * (rfoot_mpc(2) - rd_.link_[Right_Foot].xipos(2) + foot_temp(1));
+                                    lfootd1(2) = lfootd1(2)+ 10.00 * (lfoot_mpc(2) - rd_.link_[Left_Foot].xipos(2) + foot_temp(1));
+                               
                                     rfoot_mpc(2) = 0.0;
                                     lfoot_mpc(2) = 0.0;
                                 }
@@ -2512,9 +2540,6 @@ void CustomController::computeFast()
                        
                         rfoot_ori.setZero();
                         lfoot_ori.setZero();
-                        //q_pinocchio_desired(19) = 0.0;
-                        //q_pinocchio_desired(20) = 0.0;
-                        //q_pinocchio_desired(21) = 0.0;
                         q_pinocchio_desired1 = q_pinocchio_desired;
                         qd_pinocchio_desired1 = qd_pinocchio;
                     }
