@@ -208,7 +208,7 @@ public:
 
     int variable_size1, constraint_size1;
     int variable_size2, constraint_size2;
-
+    Eigen::Vector2d zmp_bx;
 
    CQuadraticProgram qp_momentum_control;
    CQuadraticProgram qp_torque_control;
@@ -216,6 +216,7 @@ public:
    double zmpy, zmpx;
     double forcex;
     bool mpc_ok = true;
+    Eigen::Vector3d rfoot_ori, lfoot_ori,rfoot_ori_c, lfoot_ori_c, pelv_ori_c;
 
     int controlwalk_time;
 private:
