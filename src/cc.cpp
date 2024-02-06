@@ -209,10 +209,31 @@ CustomController::CustomController(RobotData &rd) : rd_(rd) //, wbc_(dc.wbc_)
     qdot_command.resize(18);
     qdd_pinocchio_desired1.setZero();
     qd_pinocchio_prev.setZero();
+    G_temp.setZero(12, MODEL_DOF_VIRTUAL);
+    g_temp.setZero();
 
+    variable_size1 = MODEL_DOF_VIRTUAL + 12;
+    constraint_size1 = 63;//6 + 12 + 8 + 8 + 1 + MODEL_DOF_VIRTUAL;// + 1;
+
+    qp_torque_control.InitializeProblemSize(variable_size1, constraint_size1);
+    qp_torque_control.EnableEqualityCondition(0.001);
+    variable_size2 = 18;
+    constraint_size2 = 17;
+    qp_momentum_control.InitializeProblemSize(variable_size2, constraint_size2);
+
+    J.setZero(constraint_size2, variable_size2);
+    X.setZero(constraint_size2);
+
+    qp_momentum_control.EnableEqualityCondition(0.001);
+        
     qp_result.setZero(MODEL_DOF_VIRTUAL+12);
     tau_.resize(MODEL_DOF_VIRTUAL);
     tau_.setZero();
+
+    RFj.resize(6, MODEL_DOF_VIRTUAL);
+    LFj.resize(6, MODEL_DOF_VIRTUAL);
+    RFdj.resize(6, MODEL_DOF_VIRTUAL);
+    LFdj.resize(6, MODEL_DOF_VIRTUAL);
 
     virtual_temp.setZero();
     foot_temp.setZero();
@@ -538,6 +559,8 @@ void CustomController::computeSlow()
     ZMP_r(0) = -rd_.RF_CF_FT(4)/rd_.RF_CF_FT(2);
     ZMP_r(1) = rd_.RF_CF_FT(3)/rd_.RF_CF_FT(2);
 
+    int K_temp = 0;
+    double b_;
     if(mpc_cycle <= 69)
     {
         if(lfoot_mpc(2) <= 0.0010 && rfoot_mpc(2) <= 0.0010)
@@ -585,10 +608,12 @@ void CustomController::computeSlow()
     }
     else if(mpc_cycle <= 99)
     {
+        b_ = lfoot_mpc(2);
         if(lfoot_mpc(2)<= 0.0010 && rfoot_mpc(2) <= 0.0010)
         {
             if(mpc_cycle == 95 || mpc_cycle == 96 || mpc_cycle == 97|| mpc_cycle == 98)// || mpc_cycle == 98 || mpc_cycle == 99|| mpc_cycle == 100)
             {
+                K_temp = 1;
                 contactMode = 2;
                 ZMP(0) = ZMP_l(0)+ LF_matrix(mpc_cycle,0);
                 ZMP(1) = ZMP_l(1)+ LF_matrix(mpc_cycle,1);
@@ -597,6 +622,7 @@ void CustomController::computeSlow()
             }
             else
             {
+                K_temp = 2;
                 contactMode = 1;
                 ZMP(0) = ((ZMP_l(0) + LF_matrix_ssp2(mpc_cycle-49,0) - virtual_temp1(0))*rd_.LF_CF_FT(2) + (ZMP_r(0) + RF_matrix_ssp2(mpc_cycle-49,0) - virtual_temp1(0))*rd_.RF_CF_FT(2))/(rd_.RF_CF_FT(2) + rd_.LF_CF_FT(2));
                 ZMP(1) = ((ZMP_l(1) + LF_matrix_ssp2(mpc_cycle-49,1))*rd_.LF_CF_FT(2) + (ZMP_r(1) + RF_matrix_ssp2(mpc_cycle-49,1))*rd_.RF_CF_FT(2))/(rd_.RF_CF_FT(2) + rd_.LF_CF_FT(2));
@@ -604,7 +630,7 @@ void CustomController::computeSlow()
         }
         else if(lfoot_mpc(2) <= 0.0010)
         {
-            
+            K_temp = 3;
                 contactMode = 2;
                 ZMP(0) = ZMP_l(0)+ LF_matrix_ssp2(mpc_cycle-49,0) - virtual_temp1(0);
                 ZMP(1) = ZMP_l(1)+ LF_matrix_ssp2(mpc_cycle-49,1);
@@ -613,6 +639,7 @@ void CustomController::computeSlow()
         }
         else if(rfoot_mpc(2) <= 0.0010)
         {
+            K_temp = 4;
             contactMode = 3;
             ZMP(0) = ZMP_r(0)+ RF_matrix_ssp2(mpc_cycle-49,0) - virtual_temp1(0);
             ZMP(1) = ZMP_r(1)+ RF_matrix_ssp2(mpc_cycle-49,1);
@@ -737,6 +764,7 @@ void CustomController::computeSlow()
     {
         ZMP_FT_law(0) = ZMP(0);
         ZMP_FT_law(1) = ZMP(1);
+        com_z_init = rd_.link_[COM_id].xpos(2);
     }
    
     cc_mutex.lock();
@@ -759,8 +787,8 @@ void CustomController::computeSlow()
     LFj1.resize(6, MODEL_DOF_VIRTUAL);
     CMM = pinocchio::computeCentroidalMap(model, model_data2, q_pinocchio);
     pinocchio::computeCentroidalMomentum(model, model_data1, q_pinocchio, rd_.q_dot_virtual_);  
-
     cc_mutex.unlock();
+
     if(control_start == false)
     {    
         for (int i = 0; i < 6; i++)
@@ -775,15 +803,8 @@ void CustomController::computeSlow()
        
         RFz = -1 * rd_.RF_CF_FT(2);
         LFz = -1 * rd_.LF_CF_FT(2);
-        qdd_virtual.setZero();
-        qd_virtual_prev = rd_.q_dot_virtual_;
-
+     
         zmpx = rd_.link_[COM_id].xpos(0);
-    }
-    else
-    {
-        qdd_virtual = (rd_.q_dot_virtual_-qd_virtual_prev)*1000;
-        qd_virtual_prev = rd_.q_dot_virtual_;
     }
 
     if(walk_start == true)
@@ -792,30 +813,25 @@ void CustomController::computeSlow()
         zmpy = ZMPy_test;
     }
 
-
     //qddot_virtual은 다시해보기
     pinocchio::forwardKinematics(model, model_data2, q_pinocchio);
     pinocchio::centerOfMass(model, model_data2, q_pinocchio, rd_.q_dot_virtual_);
     pinocchio::crba(model, model_data2, q_pinocchio);
     pinocchio::nonLinearEffects(model, model_data2, q_pinocchio, rd_.q_dot_virtual_);
     pinocchio::computeCentroidalMomentum(model, model_data2, q_pinocchio, rd_.q_dot_virtual_);
-   
-    Eigen::MatrixXd RFj, LFj, RFdj, LFdj;
-    RFj.resize(6, MODEL_DOF_VIRTUAL);
-    LFj.resize(6, MODEL_DOF_VIRTUAL);
-    RFdj.resize(6, MODEL_DOF_VIRTUAL);
-    LFdj.resize(6, MODEL_DOF_VIRTUAL);
+    pinocchio::computeJointJacobiansTimeVariation(model, model_data2, q_pinocchio, rd_.q_dot_virtual_);
+    
     RFj.setZero();
     LFj.setZero();
 
+    cc_mutex.lock();
     pinocchio::computeFrameJacobian(model, model_data2, q_pinocchio, RFcframe_id, RFj);
     pinocchio::computeFrameJacobian(model, model_data2, q_pinocchio, LFcframe_id, LFj);
-    pinocchio::computeJointJacobiansTimeVariation(model, model_data2, q_pinocchio, rd_.q_dot_virtual_);
    
     pinocchio::getFrameJacobianTimeVariation(model, model_data2, RFcframe_id, WORLD, RFdj);
     pinocchio::getFrameJacobianTimeVariation(model, model_data2, LFcframe_id, WORLD, LFdj);
+    cc_mutex.unlock();
 
-    Eigen::VectorVQd force;
 
     RFj.block(0, 18, 6, MODEL_DOF_VIRTUAL -18).setZero();
     LFj.block(0, 18, 6, MODEL_DOF_VIRTUAL -18).setZero();
@@ -903,12 +919,12 @@ void CustomController::computeSlow()
     }
 
     //Disturbance
-
-    if(mpc_cycle >= 205  && mpc_cycle <= 208)//&& (walking_tick >= 1  && walking_tick <= 20))
+    if(mpc_cycle >= 174  && mpc_cycle <= 178)//&& (walking_tick >= 1  && walking_tick <= 20))
         mj_shm_->dis_check = true;
     else
         mj_shm_->dis_check = false;
     
+    cc_mutex.lock();    
     if(contactMode == 1)
     {
         if(mpc_cycle <= 69)
@@ -1000,16 +1016,11 @@ void CustomController::computeSlow()
             virtual_temp(1) = -(model_data2.oMf[RFcframe_id].translation()(1) + 0.1025);
         }
     }
-
-    double cal = 0;
-    double zmpx_, zmpy_;
+    cc_mutex.unlock();
    
     if(control_start == false || control_time > 0)// && walking_tick_stop == tru) //추후 삭제
     {  
         control_start = true;
-       
-        zmpx_ = zmpx;
-        zmpy_ = zmpy;
 
         if(contactMode == 1)// && mpc_cycle != 49)
         {
@@ -1021,9 +1032,9 @@ void CustomController::computeSlow()
             if(model_data2.oMf[LFcframe_id].translation()(0) >  model_data2.oMf[RFcframe_id].translation()(0))
             {
                 if(zmpx > model_data2.oMf[LFcframe_id].translation()(0) + lx)
-                    zmpx_  = model_data2.oMf[LFcframe_id].translation()(0) + lx;
+                    zmpx  = model_data2.oMf[LFcframe_id].translation()(0) + lx;
                 if(zmpx < model_data2.oMf[RFcframe_id].translation()(0) - lx)
-                    zmpx_  = model_data2.oMf[RFcframe_id].translation()(0) - lx;
+                    zmpx  = model_data2.oMf[RFcframe_id].translation()(0) - lx;
 
                 zmp_bx(0) =  model_data2.oMf[LFcframe_id].translation()(0) + lx;
                 zmp_bx(1) =  model_data2.oMf[RFcframe_id].translation()(0) - lx;
@@ -1031,44 +1042,34 @@ void CustomController::computeSlow()
             else if(model_data2.oMf[LFcframe_id].translation()(0) <  model_data2.oMf[RFcframe_id].translation()(0))
             {
                 if(zmpx > model_data2.oMf[RFcframe_id].translation()(0) + lx)
-                    zmpx_  = model_data2.oMf[RFcframe_id].translation()(0) + lx;
+                    zmpx  = model_data2.oMf[RFcframe_id].translation()(0) + lx;
                 if(zmpx < model_data2.oMf[LFcframe_id].translation()(0) - lx)
-                    zmpx_  = model_data2.oMf[LFcframe_id].translation()(0) - lx;
+                    zmpx  = model_data2.oMf[LFcframe_id].translation()(0) - lx;
                 zmp_bx(0) =  model_data2.oMf[RFcframe_id].translation()(0) + lx;
                 zmp_bx(1) =  model_data2.oMf[LFcframe_id].translation()(0) - lx;
             }
             else
             {
                 if(zmpx > model_data2.oMf[RFcframe_id].translation()(0) + lx)
-                    zmpx_  = model_data2.oMf[RFcframe_id].translation()(0) + lx;
+                    zmpx  = model_data2.oMf[RFcframe_id].translation()(0) + lx;
                 if(zmpx < model_data2.oMf[LFcframe_id].translation()(0) - lx)
-                    zmpx_  = model_data2.oMf[LFcframe_id].translation()(0) - lx;
+                    zmpx  = model_data2.oMf[LFcframe_id].translation()(0) - lx;
                 zmp_bx(0) =  model_data2.oMf[LFcframe_id].translation()(0) + lx;
                 zmp_bx(1) =  model_data2.oMf[RFcframe_id].translation()(0) - lx;
             }
 
             if(zmpy > model_data2.oMf[LFcframe_id].translation()(1) + ly)
             {
-                zmpy_ = model_data2.oMf[LFcframe_id].translation()(1) + ly;
+                zmpy = model_data2.oMf[LFcframe_id].translation()(1) + ly;
             }
 
             if(zmpy < model_data2.oMf[RFcframe_id].translation()(1) - ly)
             {
-                zmpy_ = model_data2.oMf[RFcframe_id].translation()(1) - ly;
+                zmpy = model_data2.oMf[RFcframe_id].translation()(1) - ly;
             }
-
-
-            cal = 0;
-           
-
-            int variable_size1, constraint_size1;
-
-            variable_size1 = MODEL_DOF_VIRTUAL + 12;
-            constraint_size1 = 63;//6 + 12 + 8 + 8 + 1 + MODEL_DOF_VIRTUAL;// + 1;
 
             MatrixXd J1, H1, A1;
             VectorXd X1, g1, lb1, ub1, lbA1, ubA1;
-            static CQuadraticProgram qp_torque_control;
             X1.setZero(constraint_size1);
             J1.setZero(constraint_size1, variable_size1);
             H1.setZero(variable_size1, variable_size1);
@@ -1076,8 +1077,7 @@ void CustomController::computeSlow()
             g1.setZero(variable_size1);
             lbA1.setZero(constraint_size1);
             ubA1.setZero(constraint_size1);
-            qp_torque_control.InitializeProblemSize(variable_size1, constraint_size1);
-           
+            
             M_ = model_data2.M;
             nle = model_data2.nle;
 
@@ -1086,7 +1086,6 @@ void CustomController::computeSlow()
             lb1.setConstant(variable_size1, -100000);
             ub1.setConstant(variable_size1, 100000);
 
-           
             H1(2,2) = 1.0;
             H1(8,8) = 1.0;
             g1(2) = - com_alpha * nle(2) * 1.0;
@@ -1101,12 +1100,8 @@ void CustomController::computeSlow()
             lbA1.head(6) = (nle + M_ * qdd_pinocchio_desired1_).head(6);
             ubA1.head(6) = (nle + M_ * qdd_pinocchio_desired1_).head(6);
            
-            MatrixXd G_temp, G_temp1;
-            Vector12d g_temp, g_temp1;
             double weight_resi = 0.0, weight_resi1 = 2.0;;
-            G_temp.setZero(12, MODEL_DOF_VIRTUAL);
-            G_temp1.setIdentity(12,12);
-            g_temp.setZero();
+            G_temp.setZero();
             g_temp.setZero();
             G_temp.block(0,0,6,MODEL_DOF_VIRTUAL) = RFj;
             G_temp.block(6,0,6,MODEL_DOF_VIRTUAL) = LFj;
@@ -1186,16 +1181,16 @@ void CustomController::computeSlow()
             lbA1(21) = 0.0;
             ubA1(21) = 100000.0;
            
-            A1.block(22,0,1,6)(0,2) = (model_data2.oMf[RFcframe_id].translation()(1)  - zmpy_);
+            A1.block(22,0,1,6)(0,2) = (model_data2.oMf[RFcframe_id].translation()(1)  - zmpy);
             A1.block(22,0,1,6)(0,3) = 1;
-            A1.block(22,6,1,6)(0,2) = (model_data2.oMf[LFcframe_id].translation()(1)  - zmpy_);
+            A1.block(22,6,1,6)(0,2) = (model_data2.oMf[LFcframe_id].translation()(1)  - zmpy);
             A1.block(22,6,1,6)(0,3) = 1;
             lbA1(22) = 0.0;
             ubA1(22) = 0.0;
 
-            A1.block(23,0,1,6)(0,2) = (model_data2.oMf[RFcframe_id].translation()(0)  - zmpx_);
+            A1.block(23,0,1,6)(0,2) = (model_data2.oMf[RFcframe_id].translation()(0)  - zmpx);
             A1.block(23,0,1,6)(0,4) = -1;
-            A1.block(23,6,1,6)(0,2) = (model_data2.oMf[LFcframe_id].translation()(0)  - zmpx_);
+            A1.block(23,6,1,6)(0,2) = (model_data2.oMf[LFcframe_id].translation()(0)  - zmpx);
             A1.block(23,6,1,6)(0,4) = -1;
             lbA1(23) = 0.0;
             ubA1(23) = 0.0;
@@ -1305,8 +1300,7 @@ void CustomController::computeSlow()
             A1.block(62,6,1,6)(0,5) = -1;
             lbA1(62) = 0.0;
             ubA1(62) = 100000.0;
-       
-            qp_torque_control.EnableEqualityCondition(0.001);
+
             qp_torque_control.UpdateMinProblem(H1, g1);
             qp_torque_control.UpdateSubjectToAx(A1, lbA1, ubA1);
             qp_torque_control.UpdateSubjectToX(lb1, ub1);
@@ -1337,30 +1331,23 @@ void CustomController::computeSlow()
             lx = 0.11;
             mu = 0.8;
 
-            cal = 1;
-
             if(zmpx > model_data2.oMf[LFcframe_id].translation()(0) + lx)
-                zmpx_  = model_data2.oMf[LFcframe_id].translation()(0) + lx;
+                zmpx  = model_data2.oMf[LFcframe_id].translation()(0) + lx;
             if(zmpx < model_data2.oMf[LFcframe_id].translation()(0) - lx)
-                zmpx_  = model_data2.oMf[LFcframe_id].translation()(0) - lx;
+                zmpx  = model_data2.oMf[LFcframe_id].translation()(0) - lx;
 
             if(zmpy > model_data2.oMf[LFcframe_id].translation()(1) + ly)
-                zmpy_ = model_data2.oMf[LFcframe_id].translation()(1) + ly;
+                zmpy = model_data2.oMf[LFcframe_id].translation()(1) + ly;
             else if(zmpy < model_data2.oMf[LFcframe_id].translation()(1) - ly)
-                zmpy_ = model_data2.oMf[LFcframe_id].translation()(1) - ly;
+                zmpy = model_data2.oMf[LFcframe_id].translation()(1) - ly;
 
 
             zmp_bx(0) =  model_data2.oMf[LFcframe_id].translation()(0) + lx;
             zmp_bx(1) =  model_data2.oMf[LFcframe_id].translation()(0) - lx;
 
-            int variable_size1, constraint_size1;
-
-            variable_size1 = MODEL_DOF_VIRTUAL + 12;
-            constraint_size1 = 60;
-
             MatrixXd J1, H1, A1;
             VectorXd X1, g1, lb1, ub1, lbA1, ubA1;
-            static CQuadraticProgram qp_torque_control;
+
             X1.setZero(constraint_size1);
             J1.setZero(constraint_size1, variable_size1);
             H1.setZero(variable_size1, variable_size1);
@@ -1368,7 +1355,6 @@ void CustomController::computeSlow()
             g1.setZero(variable_size1);
             lbA1.setZero(constraint_size1);
             ubA1.setZero(constraint_size1);
-            qp_torque_control.InitializeProblemSize(variable_size1, constraint_size1);
            
             M_ = model_data2.M;
             nle = model_data2.nle;
@@ -1388,10 +1374,8 @@ void CustomController::computeSlow()
            
             qdd_pinocchio_desired1_ = qdd_pinocchio_desired1;
            
-            MatrixXd G_temp;
-            Vector12d g_temp;
             double weight_resi = 0.0;
-            G_temp.setZero(12, MODEL_DOF_VIRTUAL);
+            G_temp.setZero();
             g_temp.setZero();
             G_temp.block(0,0,6,MODEL_DOF_VIRTUAL) = LFj;
             g_temp.head(6) <<  LFdj * rd_.q_dot_virtual_ + LFj * qdd_pinocchio_desired1_;
@@ -1440,13 +1424,13 @@ void CustomController::computeSlow()
             lbA1(17) = 0.0;
             ubA1(17) = 100000.0;
        
-            A1.block(22,6,1,6)(0,2) = (model_data2.oMf[LFcframe_id].translation()(1)  - zmpy_);
+            A1.block(22,6,1,6)(0,2) = (model_data2.oMf[LFcframe_id].translation()(1)  - zmpy);
             A1.block(22,6,1,6)(0,3) = 1;
 
             lbA1(22) = 0.0;
             ubA1(22) = 0.0;
            
-            A1.block(23,6,1,6)(0,2) = (model_data2.oMf[LFcframe_id].translation()(0)  - zmpx_);
+            A1.block(23,6,1,6)(0,2) = (model_data2.oMf[LFcframe_id].translation()(0)  - zmpx);
             A1.block(23,6,1,6)(0,4) = -1;
    
             lbA1(23) = 0.0;
@@ -1543,7 +1527,6 @@ void CustomController::computeSlow()
             lbA1(59) = 0.0;
             ubA1(59) = 100000.0;
    
-            qp_torque_control.EnableEqualityCondition(0.001);
             qp_torque_control.UpdateMinProblem(H1, g1);
             qp_torque_control.UpdateSubjectToAx(A1, lbA1, ubA1);
             qp_torque_control.UpdateSubjectToX(lb1, ub1);
@@ -1564,29 +1547,24 @@ void CustomController::computeSlow()
             lx = 0.11;
             mu = 0.8;
 
-            cal = 2;
-
             if(zmpx > model_data2.oMf[RFcframe_id].translation()(0) + lx)
-                zmpx_  = model_data2.oMf[RFcframe_id].translation()(0) + lx;
+                zmpx  = model_data2.oMf[RFcframe_id].translation()(0) + lx;
             if(zmpx < model_data2.oMf[RFcframe_id].translation()(0) - lx)
-                zmpx_  = model_data2.oMf[RFcframe_id].translation()(0) - lx;
+                zmpx  = model_data2.oMf[RFcframe_id].translation()(0) - lx;
 
             if(zmpy < model_data2.oMf[RFcframe_id].translation()(1) - ly)
-                zmpy_ = model_data2.oMf[RFcframe_id].translation()(1) - ly;
+                zmpy = model_data2.oMf[RFcframe_id].translation()(1) - ly;
             else if(zmpy > model_data2.oMf[RFcframe_id].translation()(1) + ly)
-                zmpy_ = model_data2.oMf[RFcframe_id].translation()(1) + ly;
+                zmpy = model_data2.oMf[RFcframe_id].translation()(1) + ly;
 
             zmp_bx(0) =  model_data2.oMf[RFcframe_id].translation()(0) + lx;
             zmp_bx(1) =  model_data2.oMf[RFcframe_id].translation()(0) - lx;
 
-            int variable_size1, constraint_size1;
-
-            variable_size1 = MODEL_DOF_VIRTUAL + 12;
-            constraint_size1 = 60;//6 + 12 + 8 + 8 + 1 + MODEL_DOF_VIRTUAL;// + 1;
-
+            
+            
             MatrixXd J1, H1, A1;
             VectorXd X1, g1, lb1, ub1, lbA1, ubA1;
-            static CQuadraticProgram qp_torque_control;
+            
             X1.setZero(constraint_size1);
             J1.setZero(constraint_size1, variable_size1);
             H1.setZero(variable_size1, variable_size1);
@@ -1594,7 +1572,6 @@ void CustomController::computeSlow()
             g1.setZero(variable_size1);
             lbA1.setZero(constraint_size1);
             ubA1.setZero(constraint_size1);
-            qp_torque_control.InitializeProblemSize(variable_size1, constraint_size1);
            
             M_ = model_data2.M;
             nle = model_data2.nle;
@@ -1604,9 +1581,7 @@ void CustomController::computeSlow()
             lb1.setConstant(variable_size1, -100000);
             ub1.setConstant(variable_size1, 100000);
 
-            //H1.block(0,0,12,12) = 100.0* H1.block(0,0,12,12);
-           
-           
+            
             H1(2,2) = 5;
             g1(2) = - com_alpha * nle(2) * 5;
             lb1(2) = 0.0;
@@ -1614,24 +1589,16 @@ void CustomController::computeSlow()
 
             H1.block(12,12,6,6) = 100 * H1.block(12,12,6,6);
            
-            /*H1(15,15) = 50000000;
-            g1(15) =  qdd_pinocchio_desired1(3) * 50000000;
-            H1(16,16) = 50000000;
-            g1(16) =  qdd_pinocchio_desired1(4) * 50000000;*/
-           
+            
             qdd_pinocchio_desired1_ = qdd_pinocchio_desired1;
            
-            MatrixXd G_temp;
-            Vector12d g_temp;
             double weight_resi = 100.0;
-            G_temp.setZero(12, MODEL_DOF_VIRTUAL);
+            G_temp.setZero();
             g_temp.setZero();
             G_temp.block(0,0,6,MODEL_DOF_VIRTUAL) = RFj;
             g_temp.head(6) <<  RFdj * rd_.q_dot_virtual_ + RFj * qdd_pinocchio_desired1_;
-
             g1.tail(MODEL_DOF_VIRTUAL) = g1.tail(MODEL_DOF_VIRTUAL) + weight_resi * G_temp.transpose() * g_temp;
             H1.block(12, 12, MODEL_DOF_VIRTUAL, MODEL_DOF_VIRTUAL) += H1.block(12, 12, MODEL_DOF_VIRTUAL, MODEL_DOF_VIRTUAL) + weight_resi * G_temp.transpose() * G_temp;
-           
        
             lbA1.head(6) = (nle + M_ * qdd_pinocchio_desired1_).head(6);
             ubA1.head(6) = (nle + M_ * qdd_pinocchio_desired1_).head(6);
@@ -1673,13 +1640,13 @@ void CustomController::computeSlow()
             lbA1(17) = 0.0;
             ubA1(17) = 100000.0;
        
-            A1.block(22,0,1,6)(0,2) = (model_data2.oMf[RFcframe_id].translation()(1) - zmpy_);
+            A1.block(22,0,1,6)(0,2) = (model_data2.oMf[RFcframe_id].translation()(1) - zmpy);
             A1.block(22,0,1,6)(0,3) = 1;
 
             lbA1(22) = 0.0;
             ubA1(22) = 0.0;
            
-            A1.block(23,0,1,6)(0,2) = (model_data2.oMf[RFcframe_id].translation()(0) - zmpx_);
+            A1.block(23,0,1,6)(0,2) = (model_data2.oMf[RFcframe_id].translation()(0) - zmpx);
             A1.block(23,0,1,6)(0,4) = -1;
    
             lbA1(23) = 0.0;
@@ -1776,7 +1743,6 @@ void CustomController::computeSlow()
             lbA1(59) = 0.0;
             ubA1(59) = 100000.0;
 
-            qp_torque_control.EnableEqualityCondition(0.001);
             qp_torque_control.UpdateMinProblem(H1, g1);
             qp_torque_control.UpdateSubjectToAx(A1, lbA1, ubA1);
             qp_torque_control.UpdateSubjectToX(lb1, ub1);
@@ -1802,14 +1768,15 @@ void CustomController::computeSlow()
         }
     }
    
-    if(mpc_cycle >= 2 && mpc_cycle < controlwalk_time)
+    if(mpc_cycle >= 2 && mpc_cycle < controlwalk_time && statemachine.m_shared_memory_int[0] != 3)
     {
         file[1] << mpc_cycle << " " << walking_tick << " ";
         //file[1] << q_pinocchio_desired1(9) << " " << rd_.q_(2) << " "<< q_pinocchio_desired1(10) << " " << rd_.q_(3) << " "<< q_pinocchio_desired1(11) << " " << rd_.q_(4) << " "<< q_pinocchio_desired1(15) << " " << rd_.q_(8) << " "<< q_pinocchio_desired1(16) << " " << rd_.q_(9) << " "<< q_pinocchio_desired1(17) << " "<< rd_.q_(10) ;
         file[1] << virtual_temp(0) << " " << virtual_temp1(0) << " " << virtual_temp(1) << " " << virtual_temp1(1) << " " << desired_val.m_shared_memory[43] <<  " " << rd_.q_(13) << " " << rd_.q_(14) << " " << desired_val.m_shared_memory[19] << " " << desired_val.m_shared_memory[20] << " " << pelv_ori_c(0) <<  "  " << pelv_ori_c(1);// << rfoot_ori_c(0) << " " << rfoot_ori_c(1) << " " << rfoot_ori_c(2) << " " << lfoot_ori_c(0) << " " << lfoot_ori_c(1) << " " << lfoot_ori_c(2);
         file[1] << std::endl;
         //file[1] << virtual_temp(0) << " " << virtual_temp1(0) << " " << virtual_temp(1) << " " <<  virtual_temp1(1)<<" " << com_alpha << " " << qd_pinocchio(3) << " "<< qd_pinocchio(4) << " "<< angd_[0] << " " << angd_[1] << " "  <<ang_de(0) <<  " " << ang_de(1) << " " <<ang_de(2) << " " << ang_de(3) << std::endl;//<< rd_.roll << " "<< rd_.pitch<< " " << rd_.q_(14) << " " << rd_.q_(13)<< " " << desired_val.m_shared_memory[20] << " " << desired_val.m_shared_memory[19] <<std::endl;
-        file[0] << mpc_cycle <<  " " << com_alpha << " " << KK_temp << " " << solved<< " " <<qp_solved<<" " <<contactMode << " "  <<rfoot_mpc(2) << " " <<model_data2.oMf[RFcframe_id].translation()(2) << " "<< rfootd1(2) << " " << rfootd(2)<<  " " << lfoot_mpc(2)<< " " << model_data2.oMf[LFcframe_id].translation()(2) << " "<< lfootd1(2) << " "<< rfoot_mpc(1)<< " " <<model_data2.oMf[RFcframe_id].translation()(1) + virtual_temp1(1)<< " "<<rfootd1(1)<< " "<<  lfoot_mpc(1) << " " << model_data2.oMf[LFcframe_id].translation()(1) + virtual_temp1(1)<< " "<< lfootd1(1) << " "<<rfoot_mpc(0)<< " " <<model_data2.oMf[RFcframe_id].translation()(0) + virtual_temp1(0) << " "<<rd_.link_[Right_Foot].xipos(0) + 0.0378 + virtual_temp1(0) <<  " " << rfootd1(0) << " "<< lfoot_mpc(0) << " " << model_data2.oMf[LFcframe_id].translation()(0)+ virtual_temp1(0)<<" " <<rfootd1(0) << " " << lfootd1(0) << " " <<qp_result(2)  << " " << qp_result(8)  <<" " << qp_result(13) << " " << qp_result(19) << " "  << -1 * rd_.LF_CF_FT(2) <<" "  << -1 * rd_.RF_CF_FT(2) << " "<< model_data2.oMf[RFcframe_id].translation()(0)+ virtual_temp(0) << " "  << ZMP_FT_law(0) << " " << zmpx_<<  " " << zmp_mpcx<< " " << zmp_bx(0) << " " << zmp_bx(1) << " "  << ZMP_FT_law(1) << " "<< zmpy<< " " <<zmpy_ << " " << model_data1.hg.angular()[0] << " " << model_data1.hg.angular()[1] << " "<< angd_(0) << " " << angd_(1) << " " << comd(0) << " " << comd(1) << " " << rd_.link_[COM_id].v(0)<< " " << rd_.link_[COM_id].v(1)  << " " << rd_.link_[COM_id].xpos(0)<< " " << rd_.link_[COM_id].xpos(1) << " " << com_mpc[0]  << " " << com_mpc[1] <<  " " << rd_.link_[COM_id].xpos(2) << " " << mj_shm_->dis_check<< std::endl;
+         /*<< com_alpha << " " << KK_temp << " " << solved<< " " <<qp_solved<<" " <<contactMode << " "  <<rfoot_mpc(2) << " " <<model_data2.oMf[RFcframe_id].translation()(2) << " "<< rfootd1(2) << " " << rfootd(2)<<  " " << lfoot_mpc(2)<< " " << model_data2.oMf[LFcframe_id].translation()(2) << " "<< lfootd1(2) << " "<< rfoot_mpc(1)<< " " <<model_data2.oMf[RFcframe_id].translation()(1) + virtual_temp1(1)<< " "<<rfootd1(1)<< " "<<  lfoot_mpc(1) << " " << model_data2.oMf[LFcframe_id].translation()(1) + virtual_temp1(1)<< " "<< lfootd1(1) << " "<<rfoot_mpc(0)<< " " <<model_data2.oMf[RFcframe_id].translation()(0) + virtual_temp1(0) << " "<<rd_.link_[Right_Foot].xipos(0) + 0.0378 + virtual_temp1(0) <<  " " << rfootd1(0) << " "<< lfoot_mpc(0) << " " << model_data2.oMf[LFcframe_id].translation()(0)+ virtual_temp1(0)<<" " <<rfootd1(0) << " " << lfootd1(0) << " " <<qp_result(2)  << " " << qp_result(8)  <<" " << qp_result(13) << " " << qp_result(19) << " "  << -1 * rd_.LF_CF_FT(2) <<" "  << -1 * rd_.RF_CF_FT(2) << " "<< model_data2.oMf[RFcframe_id].translation()(0)+ virtual_temp(0) << " " */ 
+        file[0] << mpc_cycle <<  " " << contactMode << " " << K_temp << " " << b_ << " "<< ZMP_FT_law(0) << " " << " " << zmpx<<  " " << zmp_mpcx<< " " << zmp_bx(0) << " " << zmp_bx(1) << " "  << ZMP_FT_law(1) << " "<< zmpy << " " << model_data1.hg.angular()[0] << " " << model_data1.hg.angular()[1] << " "<< angd_(0) << " " << angd_(1) << " " << comd(0) << " " << comd(1) << " " << rd_.link_[COM_id].v(0)<< " " << rd_.link_[COM_id].v(1)  << " " << rd_.link_[COM_id].xpos(0)<< " " << rd_.link_[COM_id].xpos(1) << " " << com_mpc[0]  << " " << com_mpc[1] <<  " " << rd_.link_[COM_id].xpos(2) << " " << mj_shm_->dis_check<< " " << rd_.q_(13) << " " << rd_.q_(14)<<" " <<rfoot_mpc(0)<< " " <<model_data2.oMf[RFcframe_id].translation()(0) + virtual_temp1(0) <<" " <<lfoot_mpc(0)<< " " <<model_data2.oMf[LFcframe_id].translation()(0) + virtual_temp1(0) <<  std::endl;
     }
    
     if(mpc_cycle <= controlwalk_time - 1)// && mpc_cycle <= 83)
@@ -1923,7 +1890,7 @@ void CustomController::computeFast()
             {
                 wk_Hz = 2000;
                 wk_dt = 1 / wk_Hz;
-                controlwalk_time = 360;//217;//360;
+                controlwalk_time = 260;//217;//360;
 
                 if (walking_tick == 0)
                 {
@@ -2139,7 +2106,7 @@ void CustomController::computeFast()
                             std::cout << "JOint " << desired_val.m_shared_memory[19] << " " << desired_val.m_shared_memory[20] << "  " << DyrosMath::rot2Euler(rd_.link_[Pelvis].rotm)(0) << " " << DyrosMath::rot2Euler(rd_.link_[Pelvis].rotm)(1) << " " << q_pinocchio_desired(20) << " " << q_pinocchio_desired(21) << std::endl;
                             if(desired_val.m_shared_memory[19] < -0.2000)
                             {  
-                                std::cout << "Roll over" << std::endl;
+                                std::cout << "Pitch over" << std::endl;
                                 if(desired_val.m_shared_memory[39] < 0.0)
                                 {
                                     //qd_pinocchio(19) = 0.0;
@@ -2155,7 +2122,7 @@ void CustomController::computeFast()
                             }
                             else if(desired_val.m_shared_memory[19] > 0.2000)
                             {  
-                                std::cout << "Roll over" << std::endl;
+                                std::cout << "Pitch over" << std::endl;
                                 if(desired_val.m_shared_memory[39] > 0.0)
                                 {
                                     //qd_pinocchio(19) = 0.0;
@@ -2177,7 +2144,7 @@ void CustomController::computeFast()
 
                             if(desired_val.m_shared_memory[20] < -0.2000)
                             {
-                                std::cout << "Pitch over" << std::endl;
+                                std::cout << "Roll over" << std::endl;
                                 if(desired_val.m_shared_memory[40] < 0.0)
                                 {
                                     //qd_pinocchio(20) = 0.0;
@@ -2193,6 +2160,7 @@ void CustomController::computeFast()
                             }
                             else if(desired_val.m_shared_memory[20] > 0.2000)
                             {
+                                std::cout << "Roll over" << std::endl;
                                 if(desired_val.m_shared_memory[40] > 0.0)
                                 {
                                     //qd_pinocchio(20) = 0.0;
@@ -2345,7 +2313,7 @@ void CustomController::computeFast()
 
                         comd_(0) = comdt_(0)+ 0.0 * (comdt_(0) - rd_.link_[COM_id].v(0)) + 0.0 * (com_mpc[0] - rd_.link_[COM_id].xpos(0));
                         comd_(1) = comdt_(1)+ 0.0 * (comdt_(1) - rd_.link_[COM_id].v(1)) + 0.0 * (com_mpc[1] - rd_.link_[COM_id].xpos(1));
-                        comd_(2) = comd(2);
+                        comd_(2) = comd(2) + 2.0 * (com_z_init - rd_.link_[COM_id].xpos(2));
 
                         angd_(0) = (angm(0) * walking_tick + angm_prev(0) * (40 -walking_tick))/40;
                         angd_(1) = (angm(1) * walking_tick + angm_prev(1) * (40 -walking_tick))/40;
@@ -2639,7 +2607,7 @@ void CustomController::momentumControl(RobotData &Robot, Eigen::Vector3d comd,  
 {
     if(upper_on == false)
     {
-        int variable_size, constraint_size;
+        /*int variable_size, constraint_size;
 
         variable_size = 18;
         constraint_size = 17;
@@ -2661,42 +2629,32 @@ void CustomController::momentumControl(RobotData &Robot, Eigen::Vector3d comd,  
         X.segment<3>(11) = lfootd;
         Eigen::MatrixXd pinv = J.completeOrthogonalDecomposition().pseudoInverse() ;
 
-        q_dm = pinv * X;
+        q_dm = pinv * X;*/
     }
     else
     {  
-        int variable_size1, constraint_size1;
-
-        variable_size1 = 18;
-        constraint_size1 = 17;
+        
 
         MatrixXd J1, H1, A1;
         VectorXd X1, g1, lb1, ub1, lbA1, ubA1;
-        static CQuadraticProgram qp_momentum_control;
-        X1.setZero(constraint_size1);
-        J1.setZero(constraint_size1, variable_size1);
-        H1.setZero(variable_size1, variable_size1);
-        A1.setZero(constraint_size1, variable_size1);
-        g1.setZero(variable_size1);
-        lbA1.setZero(constraint_size1);
-        ubA1.setZero(constraint_size1);
-        qp_momentum_control.InitializeProblemSize(variable_size1, constraint_size1);
+        X1.setZero(constraint_size2);
+        J1.setZero(constraint_size2, variable_size2);
+        H1.setZero(variable_size2, variable_size2);
+        A1.setZero(constraint_size2, variable_size2);
+        g1.setZero(variable_size2);
+        lbA1.setZero(constraint_size2);
+        ubA1.setZero(constraint_size2);
            
-        lb1.setConstant(variable_size1, -100000);
-        ub1.setConstant(variable_size1, 100000);
+        lb1.setConstant(variable_size2, -100000);
+        ub1.setConstant(variable_size2, 100000);
        
         H1(3,3) = 1;
         H1(4,4) = 1;
         H1(5,5) = 1;
-
-        MatrixXd J;
-        VectorXd X;
-        X.setZero(constraint_size1);
        
         MOMX = CMM.block(3,19,2,2) * upperd; 
         COMX = Robot.link_[COM_id].Jac().block(0,19,3,2) * upperd;
 
-        J.setZero(constraint_size1, variable_size1);
         J.block(0,0,3,18) = Robot.link_[COM_id].Jac().block(0,0,3,18);
         J.block(5,0,6,18) = Robot.link_[Right_Foot].Jac().block(0,0,6,18);
         J.block(11,0,6,18) = Robot.link_[Left_Foot].Jac().block(0,0,6,18);
@@ -2719,7 +2677,6 @@ void CustomController::momentumControl(RobotData &Robot, Eigen::Vector3d comd,  
         lbA1 = X;
         ubA1 = X;
 
-        qp_momentum_control.EnableEqualityCondition(0.001);
         qp_momentum_control.UpdateMinProblem(H1, g1);
         qp_momentum_control.UpdateSubjectToAx(A1, lbA1, ubA1);
         qp_momentum_control.UpdateSubjectToX(lb1, ub1);

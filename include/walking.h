@@ -19,6 +19,7 @@ public:
     const int Right_Hand = 31;
     const int Head = 33;
     const int COM_id = 34;
+    std::atomic<int> walking_tick;
     int mpct = 10;
 
     const int LEFT = 0;
@@ -75,7 +76,7 @@ public:
     std::atomic<double> zc;
     std::atomic<double> lipm_w;
     std::atomic<double> total_mass;
-    std::atomic<int> walking_tick;
+    //std::atomic<int> walking_tick;
     int walking_tick_prev;
     std::atomic<int> walking_init_tick;
     std::atomic<int> debugg_int;

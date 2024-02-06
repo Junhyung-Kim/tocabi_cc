@@ -90,9 +90,14 @@ public:
     Eigen::VectorVQd qd_pinocchio_prev;
     Eigen::VectorVQd qdd_pinocchio_desired1;
     Eigen::VectorVQd qdd_pinocchio_desired1_;
-    Eigen::VectorVQd qdd_virtual;
-    Eigen::VectorVQd qd_virtual_prev;
     Eigen::VectorXd qp_result, qp_result_prev;
+
+    double com_z_init;
+
+    Eigen::MatrixXd RFj, LFj, RFdj, LFdj;
+    MatrixXd G_temp;
+    Vector12d g_temp;
+            
     
     Eigen::Vector3d rfoot_mpc, lfoot_mpc;
 
@@ -219,6 +224,10 @@ public:
     Eigen::Vector3d rfoot_ori, lfoot_ori,rfoot_ori_c, lfoot_ori_c, pelv_ori_c;
 
     int controlwalk_time;
+
+    MatrixXd J;
+   VectorXd X;
+
 private:
     Eigen::VectorQd ControlVal_;
 };
