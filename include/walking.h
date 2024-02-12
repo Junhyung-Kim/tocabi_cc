@@ -80,7 +80,7 @@ public:
     int walking_tick_prev;
     std::atomic<int> walking_init_tick;
     std::atomic<int> debugg_int;
-    std::atomic<double> contactMode;
+    std::atomic<int> contactMode;
     std::atomic<double> phaseChange;
     std::atomic<double> phaseChange1;
 

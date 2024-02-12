@@ -52,6 +52,9 @@ public:
 
     RobotData &rd_;
     RobotData rd_cc_;
+    
+    std::atomic<double> lfootz;
+    std::atomic<double> rfootz;
 
     int LFjoint_id, RFjoint_id, RFframe_id, LFframe_id, RFcframe_id, LFcframe_id;
 
@@ -140,6 +143,7 @@ public:
 
     Eigen::Vector2d virtual_temp;
     Eigen::Vector2d virtual_temp1;
+    Eigen::Vector2d virtual_temp2;
     Eigen::Vector2d foot_temp;
 
     int nx_;
