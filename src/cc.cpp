@@ -43,6 +43,9 @@ CustomController::CustomController(RobotData &rd) : rd_(rd) //, wbc_(dc.wbc_)
     MOMX.setZero(2);
     rd_.mujoco_dist = false;
 
+    q_desireddot.resize(18);
+    q_desireddot.setZero();
+
     nh.setCallbackQueue(&queue_cc_);
     gui_sub_ = nh.subscribe("/chatter", 1, &CustomController::GuiCommandCallback, this);
    
@@ -218,7 +221,7 @@ CustomController::CustomController(RobotData &rd) : rd_(rd) //, wbc_(dc.wbc_)
     qp_torque_control.InitializeProblemSize(variable_size1, constraint_size1);
     qp_torque_control.EnableEqualityCondition(0.001);
     variable_size2 = 18;
-    constraint_size2 = 17;
+    constraint_size2 = 17;//15;
     qp_momentum_control.InitializeProblemSize(variable_size2, constraint_size2);
 
     J.setZero(constraint_size2, variable_size2);
@@ -289,7 +292,7 @@ CustomController::CustomController(RobotData &rd) : rd_(rd) //, wbc_(dc.wbc_)
     mpc_start_init.attachSharedMemoryint();
     std::cout << "SHAREDMEMORY FIRST OK"<< std::endl;
     state_init.setKey(2);
-    state_init.setupSharedMemory(sizeof(double) * 49);
+    state_init.setupSharedMemory(sizeof(double) * 50);
     state_init.attachSharedMemory();
     std::cout << "SHAREDMEMORY Second OK"<< std::endl;
     statemachine.setKey(3);
@@ -839,7 +842,7 @@ void CustomController::computeSlow()
     }
 
     //Disturbance
-    mj_shm_->dis_check = false;
+    
     if(mpc_cycle >= 174  && mpc_cycle <= 178)//&& (walking_tick >= 1  && walking_tick <= 20))
         mj_shm_->dis_check = true;
     else if(mpc_cycle == 179)
@@ -849,8 +852,33 @@ void CustomController::computeSlow()
         mj_shm_->dis_check = true;
     else if(mpc_cycle == 379)
         mj_shm_->dis_check = false;
-
     
+    /*
+    if(mpc_cycle >= 203  && mpc_cycle <= 207)//&& (walking_tick >= 1  && walking_tick <= 20))
+        mj_shm_->dis_check = true;
+    else if(mpc_cycle == 208)
+        mj_shm_->dis_check = false;
+    
+    if(mpc_cycle >= 403 && mpc_cycle <= 407)//&& (walking_tick >= 1  && walking_tick <= 20))
+        mj_shm_->dis_check = true;
+    else if(mpc_cycle == 408)
+        mj_shm_->dis_check = false;
+    */
+
+    //y-direction
+    /*
+    if(mpc_cycle >= 192  && mpc_cycle <= 196)//&& (walking_tick >= 1  && walking_tick <= 20))
+        mj_shm_->dis_check = true;
+    else if(mpc_cycle == 197)
+        mj_shm_->dis_check = false;
+    
+    if(mpc_cycle >= 392 && mpc_cycle <= 396)//&& (walking_tick >= 1  && walking_tick <= 20))
+        mj_shm_->dis_check = true;
+    else if(mpc_cycle ==397)
+        mj_shm_->dis_check = false;
+    */
+    
+    double kkkk = 0;
     cc_mutex.lock();    
     if(contactMode == 1)
     {
@@ -914,9 +942,9 @@ void CustomController::computeSlow()
         else if(mpc_cycle_int1 == 49 && walking_tick == 40)//0)
             virtual_temp1(0) = virtual_temp(0);
 
-        if(mpc_cycle == 50)
+        if(mpc_cycle == 49)
             virtual_temp2(0) = virtual_temp(0);
-        else if(mpc_cycle_int1 == 1)
+        else if(mpc_cycle_int1 == 0)
             virtual_temp2(0) = virtual_temp(0);
     }    
     else if(contactMode == 2)
@@ -925,7 +953,7 @@ void CustomController::computeSlow()
         {
             virtual_temp(0) =  -(model_data2.oMf[LFcframe_id].translation()(0) - 1.451300000000000090e-01);
             virtual_temp(1) =  -(model_data2.oMf[LFcframe_id].translation()(1) - 0.1025);
-            if(mpc_cycle_int1 == 21)
+            if(mpc_cycle_int1 == 20)
                 virtual_temp2(0) = virtual_temp(0);
         }
         if(mpc_cycle_int1 == 20 && walking_tick == 10)//20)
@@ -942,7 +970,7 @@ void CustomController::computeSlow()
             else
                 virtual_temp(0) = -(model_data2.oMf[RFcframe_id].translation()(0) - 1.451300000000000090e-01);    
             virtual_temp(1) = -(model_data2.oMf[RFcframe_id].translation()(1) + 0.1025);
-            if(mpc_cycle_int1 == 21)
+            if(mpc_cycle_int1 == 20)
                 virtual_temp2(0) = virtual_temp(0);
         }
         if(mpc_cycle_int1 == 20 && walking_tick == 10)//20)
@@ -1124,8 +1152,8 @@ void CustomController::computeSlow()
     }
    
     cc_mutex.lock();
-    ZMP_FT_law(0) = DyrosMath::lpf(ZMP(0), ZMP_FT_law(0), 2000, 60);
-    ZMP_FT_law(1) = DyrosMath::lpf(ZMP(1), ZMP_FT_law(1), 2000, 60);
+    ZMP_FT_law(0) = DyrosMath::lpf(ZMP(0), ZMP_FT_law(0), 2000, 10);
+    ZMP_FT_law(1) = DyrosMath::lpf(ZMP(1), ZMP_FT_law(1), 2000, 10);
     //ZMP_FT(0) = ZMP(0);
     //ZMP_FT(1) = ZMP(1);
     cc_mutex.unlock();
@@ -1149,8 +1177,8 @@ void CustomController::computeSlow()
                 if(zmpx < model_data2.oMf[RFcframe_id].translation()(0) - lx)
                     zmpx  = model_data2.oMf[RFcframe_id].translation()(0) - lx;
 
-                zmp_bx(0) =  model_data2.oMf[LFcframe_id].translation()(1) + ly;
-                zmp_bx(1) =  model_data2.oMf[RFcframe_id].translation()(1) - ly;
+                zmp_bx(0) =  model_data2.oMf[LFcframe_id].translation()(0) + lx;
+                zmp_bx(1) =  model_data2.oMf[RFcframe_id].translation()(0) - lx;
             }
             else if(model_data2.oMf[LFcframe_id].translation()(0) <  model_data2.oMf[RFcframe_id].translation()(0))
             {
@@ -1158,8 +1186,8 @@ void CustomController::computeSlow()
                     zmpx  = model_data2.oMf[RFcframe_id].translation()(0) + lx;
                 if(zmpx < model_data2.oMf[LFcframe_id].translation()(0) - lx)
                     zmpx  = model_data2.oMf[LFcframe_id].translation()(0) - lx;
-                zmp_bx(0) =  model_data2.oMf[RFcframe_id].translation()(1) + ly;
-                zmp_bx(1) =  model_data2.oMf[LFcframe_id].translation()(1) - ly;
+                zmp_bx(0) =  model_data2.oMf[RFcframe_id].translation()(0) + lx;
+                zmp_bx(1) =  model_data2.oMf[LFcframe_id].translation()(0) - lx;
             }
             else
             {
@@ -1167,8 +1195,8 @@ void CustomController::computeSlow()
                     zmpx  = model_data2.oMf[RFcframe_id].translation()(0) + lx;
                 if(zmpx < model_data2.oMf[LFcframe_id].translation()(0) - lx)
                     zmpx  = model_data2.oMf[LFcframe_id].translation()(0) - lx;
-                zmp_bx(0) =  model_data2.oMf[LFcframe_id].translation()(1) + ly;
-                zmp_bx(1) =  model_data2.oMf[RFcframe_id].translation()(1) - ly;
+                zmp_bx(0) =  model_data2.oMf[LFcframe_id].translation()(0) + lx;
+                zmp_bx(1) =  model_data2.oMf[RFcframe_id].translation()(0) - lx;
             }
 
             if(zmpy > model_data2.oMf[LFcframe_id].translation()(1) + ly)
@@ -1182,7 +1210,7 @@ void CustomController::computeSlow()
             }
 
             ly = 0.05;
-            lx = 0.15;
+            lx = 0.13;
 
             MatrixXd J1, H1, A1;
             VectorXd X1, g1, lb1, ub1, lbA1, ubA1;
@@ -1458,11 +1486,11 @@ void CustomController::computeSlow()
                 zmpy = model_data2.oMf[LFcframe_id].translation()(1) - ly;
 
 
-            zmp_bx(0) =  model_data2.oMf[LFcframe_id].translation()(1) + ly;
-            zmp_bx(1) =  model_data2.oMf[LFcframe_id].translation()(1) - ly;
+            zmp_bx(0) =  model_data2.oMf[LFcframe_id].translation()(0) + lx;
+            zmp_bx(1) =  model_data2.oMf[LFcframe_id].translation()(0) - lx;
 
             ly = 0.05;
-            lx = 0.15;
+            lx = 0.13;
 
             MatrixXd J1, H1, A1;
             VectorXd X1, g1, lb1, ub1, lbA1, ubA1;
@@ -1674,11 +1702,11 @@ void CustomController::computeSlow()
             else if(zmpy > model_data2.oMf[RFcframe_id].translation()(1) + ly)
                 zmpy = model_data2.oMf[RFcframe_id].translation()(1) + ly;
 
-            zmp_bx(0) =  model_data2.oMf[RFcframe_id].translation()(1) + ly;
-            zmp_bx(1) =  model_data2.oMf[RFcframe_id].translation()(1) - ly;
+            zmp_bx(0) =  model_data2.oMf[RFcframe_id].translation()(0) + lx;
+            zmp_bx(1) =  model_data2.oMf[RFcframe_id].translation()(0) - lx;
 
             ly = 0.05;
-            lx = 0.15;
+            lx = 0.13;
             
             MatrixXd J1, H1, A1;
             VectorXd X1, g1, lb1, ub1, lbA1, ubA1;
@@ -1890,11 +1918,12 @@ void CustomController::computeSlow()
     {
         file[1] << mpc_cycle << " " << walking_tick << " ";
         //file[1] << q_pinocchio_desired1(9) << " " << rd_.q_(2) << " "<< q_pinocchio_desired1(10) << " " << rd_.q_(3) << " "<< q_pinocchio_desired1(11) << " " << rd_.q_(4) << " "<< q_pinocchio_desired1(15) << " " << rd_.q_(8) << " "<< q_pinocchio_desired1(16) << " " << rd_.q_(9) << " "<< q_pinocchio_desired1(17) << " "<< rd_.q_(10) ;
-        file[1] << virtual_temp(0) << " " << virtual_temp1(0) << " " << zmp_mpcx << " "<< virtual_temp(1) << " " << virtual_temp1(1) << " " << desired_val.m_shared_memory[43] <<  " " << rd_.q_(13) << " " << rd_.q_(14) << " " << desired_val.m_shared_memory[19] << " " << desired_val.m_shared_memory[20] << " " << pelv_ori_c(0) <<  "  " << pelv_ori_c(1);// << rfoot_ori_c(0) << " " << rfoot_ori_c(1) << " " << rfoot_ori_c(2) << " " << lfoot_ori_c(0) << " " << lfoot_ori_c(1) << " " << lfoot_ori_c(2);
+        file[1] << virtual_temp(0) << " " << virtual_temp1(0) << " " << zmp_mpcx << " "<< virtual_temp(1) << " " << virtual_temp1(1) << " " << desired_val.m_shared_memory[43] <<  " " << rd_.q_(13) << " " << rd_.q_(14) << " " << desired_val.m_shared_memory[19] << " " << desired_val.m_shared_memory[20] << " " << pelv_ori_c(0) <<  "  " << pelv_ori_c(1) << std::endl;// << rfoot_ori_c(0) << " " << rfoot_ori_c(1) << " " << rfoot_ori_c(2) << " " << lfoot_ori_c(0) << " " << lfoot_ori_c(1) << " " << lfoot_ori_c(2);
         file[1] << std::endl;
         //file[1] << virtual_temp(0) << " " << virtual_temp1(0) << " " << virtual_temp(1) << " " <<  virtual_temp1(1)<<" " << com_alpha << " " << qd_pinocchio(3) << " "<< qd_pinocchio(4) << " "<< angd_[0] << " " << angd_[1] << " "  <<ang_de(0) <<  " " << ang_de(1) << " " <<ang_de(2) << " " << ang_de(3) << std::endl;//<< rd_.roll << " "<< rd_.pitch<< " " << rd_.q_(14) << " " << rd_.q_(13)<< " " << desired_val.m_shared_memory[20] << " " << desired_val.m_shared_memory[19] <<std::endl;
          /*<< com_alpha << " " << KK_temp << " " << solved<< " " <<qp_solved<<" " <<contactMode << " "  <<rfoot_mpc(2) << " " <<model_data2.oMf[RFcframe_id].translation()(2) << " "<< rfootd1(2) << " " << rfootd(2)<<  " " << lfoot_mpc(2)<< " " << model_data2.oMf[LFcframe_id].translation()(2) << " "<< lfootd1(2) << " "<< rfoot_mpc(1)<< " " <<model_data2.oMf[RFcframe_id].translation()(1) + virtual_temp1(1)<< " "<<rfootd1(1)<< " "<<  lfoot_mpc(1) << " " << model_data2.oMf[LFcframe_id].translation()(1) + virtual_temp1(1)<< " "<< lfootd1(1) << " "<<rfoot_mpc(0)<< " " <<model_data2.oMf[RFcframe_id].translation()(0) + virtual_temp1(0) << " "<<rd_.link_[Right_Foot].xipos(0) + 0.0378 + virtual_temp1(0) <<  " " << rfootd1(0) << " "<< lfoot_mpc(0) << " " << model_data2.oMf[LFcframe_id].translation()(0)+ virtual_temp1(0)<<" " <<rfootd1(0) << " " << lfootd1(0) << " " <<qp_result(2)  << " " << qp_result(8)  <<" " << qp_result(13) << " " << qp_result(19) << " "  << -1 * rd_.LF_CF_FT(2) <<" "  << -1 * rd_.RF_CF_FT(2) << " "<< model_data2.oMf[RFcframe_id].translation()(0)+ virtual_temp(0) << " " */ 
-        file[0] << mpc_cycle <<  " " << contactMode << " "<< solved<< " " << qp_solved<< " " << ZMP_l(0) << " " << ZMP_r(0) << " "<< ZMP_FT_law(0) << " " << zmpx<<  " " << zmp_mpcx<< " " << zmp_bx(0) << " " << zmp_bx(1) << " "  << ZMP_FT_law(1) << " "<< zmpy << " " << model_data1.hg.angular()[0] << " " << model_data1.hg.angular()[1] << " "<< angd_(0) << " " << angd_(1) << " " << comd(0) << " " << comd(1) << " " << rd_.link_[COM_id].v(0)<< " " << rd_.link_[COM_id].v(1)  << " " << rd_.link_[COM_id].xpos(0)<< " " << rd_.link_[COM_id].xpos(1) << " " << com_mpc[0]  << " " << com_mpc[1] <<  " " << rd_.link_[COM_id].xpos(2) << " " << mj_shm_->dis_check<< " " << rd_.q_(13) << " " << rd_.q_(14)<<" " <<rfoot_mpc(0)<< " " <<model_data2.oMf[RFcframe_id].translation()(0) + virtual_temp1(0) <<" " <<lfoot_mpc(0)<< " " <<model_data2.oMf[LFcframe_id].translation()(0) + virtual_temp1(0) <<  std::endl;
+        file[0] << mpc_cycle << " " << qp_solved << " " << rd_.q_(13) << " " << rd_.q_(14)<< " "<<pelv_ori_c(0) << " " << pelv_ori_c(1) << " " << ang_de(1) << " " << ang_de(3)<< " " << ang_de(5)<< " " << ang_de(0) << " " << ang_de(2)<< " " << ang_de(4)<< " " <<desired_val.m_shared_memory[25] << " " << q_dm(4) << std::endl;//" " << ZMP_FT_law(0) << " "  << zmpx<< " " << ZMP_FT_law(1) << " "  << zmpy<< " " << rd_.link_[COM_id].xpos(2)<<" " << com_z_init << " " << comd(2) << " " << model_data1.hg.angular()[0] << " " << model_data1.hg.angular()[1] << " "<< angd_(0) << " " << angd_(1) << " "<< rfoot_mpc(0)<< " " <<model_data2.oMf[RFcframe_id].translation()(0) + virtual_temp1(0)<< " "<<  lfoot_mpc(0) << " " << model_data2.oMf[LFcframe_id].translation()(0) + virtual_temp1(0)<<  std::endl;//<<  lfoot_mpc(2) << " " << model_data2.oMf[LFcframe_id].translation()(2) << " "<<  rfoot_mpc(2) << " " << model_data2.oMf[RFcframe_id].translation()(2)<< std::endl;//<< angd_(0) << " " << angd_(1) << std:::endl;//std::endl;
+        //file[0] << mpc_cycle <<  " " <<walking_tick << " "<< contactMode << " "<< solved<< " " << qp_solved<< " " << virtual_temp2(0) << " "<< ZMP_FT_law(0) << " " << ZMP(0)<<  " " << zmpx<< " " << zmp_bx(0) << " " << zmp_bx(1) << " "  << ZMP_FT_law(1) << " "<< zmpy << " " << rd_.link_[COM_id].xpos(1)<< " " << model_data1.hg.angular()[0] << " " << model_data1.hg.angular()[1] << " "<< angd_(0) << " " << angd_(1) << " " << comd(0) << " " << comd(1) << " " << rd_.link_[COM_id].v(0)<< " " << rd_.link_[COM_id].v(1)  << " " << rd_.link_[COM_id].xpos(0)<< " " << rd_.link_[COM_id].xpos(1) << " " << com_mpc[0]  << " " << com_mpc[1] <<  " " << rd_.link_[COM_id].xpos(2) << " " << mj_shm_->dis_check<< " " << rd_.q_(13) << " " << rd_.q_(14)<< " " << q_pinocchio_desired(20) << " " << q_pinocchio_desired(21)<<" " <<qp_result.segment<MODEL_DOF_VIRTUAL>(12)(19)<< " " << qp_result.segment<MODEL_DOF_VIRTUAL>(12)(20) <<std::endl;//rfoot_mpc(0)<< " " <<model_data2.oMf[RFcframe_id].translation()(0) + virtual_temp1(0) <<" " <<lfoot_mpc(0)<< " " <<model_data2.oMf[LFcframe_id].translation()(0) + virtual_temp1(0) << " " << rd_.link_[COM_id].xpos(2)<<  " "<<com_z_init  <<  std::endl;
     }
    
     if(mpc_cycle <= controlwalk_time - 1)// && mpc_cycle <= 83)
@@ -2189,6 +2218,8 @@ void CustomController::computeFast()
                
                 state_init.m_shared_memory[44] = model_data1.hg.angular()[1];
                 state_init.m_shared_memory[48] = model_data1.hg.angular()[0];
+
+                state_init.m_shared_memory[49] = rd_.link_[COM_id].xpos(2);//model_data1.hg.angular()[0];
             }
 
             if(statemachine.m_shared_memory_int[0] == 2)
@@ -2220,10 +2251,9 @@ void CustomController::computeFast()
                         {
                             std::cout << "mpc_cycle " << " : " << mpc_cycle << " " << walking_tick <<  " " << rfoot_mpc(2) << " " << lfoot_mpc(2) << " " << contactMode << std::endl;
 
-                            std::cout << "JOint " << rd_.q_(13) << " " << rd_.q_(14) << "  " << qd_pinocchio(19) << " " << qd_pinocchio(20) << " " << q_pinocchio_desired(20) << " " << q_pinocchio_desired(21) <<std::endl;//DyrosMath::rot2Euler(rd_.link_[Pelvis].rotm)(0) << " " << DyrosMath::rot2Euler(rd_.link_[Pelvis].rotm)(1) << " " << q_pinocchio_desired(20) << " " << q_pinocchio_desired(21) << std::endl;
                             qd_pinocchio.setZero();
                             
-                            if(desired_val.m_shared_memory[19] < -0.4000)
+                            if(desired_val.m_shared_memory[19] < -0.4000 || rd_.q_(13) < -0.4000)
                             {  
                                 std::cout << "Pitch over" << std::endl;
                                 if(desired_val.m_shared_memory[39] < 0.0)
@@ -2239,7 +2269,7 @@ void CustomController::computeFast()
                                     upperd[0] = desired_val.m_shared_memory[39];
                                 }
                             }
-                            else if(desired_val.m_shared_memory[19] > 0.4000)
+                            else if(desired_val.m_shared_memory[19] > 0.4000 || rd_.q_(13) > 0.4000)
                             {  
                                 std::cout << "Pitch over" << std::endl;
                                 if(desired_val.m_shared_memory[39] > 0.0)
@@ -2261,7 +2291,7 @@ void CustomController::computeFast()
                                 upperd[0] = desired_val.m_shared_memory[39];
                             }
 
-                            if(desired_val.m_shared_memory[20] < -0.4000)
+                            if(desired_val.m_shared_memory[20] < -0.4000 || rd_.q_(14) < -0.4000)
                             {
                                 std::cout << "Roll over" << std::endl;
                                 if(desired_val.m_shared_memory[40] < 0.0)
@@ -2277,7 +2307,7 @@ void CustomController::computeFast()
                                     upperd[1] = desired_val.m_shared_memory[40];
                                 }
                             }
-                            else if(desired_val.m_shared_memory[20] > 0.4000)
+                            else if(desired_val.m_shared_memory[20] > 0.4000 || rd_.q_(14) > 0.4000)
                             {
                                 std::cout << "Roll over" << std::endl;
                                 if(desired_val.m_shared_memory[40] > 0.0)
@@ -2300,6 +2330,8 @@ void CustomController::computeFast()
                             }
                         }
                         
+                        std::cout << "JOint " << rd_.q_(13) << " " << rd_.q_(14) << "  " << qd_pinocchio(19) << " " << qd_pinocchio(20) << " " << desired_val.m_shared_memory[39] << " " << desired_val.m_shared_memory[40]<< " " << q_pinocchio_desired(20) << " " << q_pinocchio_desired(21) <<std::endl;//DyrosMath::rot2Euler(rd_.link_[Pelvis].rotm)(0) << " " << DyrosMath::rot2Euler(rd_.link_[Pelvis].rotm)(1) << " " << q_pinocchio_desired(20) << " " << q_pinocchio_desired(21) << std::endl;
+                            
                         
                         if(mpc_cycle == 0)
                         {
@@ -2324,6 +2356,11 @@ void CustomController::computeFast()
                     
                         zmp_mpcx = desired_val.m_shared_memory[43] - virtual_temp1(0);
                         zmp_mpcy = desired_val.m_shared_memory[47] - virtual_temp1(1);  
+
+                        for(int i = 0; i < 18; i++)
+                        {
+                            q_desireddot(i) = desired_val.m_shared_memory[i+21];
+                        }
 
                             
                         if(comd[0] > 0.5)
@@ -2432,7 +2469,7 @@ void CustomController::computeFast()
 
                         comd_(0) = comdt_(0)+ 0.0 * (comdt_(0) - rd_.link_[COM_id].v(0)) + 0.0 * (com_mpc[0] - rd_.link_[COM_id].xpos(0));
                         comd_(1) = comdt_(1)+ 0.0 * (comdt_(1) - rd_.link_[COM_id].v(1)) + 0.0 * (com_mpc[1] - rd_.link_[COM_id].xpos(1));
-                        comd_(2) = comd(2) + 2.0 * (com_z_init - rd_.link_[COM_id].xpos(2));
+                        comd_(2) = comd(2) + 15.0 * (com_z_init - rd_.link_[COM_id].xpos(2));
 
                         angd_(0) = (angm(0) * walking_tick + angm_prev(0) * (40 -walking_tick))/40;
                         angd_(1) = (angm(1) * walking_tick + angm_prev(1) * (40 -walking_tick))/40;
@@ -2448,7 +2485,7 @@ void CustomController::computeFast()
 
                         rfootd1 = rfootd;
                         lfootd1 = lfootd;
-                        double gain_xz = 40;
+                        double gain_xz = 10.0;
                        
                         if(mpc_cycle <= 49 && mpc_cycle >= 2)
                         {
@@ -2484,8 +2521,8 @@ void CustomController::computeFast()
                             }  
                             else
                             {
-                                rfootd1(2) = rfootd1(2)+ 10.00 * (rfoot_mpc(2) - rd_.link_[Right_Foot].xipos(2) + foot_temp(1));
-                                lfootd1(2) = lfootd1(2)+ 10.00 * (lfoot_mpc(2) - rd_.link_[Left_Foot].xipos(2) + foot_temp(1));
+                                rfootd1(2) = rfootd1(2)+ gain_xz/2 * (rfoot_mpc(2) - rd_.link_[Right_Foot].xipos(2) + foot_temp(1));
+                                lfootd1(2) = lfootd1(2)+ gain_xz/2 * (lfoot_mpc(2) - rd_.link_[Left_Foot].xipos(2) + foot_temp(1));
                                
                                 rfoot_mpc(2) = 0.0;
                                 lfoot_mpc(2) = 0.0;
@@ -2527,8 +2564,8 @@ void CustomController::computeFast()
                             }
                             else
                             {
-                                rfootd1(2) = rfootd1(2)+ 10.00 * (rfoot_mpc(2) - rd_.link_[Right_Foot].xipos(2) + foot_temp(1));
-                                lfootd1(2) = lfootd1(2)+ 10.00 * (lfoot_mpc(2) - rd_.link_[Left_Foot].xipos(2) + foot_temp(1));
+                                rfootd1(2) = rfootd1(2)+ gain_xz/2 * (rfoot_mpc(2) - rd_.link_[Right_Foot].xipos(2) + foot_temp(1));
+                                lfootd1(2) = lfootd1(2)+ gain_xz/2 * (lfoot_mpc(2) - rd_.link_[Left_Foot].xipos(2) + foot_temp(1));
                                
                                 rfoot_mpc(2) = 0.0;
                                 lfoot_mpc(2) = 0.0;
@@ -2568,8 +2605,8 @@ void CustomController::computeFast()
                             }
                             else
                             {
-                                rfootd1(2) = rfootd1(2)+ 10.00 * (rfoot_mpc(2) - rd_.link_[Right_Foot].xipos(2) + foot_temp(1));
-                                lfootd1(2) = lfootd1(2)+ 10.00 * (lfoot_mpc(2) - rd_.link_[Left_Foot].xipos(2) + foot_temp(1));
+                                rfootd1(2) = rfootd1(2)+ gain_xz/2 * (rfoot_mpc(2) - rd_.link_[Right_Foot].xipos(2) + foot_temp(1));
+                                lfootd1(2) = lfootd1(2)+ gain_xz/2 * (lfoot_mpc(2) - rd_.link_[Left_Foot].xipos(2) + foot_temp(1));
                                
                                 rfoot_mpc(2) = 0.0;
                                 lfoot_mpc(2) = 0.0;
@@ -2611,8 +2648,8 @@ void CustomController::computeFast()
                                 }
                                 else
                                 {
-                                    rfootd1(2) = rfootd1(2)+ 10.00 * (rfoot_mpc(2) - rd_.link_[Right_Foot].xipos(2) + foot_temp(1));
-                                    lfootd1(2) = lfootd1(2)+ 10.00 * (lfoot_mpc(2) - rd_.link_[Left_Foot].xipos(2) + foot_temp(1));
+                                    rfootd1(2) = rfootd1(2)+ gain_xz/2 * (rfoot_mpc(2) - rd_.link_[Right_Foot].xipos(2) + foot_temp(1));
+                                    lfootd1(2) = lfootd1(2)+ gain_xz/2 * (lfoot_mpc(2) - rd_.link_[Left_Foot].xipos(2) + foot_temp(1));
                                
                                     rfoot_mpc(2) = 0.0;
                                     lfoot_mpc(2) = 0.0;
@@ -2653,8 +2690,8 @@ void CustomController::computeFast()
                                 }
                                 else
                                 {
-                                    rfootd1(2) = rfootd1(2)+ 10.00 * (rfoot_mpc(2) - rd_.link_[Right_Foot].xipos(2) + foot_temp(1));
-                                    lfootd1(2) = lfootd1(2)+ 10.00 * (lfoot_mpc(2) - rd_.link_[Left_Foot].xipos(2) + foot_temp(1));
+                                    rfootd1(2) = rfootd1(2)+ gain_xz/2 * (rfoot_mpc(2) - rd_.link_[Right_Foot].xipos(2) + foot_temp(1));
+                                    lfootd1(2) = lfootd1(2)+ gain_xz/2 * (lfoot_mpc(2) - rd_.link_[Left_Foot].xipos(2) + foot_temp(1));
                                
                                     rfoot_mpc(2) = 0.0;
                                     lfoot_mpc(2) = 0.0;
@@ -2768,8 +2805,8 @@ void CustomController::momentumControl(RobotData &Robot, Eigen::Vector3d comd,  
     }
     else
     {  
+        ///*
         
-
         MatrixXd J1, H1, A1;
         VectorXd X1, g1, lb1, ub1, lbA1, ubA1;
         X1.setZero(constraint_size2);
@@ -2782,32 +2819,31 @@ void CustomController::momentumControl(RobotData &Robot, Eigen::Vector3d comd,  
            
         lb1.setConstant(variable_size2, -100000);
         ub1.setConstant(variable_size2, 100000);
-       
-        H1(3,3) = 1;
-        H1(4,4) = 1;
-        H1(5,5) = 1;
-       
+    
+        H1(3,3) = 2.0;
+        H1(4,4) = 2.0;
+        if(pelv_ori_c(1) != 0)
+            H1(4,4) = 0.1/abs(pelv_ori_c(1));
+        H1(5,5) = 1.0;
+
         MOMX = CMM.block(3,19,2,2) * upperd; 
         COMX = Robot.link_[COM_id].Jac().block(0,19,3,2) * upperd;
 
         J.block(0,0,3,18) = Robot.link_[COM_id].Jac().block(0,0,3,18);
-        J.block(5,0,6,18) = Robot.link_[Right_Foot].Jac().block(0,0,6,18);
-        J.block(11,0,6,18) = Robot.link_[Left_Foot].Jac().block(0,0,6,18);
+        J.block(3,0,6,18) = Robot.link_[Right_Foot].Jac().block(0,0,6,18);
+        J.block(9,0,6,18) = Robot.link_[Left_Foot].Jac().block(0,0,6,18);
    
         X.segment<3>(0) = comd - COMX;
-        J.block(3,0,2,18) = CMM.block(3,0,2,18);
-        X.segment<2>(3) = ang_ - MOMX;
+        X.segment<3>(3) = rfootd;
+        X.segment<3>(6) = rfootori;
+        X.segment<3>(9) = lfootd;
+        X.segment<3>(12) = lfootori;
+        //J.block(3,0,2,18) = CMM.block(3,0,2,18);
+        //X.segment<2>(3) = ang_ - MOMX;
+
+        H1 = H1 + CMM.block(3,0,2,18).transpose() * CMM.block(3,0,2,18);
+        g1 = g1 - CMM.block(3,0,2,18).transpose() * (ang_ - MOMX);
         
-        X.segment<3>(5) = rfootd;
-        X.segment<3>(8) = rfootori;
-        X.segment<3>(11) = lfootd;
-        X.segment<3>(14) = lfootori;
-
-        ang_de(0) = MOMX(0);
-        ang_de(1) = MOMX(1);
-        ang_de(2) = (ang_-MOMX)(0);
-        ang_de(3) = (ang_-MOMX)(1);
-
         A1 = J;
         lbA1 = X;
         ubA1 = X;
@@ -2822,6 +2858,75 @@ void CustomController::momentumControl(RobotData &Robot, Eigen::Vector3d comd,  
             q_dm = qp_result;
         else
             q_dm.setZero();
+
+        ang_de(0) = ang_(0)- MOMX(0);
+        ang_de(1) = ang_(1)- MOMX(1);
+        ang_de(2) = (CMM.block(3,0,2,18) * q_dm)(0);
+        ang_de(3) = (CMM.block(3,0,2,18) * q_dm)(1);
+        ang_de(4) = (CMM.block(3,0,2,18) * q_desireddot)(0);
+        ang_de(5) = (CMM.block(3,0,2,18) * q_desireddot)(1);
+        
+        
+        
+        /*
+        MatrixXd J1, H1, A1;
+        VectorXd X1, g1, lb1, ub1, lbA1, ubA1;
+        X1.setZero(constraint_size2);
+        J1.setZero(constraint_size2, variable_size2);
+        H1.setZero(variable_size2, variable_size2);
+        A1.setZero(constraint_size2, variable_size2);
+        g1.setZero(variable_size2);
+        lbA1.setZero(constraint_size2);
+        ubA1.setZero(constraint_size2);
+           
+        lb1.setConstant(variable_size2, -100000);
+        ub1.setConstant(variable_size2, 100000);
+       
+        H1(3,3) = 1;
+        H1(4,4) = 10;
+        H1(5,5) = 1;
+       
+        MOMX = CMM.block(3,19,2,2) * upperd; 
+        COMX = Robot.link_[COM_id].Jac().block(0,19,3,2) * upperd;
+
+        J.block(0,0,3,18) = Robot.link_[COM_id].Jac().block(0,0,3,18);
+        J.block(5,0,6,18) = Robot.link_[Right_Foot].Jac().block(0,0,6,18);
+        J.block(11,0,6,18) = Robot.link_[Left_Foot].Jac().block(0,0,6,18);
+   
+        X.segment<3>(0) = comd - COMX;
+        X.segment<3>(5) = rfootd;
+        X.segment<3>(8) = rfootori;
+        X.segment<3>(11) = lfootd;
+        X.segment<3>(14) = lfootori;
+        J.block(3,0,2,18) = CMM.block(3,0,2,18);
+        X.segment<2>(3) = ang_ - MOMX;
+
+        //H1 = H1 + CMM.block(3,0,2,18).transpose() * CMM.block(3,0,2,18);
+        //g1 = g1 + CMM.block(3,0,2,18).transpose() * (ang_ - MOMX);
+        
+        
+        A1 = J;
+        lbA1 = X;
+        ubA1 = X;
+
+        qp_momentum_control.UpdateMinProblem(H1, g1);
+        qp_momentum_control.UpdateSubjectToAx(A1, lbA1, ubA1);
+        qp_momentum_control.UpdateSubjectToX(lb1, ub1);
+       
+        qp_solved = qp_momentum_control.SolveQPoases(100, qp_result);
+        
+        if(qp_solved == true)
+            q_dm = qp_result;
+        else
+            q_dm.setZero();
+        
+        ang_de(0) = MOMX(0);
+        ang_de(1) = MOMX(1);
+        ang_de(2) = (CMM.block(3,0,2,18) * q_dm)(0);
+        ang_de(3) = (CMM.block(3,0,2,18) * q_dm)(1);
+        ang_de(4) = ang_(0);
+        ang_de(5) = ang_(1);
+        */
     }
 }
 

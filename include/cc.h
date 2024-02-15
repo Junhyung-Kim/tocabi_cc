@@ -166,7 +166,7 @@ public:
 
    int mpc_cycle_int = 0;
    int mpc_cycle_int1 = 0;
-     Eigen::Vector4d ang_de;
+   Eigen::Vector6d ang_de;
 
 
    bool upper_on;
@@ -175,6 +175,7 @@ public:
     //TaskCommand tc;
 
     Eigen::VectorXd q_desired;
+    Eigen::VectorXd q_desireddot;
     int aaa = 0;
     bool qp_solved;
     Eigen::MatrixXd RF_matrix;
