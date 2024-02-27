@@ -87,6 +87,7 @@ public:
     Eigen::VectorQd TorqueGrav;
     Eigen::VectorQVQd q_pinocchio;
     Eigen::VectorQVQd q_pinocchio_desired;
+    Eigen::VectorQVQd q_pinocchio_desired2;
     Eigen::VectorQVQd q_pinocchio_desired1;
     Eigen::VectorVQd qd_pinocchio_desired1;
     Eigen::VectorVQd qd_pinocchio_desired1_prev;
@@ -151,6 +152,8 @@ public:
     double timeHorizon = 1.0;
     size_t K;
     
+    double H_temp_22;
+
     int dist;
 
     std::atomic<int> mpc_cycle;
@@ -190,6 +193,7 @@ public:
     Eigen::VectorXd COMX, MOMX;
     Eigen::Vector3d comd_;
     Eigen::Vector2d angd_;
+    Eigen::Vector2d angd_1;
     Eigen::Vector4d control_input, control_input1, control_input1prev;
     Eigen::Vector2d LT, RT, LT_l, RT_l, LT_prev, RT_prev;
     Eigen::Vector3d F_diff, F_diff_m;
@@ -230,7 +234,7 @@ public:
 
     int controlwalk_time;
 
-    MatrixXd J;
+   MatrixXd J;
    VectorXd X;
 
 private:
