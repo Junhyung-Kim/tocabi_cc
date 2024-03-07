@@ -31,7 +31,6 @@ public:
         };
 
     std::fstream file[2];
-
     Eigen::VectorQd getControl();
 
     //void taskCommandToCC(TaskCommand tc_);
