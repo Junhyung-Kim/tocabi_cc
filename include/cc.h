@@ -26,8 +26,8 @@ public:
     const std::string FILE_NAMES[2] =
         {
             ///change this directory when you use this code on the other computer///
-            "/home/jhk/data/walking/0_tocabi_.txt",
-            "/home/jhk/data/walking/1_tocabi_.txt",
+            "/home/jhk/data/walking/0_tocabi_lipm.txt",
+            "/home/jhk/data/walking/1_tocabi_lipm.txt",
         };
 
     std::fstream file[2];
@@ -75,8 +75,10 @@ public:
     Eigen::VectorXd q_command; 
 
     bool walking_tick_stop = false;
+    bool walking_tick_stop1 = false;
 
     bool mob_start = false;
+    bool walk_start1 = false;
     bool control_start = false;
     bool stateestimation = false;
     bool stateestimation_mode = false;
@@ -96,6 +98,14 @@ public:
     Eigen::VectorVQd qdd_pinocchio_desired1_;
     Eigen::VectorXd qp_result, qp_result_prev;
 
+    std::atomic<bool> time_tick;
+    std::atomic<bool> time_tick_next;
+    std::atomic<bool> time_tick_starts;
+
+   std::chrono::system_clock::time_point startTime;
+   std::chrono::system_clock::time_point startTime_init;
+   std::chrono::system_clock::time_point endTime;
+
     double com_z_init;
 
     Eigen::MatrixXd RFj, LFj, RFdj, LFdj;
@@ -104,6 +114,8 @@ public:
             
     
     Eigen::Vector3d rfoot_mpc, lfoot_mpc;
+    double com_x_int = 0.0;
+    double foot_x_int = 0.0;
 
     int solved = 0;
     double vector_tes = 0;
@@ -158,8 +170,8 @@ public:
 
     std::atomic<int> mpc_cycle;
     std::atomic<int> mpc_cycle_prev;
-    Eigen::Vector3d rfootd, lfootd,rfootd1, lfootd1, comd, com_mpc,vjoint_prev, vjoint_dot, comprev;
-    Eigen::Vector2d angm, angm_prev, upperd, comdt_;
+    Eigen::Vector3d rfootd, lfootd,rfootd1, lfootd1, comd, com_mpc, com_mpc_prev, vjoint_prev, vjoint_dot, comprev;
+    Eigen::Vector2d angm, angm_prev, upperd, comdt_, comt_;
 
     Eigen::VectorQd joint_prev, jointdot;
     bool state_init_ = true;
@@ -183,7 +195,7 @@ public:
     bool qp_solved;
     Eigen::MatrixXd RF_matrix;
     Eigen::MatrixXd LF_matrix;
-    Eigen::MatrixXd ZMP_bound_matrix;
+    Eigen::MatrixXd ZMP_bound_matrix, com_matrix_matrix, comd_matrix_matrix, angm_ref_matrix, zmp_matrix;
     Eigen::MatrixXd RF_matrix_ssp2;
     Eigen::MatrixXd LF_matrix_ssp2;
     Eigen::MatrixXd RF_matrix_ssp1;
