@@ -7,16 +7,18 @@
 #include <unistd.h>
 #include <string.h>
 #include <stdlib.h>
-#include <sys/types.h>
-#include <sys/ipc.h>
 #include <std_msgs/String.h>
-#include <sys/shm.h>
 #include "math_type_define.h"
 #include "walking.h"
 #include "wholebody_functions.h"
-
+#include <sys/socket.h>
+#include <arpa/inet.h>
+#include <sys/shm.h>
+#include <sys/types.h>
+#include <sys/ipc.h>
 
 #include <future>
+
 
 class CustomController : virtual public WalkingController
 {
@@ -44,6 +46,9 @@ public:
     void zmpControl(RobotData &rd_l);
     void dspForceControl(RobotData &Robot, double alpha);
 
+    void proc_recv();
+    void proc_recv1();
+
     std::future<void> solverx;
     std::future<void> solvery;
 
@@ -54,6 +59,9 @@ public:
     
     std::atomic<double> lfootz;
     std::atomic<double> rfootz;
+
+    std::atomic<int> mpc_start_init;
+    std::atomic<int> statemachine;
 
     int LFjoint_id, RFjoint_id, RFframe_id, LFframe_id, RFcframe_id, LFcframe_id;
 
@@ -150,6 +158,8 @@ public:
     int nu_;
     double timeHorizon = 1.0;
     size_t K;
+
+    int socket_send, socket_receive;
     
     double H_temp_22;
 
@@ -226,6 +236,7 @@ public:
    CQuadraticProgram qp_momentum_control;
    CQuadraticProgram qp_torque_control;
 
+
    double zmpy, zmpx;
     double forcex;
     bool mpc_ok = true;
@@ -233,98 +244,39 @@ public:
 
     int controlwalk_time;
 
+
+   std::atomic<bool> state_init_bool;
+   std::atomic<bool> desired_init_bool;
+
+   std::mutex thread1_lock, thread2_lock;
+
+   Eigen::VectorXd state_init;
+   Eigen::VectorXd desired_val;
+   Eigen::VectorXd state_init_mu;
+   Eigen::VectorXd desired_val_mu;
+
+   int new_socket;
+
+   double buffer[51] = {1.0, 2, 3, 4, 5, 6, 
+    0, 0, 0, 0, 0, 0, 
+    0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 
+    0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 
+    0, 0, 0, 0, 1.0, 2, 
+    3, 4, 5, 6, 0, 0,
+    0, 99, 100};
+
+   double buffer1[50] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+   
+
    MatrixXd J;
    VectorXd X;
 
 private:
     Eigen::VectorQd ControlVal_;
 };
-
-class CSharedMemory
-{
- 
-private :
-    
-
- 
- 
-public :
- 
-    void setShmId(int key);
-    int getShmId();
-    void setKey(key_t key);
- 
-    void setupSharedMemory(int size);
-    void setupSharedMemoryRead(int size);
-    void attachSharedMemory();
-    void attachSharedMemoryint();
-    void close();
-    int m_shmid;   
-    key_t m_key;
-    double *m_shared_memory;
-    int *m_shared_memory_int;
-    
-};
- 
- 
-void CSharedMemory::setShmId( int id )
-{
-    m_shmid = id;
-}
- 
- 
-void CSharedMemory::setKey( key_t key )
-{
-    m_key = key;
-}
- 
- 
-void CSharedMemory::setupSharedMemory(int size)
-{
-   // Setup shared memory, 11 is the size
-   if ((m_shmid = shmget(m_key, size , IPC_CREAT | 0666)) < 0)
-   {
-      printf("Error getting shared memory id");
-      exit( 1 );
-   }
-}
-
-void CSharedMemory::setupSharedMemoryRead(int size)
-{
-    m_shmid = shmget(m_key, size , IPC_CREAT | 0666);
-   // Setup shared memory, 11 is the size
-   if ((m_shmid = shmget(m_key, size , 0666|IPC_EXCL)) < 0)
-   {
-      printf("Error getting shared memory id");
-      exit( 1 );
-   }
-}
- 
-void CSharedMemory::attachSharedMemory()
-{
-   // Attached shared memory
-   m_shared_memory = (double*)shmat(m_shmid,NULL,0);
-   if ((*m_shared_memory) == -1)
-   {
-      printf("Error attaching shared memory id");
-      exit(1);
-   }
-}
-
-void CSharedMemory::attachSharedMemoryint()
-{
-   // Attached shared memory
-   m_shared_memory_int = (int*)shmat(m_shmid,NULL,0);
-   if ((*m_shared_memory_int) == -1)
-   {
-      printf("Error attaching shared memoryint id");
-      exit(1);
-   }
-}
- 
-void CSharedMemory::close()
-{
-   // Detach and remove shared memory
-   shmctl(m_shmid,IPC_RMID,NULL);
- 
-}
