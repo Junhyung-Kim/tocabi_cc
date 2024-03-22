@@ -36,14 +36,9 @@ void CustomController::proc_recv(){
             statemachine = buffer1[0];
             thread1_lock.lock();
             std::copy(&buffer1[1], &buffer1[1] + 49, &desired_val[0]);
-
-            /*for(int i = 0; i < 49; i++)
-            {
-                std::cout << i << " " << desired_val[i] << " " << std::endl;
-            }*/
-            //std::cout << "mpc " << statemachine << std::endl;
-            //std::cout << "State" << statemachine << std::endl;
             thread1_lock.unlock();
+
+            //std::cout << "G " << buffer1[0]<<std::endl;
         }
     }
 }
@@ -52,15 +47,84 @@ void CustomController::proc_recv1(){
 
     while(true)
     {
-        //std::cout << "KK" << std::endl;
         thread2_lock.lock();
         std::copy(&state_init_mu[0], &state_init_mu[0] + 50,&buffer[1]);
         thread2_lock.unlock();
-        buffer[0] = mpc_start_init;
-        send(socket_send,buffer,sizeof(buffer),0);
+        //buffer[0] = mpc_start_init;
+        if (mpc_start_init == 1 && mpc_start_init_bool == false)
+        {   //MPC cal
+            buffer[0] = 1;
+            send(socket_send,buffer,sizeof(buffer),0);
+            //std::cout << "KK " << mpc_start_init << " " << buffer[0] <<std::endl;
+            
+            mpc_start_init_bool = true;
+            mpc_start_init_bool1 = false;
+            mpc_start_init_bool2 = false;
+        }
+        else if(mpc_start_init == 2 && mpc_start_init_bool1 == false)
+        {
+            buffer[0] = 2;
+            send(socket_send,buffer,sizeof(buffer),0);
+            //std::cout << "FFF" << std::endl;
+            mpc_start_init_bool1 = true;
+            mpc_start_init_bool = false; 
+        }
+        else if(mpc_start_init == 3 && mpc_start_init_bool2 == false)
+        {
+            buffer[0] = 3;
+            send(socket_send,buffer,sizeof(buffer),0);
+            //std::cout << "FFF5" << std::endl;
+            mpc_start_init_bool2 = true; 
+            mpc_start_init_bool = false; 
+        }
+        else if(mpc_start_init == 4 && mpc_start_init_bool3 == false)
+        {
+            buffer[0] = 4;
+            //std::cout << "FFF6" << std::endl;
+            mpc_start_init_bool3 = true;
+            send(socket_send,buffer,sizeof(buffer),0);
+        }
     }
 }
 
+/*
+thread2_lock.lock();
+        std::copy(&state_init_mu[0], &state_init_mu[0] + 50,&buffer[1]);
+        thread2_lock.unlock();
+        
+        if (mpc_start_init == 1 && mpc_start_init_bool == false)
+        {   //MPC cal
+            buffer[0] = 1;
+            send(socket_send,buffer,sizeof(buffer),0);
+            std::cout << "KK " << mpc_start_init << " " << buffer[0] <<std::endl;
+            
+            mpc_start_init_bool = true;
+            mpc_start_init_bool1 = false;
+            mpc_start_init_bool2 = false;
+        }
+        else if(mpc_start_init == 2 && mpc_start_init_bool1 == false)
+        {
+            buffer[0] = 2;
+            send(socket_send,buffer,sizeof(buffer),0);
+            std::cout << "FFF" << std::endl;
+            mpc_start_init_bool1 = true;
+            mpc_start_init_bool = false; 
+        }
+        else if(mpc_start_init == 3 && mpc_start_init_bool2 == false)
+        {
+            buffer[0] = 3;
+            send(socket_send,buffer,sizeof(buffer),0);
+            std::cout << "FFF5" << std::endl;
+            mpc_start_init_bool2 = true; 
+            mpc_start_init_bool = false; 
+        }
+        else if(mpc_start_init == 4 && mpc_start_init_bool == false)
+        {
+            buffer[0] = 4;
+            std::cout << "FFF6" << std::endl;
+            send(socket_send,buffer,sizeof(buffer),0);
+        }
+*/
 
 CustomController::CustomController(RobotData &rd) : rd_(rd) //, wbc_(dc.wbc_)
 {
@@ -78,6 +142,7 @@ CustomController::CustomController(RobotData &rd) : rd_(rd) //, wbc_(dc.wbc_)
     desired_val.setZero(49);
     state_init_mu.setZero(50);
     desired_val_mu.setZero(49);
+    
     //state_init_bool = false;
     //desired_init_bool = false;
 
@@ -561,13 +626,9 @@ CustomController::CustomController(RobotData &rd) : rd_(rd) //, wbc_(dc.wbc_)
     qd_pinocchio_desired1.setZero();
        
     walk_start = false;
-    std::cout << "GGG" << std::endl;
     thread proc1(&CustomController::proc_recv, this);
 
-    std::cout << "GGG1" << std::endl;
     thread proc2(&CustomController::proc_recv1, this);
-
-    std::cout << "GGG2" << std::endl;
 
     proc2.detach();
     proc1.detach();
@@ -1940,8 +2001,8 @@ void CustomController::computeSlow()
 
     if(mpc_cycle >= 2 && mpc_cycle < controlwalk_time && statemachine != 3)
     {
-        file[1] << mpc_cycle << " " << walking_tick << " ";
-        file[1] << virtual_temp(0) << " " << virtual_temp1(0) << " " << zmp_mpcx << " "<< virtual_temp(1) << " " << virtual_temp1(1) << " " << desired_val_mu[43] <<  " " << rd_.q_(13) << " " << rd_.q_(14) << " " << desired_val_mu[19] << " " << desired_val_mu[20] << " " << pelv_ori_c(0) <<  "  " << pelv_ori_c(1) << std::endl;// << rfoot_ori_c(0) << " " << rfoot_ori_c(1) << " " << rfoot_ori_c(2) << " " << lfoot_ori_c(0) << " " << lfoot_ori_c(1) << " " << lfoot_ori_c(2);
+        file[1] << mpc_cycle << " " << walking_tick << " " << desired_val_mu[0]  << " " << desired_val_mu[1] << " " << desired_val_mu[2]<< " " << desired_val_mu[43];
+        //file[1] << virtual_temp(0) << " " << virtual_temp1(0) << " " << zmp_mpcx << " "<< virtual_temp(1) << " " << virtual_temp1(1) << " " << desired_val_mu[43] <<  " " << rd_.q_(13) << " " << rd_.q_(14) << " " << desired_val_mu[19] << " " << desired_val_mu[20] << " " << pelv_ori_c(0) <<  "  " << pelv_ori_c(1) << std::endl;// << rfoot_ori_c(0) << " " << rfoot_ori_c(1) << " " << rfoot_ori_c(2) << " " << lfoot_ori_c(0) << " " << lfoot_ori_c(1) << " " << lfoot_ori_c(2);
         file[1] << std::endl;
         file[0] <<mpc_cycle << " " << qp_solved<< " "<<solved<< " "<< lfoot_mpc(0)<< " " << model_data2.oMf[LFcframe_id].translation()(0)+ virtual_temp1(0) << " "<< rfoot_mpc(0)<< " " <<model_data2.oMf[RFcframe_id].translation()(0) + virtual_temp1(0)<< " "<< virtual_temp(0)<< " " << virtual_temp1(0)<< " "<< com_mpc[0] << " " << com_mpc[1] << " "<< rd_.link_[COM_id].xpos(0)<< " " << rd_.link_[COM_id].xpos(1)<< " " << angd_(0) << " " << angd_(1) << " "  << model_data1.hg.angular()[0]  << " " << model_data1.hg.angular()[1] << " " <<H_temp_22 << " " << pelv_ori_c(1) << " " << zmpx << " " << zmpy << " " << ZMP_FT_law(0)<< " " << ZMP_FT_law(1)<< " " <<zmp_bx(0) << " " << zmp_bx(1) <<  " " << pelv_ori_c(1) <<std::endl;//<< " " << model_data2.oMf[RFcframe_id].translation()(0)<< " " << model_data2.oMf[LFcframe_id].translation()(0)   <<  " " << model_data2.oMf[RFcframe_id].translation()(2)<< " " << model_data2.oMf[LFcframe_id].translation()(2)   <<  " " << rfoot_mpc(2) << " " << lfoot_mpc(2) << " " << rd_.link_[COM_id].xpos(2)<< " " << com_z_init << " " << rfoot_ori_c(0)<< " " << rfoot_ori_c(1)<< " " << lfoot_ori_c(0)<< " " << lfoot_ori_c(1)<<std::endl;///<< mpc_cycle << " " << contactMode << " "  << rd_.q_(13) << " " << rd_.q_(14)<< " "<<pelv_ori_c(0) << " " << pelv_ori_c(1) << " " << ang_de(0) << " " << ang_de(2)<< " " << ang_de(4)<< " " <<desired_val[25] << " " << q_dm(4) <<" "<< model_data1.hg.angular()[0] << " " << model_data1.hg.angular()[1] << " "<< angd_(0) << " " << angd_(1) << " "<< ZMP_FT_law(0) << " "  << zmpx << std::endl;//" " << ZMP_FT_law(0) << " "  << zmpx<< " " << ZMP_FT_law(1) << " "  << zmpy<< " " << rd_.link_[COM_id].xpos(2)<<" " << com_z_init << " " << comd(2) << " " << model_data1.hg.angular()[0] << " " << model_data1.hg.angular()[1] << " "<< angd_(0) << " " << angd_(1) << " "<< rfoot_mpc(0)<< " " <<model_data2.oMf[RFcframe_id].translation()(0) + virtual_temp1(0)<< " "<<  lfoot_mpc(0) << " " << model_data2.oMf[LFcframe_id].translation()(0) + virtual_temp1(0)<<  std::endl;//<<  lfoot_mpc(2) << " " << model_data2.oMf[LFcframe_id].translation()(2) << " "<<  rfoot_mpc(2) << " " << model_data2.oMf[RFcframe_id].translation()(2)<< std::endl;//<< angd_(0) << " " << angd_(1) << std:::endl;//std::endl;//file[0] << mpc_cycle <<  " " <<walking_tick << " "<< contactMode << " "<< solved<< " " << qp_solved<< " " << virtual_temp2(0) << " "<< ZMP_FT_law(0) << " " << ZMP(0)<<  " " << zmpx<< " " << zmp_bx(0) << " " << zmp_bx(1) << " "  << ZMP_FT_law(1) << " "<< zmpy << " " << rd_.link_[COM_id].xpos(1)<< " " << model_data1.hg.angular()[0] << " " << model_data1.hg.angular()[1] << " "<< angd_(0) << " " << angd_(1) << " " << comd(0) << " " << comd(1) << " " << rd_.link_[COM_id].v(0)<< " " << rd_.link_[COM_id].v(1)  << " " << rd_.link_[COM_id].xpos(0)<< " " << rd_.link_[COM_id].xpos(1) << " " << com_mpc[0]  << " " << com_mpc[1] <<  " " << rd_.link_[COM_id].xpos(2) << " " << mj_shm_->dis_check<< " " << rd_.q_(13) << " " << rd_.q_(14)<< " " << q_pinocchio_desired(20) << " " << q_pinocchio_desired(21)<<" " <<qp_result.segment<MODEL_DOF_VIRTUAL>(12)(19)<< " " << qp_result.segment<MODEL_DOF_VIRTUAL>(12)(20) <<std::endl;//rfoot_mpc(0)<< " " <<model_data2.oMf[RFcframe_id].translation()(0) + virtual_temp1(0) <<" " <<lfoot_mpc(0)<< " " <<model_data2.oMf[LFcframe_id].translation()(0) + virtual_temp1(0) << " " << rd_.link_[COM_id].xpos(2)<<  " "<<com_z_init  <<  std::endl;   
     }
@@ -2057,7 +2118,7 @@ void CustomController::computeFast()
             {
                 wk_Hz = 2000;
                 wk_dt = 1 / wk_Hz;
-                controlwalk_time = 660;//217;//360;
+                controlwalk_time = 370;//660;//217;//360;
 
                 if (walking_tick == 0)
                 {
@@ -2241,9 +2302,6 @@ void CustomController::computeFast()
                 thread2_lock.unlock();   
             }
 
-            if(statemachine == 2)
-                mpc_start_init = 3;
-
             if(statemachine == 1 || statemachine == 2 && mpc_cycle < controlwalk_time)
             {
                 if (walking_tick == 0)
@@ -2268,7 +2326,7 @@ void CustomController::computeFast()
 
                         if(upper_on == true)
                         {
-                            //std::cout << "mpc_cycle " << " : " << mpc_cycle << " " << walking_tick <<  " " << rfoot_mpc(2) << " " << lfoot_mpc(2) << " " << contactMode << std::endl;
+                            std::cout << "mpc_cycle " << " : " << mpc_cycle << " " << walking_tick <<  " " << rfoot_mpc(2) << " " << lfoot_mpc(2) << " " << contactMode << std::endl;
                             qd_pinocchio.setZero();
                             thread1_lock.lock();
                             desired_val_mu = desired_val;
@@ -2342,7 +2400,7 @@ void CustomController::computeFast()
                             }
                         }
                         
-                        std::cout << "JOint " << rd_.q_(13) << " " << rd_.q_(14) << "  " << qd_pinocchio(19) << " " << qd_pinocchio(20) << " " << desired_val[39] << " " << desired_val[40]<< " " << q_pinocchio_desired(20) << " " << q_pinocchio_desired(21) <<std::endl;//DyrosMath::rot2Euler(rd_.link_[Pelvis].rotm)(0) << " " << DyrosMath::rot2Euler(rd_.link_[Pelvis].rotm)(1) << " " << q_pinocchio_desired(20) << " " << q_pinocchio_desired(21) << std::endl;
+                        //std::cout << "JOint " << rd_.q_(13) << " " << rd_.q_(14) << "  " << qd_pinocchio(19) << " " << qd_pinocchio(20) << " " << desired_val_mu[39] << " " << desired_val_mu[40]<< " " << q_pinocchio_desired(20) << " " << q_pinocchio_desired(21) <<std::endl;//DyrosMath::rot2Euler(rd_.link_[Pelvis].rotm)(0) << " " << DyrosMath::rot2Euler(rd_.link_[Pelvis].rotm)(1) << " " << q_pinocchio_desired(20) << " " << q_pinocchio_desired(21) << std::endl;
                             
                         
                         if(mpc_cycle == 0)
@@ -2460,6 +2518,10 @@ void CustomController::computeFast()
                           
                     }
                 }
+
+                if(statemachine == 2 && walking_tick > 3)
+                    mpc_start_init = 3;
+
                 KK_temp = 0.0;
                 if ((walking_tick == 0) && (walking_tick_stop == true))
                 {

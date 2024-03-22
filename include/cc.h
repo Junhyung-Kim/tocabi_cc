@@ -256,6 +256,10 @@ public:
    Eigen::VectorXd desired_val_mu;
 
    int new_socket;
+   bool mpc_start_init_bool = false;
+   bool mpc_start_init_bool1 = false;
+   bool mpc_start_init_bool2 = false;
+   bool mpc_start_init_bool3 = false;
 
    double buffer[51] = {1.0, 2, 3, 4, 5, 6, 
     0, 0, 0, 0, 0, 0, 
