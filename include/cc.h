@@ -149,10 +149,19 @@ public:
     bool mpcxsol = true;
     bool mpcysol = true;
 
+    int Debug_check = 0;
+
     Eigen::Vector2d virtual_temp;
     Eigen::Vector2d virtual_temp1;
     Eigen::Vector2d virtual_temp2;
     Eigen::Vector2d foot_temp;
+
+    std::atomic<double> virtual_temp1_x, virtual_temp1_y;
+    std::atomic<double> virtual_temp2_x, virtual_temp2_y;
+    std::atomic<double> virtual_temp_x, virtual_temp_y;
+    std::atomic<double> foot_temp_x, foot_temp_y;
+
+    bool state_virtual = true;
 
     int nx_;
     int nu_;
