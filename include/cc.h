@@ -96,7 +96,7 @@ public:
     Eigen::VectorVQd qd_pinocchio_prev;
     Eigen::VectorVQd qdd_pinocchio_desired1;
     Eigen::VectorVQd qdd_pinocchio_desired1_;
-    Eigen::VectorXd qp_result, qp_result_prev;
+    Eigen::VectorXd qp_result, qp_result_prev, qp_result1;
 
     std::atomic<bool> time_tick;
     std::atomic<bool> time_tick_next;
@@ -139,6 +139,11 @@ public:
     ros::CallbackQueue queue_cc_;
     double rate;
     ros::NodeHandle nh;
+
+    string rf,rf1,rf2,rf3,rf4,rf5,rf6,rf7;
+    Eigen::MatrixXd RFj1, LFj1;
+
+    int as = 2;
 
     //MPC
     std::atomic<bool> wlk_on;
