@@ -315,36 +315,36 @@ CustomController::CustomController(RobotData &rd) : rd_(rd) //, wbc_(dc.wbc_)
 
     if(as == 0)
     {
-        rf = "/home/jhk/wpwkfl/lfpos1.txt";
-        rf1 = "/home/jhk/wpwkfl/rfpos1.txt";
-        rf2 = "/home/jhk/wpwkfl/zmpbx1.txt";
-        rf3 = "/home/jhk/wpwkfl/com_ref_lipm.txt";
-        rf4 = "/home/jhk/wpwkfl/comd_re_lipm.txt";
-        rf5 = "/home/jhk/wpwkfl/angmom_de_lipm.txt";
-        rf6 = "/home/jhk/wpwkfl/zmp_des_lipm.txt";
-        rf7 = "/home/jhk/wpwkfl/zmpby1.txt";
+        rf = "/home/jhk/catkin_ws/src/tocabi_cc/wpwkfl/lfpos1.txt";
+        rf1 = "/home/jhk/catkin_ws/src/tocabi_cc/wpwkfl/rfpos1.txt";
+        rf2 = "/home/jhk/catkin_ws/src/tocabi_cc/wpwkfl/zmpbx1.txt";
+        rf3 = "/home/jhk/catkin_ws/src/tocabi_cc/wpwkfl/com_ref_lipm.txt";
+        rf4 = "/home/jhk/catkin_ws/src/tocabi_cc/wpwkfl/comd_re_lipm.txt";
+        rf5 = "/home/jhk/catkin_ws/src/tocabi_cc/wpwkfl/angmom_de_lipm.txt";
+        rf6 = "/home/jhk/catkin_ws/src/tocabi_cc/wpwkfl/zmp_des_lipm.txt";
+        rf7 = "/home/jhk/catkin_ws/src/tocabi_cc/wpwkfl/zmpby1.txt";
     }
     else if(as == 1)
     {
-        rf = "/home/jhk/wpwkflup1/lfpos1.txt";
-        rf1 = "/home/jhk/wpwkflup1/rfpos1.txt";
-        rf2 = "/home/jhk/wpwkflup1/zmpbx1.txt";
-        rf3 = "/home/jhk/wpwkflup1/com_ref_lipm.txt";
-        rf4 = "/home/jhk/wpwkflup1/comd_re_lipm.txt";
-        rf5 = "/home/jhk/wpwkflup1/angmom_de_lipm.txt";
-        rf6 = "/home/jhk/wpwkflup1/zmp_des_lipm.txt";
-        rf7 = "/home/jhk/wpwkflup1/zmpby1.txt";
+        rf = "/home/jhk/catkin_ws/src/tocabi_cc/wpwkflup1/lfpos1.txt";
+        rf1 = "/home/jhk/catkin_ws/src/tocabi_cc/wpwkflup1/rfpos1.txt";
+        rf2 = "/home/jhk/catkin_ws/src/tocabi_cc/wpwkflup1/zmpbx1.txt";
+        rf3 = "/home/jhk/catkin_ws/src/tocabi_cc/wpwkflup1/com_ref_lipm.txt";
+        rf4 = "/home/jhk/catkin_ws/src/tocabi_cc/wpwkflup1/comd_re_lipm.txt";
+        rf5 = "/home/jhk/catkin_ws/src/tocabi_cc/wpwkflup1/angmom_de_lipm.txt";
+        rf6 = "/home/jhk/catkin_ws/src/tocabi_cc/wpwkflup1/zmp_des_lipm.txt";
+        rf7 = "/home/jhk/catkin_ws/src/tocabi_cc/wpwkflup1/zmpby1.txt";
     }
     else
     {
-        rf = "/home/jhk/LIPFM_CEN/lfpos.txt";
-        rf1 = "/home/jhk/LIPFM_CEN/rfpos.txt";
-        rf2 = "/home/jhk/LIPFM_CEN/zmpb.txt";
-        rf3 = "/home/jhk/LIPFM_CEN/com_ref.txt";
-        rf4 = "/home/jhk/LIPFM_CEN/comd_re.txt";
-        rf5 = "/home/jhk/LIPFM_CEN/angmom_de.txt";
-        rf6 = "/home/jhk/LIPFM_CEN/zmp_des.txt";
-        rf7 = "/home/jhk/LIPFM_CEN/zmpb.txt";
+        rf = "/home/jhk/catkin_ws/src/tocabi_cc/LIPFM_CEN/lfpos.txt";
+        rf1 = "/home/jhk/catkin_ws/src/tocabi_cc/LIPFM_CEN/rfpos.txt";
+        rf2 = "/home/jhk/catkin_ws/src/tocabi_cc/LIPFM_CEN/zmpb.txt";
+        rf3 = "/home/jhk/catkin_ws/src/tocabi_cc/LIPFM_CEN/com_ref.txt";
+        rf4 = "/home/jhk/catkin_ws/src/tocabi_cc/LIPFM_CEN/comd_re.txt";
+        rf5 = "/home/jhk/catkin_ws/src/tocabi_cc/LIPFM_CEN/angmom_de.txt";
+        rf6 = "/home/jhk/catkin_ws/src/tocabi_cc/LIPFM_CEN/zmp_des.txt";
+        rf7 = "/home/jhk/catkin_ws/src/tocabi_cc/LIPFM_CEN/zmpb.txt";
     }
 
     std::fstream read_file(rf);
