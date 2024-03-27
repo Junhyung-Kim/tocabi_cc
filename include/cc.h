@@ -101,7 +101,7 @@ public:
     Eigen::VectorVQd qd_pinocchio_prev;
     Eigen::VectorVQd qdd_pinocchio_desired1;
     Eigen::VectorVQd qdd_pinocchio_desired1_;
-    Eigen::VectorXd qp_result, qp_result_prev;
+    Eigen::VectorXd qp_result, qp_result_prev, qp_result1;
 
     double com_z_init;
 

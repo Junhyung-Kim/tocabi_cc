@@ -375,6 +375,7 @@ CustomController::CustomController(RobotData &rd) : rd_(rd) //, wbc_(dc.wbc_)
     qp_torque_control.EnableEqualityCondition(0.001);
     variable_size2 = 18;
     constraint_size2 = 17;//15;
+    qp_result1.setZero(variable_size2);
     qp_momentum_control.InitializeProblemSize(variable_size2, constraint_size2);
 
     J.setZero(constraint_size2, variable_size2);
@@ -3852,10 +3853,10 @@ void CustomController::momentumControl(RobotData &Robot, Eigen::Vector3d comd,  
         qp_momentum_control.UpdateSubjectToAx(A1, lbA1, ubA1);
         qp_momentum_control.UpdateSubjectToX(lb1, ub1);
        
-        qp_solved = qp_momentum_control.SolveQPoases(100, qp_result);
+        qp_solved = qp_momentum_control.SolveQPoases(100, qp_result1);
         
         if(qp_solved == true)
-            q_dm = qp_result;
+            q_dm = qp_result1;
         else
             q_dm.setZero();
 
