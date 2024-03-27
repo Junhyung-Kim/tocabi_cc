@@ -146,6 +146,14 @@ public:
     double Ts = 0.01;
     double KK_temp = 0.0;
 
+    bool time_tick;
+    bool time_tick_next;
+    bool time_tick_starts;
+
+    std::chrono::system_clock::time_point startTime;
+    std::chrono::system_clock::time_point startTime_init;
+    std::chrono::system_clock::time_point endTime;
+
     bool mpcxsol = true;
     bool mpcysol = true;
 
