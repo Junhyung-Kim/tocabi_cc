@@ -45,7 +45,9 @@ public:
     void momentumControl(RobotData &Robot, Eigen::Vector3d comd,  Eigen::Vector2d ang_, Eigen::Vector3d rfootd, Eigen::Vector3d lfootd, Eigen::Vector2d upperd, Eigen::Vector3d rfootori, Eigen::Vector3d lfootori);
     void zmpControl(RobotData &rd_l);
     void dspForceControl(RobotData &Robot, double alpha);
-
+    
+    void setContact_1(RobotData &Robot, bool left_foot, bool right_foot, bool left_hand, bool right_hand);
+    
     void proc_recv();
     void proc_recv1();
 
@@ -107,8 +109,7 @@ public:
 
     Eigen::MatrixXd RFj, LFj, RFdj, LFdj;
     MatrixXd G_temp;
-    Vector12d g_temp;
-            
+    Vector12d g_temp;            
     
     Eigen::Vector3d rfoot_mpc, lfoot_mpc;
 
@@ -138,6 +139,8 @@ public:
     //MPC
     std::atomic<bool> wlk_on;
     std::atomic<bool> mpc_on;
+
+    std::atomic<double> x_foot;
 
     double debug_temp;
     bool debug = false;

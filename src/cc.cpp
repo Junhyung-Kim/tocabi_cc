@@ -26,6 +26,42 @@ pinocchio::Model model;
 SHMmsgs *mj_shm_;
 int shm_msg_id;
 
+void CustomController::setContact_1(RobotData &Robot, bool left_foot, bool right_foot, bool left_hand=0, bool right_hand=0)
+{
+    Robot.ee_[0].contact = left_foot;
+    Robot.ee_[1].contact = right_foot;
+    Robot.ee_[2].contact = left_hand;
+    Robot.ee_[3].contact = right_hand;
+
+    Robot.contact_index = 0;
+    if (left_foot)
+    {
+        Robot.contact_part[Robot.contact_index] = TOCABI::Left_Foot;
+        Robot.ee_idx[Robot.contact_index] = 0;
+        Robot.contact_index++;
+    }
+    if (right_foot)
+    {
+        Robot.contact_part[Robot.contact_index] = TOCABI::Right_Foot;
+        Robot.ee_idx[Robot.contact_index] = 1;
+        Robot.contact_index++;
+    }
+    if (left_hand)
+    {
+        Robot.contact_part[Robot.contact_index] = TOCABI::Left_Hand;
+        Robot.ee_idx[Robot.contact_index] = 2;
+        Robot.contact_index++;
+    }
+    if (right_hand)
+    {
+        Robot.contact_part[Robot.contact_index] = TOCABI::Right_Hand;
+        Robot.ee_idx[Robot.contact_index] = 3;
+        Robot.contact_index++;
+    }
+
+    Robot.J_C.setZero(Robot.contact_index * 6, MODEL_DOF_VIRTUAL);
+}
+
 void CustomController::proc_recv(){
 
     while(true)
@@ -678,24 +714,29 @@ void CustomController::computeSlow()
                 if(mpc_cycle == 49)
                 {
                     contactMode = 1;
+                    setContact_1(rd_, 1, 1);
                 }
                 else
                 {
                     contactMode = 3;
+                    setContact_1(rd_, 0, 1);
                 }
             }
             else
             {
                 contactMode = 1;
+                setContact_1(rd_, 1, 1);
             }
         }
         else if(lfootz <= 0.0010)
         {
             contactMode = 2;
+            setContact_1(rd_, 1, 0);
         }
         else if(rfootz <= 0.0010)
         {
             contactMode = 3;
+            setContact_1(rd_, 0, 1);
         }
     }
     else if(mpc_cycle <= 99)
@@ -705,19 +746,23 @@ void CustomController::computeSlow()
             if(mpc_cycle == 95 || mpc_cycle == 96 || mpc_cycle == 97|| mpc_cycle == 98)// || mpc_cycle == 98 || `|| mpc_cycle == 100)
             {
                 contactMode = 2;
+                setContact_1(rd_, 1, 0);
             }
             else
             {
                 contactMode = 1;
+                setContact_1(rd_, 1, 1);
             }
         }
         else if(lfootz <= 0.0010)
         {
             contactMode = 2;
-            }
+            setContact_1(rd_, 1, 0);
+        }
         else if(rfootz <= 0.0010)
         {
             contactMode = 3;
+            setContact_1(rd_, 0, 1);
         }
     }
     else if(mpc_cycle <= 149)
@@ -727,19 +772,23 @@ void CustomController::computeSlow()
             if(mpc_cycle == 145 || mpc_cycle == 146 || mpc_cycle == 147|| mpc_cycle == 148)
             {
                 contactMode = 3;
+                setContact_1(rd_, 0, 1);
             }
             else
             {
                 contactMode = 1;
+                setContact_1(rd_, 1, 1);
             }
         }
         else if(lfootz <= 0.0010)
         {
             contactMode = 2;
+            setContact_1(rd_, 1, 0);
         }
         else if(rfootz <= 0.0010)
         {
             contactMode = 3;
+            setContact_1(rd_, 0, 1);
         }
     }
     else
@@ -751,19 +800,23 @@ void CustomController::computeSlow()
                 if(mpc_cycle == 50 * (mpc_cycle_int + 2) - 5 || mpc_cycle == 50 * (mpc_cycle_int + 2) - 4 || mpc_cycle == 50 * (mpc_cycle_int + 2) - 3|| mpc_cycle == 50 * (mpc_cycle_int + 2) - 2)// || mpc_cycle == 98 || mpc_cycle == 99|| mpc_cycle == 100)
                 {
                     contactMode = 2;
+                    setContact_1(rd_, 1, 0);
                 }
                 else
                 {
                     contactMode = 1;
+                    setContact_1(rd_, 1, 1);
                 }
             }
             else if(lfootz <= 0.0010)
             { 
                 contactMode = 2;
+                setContact_1(rd_, 1, 0);
             }
             else if(rfootz <= 0.0010)
             {
                 contactMode = 3;
+                setContact_1(rd_, 0, 1);
             }
         }
         else
@@ -773,19 +826,23 @@ void CustomController::computeSlow()
                 if(mpc_cycle == 50 * (mpc_cycle_int + 2) - 5 || mpc_cycle == 50 * (mpc_cycle_int + 2) - 4 || mpc_cycle == 50 * (mpc_cycle_int + 2) - 3|| mpc_cycle == 50 * (mpc_cycle_int + 2) - 2)
                 {
                     contactMode = 3;
+                    setContact_1(rd_, 0, 1);
                 }
                 else
                 {
                     contactMode = 1;
+                    setContact_1(rd_, 1, 1);
                 }
             }
             else if(lfootz <= 0.0010)
             {
                 contactMode = 2;
+                setContact_1(rd_, 1, 0);
             }
             else if(rfootz <= 0.0010)
             {
                 contactMode = 3;
+                setContact_1(rd_, 0, 1);
             }
         }
     }
@@ -937,7 +994,7 @@ void CustomController::computeSlow()
     }
     else
     {
-        WBC::SetContact(rd_, 1, 1);
+        setContact_1(rd_, 1, 1);
         com_alpha = 0.5;
     }
 
@@ -2890,7 +2947,8 @@ ub1(15) = 0.0;
         file[1] << mpc_cycle << " " << walking_tick << " " << desired_val_mu[0]  << " " << desired_val_mu[1] << " " << desired_val_mu[2]<< " " << desired_val_mu[43];
         //file[1] << virtual_temp_x << " " << virtual_temp1_x << " " << zmp_mpcx << " "<< virtual_temp_y << " " << virtual_temp1_y << " " << desired_val_mu[43] <<  " " << rd_.q_(13) << " " << rd_.q_(14) << " " << desired_val_mu[19] << " " << desired_val_mu[20] << " " << pelv_ori_c(0) <<  "  " << pelv_ori_c(1) << std::endl;// << rfoot_ori_c(0) << " " << rfoot_ori_c(1) << " " << rfoot_ori_c(2) << " " << lfoot_ori_c(0) << " " << lfoot_ori_c(1) << " " << lfoot_ori_c(2);
         file[1] << std::endl;
-        file[0] <<contactMode << " " << Debug_check << " " << mpc_cycle << " " <<walking_tick << " "<< qp_solved<< " "<<solved<< " "<< mpc_cycle_int1 << " " << mpc_cycle_int << " "<< lfoot_mpc(0)<< " " << model_data2.oMf[LFcframe_id].translation()(0)+ virtual_temp1_x << " "<< rfoot_mpc(0)<< " " <<model_data2.oMf[RFcframe_id].translation()(0) + virtual_temp1_x<< " "<<state_virtual << " " << virtual_temp_x<< " " << virtual_temp1_x<< " " << virtual_temp2_x<< " "<< com_mpc[0] << " " << com_mpc[1] << " "<< rd_.link_[COM_id].xpos(0)<< " " << rd_.link_[COM_id].xpos(1)<< " " << angd_(0) << " " << angd_(1) << " "  << model_data1.hg.angular()[0]  << " " << model_data1.hg.angular()[1] << " " <<H_temp_22 << " " << pelv_ori_c(1) << " " << zmpx << " " << zmpy << " " << ZMP_FT_law(0)<< " " << ZMP_FT_law(1)<< " " <<zmp_bx(0) << " " << zmp_bx(1) <<  " " << pelv_ori_c(1) <<std::endl;//<< " " << model_data2.oMf[RFcframe_id].translation()(0)<< " " << model_data2.oMf[LFcframe_id].translation()(0)   <<  " " << model_data2.oMf[RFcframe_id].translation()(2)<< " " << model_data2.oMf[LFcframe_id].translation()(2)   <<  " " << rfoot_mpc(2) << " " << lfoot_mpc(2) << " " << rd_.link_[COM_id].xpos(2)<< " " << com_z_init << " " << rfoot_ori_c(0)<< " " << rfoot_ori_c(1)<< " " << lfoot_ori_c(0)<< " " << lfoot_ori_c(1)<<std::endl;///<< mpc_cycle << " " << contactMode << " "  << rd_.q_(13) << " " << rd_.q_(14)<< " "<<pelv_ori_c(0) << " " << pelv_ori_c(1) << " " << ang_de(0) << " " << ang_de(2)<< " " << ang_de(4)<< " " <<desired_val[25] << " " << q_dm(4) <<" "<< model_data1.hg.angular()[0] << " " << model_data1.hg.angular()[1] << " "<< angd_(0) << " " << angd_(1) << " "<< ZMP_FT_law(0) << " "  << zmpx << std::endl;//" " << ZMP_FT_law(0) << " "  << zmpx<< " " << ZMP_FT_law(1) << " "  << zmpy<< " " << rd_.link_[COM_id].xpos(2)<<" " << com_z_init << " " << comd(2) << " " << model_data1.hg.angular()[0] << " " << model_data1.hg.angular()[1] << " "<< angd_(0) << " " << angd_(1) << " "<< rfoot_mpc(0)<< " " <<model_data2.oMf[RFcframe_id].translation()(0) + virtual_temp1_x<< " "<<  lfoot_mpc(0) << " " << model_data2.oMf[LFcframe_id].translation()(0) + virtual_temp1_x<<  std::endl;//<<  lfoot_mpc(2) << " " << model_data2.oMf[LFcframe_id].translation()(2) << " "<<  rfoot_mpc(2) << " " << model_data2.oMf[RFcframe_id].translation()(2)<< std::endl;//<< angd_(0) << " " << angd_(1) << std:::endl;//std::endl;//file[0] << mpc_cycle <<  " " <<walking_tick << " "<< contactMode << " "<< solved<< " " << qp_solved<< " " << virtual_temp2_x << " "<< ZMP_FT_law(0) << " " << ZMP(0)<<  " " << zmpx<< " " << zmp_bx(0) << " " << zmp_bx(1) << " "  << ZMP_FT_law(1) << " "<< zmpy << " " << rd_.link_[COM_id].xpos(1)<< " " << model_data1.hg.angular()[0] << " " << model_data1.hg.angular()[1] << " "<< angd_(0) << " " << angd_(1) << " " << comd(0) << " " << comd(1) << " " << rd_.link_[COM_id].v(0)<< " " << rd_.link_[COM_id].v(1)  << " " << rd_.link_[COM_id].xpos(0)<< " " << rd_.link_[COM_id].xpos(1) << " " << com_mpc[0]  << " " << com_mpc[1] <<  " " << rd_.link_[COM_id].xpos(2) << " " << mj_shm_->dis_check<< " " << rd_.q_(13) << " " << rd_.q_(14)<< " " << q_pinocchio_desired(20) << " " << q_pinocchio_desired(21)<<" " <<qp_result.segment<MODEL_DOF_VIRTUAL>(12)(19)<< " " << qp_result.segment<MODEL_DOF_VIRTUAL>(12)(20) <<std::endl;//rfoot_mpc(0)<< " " <<model_data2.oMf[RFcframe_id].translation()(0) + virtual_temp1_x <<" " <<lfoot_mpc(0)<< " " <<model_data2.oMf[LFcframe_id].translation()(0) + virtual_temp1_x << " " << rd_.link_[COM_id].xpos(2)<<  " "<<com_z_init  <<  std::endl;   
+        file[0] <<contactMode <<" " << lfoot_mpc(0)<< " " << model_data2.oMf[LFcframe_id].translation()(0)+ virtual_temp1_x << " " << rd_.link_[Right_Foot].xipos(0) + virtual_temp1_x << " "<< rfoot_mpc(0)<< " " <<model_data2.oMf[RFcframe_id].translation()(0) + virtual_temp1_x<< " "<<state_virtual << " " << virtual_temp_x<< " " << virtual_temp1_x<< " " << virtual_temp2_x<< " "<< com_mpc[0] << " " << com_mpc[1] << " "<< rd_.link_[COM_id].xpos(0)<< " " << rd_.link_[COM_id].xpos(1)<< " " << angd_(0) << " " << angd_(1) << " "  << model_data1.hg.angular()[0]  << " " << model_data1.hg.angular()[1] << " " <<H_temp_22 << " " << pelv_ori_c(1) << " " << zmpx << " " << zmpy << " " << ZMP_FT_law(0)<< " " << ZMP_FT_law(1)<< " " <<zmp_bx(0) << " " << zmp_bx(1) <<  " " << pelv_ori_c(1) <<std::endl;//<< " " << model_data2.oMf[RFcframe_id].translation()(0)<< " " << model_data2.oMf[LFcframe_id].translation()(0)   <<  " " << model_data2.oMf[RFcframe_id].translation()(2)<< " " << model_data2.oMf[LFcframe_id].translation()(2)   <<  " " << rfoot_mpc(2) << " " << lfoot_mpc(2) << " " << rd_.link_[COM_id].xpos(2)<< " " << com_z_init << " " << rfoot_ori_c(0)<< " " << rfoot_ori_c(1)<< " " << lfoot_ori_c(0)<< " " << lfoot_ori_c(1)<<std::endl;///<< mpc_cycle << " " << contactMode << " "  << rd_.q_(13) << " " << rd_.q_(14)<< " "<<pelv_ori_c(0) << " " << pelv_ori_c(1) << " " << ang_de(0) << " " << ang_de(2)<< " " << ang_de(4)<< " " <<desired_val[25] << " " << q_dm(4) <<" "<< model_data1.hg.angular()[0] << " " << model_data1.hg.angular()[1] << " "<< angd_(0) << " " << angd_(1) << " "<< ZMP_FT_law(0) << " "  << zmpx << std::endl;//" " << ZMP_FT_law(0) << " "  << zmpx<< " " << ZMP_FT_law(1) << " "  << zmpy<< " " << rd_.link_[COM_id].xpos(2)<<" " << com_z_init << " " << comd(2) << " " << model_data1.hg.angular()[0] << " " << model_data1.hg.angular()[1] << " "<< angd_(0) << " " << angd_(1) << " "<< rfoot_mpc(0)<< " " <<model_data2.oMf[RFcframe_id].translation()(0) + virtual_temp1_x<< " "<<  lfoot_mpc(0) << " " << model_data2.oMf[LFcframe_id].translation()(0) + virtual_temp1_x<<  std::endl;//<<  lfoot_mpc(2) << " " << model_data2.oMf[LFcframe_id].translation()(2) << " "<<  rfoot_mpc(2) << " " << model_data2.oMf[RFcframe_id].translation()(2)<< std::endl;//<< angd_(0) << " " << angd_(1) << std:::endl;//std::endl;//file[0] << mpc_cycle <<  " " <<walking_tick << " "<< contactMode << " "<< solved<< " " << qp_solved<< " " << virtual_temp2_x << " "<< ZMP_FT_law(0) << " " << ZMP(0)<<  " " << zmpx<< " " << zmp_bx(0) << " " << zmp_bx(1) << " "  << ZMP_FT_law(1) << " "<< zmpy << " " << rd_.link_[COM_id].xpos(1)<< " " << model_data1.hg.angular()[0] << " " << model_data1.hg.angular()[1] << " "<< angd_(0) << " " << angd_(1) << " " << comd(0) << " " << comd(1) << " " << rd_.link_[COM_id].v(0)<< " " << rd_.link_[COM_id].v(1)  << " " << rd_.link_[COM_id].xpos(0)<< " " << rd_.link_[COM_id].xpos(1) << " " << com_mpc[0]  << " " << com_mpc[1] <<  " " << rd_.link_[COM_id].xpos(2) << " " << mj_shm_->dis_check<< " " << rd_.q_(13) << " " << rd_.q_(14)<< " " << q_pinocchio_desired(20) << " " << q_pinocchio_desired(21)<<" " <<qp_result.segment<MODEL_DOF_VIRTUAL>(12)(19)<< " " << qp_result.segment<MODEL_DOF_VIRTUAL>(12)(20) <<std::endl;//rfoot_mpc(0)<< " " <<model_data2.oMf[RFcframe_id].translation()(0) + virtual_temp1_x <<" " <<lfoot_mpc(0)<< " " <<model_data2.oMf[LFcframe_id].translation()(0) + virtual_temp1_x << " " << rd_.link_[COM_id].xpos(2)<<  " "<<com_z_init  <<  std::endl;   
+        //<< " " << Debug_check << " " << mpc_cycle << " " <<walking_tick << " "<< qp_solved<< " "<<solved<< " "<< mpc_cycle_int1 << " " << mpc_cycle_int << " "<<
     }
     
     if(mpc_cycle <= controlwalk_time - 1)// && mpc_cycle <= 83)
@@ -2918,7 +2976,7 @@ ub1(15) = 0.0;
             std::cout << "cc mode 11" << std::endl;
         }
 
-        WBC::SetContact(rd_, 1, 1);
+        setContact_1(rd_, 1, 1);
 
         rd_.J_task.setZero(9, MODEL_DOF_VIRTUAL);
         rd_.J_task.block(0, 0, 6, MODEL_DOF_VIRTUAL) = rd_.link_[COM_id].Jac();
@@ -2963,8 +3021,8 @@ ub1(15) = 0.0;
             auto endTime1 = std::chrono::system_clock::now();
            
             if(walking_tick == 1)
-            {
-                //auto elapsed2 = std::chrono::duration_cast<std::chrono::microseconds>(endTime1 - startTime1);
+            { 
+                  //auto elapsed2 = std::chrono::duration_cast<std::chrono::microseconds>(endTime1 - startTime1);
                 //mpc_latency += elapsed2.count();
             }
             else
@@ -2975,7 +3033,7 @@ ub1(15) = 0.0;
         }
         else if (rd_.tc_.walking_enable == 3.0 || rd_.tc_.walking_enable == 2.0)
         {
-            //WBC::SetContact(rd_, 1, 1);
+            //setContact_1(rd_, 1, 1);
             rd_.torque_desired_walk = WBC::ContactForceRedistributionTorque(rd_, WBC::GravityCompensationTorque(rd_));
             for (int i = 0; i < MODEL_DOF; i++)
             {
@@ -3488,7 +3546,7 @@ void CustomController::computeFast()
                                     rfoot_ori(2) = 1.0 * (-rfoot_ori_c(2));
                                     rfootd1(2) = rfootd1(2)+ gain_xz * (rfoot_mpc(2) - rd_.link_[Right_Foot].xipos(2) + foot_temp_y);
                                     rfootd1(1) = rfootd1(1) + 10.00 * (-0.1025 - rd_.link_[Right_Foot].xipos(1)- virtual_temp1_y);
-                                    rfootd1(0) = rfootd1(0)+ gain_xz * (rfoot_mpc(0) - rd_.link_[Right_Foot].xipos(0) - 0.0378);
+                                    rfootd1(0) = rfootd1(0)+ gain_xz * (rfoot_mpc(0) - rd_.link_[Right_Foot].xipos(0) - x_foot);
                                 }
                                 else if(lfoot_mpc(2)>0.0)
                                 {
@@ -3497,7 +3555,7 @@ void CustomController::computeFast()
                                     lfoot_ori(2) = 1.0 * (-lfoot_ori_c(2));
                                     lfootd1(2) = lfootd1(2)+ gain_xz * (lfoot_mpc(2) - rd_.link_[Left_Foot].xipos(2) + foot_temp_y);
                                     lfootd1(1) = lfootd1(1) + 10.00 * (0.1025 - rd_.link_[Left_Foot].xipos(1)- virtual_temp1_y);
-                                    lfootd1(0) = lfootd1(0)+ gain_xz * (lfoot_mpc(0) - rd_.link_[Left_Foot].xipos(0) - 0.0378);
+                                    lfootd1(0) = lfootd1(0)+ gain_xz * (lfoot_mpc(0) - rd_.link_[Left_Foot].xipos(0) - x_foot);
                                 }  
                                 else
                                 {
@@ -3531,7 +3589,7 @@ void CustomController::computeFast()
                                     rfoot_ori(2) = 1.0 * (-rfoot_ori_c(2));
                                     rfootd1(2) = rfootd1(2)+ gain_xz * (rfoot_mpc(2) - rd_.link_[Right_Foot].xipos(2) + foot_temp_y);
                                     rfootd1(1) = rfootd1(1)+ 10.00 * (-0.1025 - rd_.link_[Right_Foot].xipos(1)- virtual_temp1_y);
-                                    rfootd1(0) = rfootd1(0)+ gain_xz * (rfoot_mpc(0) - virtual_temp1_x- rd_.link_[Right_Foot].xipos(0) - 0.0378);
+                                    rfootd1(0) = rfootd1(0)+ gain_xz * (rfoot_mpc(0) - virtual_temp1_x- rd_.link_[Right_Foot].xipos(0) - x_foot);
                                 }
                                 else if(lfoot_mpc(2)>0.0)
                                 {
@@ -3540,7 +3598,7 @@ void CustomController::computeFast()
                                     lfoot_ori(2) = 1.0 * (-lfoot_ori_c(2));
                                     lfootd1(2) = lfootd1(2)+ gain_xz * (lfoot_mpc(2) - rd_.link_[Left_Foot].xipos(2) + foot_temp_y);
                                     lfootd1(1) = lfootd1(1) + 10.00 * (0.1025 - rd_.link_[Left_Foot].xipos(1) - virtual_temp1_y);
-                                    lfootd1(0) = lfootd1(0)+ gain_xz * (lfoot_mpc(0) - virtual_temp1_x - rd_.link_[Left_Foot].xipos(0) - 0.0378);
+                                    lfootd1(0) = lfootd1(0)+ gain_xz * (lfoot_mpc(0) - virtual_temp1_x - rd_.link_[Left_Foot].xipos(0) - x_foot);
                                 }
                                 else
                                 {
@@ -3572,7 +3630,7 @@ void CustomController::computeFast()
                                     rfoot_ori(2) = 1.0 * (-rfoot_ori_c(2));
                                     rfootd1(2) = rfootd1(2)+ gain_xz * (rfoot_mpc(2) - rd_.link_[Right_Foot].xipos(2) + foot_temp_y);
                                     rfootd1(1) = rfootd1(1)+ 10.00 * (-0.1025 - rd_.link_[Right_Foot].xipos(1)- virtual_temp1_y);
-                                    rfootd1(0) = rfootd1(0)+ gain_xz * (rfoot_mpc(0) - virtual_temp1_x- rd_.link_[Right_Foot].xipos(0) - 0.0378);
+                                    rfootd1(0) = rfootd1(0)+ gain_xz * (rfoot_mpc(0) - virtual_temp1_x- rd_.link_[Right_Foot].xipos(0) - x_foot);
                                 }
                                 else if(lfoot_mpc(2)>0.0)
                                 {
@@ -3581,7 +3639,7 @@ void CustomController::computeFast()
                                     lfoot_ori(2) = 1.0 * (-lfoot_ori_c(2));
                                     lfootd1(2) = lfootd1(2)+ gain_xz * (lfoot_mpc(2) - rd_.link_[Left_Foot].xipos(2) + foot_temp_y);
                                     lfootd1(1) = lfootd1(1) + 10.00 * (0.1025 - rd_.link_[Left_Foot].xipos(1)- virtual_temp1_y);
-                                    lfootd1(0) = lfootd1(0)+ gain_xz * (lfoot_mpc(0) - virtual_temp1_x - rd_.link_[Left_Foot].xipos(0) - 0.0378);
+                                    lfootd1(0) = lfootd1(0)+ gain_xz * (lfoot_mpc(0) - virtual_temp1_x - rd_.link_[Left_Foot].xipos(0) - x_foot);
                                 }
                                 else
                                 {
@@ -3615,7 +3673,7 @@ void CustomController::computeFast()
                                         rfoot_ori(2) = 1.0 * (-rfoot_ori_c(2));
                                         rfootd1(2) = rfootd1(2)+ gain_xz * (rfoot_mpc(2) - rd_.link_[Right_Foot].xipos(2) + foot_temp_y);
                                         rfootd1(1) = rfootd1(1)+ 10.00 * (-0.1025 - rd_.link_[Right_Foot].xipos(1)- virtual_temp1_y);
-                                        rfootd1(0) = rfootd1(0)+ gain_xz * (rfoot_mpc(0) - virtual_temp1_x- rd_.link_[Right_Foot].xipos(0) - 0.0378);
+                                        rfootd1(0) = rfootd1(0)+ gain_xz * (rfoot_mpc(0) - virtual_temp1_x- rd_.link_[Right_Foot].xipos(0) - x_foot);
                                     }
                                     else if(lfoot_mpc(2)>0.0)
                                     {
@@ -3624,7 +3682,7 @@ void CustomController::computeFast()
                                         lfoot_ori(2) = 1.0 * (-lfoot_ori_c(2));
                                         lfootd1(2) = lfootd1(2)+ gain_xz * (lfoot_mpc(2) - rd_.link_[Left_Foot].xipos(2) + foot_temp_y);
                                         lfootd1(1) = lfootd1(1) + 10.00 * (0.1025 - rd_.link_[Left_Foot].xipos(1) - virtual_temp1_y);
-                                        lfootd1(0) = lfootd1(0)+ gain_xz * (lfoot_mpc(0) - virtual_temp1_x - rd_.link_[Left_Foot].xipos(0) - 0.0378);
+                                        lfootd1(0) = lfootd1(0)+ gain_xz * (lfoot_mpc(0) - virtual_temp1_x - rd_.link_[Left_Foot].xipos(0) - x_foot);
                                     }
                                     else
                                     {
@@ -3656,7 +3714,7 @@ void CustomController::computeFast()
                                         rfoot_ori(2) = 1.0 * (-rfoot_ori_c(2));
                                         rfootd1(2) = rfootd1(2)+ gain_xz * (rfoot_mpc(2) - rd_.link_[Right_Foot].xipos(2) + foot_temp_y);
                                         rfootd1(1) = rfootd1(1)+ 10.00 * (-0.1025 - rd_.link_[Right_Foot].xipos(1)- virtual_temp1_y);
-                                        rfootd1(0) = rfootd1(0)+ gain_xz * (rfoot_mpc(0) - virtual_temp1_x- rd_.link_[Right_Foot].xipos(0) - 0.0378);
+                                        rfootd1(0) = rfootd1(0)+ gain_xz * (rfoot_mpc(0) - virtual_temp1_x- rd_.link_[Right_Foot].xipos(0) - x_foot);
                         
                                     }
                                     else if(lfoot_mpc(2)>0.0)
@@ -3666,7 +3724,7 @@ void CustomController::computeFast()
                                         lfoot_ori(2) = 1.0 * (-lfoot_ori_c(2));
                                         lfootd1(2) = lfootd1(2)+ gain_xz * (lfoot_mpc(2) - rd_.link_[Left_Foot].xipos(2) + foot_temp_y);
                                         lfootd1(1) = lfootd1(1) + 10.00 * (0.1025 - rd_.link_[Left_Foot].xipos(1)- virtual_temp1_y);
-                                        lfootd1(0) = lfootd1(0)+ gain_xz * (lfoot_mpc(0) - virtual_temp1_x - rd_.link_[Left_Foot].xipos(0) - 0.0378);
+                                        lfootd1(0) = lfootd1(0)+ gain_xz * (lfoot_mpc(0) - virtual_temp1_x - rd_.link_[Left_Foot].xipos(0) - x_foot);
                                     }
                                     else
                                     {
@@ -3735,6 +3793,7 @@ void CustomController::GuiCommandCallback(const std_msgs::StringConstPtr &msg)
         {
             std::cout << "STate" << stateestimation_count << std::endl;
             stateestimation = true;
+            x_foot = 0.0321;
         }
     }
 
@@ -3742,6 +3801,7 @@ void CustomController::GuiCommandCallback(const std_msgs::StringConstPtr &msg)
     {
         std::cout << "STate" << stateestimation_count << std::endl;
         stateestimation = true;
+        x_foot = 0.0378;
     }
 }
  
