@@ -143,7 +143,7 @@ public:
     string rf,rf1,rf2,rf3,rf4,rf5,rf6,rf7;
     Eigen::MatrixXd RFj1, LFj1;
 
-    int as = 2;
+    int as = 0;
 
     //MPC
     std::atomic<bool> wlk_on;
