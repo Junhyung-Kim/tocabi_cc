@@ -1758,6 +1758,14 @@ void CustomController::computeSlow()
                 rd_.torque_desired[i] = 1.0 * (rd_.pos_kp_v[i] * (q_pinocchio_desired1[i+7] - rd_.q_[i]) + rd_.pos_kv_v[i] * (- rd_.q_dot_[i]));
             }
         }
+        //std::cout << rd_.q_virtual_ << std::endl;
+    file[0]<<solved<< " "<< zmp_bx(0) << " " << zmp_bx(1) << " "<< zmpx << " " << zmpy << " "  << ZMP_FT_law(0) << "  " << ZMP_FT_law(1)<< " "  <<  comt_[0] << " " << comt_[1]<< " "<<rd_.link_[COM_id].xpos(0)<< " "<<rd_.link_[COM_id].xpos(1)<<  " " << comdt_(0)<<  " " << comdt_(1)<< " " <<rd_.link_[COM_id].v(0)<< " "<<rd_.link_[COM_id].v(1)<<  std::endl;
+    //file[0]<<mpc_cycle << " " << walking_tick << " "<<com_z_init<< " " << rd_.link_[COM_id].xpos(2)<< " " <<foot_x_int<< " " << foot_y_int << " " << rd_.link_[Left_Foot].xipos(0) << " " << rd_.link_[Left_Foot].xipos(1) << " " << rd_.link_[Left_Foot].xipos(2)<< " " << lfoot_mpc(0) << " " << lfoot_mpc(1)<< " " << lfoot_mpc(2) + foot_temp(1) - 0.15842<< " " << rd_.link_[Right_Foot].xipos(0) << " " << rd_.link_[Right_Foot].xipos(1) << " " << rd_.link_[Right_Foot].xipos(2)<< " " << rfoot_mpc(0) << " " << rfoot_mpc(1)<< " " << rfoot_mpc(2) + foot_temp(1) - 0.15842<< " " << rfootz << " " <<lfootz <<  " " << angd_(0)  <<  " " << angd_(1)<<  " " << model_data2.hg.angular()[0]  <<  " " << model_data2.hg.angular()[1]<< " "  << rd_.q_desired(5)<< " " << rd_.torque_desired[5] << " " << tau_[5]<<std::endl;
+    /*file[1] <<mpc_cycle << " " << walking_tick << " " << q_pinocchio_desired1[0+7] << " " << rd_.q_[0] << " " << q_pinocchio_desired1[1+7] << " " << rd_.q_[1] << " " << q_pinocchio_desired1[2+7] << " " << rd_.q_[2] << " " << q_pinocchio_desired1[3+7] << " " << rd_.q_[3] << " " << q_pinocchio_desired1[4+7] << " " << rd_.q_[4] << " " << q_pinocchio_desired1[5+7] << " " << rd_.q_[5] << " " << rd_.torque_desired[0] << " " << tau_[0+6] + 1.0 * (rd_.pos_kp_v[0] * (q_pinocchio_desired1[0+7] - rd_.q_[0]) + rd_.pos_kv_v[0] * (qd_pinocchio_desired1[0+6]- rd_.q_dot_[0]))<< " " << tau_[1+6] + 1.0 * (rd_.pos_kp_v[1] * (q_pinocchio_desired1[1+7] - rd_.q_[1]) + rd_.pos_kv_v[1] * (qd_pinocchio_desired1[1+6]- rd_.q_dot_[1])) << " " << tau_[2+6] + 1.0 * (rd_.pos_kp_v[2] * (q_pinocchio_desired1[2+7] - rd_.q_[2]) + rd_.pos_kv_v[2] * (qd_pinocchio_desired1[2+6]- rd_.q_dot_[2]))
+<< " " << tau_[3+6] + 1.0 * (rd_.pos_kp_v[3] * (q_pinocchio_desired1[3+7] - rd_.q_[3]) + rd_.pos_kv_v[3] * (qd_pinocchio_desired1[3+6]- rd_.q_dot_[3]))
+<< " " << tau_[4+6] + 1.0 * (rd_.pos_kp_v[4] * (q_pinocchio_desired1[4+7] - rd_.q_[4]) + rd_.pos_kv_v[4] * (qd_pinocchio_desired1[4+6]- rd_.q_dot_[4]))
+<< " " << rd_.q_desired(9)<< " " << rd_.torque_desired[5] << std::endl;*/
+        
     }
     else if(rd_.tc_.mode == 6)
     {
@@ -1780,14 +1788,7 @@ void CustomController::computeSlow()
     file[0] << std::endl;*/
 
 
-    //std::cout << rd_.q_virtual_ << std::endl;
-    //<<solved<< " "<< zmp_bx(0) << " " << zmp_bx(1) << " "<< zmpx << " " << zmpy << " "  << ZMP_FT_law(0) << "  " << ZMP_FT_law(1)<< " "  <<  comt_[0] << " " << comt_[1]<< " "<<rd_.link_[COM_id].xpos(0)<< " "<<rd_.link_[COM_id].xpos(1)<<  " " << comdt_(0)<<  " " << comdt_(1)<< " " <<rd_.link_[COM_id].v(0)<< " "<<rd_.link_[COM_id].v(1)<<  " "
-    file[0]<<mpc_cycle << " " << walking_tick << " "<<com_z_init<< " " << rd_.link_[COM_id].xpos(2)<< " " <<foot_x_int<< " " << foot_y_int << " " << rd_.link_[Left_Foot].xipos(0) << " " << rd_.link_[Left_Foot].xipos(1) << " " << rd_.link_[Left_Foot].xipos(2)<< " " << lfoot_mpc(0) << " " << lfoot_mpc(1)<< " " << lfoot_mpc(2) + foot_temp(1) - 0.15842<< " " << rd_.link_[Right_Foot].xipos(0) << " " << rd_.link_[Right_Foot].xipos(1) << " " << rd_.link_[Right_Foot].xipos(2)<< " " << rfoot_mpc(0) << " " << rfoot_mpc(1)<< " " << rfoot_mpc(2) + foot_temp(1) - 0.15842<< " " << rfootz << " " <<lfootz <<  " " << angd_(0)  <<  " " << angd_(1)<<  " " << model_data2.hg.angular()[0]  <<  " " << model_data2.hg.angular()[1]<< " "  << rd_.q_desired(5)<< " " << rd_.torque_desired[5] << " " << tau_[5]<<std::endl;
-    /*file[1] <<mpc_cycle << " " << walking_tick << " " << q_pinocchio_desired1[0+7] << " " << rd_.q_[0] << " " << q_pinocchio_desired1[1+7] << " " << rd_.q_[1] << " " << q_pinocchio_desired1[2+7] << " " << rd_.q_[2] << " " << q_pinocchio_desired1[3+7] << " " << rd_.q_[3] << " " << q_pinocchio_desired1[4+7] << " " << rd_.q_[4] << " " << q_pinocchio_desired1[5+7] << " " << rd_.q_[5] << " " << rd_.torque_desired[0] << " " << tau_[0+6] + 1.0 * (rd_.pos_kp_v[0] * (q_pinocchio_desired1[0+7] - rd_.q_[0]) + rd_.pos_kv_v[0] * (qd_pinocchio_desired1[0+6]- rd_.q_dot_[0]))<< " " << tau_[1+6] + 1.0 * (rd_.pos_kp_v[1] * (q_pinocchio_desired1[1+7] - rd_.q_[1]) + rd_.pos_kv_v[1] * (qd_pinocchio_desired1[1+6]- rd_.q_dot_[1])) << " " << tau_[2+6] + 1.0 * (rd_.pos_kp_v[2] * (q_pinocchio_desired1[2+7] - rd_.q_[2]) + rd_.pos_kv_v[2] * (qd_pinocchio_desired1[2+6]- rd_.q_dot_[2]))
-<< " " << tau_[3+6] + 1.0 * (rd_.pos_kp_v[3] * (q_pinocchio_desired1[3+7] - rd_.q_[3]) + rd_.pos_kv_v[3] * (qd_pinocchio_desired1[3+6]- rd_.q_dot_[3]))
-<< " " << tau_[4+6] + 1.0 * (rd_.pos_kp_v[4] * (q_pinocchio_desired1[4+7] - rd_.q_[4]) + rd_.pos_kv_v[4] * (qd_pinocchio_desired1[4+6]- rd_.q_dot_[4]))
-<< " " << rd_.q_desired(9)<< " " << rd_.torque_desired[5] << std::endl;*/
-        
+    
 }
 
 void CustomController::computeFast()
