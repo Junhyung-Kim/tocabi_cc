@@ -19,7 +19,7 @@ using std::shared_ptr;
 
 pinocchio::Data model_data;
 pinocchio::Data model_data1;
-//pinocchio::Data model_data2;
+pinocchio::Data model_data2;
 
 pinocchio::Model model;
 
@@ -192,7 +192,8 @@ CustomController::CustomController(RobotData &rd) : rd_(rd) //, wbc_(dc.wbc_)
 
     pinocchio::Model model1;
 
-    pinocchio::urdf::buildModel("/home/jhk/tocabi.urdf", root_joint, model1);
+    //pinocchio::urdf::buildModel("/home/jhk/tocabi.urdf", root_joint, model1);
+    pinocchio::urdf::buildModel("/home/jhk/catkin_ws/src/dyros_tocabi_v2/tocabi_description/robots/dyros_tocabi.urdf", root_joint, model1);
     ///home/jhk/catkin_ws/src/dyros_tocabi_v2/tocabi_description/robots/dyros_tocabi.urdf
     model = model1;
     pinocchio::SE3 M = pinocchio::SE3::Identity();
@@ -208,7 +209,7 @@ CustomController::CustomController(RobotData &rd) : rd_(rd) //, wbc_(dc.wbc_)
     pinocchio::Data data(model);
     model_data = data;
     model_data1 = data;
-    //model_data2 = data;
+    model_data2 = data;
     q_pinocchio.setZero();
     mpc_on = false;
     wlk_on = false;
@@ -608,8 +609,7 @@ CustomController::CustomController(RobotData &rd) : rd_(rd) //, wbc_(dc.wbc_)
     qd_pinocchio_desired1.setZero();
        
     walk_start = false;
-    WBC::SetContact(rd_, 1, 1);
-    
+    WBC::SetContact(rd_, 1, 1);   
 }
 
 Eigen::VectorQd CustomController::getControl()
@@ -626,7 +626,7 @@ void CustomController::computeSlow()
 {
     auto startTime1 = std::chrono::system_clock::now();
     queue_cc_.callAvailable(ros::WallDuration());
-    pinocchio::Data model_data2(model);
+    //pinocchio::Data model_data2(model);
     Eigen::Vector2d ZMP_l, ZMP_r, ZMP;
     ZMP_l(0) = -rd_.LF_CF_FT(4)/rd_.LF_CF_FT(2);
     ZMP_l(1) = rd_.LF_CF_FT(3)/rd_.LF_CF_FT(2);
@@ -639,29 +639,29 @@ void CustomController::computeSlow()
     if(lfootz <= 0.15842 && rfootz <= 0.15842)
     {
         contactMode = 1;
-        WBC::SetContact(rd_, 1, 1);
+        setContact_1(rd_, 1, 1, 0, 0);
     }
     else if(lfootz <= 0.15842)
     {
         contactMode = 2;
-        WBC::SetContact(rd_, 1, 0);
+        setContact_1(rd_, 1, 0, 0, 0);
     }
     else if(rfootz <= 0.15842)
     {
         contactMode = 3;
-        WBC::SetContact(rd_, 0, 1);
+        setContact_1(rd_, 0, 1, 0, 0);
     }
    
     cc_mutex.lock();
     for (int i = 0; i < 6; i++)
         q_pinocchio[i] = rd_.q_virtual_[i];
 
-    q_pinocchio[6] = rd_.q_virtual_[39];
+    q_pinocchio[6] = rd_.q_virtual_[MODEL_DOF_VIRTUAL];
 
     for (int i = 6; i < MODEL_DOF_VIRTUAL; i ++)
         q_pinocchio[i+1] = rd_.q_virtual_[i];
 
-    pinocchio::normalize(model, q_pinocchio);
+    //pinocchio::normalize(model, q_pinocchio);
     //CMM = pinocchio::computeCentroidalMap(model, model_data2, q_pinocchio);
     //pinocchio::computeCentroidalMomentum(model, model_data1, q_pinocchio, rd_.q_dot_virtual_);  
     cc_mutex.unlock();
@@ -697,6 +697,14 @@ void CustomController::computeSlow()
     pinocchio::nonLinearEffects(model, model_data2, q_pinocchio, rd_.q_dot_virtual_);
     //pinocchio::computeCentroidalMomentum(model, model_data2, q_pinocchio, rd_.q_dot_virtual_);
     pinocchio::computeJointJacobiansTimeVariation(model, model_data2, q_pinocchio, rd_.q_dot_virtual_);
+    
+
+    /*if (control_start == false)
+    {
+        
+        //control_start = true;
+    }*/
+
     
     RFj.setZero();
     LFj.setZero();
@@ -864,7 +872,7 @@ void CustomController::computeSlow()
     //    file[1] << mpc_cycle << " " <<contactMode<< " "<< walking_tick << " " <<com_alpha << " " <<rfoot_mpc(0)<< " " <<rfoot_mpc(1)<< " " <<rfoot_mpc(2) << " " <<rfoot_mpc(0)<< " " <<rfoot_mpc(1)<< " " <<rfoot_mpc(2) <<  " " << pelv_ori_c(1) << " " << contactMode << std::endl;
     }
     
-    if(walk_start1 == true)
+    if(rd_.tc_.mode == 8)
     {
         if(lfootz <= 0.15842 && rfootz <= 0.15842)
         {
@@ -966,7 +974,7 @@ void CustomController::computeSlow()
                 lb1.setZero(variable_size1);
                 ub1.setZero(variable_size1);
                 
-                M_ = model_data2.M;
+                M_ = rd_.A_;
                 nle = model_data2.nle;
 
                 H1.setIdentity();
@@ -1286,7 +1294,7 @@ void CustomController::computeSlow()
                 lb1.setZero(variable_size1);
                 ub1.setZero(variable_size1);
             
-                M_ = model_data2.M;
+                M_ = rd_.A_;
                 nle = model_data2.nle;
 
                 H1.setIdentity();
@@ -1522,7 +1530,7 @@ void CustomController::computeSlow()
                 lb1.setZero(variable_size1);
                 ub1.setZero(variable_size1);
             
-                M_ = model_data2.M;
+                M_ = rd_.A_;
                 nle = model_data2.nle;
 
                 H1.setIdentity();
@@ -1751,7 +1759,7 @@ void CustomController::computeSlow()
             }
         }
     }
-    else
+    else if(rd_.tc_.mode == 6)
     {
         if(first_control == false)
         {
@@ -1783,376 +1791,372 @@ void CustomController::computeSlow()
 }
 
 void CustomController::computeFast()
-{
-    if (rd_.tc_.mode == 10)
+{ 
+    if (time_tick == false)
     {
+        startTime = std::chrono::system_clock::now();
+        time_tick = true;
+    }     
+
+    if (std::chrono::duration_cast<std::chrono::microseconds>(endTime - startTime).count() >= 500)
+    {
+        time_tick_next = true;
+        //std::cout << "dd " << mpc_cycle << " " << walking_tick << " " << std::chrono::duration_cast<std::chrono::microseconds>(endTime - startTime).count()  << std::endl; 
+        startTime = std::chrono::system_clock::now();
+        
     }
-    else if (rd_.tc_.mode == 6)
-    {
-        if (time_tick == false)
-        {
-            startTime = std::chrono::system_clock::now();
-            time_tick = true;
-        }     
 
-        if (std::chrono::duration_cast<std::chrono::microseconds>(endTime - startTime).count() >= 500)
-        {
-            time_tick_next = true;
-            //std::cout << "dd " << mpc_cycle << " " << walking_tick << " " << std::chrono::duration_cast<std::chrono::microseconds>(endTime - startTime).count()  << std::endl; 
-            startTime = std::chrono::system_clock::now();
-            
-        }
+    mpc_cycle_int = (mpc_cycle-50) / 50;
+    mpc_cycle_int1 = (mpc_cycle - 50) % 50;
 
-        mpc_cycle_int = (mpc_cycle-50) / 50;
-        mpc_cycle_int1 = (mpc_cycle - 50) % 50;
+    rd_.tc_.walking_enable = 1.0;
+    if(time_tick_next == true)
+    {     
+        time_tick_next = false;
+        if (rd_.tc_.mode == 6)
+        {   
+            if (wlk_on == false)
+            {
+                wk_Hz = 2000;
+                wk_dt = 1 / wk_Hz;
+                controlwalk_time = 198;//217;//360;
 
-        rd_.tc_.walking_enable = 1.0;
-        if(time_tick_next == true)
-        {     
-            time_tick_next = false;
-            if (rd_.tc_.walking_enable == 1.0)
-            {   
-                if (wlk_on == false)
+                if (walking_tick == 0)
                 {
-                    wk_Hz = 2000;
-                    wk_dt = 1 / wk_Hz;
-                    controlwalk_time = 198;//217;//360;
+                    ik_mode = rd_.tc_.ik_mode;
+                    walking_pattern = rd_.tc_.pattern;
+                    com_control = rd_.tc_.pattern2;
+                    target(0) = rd_.tc_.x;
+                    target(1) = rd_.tc_.y;
+                    target(2) = rd_.tc_.z;
+                    target(3) = rd_.tc_.theta;
+                    height = rd_.tc_.height;
+                    step_length_x = rd_.tc_.step_length_x;
+                    step_length_y = rd_.tc_.step_length_y;
+                    dob = rd_.tc_.dob;
+                    imu = rd_.tc_.imu;
+                    rd_.tc_.walking_height;
+                    mom = rd_.tc_.mom;
+                    vibration_control = rd_.tc_.comcontrol;
+                    com_control_mode = true;
+                    gyro_frame_flag = false;
 
-                    if (walking_tick == 0)
+                    if (rd_.tc_.first_foot_step == 0)
                     {
-                        ik_mode = rd_.tc_.ik_mode;
-                        walking_pattern = rd_.tc_.pattern;
-                        com_control = rd_.tc_.pattern2;
-                        target(0) = rd_.tc_.x;
-                        target(1) = rd_.tc_.y;
-                        target(2) = rd_.tc_.z;
-                        target(3) = rd_.tc_.theta;
-                        height = rd_.tc_.height;
-                        step_length_x = rd_.tc_.step_length_x;
-                        step_length_y = rd_.tc_.step_length_y;
-                        dob = rd_.tc_.dob;
-                        imu = rd_.tc_.imu;
-                        rd_.tc_.walking_height;
-                        mom = rd_.tc_.mom;
-                        vibration_control = rd_.tc_.comcontrol;
-                        com_control_mode = true;
-                        gyro_frame_flag = false;
-
-                        if (rd_.tc_.first_foot_step == 0)
-                        {
-                            foot_step_dir = 1.0;
-                        }
-                        else
-                        {
-                            foot_step_dir = -1.0;
-                        }
-
-                        /*setWalkingParameter();
-                        //////InitModel//////
-                        getRobotInitState(rd_);
-
-                        /////FootStep//////
-                        footStepGenerator(rd_);
-                        saveFootTrajectory();
-
-                        setCpPosition();
-                        cpReferencePatternGeneration();
-                        cptoComTrajectory();
-
-                        cc_mutex.lock();
-                        foot_step_mu = foot_step;
-                        LFvx_trajectory_float_mu = LFvx_trajectory_float;
-                        LFvy_trajectory_float_mu = LFvy_trajectory_float;
-                        LFvz_trajectory_float_mu = LFvz_trajectory_float;
-                        RFvx_trajectory_float_mu = RFvx_trajectory_float;
-                        RFvy_trajectory_float_mu = RFvy_trajectory_float;
-                        RFvz_trajectory_float_mu = RFvz_trajectory_float;
-                        LFx_trajectory_float_mu = LFx_trajectory_float;
-                        LFy_trajectory_float_mu = LFy_trajectory_float;
-                        LFz_trajectory_float_mu = LFz_trajectory_float;
-                        RFx_trajectory_float_mu = RFx_trajectory_float;
-                        RFy_trajectory_float_mu = RFy_trajectory_float;
-                        RFz_trajectory_float_mu = RFz_trajectory_float;
-                        COM_float_init_mu = COM_float_init;
-                        com_refx_mu = com_refx;
-                        com_refy_mu = com_refy;
-                        zmp_refx_mu = zmp_refx;
-                        zmp_refy_mu = zmp_refy;
-                        //std::cout << com_refx(0) << " " << com_refy(0) <<std::endl;
-                        cc_mutex.unlock();*/
-                    
-                        walking_tick = 0;
-
-                        q_init = rd_.q_;
-                        q_desired.resize(33);
-                        q_desired.setZero();
-                        q_desired.head(33) << 0, 0, -0.55, 1.26, -0.71, 0, 0, 0, -0.55, 1.26,
-                        -0.71, 0, 0, 0, 
-                        0, 0.2, 0.6, 1.5, -1.47, -1,
-                        0, -1, 0, 0, 0, -0.2, -0.6, -1.5, 1.47, 1, 
-                        0, 1, 0;
-                    }
-
-                    if(walking_tick <= 6000)
-                    {
-                        if(walking_tick <= 6000)
-                        {
-                            for (int i = 0; i < 33; i++)
-                            {
-                                rd_.q_desired(i) = DyrosMath::cubic(walking_tick, 0, 5500, q_init(i), q_desired(i), 0, 0);
-                            }
-                        }
-                        else
-                        {
-                            for (int i = 0; i < 33; i++)
-                            {
-                                rd_.q_desired(i) =  q_desired(i);
-                            }
-                        }
-                        for (int i = 33; i < MODEL_DOF; i++)
-                        {
-                            rd_.q_desired(i) = q_desired(i);
-                        }
-                        walking_tick = walking_tick + 1;
-                        first_control = true;
-                        std::cout << "q" << std::endl;
-                        std::cout << rd_.q_desired.transpose() << std::endl;
-                        std::cout << "q virtu" << std::endl;
-                        std::cout << rd_.q_virtual_.transpose() << std::endl;
+                        foot_step_dir = 1.0;
                     }
                     else
-                    {  
-                        walking_tick_stop = true;
-                        walking_tick_stop1 = true;
-                        walking_tick = 0;
-                        
-                        std::cout << "Start" << std::endl;
-                        walk_start = true;
-                        wlk_on = true;
-                        stateestimation = true;
+                    {
+                        foot_step_dir = -1.0;
                     }
+
+                    /*setWalkingParameter();
+                    //////InitModel//////
+                    getRobotInitState(rd_);
+
+                    /////FootStep//////
+                    footStepGenerator(rd_);
+                    saveFootTrajectory();
+
+                    setCpPosition();
+                    cpReferencePatternGeneration();
+                    cptoComTrajectory();
+
+                    cc_mutex.lock();
+                    foot_step_mu = foot_step;
+                    LFvx_trajectory_float_mu = LFvx_trajectory_float;
+                    LFvy_trajectory_float_mu = LFvy_trajectory_float;
+                    LFvz_trajectory_float_mu = LFvz_trajectory_float;
+                    RFvx_trajectory_float_mu = RFvx_trajectory_float;
+                    RFvy_trajectory_float_mu = RFvy_trajectory_float;
+                    RFvz_trajectory_float_mu = RFvz_trajectory_float;
+                    LFx_trajectory_float_mu = LFx_trajectory_float;
+                    LFy_trajectory_float_mu = LFy_trajectory_float;
+                    LFz_trajectory_float_mu = LFz_trajectory_float;
+                    RFx_trajectory_float_mu = RFx_trajectory_float;
+                    RFy_trajectory_float_mu = RFy_trajectory_float;
+                    RFz_trajectory_float_mu = RFz_trajectory_float;
+                    COM_float_init_mu = COM_float_init;
+                    com_refx_mu = com_refx;
+                    com_refy_mu = com_refy;
+                    zmp_refx_mu = zmp_refx;
+                    zmp_refy_mu = zmp_refy;
+                    //std::cout << com_refx(0) << " " << com_refy(0) <<std::endl;
+                    cc_mutex.unlock();*/
+                
+                    walking_tick = 0;
+
+                    q_init = rd_.q_;
+                    q_desired.resize(33);
+                    q_desired.setZero();
+                    q_desired.head(33) << 0, 0, -0.55, 1.26, -0.71, 0, 0, 0, -0.55, 1.26,
+                    -0.71, 0, 0, 0, 
+                    0, 0.2, 0.6, 1.5, -1.47, -1,
+                    0, -1, 0, 0, 0, -0.2, -0.6, -1.5, 1.47, 1, 
+                    0, 1, 0;
                 }
 
-                if(mpc_cycle < controlwalk_time && wlk_on == true && stateestimation == true)
+                if(walking_tick <= 6000)
                 {
-                    if (walking_tick == 0)
+                    if(walking_tick <= 6000)
                     {
-                        qd_pinocchio_.setZero();
-                    }  
-                    if(walking_tick == 1)
-                    {
-                        q_pinocchio_desired = q_pinocchio;
-                    }
-                    if((walking_tick_stop == true && walking_tick == 0))
-                    {  
-                        if (walking_tick == 0)
-                        {   
-                            if(mpc_cycle == 0)
-                            {
-                                foot_x_int = RF_matrix(mpc_cycle,0) - rd_.link_[Right_Foot].xipos(0);
-                                foot_y_int = RF_matrix(mpc_cycle,1) - rd_.link_[Right_Foot].xipos(1);
-                                com_x_int = com_matrix_matrix(mpc_cycle,0) - rd_.link_[COM_id].xpos(0);
-                                com_y_int = com_matrix_matrix(mpc_cycle,1) - rd_.link_[COM_id].xpos(1);
-                                com_z_init = rd_.link_[COM_id].xpos(2);
-                                
-                                if(contactMode == 1)
-                                {
-                                    foot_temp(1) = rd_.link_[Right_Foot].xipos(2);
-                                    foot_temp(1) = rd_.link_[Left_Foot].xipos(2);
-                                }
-                            }
-                            walking_tick_stop = false;
-
-                            if(mpc_cycle == 0)
-                            {
-                                angm_prev.setZero();
-                                comprev.setZero();
-                            }
-                            else 
-                            {
-                                angm_prev = angm;
-                                comprev = comd;
-                            }
-                            comd[0] = comd_matrix_matrix(mpc_cycle,0);
-                            comd[1] = comd_matrix_matrix(mpc_cycle,1);
-                            comd[2] = 0.0;
-
-                            angm[0] = angm_ref_matrix(mpc_cycle,0);
-                            angm[1] = angm_ref_matrix(mpc_cycle,1);
-                            if(mpc_cycle == 0)
-                            {
-                                ZMPx_prev = zmp_matrix(mpc_cycle,0)- com_x_int;
-                                ZMPy_prev = zmp_matrix(mpc_cycle,1)- com_y_int;
-                            }
-                            else
-                            {
-                                ZMPx_prev = zmp_mpcx;
-                                ZMPy_prev = zmp_mpcy;
-                            }  
-                            
-                            zmp_mpcx = zmp_matrix(mpc_cycle,0) - com_x_int;
-                            zmp_mpcy = zmp_matrix(mpc_cycle,1) - com_y_int;
-
-                            if(mpc_cycle == 0)
-                            {
-                                com_mpc_prev[0] = com_matrix_matrix(mpc_cycle,0) - com_x_int;
-                                com_mpc_prev[1] = com_matrix_matrix(mpc_cycle,1) - com_y_int;
-                            }
-                            else
-                            {
-                                com_mpc_prev = com_mpc;
-                            }  
-                                
-                            com_mpc[0] = com_matrix_matrix(mpc_cycle,0) - com_x_int;
-                            com_mpc[1] = com_matrix_matrix(mpc_cycle,1) - com_y_int;
-
-                            
-                            if(mpc_cycle == 0)
-                            {
-                                rfootd.setZero();
-                                lfootd.setZero();
-                            }
-                            else
-                            {  
-                                rfootd[0] = (RF_matrix(mpc_cycle,0)-RF_matrix(mpc_cycle-1,0))/0.02;
-                                rfootd[1] = (RF_matrix(mpc_cycle,1)-RF_matrix(mpc_cycle-1,1))/0.02;
-                                rfootd[2] = (RF_matrix(mpc_cycle,2)-RF_matrix(mpc_cycle-1,2))/0.02;
-
-                                lfootd[0] = (LF_matrix(mpc_cycle,0)-LF_matrix(mpc_cycle-1,0))/0.02;
-                                lfootd[1] = (LF_matrix(mpc_cycle,1)-LF_matrix(mpc_cycle-1,1))/0.02;
-                                lfootd[2] = (LF_matrix(mpc_cycle,2)-LF_matrix(mpc_cycle-1,2))/0.02;
-                            }
+                        for (int i = 0; i < 33; i++)
+                        {
+                            rd_.q_desired(i) = DyrosMath::cubic(walking_tick, 0, 5500, q_init(i), q_desired(i), 0, 0);
                         }
-                    }
-                    
-                    if ((walking_tick == 0) && mpc_cycle == 0)// && (walking_tick_stop == true))
-                    {
                     }
                     else
                     {
-                        if(mpc_cycle < controlwalk_time)
-                        {   
-                            comdt_(0) = (comd(0) * walking_tick + comprev(0) * (40 -walking_tick))/40;
-                            comdt_(1) = (comd(1) * walking_tick + comprev(1) * (40 -walking_tick))/40;
-
-                            comt_(0) = (com_mpc(0) * walking_tick + com_mpc_prev(0) * (40 -walking_tick))/40;
-                            comt_(1) = (com_mpc(1) * walking_tick + com_mpc_prev(1) * (40 -walking_tick))/40;
-
-                            comd_(0) = comdt_(0)+ 90.0 * (comdt_(0) - rd_.link_[COM_id].v(0)) + 500.0 * (comt_[0] - (rd_.link_[COM_id].xpos(0)));
-                            comd_(1) = comdt_(1)+ 30.0 * (comdt_(1) - rd_.link_[COM_id].v(1)) + 100.0 * (comt_[1] - rd_.link_[COM_id].xpos(1));
-                            comd_(2) = 0.0 + 10.0 * (com_z_init - rd_.link_[COM_id].xpos(2));
-
-                            angd_(0) = (angm(0) * walking_tick + angm_prev(0) * (40 -walking_tick))/40;
-                            angd_(1) = (angm(1) * walking_tick + angm_prev(1) * (40 -walking_tick))/40;
-                            
-                            rfoot_ori.setZero();
-                            lfoot_ori.setZero();
-                            rfoot_mpc.setZero();
-                            lfoot_mpc.setZero();
-
-                            rfoot_ori_c = DyrosMath::rot2Euler(rd_.link_[Right_Foot].rotm);
-                            lfoot_ori_c = DyrosMath::rot2Euler(rd_.link_[Left_Foot].rotm);
-                            pelv_ori_c = DyrosMath::rot2Euler(rd_.link_[Pelvis].rotm);
-
-                            rfootd1 = rfootd;
-                            lfootd1 = lfootd;
-
-                            double gain_xz = 60.0;
-                            double gain_ori = 40.00;
-                            
-                            if(mpc_cycle  == 0)
-                            {
-                                rfoot_mpc(0) = RF_matrix(mpc_cycle,0) - foot_x_int;
-                                rfoot_mpc(1) = RF_matrix(mpc_cycle,1) - foot_y_int;
-                                rfoot_mpc(2) = RF_matrix(mpc_cycle,2);
-                                lfoot_mpc(0) = LF_matrix(mpc_cycle,0) - foot_x_int;
-                                lfoot_mpc(1) = LF_matrix(mpc_cycle,1) - foot_y_int;
-                                lfoot_mpc(2) = LF_matrix(mpc_cycle,2);
-                            
-                            }
-                            else
-                            {
-                                rfoot_mpc(0) = (RF_matrix(mpc_cycle,0) * walking_tick + RF_matrix(mpc_cycle-1,0) *(40-walking_tick))/40 - foot_x_int;
-                                rfoot_mpc(1) = (RF_matrix(mpc_cycle,1) * walking_tick + RF_matrix(mpc_cycle-1,1) *(40-walking_tick))/40 - foot_y_int;
-                                rfoot_mpc(2) = (RF_matrix(mpc_cycle,2) * walking_tick + RF_matrix(mpc_cycle-1,2) *(40-walking_tick))/40;
-                                lfoot_mpc(0) = (LF_matrix(mpc_cycle,0) * walking_tick + LF_matrix(mpc_cycle-1,0) *(40-walking_tick))/40 - foot_x_int;
-                                lfoot_mpc(1) = (LF_matrix(mpc_cycle,1) * walking_tick + LF_matrix(mpc_cycle-1,1) *(40-walking_tick))/40 - foot_y_int;
-                                lfoot_mpc(2) = (LF_matrix(mpc_cycle,2) * walking_tick + LF_matrix(mpc_cycle-1,2) *(40-walking_tick))/40;
-                            }
-
-                            lfootz = lfoot_mpc(2);
-                            rfootz = rfoot_mpc(2);
-
-                            rfootd1(1) = 0.0;
-                            lfootd1(1) = 0.0;
-                            
-                            if(rfoot_mpc(2)>0.15842)
-                            {
-                                rfoot_ori(0) = gain_ori * (-rfoot_ori_c(0));
-                                rfoot_ori(1) = gain_ori * (-rfoot_ori_c(1));
-                            
-                                lfoot_ori(0) = 2.5*gain_ori * (pelv_ori_c(0));
-                                lfoot_ori(1) = 2.5*gain_ori * (pelv_ori_c(1));
-                                rfootd1(2) = rfootd1(2)+ gain_xz * (rfoot_mpc(2) -0.15842 - rd_.link_[Right_Foot].xipos(2) + foot_temp(1));
-                                rfootd1(1) = rfootd1(1) + 10.00 * (-0.1025 - rd_.link_[Right_Foot].xipos(1) - virtual_temp1(1));
-                                rfootd1(0) = rfootd1(0)+ gain_xz * (rfoot_mpc(0) - rd_.link_[Right_Foot].xipos(0));
-                            }
-                            else if(lfoot_mpc(2)>0.15842)
-                            {
-                                lfoot_ori(0) = gain_ori * (-lfoot_ori_c(0));
-                                lfoot_ori(1) = gain_ori * (-lfoot_ori_c(1));
-
-                                rfoot_ori(0) = 2.5*gain_ori * (pelv_ori_c(0));
-                                rfoot_ori(1) = 2.5*gain_ori * (pelv_ori_c(1));
-                                lfootd1(2) = lfootd1(2)+ gain_xz * (lfoot_mpc(2) -0.15842 - rd_.link_[Left_Foot].xipos(2) + foot_temp(1));
-                                lfootd1(1) = lfootd1(1) + 10.00 * (0.1025 - rd_.link_[Left_Foot].xipos(1) - virtual_temp1(1));
-                                lfootd1(0) = lfootd1(0)+ gain_xz * (lfoot_mpc(0) - rd_.link_[Left_Foot].xipos(0));
-                            }  
-                            else
-                            { 
-                                lfoot_ori(0) = 0.5*gain_ori * (pelv_ori_c(0));
-                                lfoot_ori(1) = 0.5*gain_ori * (pelv_ori_c(1));
-                                rfoot_ori(0) = 0.5*gain_ori * (pelv_ori_c(0));
-                                rfoot_ori(1) = 0.5*gain_ori * (pelv_ori_c(1));
-
-                                rfoot_mpc(2) = 0.15842;
-                                lfoot_mpc(2) = 0.15842;
-                            }
-
-                            momentumControl(rd_, comd_, angd_, rfootd1, lfootd1, upperd, rfoot_ori, lfoot_ori);
-                                                      
-                            qd_pinocchio.segment<18>(0) = q_dm;
-                        
-                            qdd_pinocchio_desired1 = ((qd_pinocchio - qd_pinocchio_prev)/0.02);
-                            qd_pinocchio_prev = qd_pinocchio;
-
-                            ZMPx_test = (zmp_mpcx * walking_tick + ZMPx_prev *(40-walking_tick))/40;
-                            ZMPy_test = (zmp_mpcy * walking_tick + ZMPy_prev *(40-walking_tick))/40;
-                            
-                            if(mpc_cycle == 0)
-                                q_pinocchio_desired = pinocchio::integrate(model, q_pinocchio_desired, qd_pinocchio * 0.0005);
-                            else
-                                q_pinocchio_desired = pinocchio::integrate(model, q_pinocchio_desired, qd_pinocchio * 0.0005);
-                            
-                            q_pinocchio_desired1 = q_pinocchio_desired;
-                            qd_pinocchio_desired1 = qd_pinocchio;
-                            walk_start1 = true;
+                        for (int i = 0; i < 33; i++)
+                        {
+                            rd_.q_desired(i) =  q_desired(i);
                         }
                     }
-                    if(walking_tick == 40)
+                    for (int i = 33; i < MODEL_DOF; i++)
                     {
-                        walking_tick = 0;
-                        walking_tick_stop = true;
-                        mpc_cycle = mpc_cycle + 1;
+                        rd_.q_desired(i) = q_desired(i);
                     }
-
-                    if (walking_tick_stop == false)
-                        walking_tick = walking_tick + 1;
+                    walking_tick = walking_tick + 1;
+                    first_control = true;
+                    /*std::cout << "q" << std::endl;
+                    std::cout << rd_.q_desired.transpose() << std::endl;
+                    std::cout << "q virtu" << std::endl;
+                    std::cout << rd_.q_virtual_.transpose() << std::endl;*/
+                }
+                else
+                {  
+                    walking_tick_stop = true;
+                    walking_tick_stop1 = true;
+                    walking_tick = 0;
+                    
+                    std::cout << "Start" << std::endl;
+                    walk_start = true;
+                    wlk_on = true;
+                    stateestimation = true;
                 }
             }
         }
-        endTime = std::chrono::system_clock::now();
+        if(rd_.tc_.mode == 8)
+        {
+            if(mpc_cycle < controlwalk_time && wlk_on == true && stateestimation == true)
+            {
+                if (walking_tick == 0)
+                {
+                    qd_pinocchio_.setZero();
+                }  
+                if(walking_tick == 1)
+                {
+                    q_pinocchio_desired = q_pinocchio;
+                }
+                if((walking_tick_stop == true && walking_tick == 0))
+                {  
+                    if (walking_tick == 0)
+                    {   
+                        if(mpc_cycle == 0)
+                        {
+                            foot_x_int = RF_matrix(mpc_cycle,0) - rd_.link_[Right_Foot].xipos(0);
+                            foot_y_int = RF_matrix(mpc_cycle,1) - rd_.link_[Right_Foot].xipos(1);
+                            com_x_int = com_matrix_matrix(mpc_cycle,0) - rd_.link_[COM_id].xpos(0);
+                            com_y_int = com_matrix_matrix(mpc_cycle,1) - rd_.link_[COM_id].xpos(1);
+                            com_z_init = rd_.link_[COM_id].xpos(2);
+                            
+                            if(contactMode == 1)
+                            {
+                                foot_temp(1) = rd_.link_[Right_Foot].xipos(2);
+                                foot_temp(1) = rd_.link_[Left_Foot].xipos(2);
+                            }
+                        }
+                        walking_tick_stop = false;
+
+                        if(mpc_cycle == 0)
+                        {
+                            angm_prev.setZero();
+                            comprev.setZero();
+                        }
+                        else 
+                        {
+                            angm_prev = angm;
+                            comprev = comd;
+                        }
+                        comd[0] = comd_matrix_matrix(mpc_cycle,0);
+                        comd[1] = comd_matrix_matrix(mpc_cycle,1);
+                        comd[2] = 0.0;
+
+                        angm[0] = angm_ref_matrix(mpc_cycle,0);
+                        angm[1] = angm_ref_matrix(mpc_cycle,1);
+                        if(mpc_cycle == 0)
+                        {
+                            ZMPx_prev = zmp_matrix(mpc_cycle,0)- com_x_int;
+                            ZMPy_prev = zmp_matrix(mpc_cycle,1)- com_y_int;
+                        }
+                        else
+                        {
+                            ZMPx_prev = zmp_mpcx;
+                            ZMPy_prev = zmp_mpcy;
+                        }  
+                        
+                        zmp_mpcx = zmp_matrix(mpc_cycle,0) - com_x_int;
+                        zmp_mpcy = zmp_matrix(mpc_cycle,1) - com_y_int;
+
+                        if(mpc_cycle == 0)
+                        {
+                            com_mpc_prev[0] = com_matrix_matrix(mpc_cycle,0) - com_x_int;
+                            com_mpc_prev[1] = com_matrix_matrix(mpc_cycle,1) - com_y_int;
+                        }
+                        else
+                        {
+                            com_mpc_prev = com_mpc;
+                        }  
+                            
+                        com_mpc[0] = com_matrix_matrix(mpc_cycle,0) - com_x_int;
+                        com_mpc[1] = com_matrix_matrix(mpc_cycle,1) - com_y_int;
+
+                        
+                        if(mpc_cycle == 0)
+                        {
+                            rfootd.setZero();
+                            lfootd.setZero();
+                        }
+                        else
+                        {  
+                            rfootd[0] = (RF_matrix(mpc_cycle,0)-RF_matrix(mpc_cycle-1,0))/0.02;
+                            rfootd[1] = (RF_matrix(mpc_cycle,1)-RF_matrix(mpc_cycle-1,1))/0.02;
+                            rfootd[2] = (RF_matrix(mpc_cycle,2)-RF_matrix(mpc_cycle-1,2))/0.02;
+
+                            lfootd[0] = (LF_matrix(mpc_cycle,0)-LF_matrix(mpc_cycle-1,0))/0.02;
+                            lfootd[1] = (LF_matrix(mpc_cycle,1)-LF_matrix(mpc_cycle-1,1))/0.02;
+                            lfootd[2] = (LF_matrix(mpc_cycle,2)-LF_matrix(mpc_cycle-1,2))/0.02;
+                        }
+                    }
+                }
+                
+                if ((walking_tick == 0) && mpc_cycle == 0)// && (walking_tick_stop == true))
+                {
+                }
+                else
+                {
+                    if(mpc_cycle < controlwalk_time)
+                    {   
+                        comdt_(0) = (comd(0) * walking_tick + comprev(0) * (40 -walking_tick))/40;
+                        comdt_(1) = (comd(1) * walking_tick + comprev(1) * (40 -walking_tick))/40;
+
+                        comt_(0) = (com_mpc(0) * walking_tick + com_mpc_prev(0) * (40 -walking_tick))/40;
+                        comt_(1) = (com_mpc(1) * walking_tick + com_mpc_prev(1) * (40 -walking_tick))/40;
+
+                        comd_(0) = comdt_(0)+ 90.0 * (comdt_(0) - rd_.link_[COM_id].v(0)) + 500.0 * (comt_[0] - (rd_.link_[COM_id].xpos(0)));
+                        comd_(1) = comdt_(1)+ 30.0 * (comdt_(1) - rd_.link_[COM_id].v(1)) + 100.0 * (comt_[1] - rd_.link_[COM_id].xpos(1));
+                        comd_(2) = 0.0 + 10.0 * (com_z_init - rd_.link_[COM_id].xpos(2));
+
+                        angd_(0) = (angm(0) * walking_tick + angm_prev(0) * (40 -walking_tick))/40;
+                        angd_(1) = (angm(1) * walking_tick + angm_prev(1) * (40 -walking_tick))/40;
+                        
+                        rfoot_ori.setZero();
+                        lfoot_ori.setZero();
+                        rfoot_mpc.setZero();
+                        lfoot_mpc.setZero();
+
+                        rfoot_ori_c = DyrosMath::rot2Euler(rd_.link_[Right_Foot].rotm);
+                        lfoot_ori_c = DyrosMath::rot2Euler(rd_.link_[Left_Foot].rotm);
+                        pelv_ori_c = DyrosMath::rot2Euler(rd_.link_[Pelvis].rotm);
+
+                        rfootd1 = rfootd;
+                        lfootd1 = lfootd;
+
+                        double gain_xz = 60.0;
+                        double gain_ori = 40.00;
+                        
+                        if(mpc_cycle  == 0)
+                        {
+                            rfoot_mpc(0) = RF_matrix(mpc_cycle,0) - foot_x_int;
+                            rfoot_mpc(1) = RF_matrix(mpc_cycle,1) - foot_y_int;
+                            rfoot_mpc(2) = RF_matrix(mpc_cycle,2);
+                            lfoot_mpc(0) = LF_matrix(mpc_cycle,0) - foot_x_int;
+                            lfoot_mpc(1) = LF_matrix(mpc_cycle,1) - foot_y_int;
+                            lfoot_mpc(2) = LF_matrix(mpc_cycle,2);
+                        
+                        }
+                        else
+                        {
+                            rfoot_mpc(0) = (RF_matrix(mpc_cycle,0) * walking_tick + RF_matrix(mpc_cycle-1,0) *(40-walking_tick))/40 - foot_x_int;
+                            rfoot_mpc(1) = (RF_matrix(mpc_cycle,1) * walking_tick + RF_matrix(mpc_cycle-1,1) *(40-walking_tick))/40 - foot_y_int;
+                            rfoot_mpc(2) = (RF_matrix(mpc_cycle,2) * walking_tick + RF_matrix(mpc_cycle-1,2) *(40-walking_tick))/40;
+                            lfoot_mpc(0) = (LF_matrix(mpc_cycle,0) * walking_tick + LF_matrix(mpc_cycle-1,0) *(40-walking_tick))/40 - foot_x_int;
+                            lfoot_mpc(1) = (LF_matrix(mpc_cycle,1) * walking_tick + LF_matrix(mpc_cycle-1,1) *(40-walking_tick))/40 - foot_y_int;
+                            lfoot_mpc(2) = (LF_matrix(mpc_cycle,2) * walking_tick + LF_matrix(mpc_cycle-1,2) *(40-walking_tick))/40;
+                        }
+
+                        lfootz = lfoot_mpc(2);
+                        rfootz = rfoot_mpc(2);
+
+                        rfootd1(1) = 0.0;
+                        lfootd1(1) = 0.0;
+                        
+                        if(rfoot_mpc(2)>0.15842)
+                        {
+                            rfoot_ori(0) = gain_ori * (-rfoot_ori_c(0));
+                            rfoot_ori(1) = gain_ori * (-rfoot_ori_c(1));
+                        
+                            lfoot_ori(0) = 2.5*gain_ori * (pelv_ori_c(0));
+                            lfoot_ori(1) = 2.5*gain_ori * (pelv_ori_c(1));
+                            rfootd1(2) = rfootd1(2)+ gain_xz * (rfoot_mpc(2) -0.15842 - rd_.link_[Right_Foot].xipos(2) + foot_temp(1));
+                            rfootd1(1) = rfootd1(1) + 10.00 * (-0.1025 - rd_.link_[Right_Foot].xipos(1) - virtual_temp1(1));
+                            rfootd1(0) = rfootd1(0)+ gain_xz * (rfoot_mpc(0) - rd_.link_[Right_Foot].xipos(0));
+                        }
+                        else if(lfoot_mpc(2)>0.15842)
+                        {
+                            lfoot_ori(0) = gain_ori * (-lfoot_ori_c(0));
+                            lfoot_ori(1) = gain_ori * (-lfoot_ori_c(1));
+
+                            rfoot_ori(0) = 2.5*gain_ori * (pelv_ori_c(0));
+                            rfoot_ori(1) = 2.5*gain_ori * (pelv_ori_c(1));
+                            lfootd1(2) = lfootd1(2)+ gain_xz * (lfoot_mpc(2) -0.15842 - rd_.link_[Left_Foot].xipos(2) + foot_temp(1));
+                            lfootd1(1) = lfootd1(1) + 10.00 * (0.1025 - rd_.link_[Left_Foot].xipos(1) - virtual_temp1(1));
+                            lfootd1(0) = lfootd1(0)+ gain_xz * (lfoot_mpc(0) - rd_.link_[Left_Foot].xipos(0));
+                        }  
+                        else
+                        { 
+                            lfoot_ori(0) = 0.5*gain_ori * (pelv_ori_c(0));
+                            lfoot_ori(1) = 0.5*gain_ori * (pelv_ori_c(1));
+                            rfoot_ori(0) = 0.5*gain_ori * (pelv_ori_c(0));
+                            rfoot_ori(1) = 0.5*gain_ori * (pelv_ori_c(1));
+
+                            rfoot_mpc(2) = 0.15842;
+                            lfoot_mpc(2) = 0.15842;
+                        }
+
+                        momentumControl(rd_, comd_, angd_, rfootd1, lfootd1, upperd, rfoot_ori, lfoot_ori);
+                                                    
+                        qd_pinocchio.segment<18>(0) = q_dm;
+                    
+                        qdd_pinocchio_desired1 = ((qd_pinocchio - qd_pinocchio_prev)/0.02);
+                        qd_pinocchio_prev = qd_pinocchio;
+
+                        ZMPx_test = (zmp_mpcx * walking_tick + ZMPx_prev *(40-walking_tick))/40;
+                        ZMPy_test = (zmp_mpcy * walking_tick + ZMPy_prev *(40-walking_tick))/40;
+                        
+                        if(mpc_cycle == 0)
+                            q_pinocchio_desired = pinocchio::integrate(model, q_pinocchio_desired, qd_pinocchio * 0.0005);
+                        else
+                            q_pinocchio_desired = pinocchio::integrate(model, q_pinocchio_desired, qd_pinocchio * 0.0005);
+                        
+                        q_pinocchio_desired1 = q_pinocchio_desired;
+                        qd_pinocchio_desired1 = qd_pinocchio;
+                        walk_start1 = true;
+                    }
+                }
+                if(walking_tick == 40)
+                {
+                    walking_tick = 0;
+                    walking_tick_stop = true;
+                    mpc_cycle = mpc_cycle + 1;
+                }
+
+                if (walking_tick_stop == false)
+                    walking_tick = walking_tick + 1;
+            }
+        }
     }
+    endTime = std::chrono::system_clock::now();
 }
 
 void CustomController::GuiCommandCallback(const std_msgs::StringConstPtr &msg)
