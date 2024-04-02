@@ -912,9 +912,9 @@ void CustomController::computeSlow()
         ZMP_FT_law(1) = DyrosMath::lpf(ZMP(1), ZMP_FT_law(1), 2000, 10);
         cc_mutex.unlock();
 
-        //for(int i = 0; i < MODEL_DOF_VIRTUAL; i++)
-        //    q_dot_virtual_lpf_(i) = DyrosMath::lpf(rd_.q_dot_virtual_(i), q_dot_virtual_lpf_(i), 2000, 10);
-        q_dot_virtual_lpf_ =rd_.q_dot_virtual_;
+        for(int i = 0; i < MODEL_DOF_VIRTUAL; i++)
+            q_dot_virtual_lpf_(i) = DyrosMath::lpf(rd_.q_dot_virtual_(i), q_dot_virtual_lpf_(i), 2000, 10);
+        //q_dot_virtual_lpf_ =rd_.q_dot_virtual_;
 
         if(control_start == false || control_time > 0)
         {  
@@ -1840,9 +1840,9 @@ void CustomController::computeSlow()
 
     if(walk_start == true &&  mpc_cycle < 10)
     {
-        file[0] <<double_temp  << " " << mpc_cycle << " " << walking_tick << " " << solved << " " <<lfoot_mpc(2) -0.15842 + foot_temp(1) << " " << rd_.link_[Left_Foot].xipos(2) << " " << rd_.link_[Left_Foot].xpos(0)<< " " << rd_.link_[Right_Foot].xpos(0) << " "<<zmpy << " " << zmpx<< " " << ZMP_FT_law(1) << " " <<ZMP_FT_law(0) << " " << com_alpha<< " " << com_mpc[0] << " " <<com_mpc[1] << " " << rd_.link_[COM_id].xpos(0)<< " " << rd_.link_[COM_id].xpos(1);
-        //for (int i = 0; i < MODEL_DOF_VIRTUAL; i++)
-        //    file[0] <<  tau_[i] << " " ;//qdd_pinocchio_desired1_(i) << " " <<qdd_pinocchio_desired1(i) << " "<< qd_pinocchio(i)<< " ";///(M_ * (qdd_pinocchio_desired1_ + qp_result.segment<MODEL_DOF_VIRTUAL>(12)))(i) << " "  << nle(i) << " ";
+        file[0] <<double_temp  << " " << mpc_cycle << " " << walking_tick << " " << solved << " " << "0 ";//<<lfoot_mpc(2) -0.15842 + foot_temp(1) << " " << rd_.link_[Left_Foot].xipos(2) << " " << rd_.link_[Left_Foot].xpos(0)<< " " << rd_.link_[Right_Foot].xpos(0) << " "<<zmpy << " " << zmpx<< " " << ZMP_FT_law(1) << " " <<ZMP_FT_law(0) << " " << com_alpha<< " " << com_mpc[0] << " " <<com_mpc[1] << " " << rd_.link_[COM_id].xpos(0)<< " " << rd_.link_[COM_id].xpos(1);
+        for (int i = 0; i < MODEL_DOF_VIRTUAL - 6; i++)
+            file[0] <<  tau_[i+6] << " " << rd_.torque_desired[i] << " " << q_pinocchio_desired1(i+7) << " " << rd_.q_(i) << " " ;//qdd_pinocchio_desired1_(i) << " " <<qdd_pinocchio_desired1(i) << " "<< qd_pinocchio(i)<< " ";///(M_ * (qdd_pinocchio_desired1_ + qp_result.segment<MODEL_DOF_VIRTUAL>(12)))(i) << " "  << nle(i) << " ";
         //for (int i = 0; i < 12; i++)
         //    file[0] <<  qp_result[i] << " " ;//qdd_pinocchio_desired1_(i) << " " <<qdd_pinocchio_desired1(i) << " "<< qd_pinocchio(i)<< " ";///(M_ * (qdd_pinocchio_desired1_ + qp_result.segment<MODEL_DOF_VIRTUAL>(12)))(i) << " "  << nle(i) << " ";
         //for (int i = 0; i < MODEL_DOF_VIRTUAL-6; i++)
@@ -2018,7 +2018,7 @@ void CustomController::computeFast()
                 }  
                 if(walking_tick == 1)
                 {
-                    //q_pinocchio_desired = q_pinocchio;
+                    //q_pinocchio_desired.head(19) = q_pinocchio.head(19);
                 }
                 if((walking_tick_stop == true && walking_tick == 0))
                 {  
@@ -2113,9 +2113,9 @@ void CustomController::computeFast()
                     comd_(0) = comdt_(0)+ 90.0 * (comdt_(0) - rd_.link_[COM_id].v(0)) + 500.0 * (comt_[0] - (rd_.link_[COM_id].xpos(0)));
                     comd_(1) = comdt_(1)+ 30.0 * (comdt_(1) - rd_.link_[COM_id].v(1)) + 100.0 * (comt_[1] - rd_.link_[COM_id].xpos(1));
                     
-                    comd_(0) = comdt_(0);
-                    comd_(1) = comdt_(1);
-                    comd_(2) = 0.0;// + 10.0 * (com_z_init - rd_.link_[COM_id].xpos(2));
+                    //comd_(0) = comdt_(0);
+                    //comd_(1) = comdt_(1);
+                    comd_(2) = 0.0 + 10.0 * (com_z_init - rd_.link_[COM_id].xpos(2));
 
                     angd_(0) = (angm(0) * walking_tick + angm_prev(0) * (40 -walking_tick))/40;
                     angd_(1) = (angm(1) * walking_tick + angm_prev(1) * (40 -walking_tick))/40;
@@ -2160,7 +2160,7 @@ void CustomController::computeFast()
 
                     rfootd1(1) = 0.0;
                     lfootd1(1) = 0.0;
-                    /*
+                    
                     if(rfoot_mpc(2)>0.15842)
                     {
                         rfoot_ori(0) = gain_ori * (-rfoot_ori_c(0));
@@ -2192,7 +2192,7 @@ void CustomController::computeFast()
 
                         rfoot_mpc(2) = 0.15842;
                         lfoot_mpc(2) = 0.15842;
-                    }*/
+                    }
 
                     momentumControl(rd_, comd_, angd_, rfootd1, lfootd1, upperd, rfoot_ori, lfoot_ori);
                                                 
