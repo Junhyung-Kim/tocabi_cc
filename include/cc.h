@@ -147,7 +147,7 @@ public:
     string rf,rf1,rf2,rf3,rf4,rf5,rf6,rf7;
     Eigen::MatrixXd RFj1, LFj1;
 
-    int as = 2;
+    int as = 0;
 
     bool first_control = false;
 
@@ -242,6 +242,10 @@ public:
     std::atomic<bool> walk_start;
 
     Eigen::VectorXd Fc, tau_, nle;
+
+    int double_temp = 0;
+
+    bool zmp_init = false;
 
     int variable_size1, constraint_size1;
     int variable_size2, constraint_size2;
