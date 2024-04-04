@@ -148,6 +148,7 @@ public:
     Eigen::MatrixXd RFj1, LFj1;
 
     int as = 0;
+    bool q_desired_bool = true;
 
     bool first_control = false;
 
