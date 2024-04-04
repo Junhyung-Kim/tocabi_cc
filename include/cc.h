@@ -147,8 +147,8 @@ public:
     string rf,rf1,rf2,rf3,rf4,rf5,rf6,rf7;
     Eigen::MatrixXd RFj1, LFj1;
 
-    int as = 0;
-    bool q_desired_bool = true;
+    int as = 2;
+    bool q_desired_bool = false;
 
     bool first_control = false;
 

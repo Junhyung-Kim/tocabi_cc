@@ -1850,13 +1850,14 @@ void CustomController::computeSlow()
     {
         //file[0] <<double_temp  << " " << mpc_cycle << " " << walking_tick << " " << solved << " " << "0 ";//<<lfoot_mpc(2) -0.159 + foot_temp(1) << " " << rd_.link_[Left_Foot].xipos(2) << " " << rd_.link_[Left_Foot].xpos(0)<< " " << rd_.link_[Right_Foot].xpos(0) << " "<<zmpy << " " << zmpx<< " " << ZMP_FT_law(1) << " " <<ZMP_FT_law(0) << " " << com_alpha<< " " << com_mpc[0] << " " <<com_mpc[1] << " " << rd_.link_[COM_id].xpos(0)<< " " << rd_.link_[COM_id].xpos(1);
         
-        file[0] << mpc_cycle << " " << walking_tick << " "<< contactMode << " " << com_alpha<< " " << rfootz << " " << lfootz << " " << com_alpha * nle(2)<< " " << (1-com_alpha) * nle(2) << " " << zmpx << " " << zmpy<< " " << zmp_mpcx << " " << zmp_mpcy << " ";
+        file[0] << mpc_cycle << " " << walking_tick << " "<< contactMode << " " << com_alpha<< " " << rfootz << " " << lfootz << " " << com_alpha * nle(2)<< " " << (1-com_alpha) * nle(2) << " " << zmpx << " " << zmpy<< " " << ZMP_FT_law(0) << " " << ZMP_FT_law(1) << " ";
         //file[1] << q_pinocchio_desired1(9) << " " << rd_.q_(2) << " "<< q_pinocchio_desired1(10) << " " << rd_.q_(3) << " "<< q_pinocchio_desired1(11) << " " << rd_.q_(4) << " "<< q_pinocchio_desired1(15) << " " << rd_.q_(8) << " "<< q_pinocchio_desired1(16) << " " << rd_.q_(9) << " "<< q_pinocchio_desired1(17) << " "<< rd_.q_(10) ;
         //file[1] << virtual_temp(0) << " " << virtual_temp1(0) << " " << zmp_mpcx << " "<< virtual_temp(1) << " " << virtual_temp1(1) << " " << desired_val.m_shared_memory[43] <<  " " << rd_.q_(13) << " " << rd_.q_(14) << " " << desired_val.m_shared_memory[19] << " " << desired_val.m_shared_memory[20] << " " << pelv_ori_c(0) <<  "  " << pelv_ori_c(1) << std::endl;// << rfoot_ori_c(0) << " " << rfoot_ori_c(1) << " " << rfoot_ori_c(2) << " " << lfoot_ori_c(0) << " " << lfoot_ori_c(1) << " " << lfoot_ori_c(2);
         for (int i = 0; i < 12; i++)
             file[0] << tau_[i+6] << " " << rd_.torque_desired[i] << " " << q_pinocchio_desired1[i+7] << " ";
-        for (int i = 0; i < 12; i ++)
-            file[0] << qp_result[i] << " ";
+        //for (int i = 0; i < 12; i ++)
+        //    file[0] << qp_result[i] << " ";
+        //file[0] << rfootd1(0) << " "<< rfootd1(1) << " "<< rfootd1(2) << " "<< lfootd1(0) << " "<< lfootd1(1) << " "<< lfootd1(2) << " "  << rfoot_ori(0) << " "<< rfoot_ori(1) << " "<< rfoot_ori(2) << " "<< lfoot_ori(0) << " "<< lfoot_ori(1) << " "<< lfoot_ori(2) << " " << comd_(0)<< " " << comd_(1)<< " " << comd_(2) << " "; 
         //for (int i = 0; i < 12; i++)
         //    file[0] <<  qp_result[i] << " " ;//qdd_pinocchio_desired1_(i) << " " <<qdd_pinocchio_desired1(i) << " "<< qd_pinocchio(i)<< " ";///(M_ * (qdd_pinocchio_desired1_ + qp_result.segment<MODEL_DOF_VIRTUAL>(12)))(i) << " "  << nle(i) << " ";
         //for (int i = 0; i < MODEL_DOF_VIRTUAL-6; i++)
@@ -2106,6 +2107,7 @@ void CustomController::computeFast()
                         }
                         else
                         {  
+                            std::cout << "mpc " << mpc_cycle << " " << RF_matrix(mpc_cycle,0) << " " << RF_matrix(mpc_cycle-1,0)<< " " <<LF_matrix(mpc_cycle,0) << " " << LF_matrix(mpc_cycle-1,0) << std::endl;
                             rfootd[0] = (RF_matrix(mpc_cycle,0)-RF_matrix(mpc_cycle-1,0))/0.02;
                             rfootd[1] = (RF_matrix(mpc_cycle,1)-RF_matrix(mpc_cycle-1,1))/0.02;
                             rfootd[2] = (RF_matrix(mpc_cycle,2)-RF_matrix(mpc_cycle-1,2))/0.02;
