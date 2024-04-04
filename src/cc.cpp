@@ -333,7 +333,7 @@ CustomController::CustomController(RobotData &rd) : rd_(rd) //, wbc_(dc.wbc_)
             for (int i = 0; i < 3; i++)
             {
                 read_file >> string_test;
-                //string_test.erase(find(string_test.begin(), string_test.end(), ','));
+                
                 jointvalue = atof(string_test.c_str());
                 if (abs(jointvalue) >= 0.0)
                 {  
@@ -347,7 +347,7 @@ CustomController::CustomController(RobotData &rd) : rd_(rd) //, wbc_(dc.wbc_)
             for (int i = 0; i < 3; i++)
             {
                 read_file3 >> string_test;
-                //string_test.erase(find(string_test.begin(), string_test.end(), ','));
+
                 jointvalue = atof(string_test.c_str());
                 if (abs(jointvalue) >= 0.0)
                 {  
@@ -361,7 +361,7 @@ CustomController::CustomController(RobotData &rd) : rd_(rd) //, wbc_(dc.wbc_)
             for (int i = 0; i < 3; i++)
             {
                 read_file6 >> string_test;
-                //string_test.erase(find(string_test.begin(), string_test.end(), ','));
+               
                 jointvalue = atof(string_test.c_str());
                 if (abs(jointvalue) >= 0.0)
                 {  
