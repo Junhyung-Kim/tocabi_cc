@@ -94,7 +94,9 @@ public:
     Eigen::VectorVQd qd_pinocchio_prev;
     Eigen::VectorVQd qdd_pinocchio_desired1;
     Eigen::VectorVQd qdd_pinocchio_desired1_;
-    Eigen::VectorXd qp_result, qp_result_prev;
+    Eigen::VectorXd qp_result, qp_result_prev, qp_result1;
+
+    std::atomic<int> contactmode1;
 
     double com_z_init;
 
@@ -152,6 +154,15 @@ public:
     double timeHorizon = 1.0;
     size_t K;
     
+    std::chrono::system_clock::time_point startTime;
+    std::chrono::system_clock::time_point startTime_init;
+    std::chrono::system_clock::time_point endTime;
+
+   bool time_tick = false;
+    bool time_tick_next = true;
+    bool time_tick_starts = false;
+
+
     double H_temp_22;
 
     int dist;
