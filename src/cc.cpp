@@ -203,8 +203,10 @@ CustomController::CustomController(RobotData &rd) : rd_(rd) //, wbc_(dc.wbc_)
     pinocchio::Data data(model);
     model_data = data;
     model_data1 = data;
+    qdd_pinocchio_desired2.setZero();
     //model_data2 = data;
     q_pinocchio.setZero();
+    qdd_pinocchio_desired1_.setZero();
     mpc_on = false;
     wlk_on = false;
     walking_tick = 0;
@@ -1233,6 +1235,13 @@ void CustomController::computeSlow()
     //ZMP_FT(1) = ZMP(1);
     cc_mutex.unlock();
 
+    cc_mutex2.lock();
+    qdd_pinocchio_desired1_ = qdd_pinocchio_desired1;
+    cc_mutex2.unlock();
+
+    //for (int i = 0; i < MODEL_DOF_VIRTUAL; i++)
+    //    qdd_pinocchio_desired1_(i) = DyrosMath::lpf(qdd_pinocchio_desired1_raw(i), qdd_pinocchio_desired1_(i), 2000, 100);
+
    
     if(control_start == false || control_time > 0)// && walking_tick_stop == tru) //추후 삭제
     {  
@@ -1311,11 +1320,29 @@ void CustomController::computeSlow()
             g1(8) = - (1-com_alpha) * nle(2) * 10.0;
             lb1(2) = 0.0;
             lb1(8) = 0.0;
+
+            Eigen::MatrixXd H1_temp;
+            Eigen::VectorXd g1_temp;
+            H1_temp.setZero(variable_size1, variable_size1);
+            g1_temp.setZero(variable_size1);
+            H1_temp.setIdentity();
+
+            H1_temp = 5 * H1_temp;
+            H1_temp(2,2) = 0.0;
+            H1_temp(8,8) = 0.0;
+            qp_result(2) = 0.0;
+            qp_result(8) = 0.0;
+            //qp_result(2) = com_alpha * nle(2);
+            //qp_result(8) = (1-com_alpha) * nle(2);
+
+            H1 = H1 + H1_temp;
+            g1_temp = -qp_result * 5.0;
+
+            g1 = g1 + g1_temp;
+
            
             H1.block(12,12,6,6) = 2 * H1.block(12,12,6,6);
-
-            qdd_pinocchio_desired1_ = qdd_pinocchio_desired1;
-       
+            
             lbA1.head(6) = (nle + M_ * qdd_pinocchio_desired1_).head(6);
             ubA1.head(6) = (nle + M_ * qdd_pinocchio_desired1_).head(6);
            
@@ -1592,10 +1619,28 @@ void CustomController::computeSlow()
             lb1(2) = 0.0;
             lb1(8) = 0.0;
 
+            Eigen::MatrixXd H1_temp;
+            Eigen::VectorXd g1_temp;
+            H1_temp.setZero(variable_size1, variable_size1);
+            g1_temp.setZero(variable_size1);
+            H1_temp.setIdentity();
+
+            H1_temp = 5 * H1_temp;
+            H1_temp(2,2) = 0.0;
+            H1_temp(8,8) = 0.0;
+            qp_result(2) = 0.0;
+            qp_result(8) = 0.0;
+            //qp_result(2) = com_alpha * nle(2);
+            //qp_result(8) = (1-com_alpha) * nle(2);
+
+            H1 = H1 + H1_temp;
+            g1_temp = -qp_result * 5.0;
+
+            g1 = g1 + g1_temp;
+
+
             H1.block(12,12,6,6) = 100 * H1.block(12,12,6,6);
-           
-            qdd_pinocchio_desired1_ = qdd_pinocchio_desired1;
-           
+            
             double weight_resi = 100.0;
             G_temp.setZero();
             g_temp.setZero();
@@ -1801,18 +1846,33 @@ void CustomController::computeSlow()
             H1.block(12,12,MODEL_DOF_VIRTUAL,MODEL_DOF_VIRTUAL) = 10000 *H1.block(12,12,MODEL_DOF_VIRTUAL,MODEL_DOF_VIRTUAL);
             lb1.setConstant(variable_size1, -100000);
             ub1.setConstant(variable_size1, 100000);
-
             
             H1(2,2) = 5;
             g1(2) = - com_alpha * nle(2) * 5;
             lb1(2) = 0.0;
             lb1(8) = 0.0;
 
+            Eigen::MatrixXd H1_temp;
+            Eigen::VectorXd g1_temp;
+            H1_temp.setZero(variable_size1, variable_size1);
+            g1_temp.setZero(variable_size1);
+            H1_temp.setIdentity();
+
+            H1_temp = 5 * H1_temp;
+            H1_temp(2,2) = 0.0;
+            H1_temp(8,8) = 0.0;
+            qp_result(2) = 0.0;
+            qp_result(8) = 0.0;
+            //qp_result(2) = com_alpha * nle(2);
+            //qp_result(8) = (1-com_alpha) * nle(2);
+
+            H1 = H1 + H1_temp;
+            g1_temp = -qp_result * 5.0;
+
+            g1 = g1 + g1_temp;
+
             H1.block(12,12,6,6) = 100 * H1.block(12,12,6,6);
-           
             
-            qdd_pinocchio_desired1_ = qdd_pinocchio_desired1;
-           
             double weight_resi = 100.0;
             G_temp.setZero();
             g_temp.setZero();
@@ -1992,15 +2052,19 @@ void CustomController::computeSlow()
     if(mpc_cycle >= 2 && mpc_cycle < controlwalk_time)
     {
         //file[1] << mpc_cycle << " " << walking_tick << " ";
+        //file[1] << model_data2.hg.angular()[0] << " "<< model_data2.hg.angular()[1] << " " << angd_(0)<< " " << angd_(1) << std::endl;
         //file[1] << virtual_temp(0) << " " << virtual_temp1(0) << " " << zmp_mpcx << " "<< virtual_temp(1) << " " << virtual_temp1(1) << " " << desired_val.m_shared_memory[43] <<  " " << rd_.q_(13) << " " << rd_.q_(14) << " " << desired_val.m_shared_memory[19] << " " << desired_val.m_shared_memory[20] << " " << pelv_ori_c(0) <<  "  " << pelv_ori_c(1) << std::endl;// << rfoot_ori_c(0) << " " << rfoot_ori_c(1) << " " << rfoot_ori_c(2) << " " << lfoot_ori_c(0) << " " << lfoot_ori_c(1) << " " << lfoot_ori_c(2);
         //file[1] << std::endl;
          /*<< com_alpha << " " << KK_temp << " " << solved<< " " <<qp_solved<<" " <<contactMode << " "  <<rfoot_mpc(2) << " " <<model_data2.oMf[RFcframe_id].translation()(2) << " "<< rfootd1(2) << " " << rfootd(2)<<  " " << lfoot_mpc(2)<< " " << model_data2.oMf[LFcframe_id].translation()(2) << " "<< lfootd1(2) << " "<< rfoot_mpc(1)<< " " <<model_data2.oMf[RFcframe_id].translation()(1) + virtual_temp1(1)<< " "<<rfootd1(1)<< " "<<  lfoot_mpc(1) << " " << model_data2.oMf[LFcframe_id].translation()(1) + virtual_temp1(1)<< " "<< lfootd1(1) << " "<<rfoot_mpc(0)<< " " <<model_data2.oMf[RFcframe_id].translation()(0) + virtual_temp1(0) << " "<<rd_.link_[Right_Foot].xipos(0) + 0.0378 + virtual_temp1(0) <<  " " << rfootd1(0) << " "<< lfoot_mpc(0) << " " << model_data2.oMf[LFcframe_id].translation()(0)+ virtual_temp1(0)<<" " <<rfootd1(0) << " " << lfootd1(0) << " " <<qp_result(2)  << " " << qp_result(8)  <<" " << qp_result(13) << " " << qp_result(19) << " "  << -1 * rd_.LF_CF_FT(2) <<" "  << -1 * rd_.RF_CF_FT(2) << " "<< model_data2.oMf[RFcframe_id].translation()(0)+ virtual_temp(0) << " " */ 
         //file[0] <<mpc_cycle << " " << qp_solved<< " "<<solved<< " "<< lfoot_mpc(0)<< " " << model_data2.oMf[LFcframe_id].translation()(0)+ virtual_temp1(0) << " "<< rfoot_mpc(0)<< " " <<model_data2.oMf[RFcframe_id].translation()(0) + virtual_temp1(0)<< " "<< virtual_temp(0)<< " " << virtual_temp1(0)<< " "<< com_mpc[0] << " " << com_mpc[1] << " "<< rd_.link_[COM_id].xpos(0)<< " " << rd_.link_[COM_id].xpos(1)<< " " << angd_(0) << " " << angd_(1) << " "  << model_data1.hg.angular()[0]  << " " << model_data1.hg.angular()[1] << " " <<H_temp_22 << " " << pelv_ori_c(1) << " " << zmpx << " " << zmpy << " " << ZMP_FT_law(0)<< " " << ZMP_FT_law(1)<< " " <<zmp_bx(0) << " " << zmp_bx(1) <<  " " << pelv_ori_c(1) <<std::endl;//<< " " << model_data2.oMf[RFcframe_id].translation()(0)<< " " << model_data2.oMf[LFcframe_id].translation()(0)   <<  " " << model_data2.oMf[RFcframe_id].translation()(2)<< " " << model_data2.oMf[LFcframe_id].translation()(2)   <<  " " << rfoot_mpc(2) << " " << lfoot_mpc(2) << " " << rd_.link_[COM_id].xpos(2)<< " " << com_z_init << " " << rfoot_ori_c(0)<< " " << rfoot_ori_c(1)<< " " << lfoot_ori_c(0)<< " " << lfoot_ori_c(1)<<std::endl;///<< mpc_cycle << " " << contactMode << " "  << rd_.q_(13) << " " << rd_.q_(14)<< " "<<pelv_ori_c(0) << " " << pelv_ori_c(1) << " " << ang_de(0) << " " << ang_de(2)<< " " << ang_de(4)<< " " <<desired_val.m_shared_memory[25] << " " << q_dm(4) <<" "<< model_data1.hg.angular()[0] << " " << model_data1.hg.angular()[1] << " "<< angd_(0) << " " << angd_(1) << " "<< ZMP_FT_law(0) << " "  << zmpx << std::endl;//" " << ZMP_FT_law(0) << " "  << zmpx<< " " << ZMP_FT_law(1) << " "  << zmpy<< " " << rd_.link_[COM_id].xpos(2)<<" " << com_z_init << " " << comd(2) << " " << model_data1.hg.angular()[0] << " " << model_data1.hg.angular()[1] << " "<< angd_(0) << " " << angd_(1) << " "<< rfoot_mpc(0)<< " " <<model_data2.oMf[RFcframe_id].translation()(0) + virtual_temp1(0)<< " "<<  lfoot_mpc(0) << " " << model_data2.oMf[LFcframe_id].translation()(0) + virtual_temp1(0)<<  std::endl;//<<  lfoot_mpc(2) << " " << model_data2.oMf[LFcframe_id].translation()(2) << " "<<  rfoot_mpc(2) << " " << model_data2.oMf[RFcframe_id].translation()(2)<< std::endl;//<< angd_(0) << " " << angd_(1) << std:::endl;//std::endl;//file[0] << mpc_cycle <<  " " <<walking_tick << " "<< contactMode << " "<< solved<< " " << qp_solved<< " " << virtual_temp2(0) << " "<< ZMP_FT_law(0) << " " << ZMP(0)<<  " " << zmpx<< " " << zmp_bx(0) << " " << zmp_bx(1) << " "  << ZMP_FT_law(1) << " "<< zmpy << " " << rd_.link_[COM_id].xpos(1)<< " " << model_data1.hg.angular()[0] << " " << model_data1.hg.angular()[1] << " "<< angd_(0) << " " << angd_(1) << " " << comd(0) << " " << comd(1) << " " << rd_.link_[COM_id].v(0)<< " " << rd_.link_[COM_id].v(1)  << " " << rd_.link_[COM_id].xpos(0)<< " " << rd_.link_[COM_id].xpos(1) << " " << com_mpc[0]  << " " << com_mpc[1] <<  " " << rd_.link_[COM_id].xpos(2) << " " << mj_shm_->dis_check<< " " << rd_.q_(13) << " " << rd_.q_(14)<< " " << q_pinocchio_desired(20) << " " << q_pinocchio_desired(21)<<" " <<qp_result.segment<MODEL_DOF_VIRTUAL>(12)(19)<< " " << qp_result.segment<MODEL_DOF_VIRTUAL>(12)(20) <<std::endl;//rfoot_mpc(0)<< " " <<model_data2.oMf[RFcframe_id].translation()(0) + virtual_temp1(0) <<" " <<lfoot_mpc(0)<< " " <<model_data2.oMf[LFcframe_id].translation()(0) + virtual_temp1(0) << " " << rd_.link_[COM_id].xpos(2)<<  " "<<com_z_init  <<  std::endl;
-         file[0] << mpc_cycle << " " << walking_tick << " "<< contactMode << " " << contactmode1 << " "<< com_alpha<< " " << rfootz << " " << lfootz << " " << com_alpha * nle(2)<< " " << (1-com_alpha) * nle(2) << " " << zmpx << " " << zmpy<< " " << ZMPx_test << " " << ZMPy_test << " ";
+        
+        
+                            
+        file[0] << mpc_cycle << " " << walking_tick << " ";//<< contactMode << " " << contactmode1 << " " << walking_tick_stop << " "<< com_alpha<< " " << rfootz << " " << lfootz << " " << com_alpha * nle(2)<< " " << (1-com_alpha) * nle(2) << " " << zmpx << " " << zmpy<< " " << ZMPx_test << " " << ZMPy_test << " ";
         //file[1] << q_pinocchio_desired1(9) << " " << rd_.q_(2) << " "<< q_pinocchio_desired1(10) << " " << rd_.q_(3) << " "<< q_pinocchio_desired1(11) << " " << rd_.q_(4) << " "<< q_pinocchio_desired1(15) << " " << rd_.q_(8) << " "<< q_pinocchio_desired1(16) << " " << rd_.q_(9) << " "<< q_pinocchio_desired1(17) << " "<< rd_.q_(10) ;
         //file[1] << virtual_temp(0) << " " << virtual_temp1(0) << " " << zmp_mpcx << " "<< virtual_temp(1) << " " << virtual_temp1(1) << " " << desired_val.m_shared_memory[43] <<  " " << rd_.q_(13) << " " << rd_.q_(14) << " " << desired_val.m_shared_memory[19] << " " << desired_val.m_shared_memory[20] << " " << pelv_ori_c(0) <<  "  " << pelv_ori_c(1) << std::endl;// << rfoot_ori_c(0) << " " << rfoot_ori_c(1) << " " << rfoot_ori_c(2) << " " << lfoot_ori_c(0) << " " << lfoot_ori_c(1) << " " << lfoot_ori_c(2);
         for (int i = 0; i < 12; i++)
-            file[0] << tau_[i+6] << " " << rd_.torque_desired[i] << " ";
+            file[0] << tau_[i+6] << " " << rd_.torque_desired[i] << " " << qdd_pinocchio_desired1_(i+6)<< " " << q_dm(i+6) << " ";
         for (int i = 0; i < 12; i ++)
             file[0] << qp_result[i] << " ";
         //file[0] << rfootd1(0) << " "<< rfootd1(1) << " "<< rfootd1(2) << " "<< lfootd1(0) << " "<< lfootd1(1) << " "<< lfootd1(2) << " "  << rfoot_ori(0) << " "<< rfoot_ori(1) << " "<< rfoot_ori(2) << " "<< lfoot_ori(0) << " "<< lfoot_ori(1) << " "<< lfoot_ori(2) << " " << comd_(0)<< " " << comd_(1)<< " " << comd_(2) << " "; 
@@ -2805,10 +2869,24 @@ void CustomController::computeFast()
                             //endTime1 = std::chrono::system_clock::now();
                             //auto elapsed2 = std::chrono::duration_cast<std::chrono::microseconds>(endTime1 - startTime1);
                             qd_pinocchio.segment<18>(0) = q_dm;
-                        
-                            qdd_pinocchio_desired1 = ((qd_pinocchio - qd_pinocchio_prev)/0.02);
+                            
+                            
+                            cc_mutex2.lock();
+                            qdd_pinocchio_desired1_raw = ((qd_pinocchio - qd_pinocchio_prev)/0.02);
+                            cc_mutex2.unlock();
+                            
+                            
+                            for(int i = 0; i <MODEL_DOF_VIRTUAL; i++)
+                            {
+                                if(abs(qdd_pinocchio_desired1(i) - qdd_pinocchio_desired1_raw(i))>0.8)
+                                {
+                                    break;
+                                }
+                                if(i == MODEL_DOF_VIRTUAL - 1)
+                                    qdd_pinocchio_desired1 = qdd_pinocchio_desired1_raw;
+                            }
+                            
                             qd_pinocchio_prev = qd_pinocchio;
-
 
                             ZMPx_test = (zmp_mpcx * walking_tick + ZMPx_prev *(40-walking_tick))/40;
                             ZMPy_test = (zmp_mpcy * walking_tick + ZMPy_prev *(40-walking_tick))/40;
@@ -2922,7 +3000,6 @@ void CustomController::momentumControl(RobotData &Robot, Eigen::Vector3d comd,  
     
         H1(3,3) = 5.0;
         H1(4,4) = 5.0;
-        
         /*
         if(pelv_ori_c(1) != 0)
             H1(4,4) = 0.1/abs(pelv_ori_c(1));

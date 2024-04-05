@@ -93,7 +93,9 @@ public:
     Eigen::VectorVQd qd_pinocchio_desired1_prev;
     Eigen::VectorVQd qd_pinocchio_prev;
     Eigen::VectorVQd qdd_pinocchio_desired1;
+    Eigen::VectorVQd qdd_pinocchio_desired2;
     Eigen::VectorVQd qdd_pinocchio_desired1_;
+    Eigen::VectorVQd qdd_pinocchio_desired1_raw;
     Eigen::VectorXd qp_result, qp_result_prev, qp_result1;
 
     std::atomic<int> contactmode1;

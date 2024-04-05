@@ -98,6 +98,7 @@ public:
     //mutex
     std::mutex cc_mutex;
     std::mutex cc_mutex1;
+    std::mutex cc_mutex2;
 
     //walkingInit
     Eigen::VectorQd q_target, q_init;
