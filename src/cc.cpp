@@ -696,8 +696,8 @@ void CustomController::computeSlow()
 
     //qddot_virtual은 다시해보기
     pinocchio::forwardKinematics(model, model_data2, q_pinocchio);
-    pinocchio::centerOfMass(model, model_data2, q_pinocchio, rd_.q_dot_virtual_);
-    pinocchio::crba(model, model_data2, q_pinocchio);
+    //pinocchio::centerOfMass(model, model_data2, q_pinocchio, rd_.q_dot_virtual_);
+    //pinocchio::crba(model, model_data2, q_pinocchio);
     pinocchio::nonLinearEffects(model, model_data2, q_pinocchio, rd_.q_dot_virtual_);
     //pinocchio::computeCentroidalMomentum(model, model_data2, q_pinocchio, rd_.q_dot_virtual_);
     pinocchio::computeJointJacobiansTimeVariation(model, model_data2, q_pinocchio, rd_.q_dot_virtual_);
