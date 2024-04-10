@@ -99,6 +99,7 @@ public:
     Eigen::VectorVQd qd_pinocchio_desired1_prev;
     Eigen::VectorVQd qd_pinocchio_prev;
     Eigen::VectorVQd qdd_pinocchio_desired1;
+    Eigen::VectorVQd qdd_pinocchio_desired1_raw;
     Eigen::VectorVQd qdd_pinocchio_desired1_;
     Eigen::VectorXd qp_result, qp_result_prev, qp_result1;
 
@@ -109,6 +110,8 @@ public:
    std::chrono::system_clock::time_point startTime;
    std::chrono::system_clock::time_point startTime_init;
    std::chrono::system_clock::time_point endTime;
+
+   bool print_cout = false;
 
     double com_z_init;
 
@@ -157,6 +160,9 @@ public:
     int as = 0;
     bool q_desired_bool = true;
 
+    Eigen::Isometry3d RFc_float_current;
+    Eigen::Isometry3d LFc_float_current;
+    
     bool first_control = false;
 
     //MPC
