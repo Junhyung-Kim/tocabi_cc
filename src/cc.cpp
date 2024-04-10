@@ -2021,7 +2021,7 @@ void CustomController::computeFast()
 
                 if(walking_tick <= 6000)
                 {
-                    if(walking_tick <= 4000)//6000)
+                    if(walking_tick <= 6000)//6000)
                     {
                         for (int i = 0; i < 33; i++)
                         {
