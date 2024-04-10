@@ -97,6 +97,7 @@ public:
 
     //mutex
     std::mutex cc_mutex;
+    std::mutex cc_mutex2;
     std::mutex cc_mutex1;
 
     //walkingInit
@@ -157,6 +158,7 @@ public:
     Eigen::Vector6d SUF_float_currentV;
     Eigen::Vector6d SWF_float_currentV;
     Eigen::Isometry3d COM_float_current;
+    Eigen::Isometry3d COMv_float_current;
     Eigen::Isometry3d COM_support_current;
     Eigen::Isometry3d PELV_trajectory_float;
     Eigen::Isometry3d PELV_trajectory_float_c;
@@ -210,6 +212,9 @@ public:
     Eigen::Vector2d Hl_leg;
     Eigen::Vector6d H_data;
     Eigen::Vector3d WH_data;
+
+    Eigen::MatrixXd J_RFF;
+    Eigen::MatrixXd J_LFF;
     double lmom;
 
     Eigen::Isometry3d LF_trajectory_float;

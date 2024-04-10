@@ -14,6 +14,8 @@
 #include "math_type_define.h"
 #include "walking.h"
 #include "wholebody_functions.h"
+#include <tf2_ros/transform_broadcaster.h>
+#include <tf2/LinearMath/Quaternion.h>
 
 
 #include <future>
@@ -113,6 +115,11 @@ public:
     Eigen::MatrixXd RFj, LFj, RFdj, LFdj;
     MatrixXd G_temp;
     Vector12d g_temp;
+
+    Eigen::VectorXd initrpy;
+    Eigen::Matrix6d InitRPYM2;
+
+    Eigen::Isometry3d InitRPYM;
             
     
     Eigen::Vector3d rfoot_mpc, lfoot_mpc;
