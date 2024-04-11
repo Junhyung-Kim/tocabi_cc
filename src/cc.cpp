@@ -716,12 +716,18 @@ void CustomController::computeSlow()
         q1.normalize();*/
 
         for (int i = 0; i < 3; i++)
-            q_pinocchio_desired1[i] = rd_.q_virtual_[i];// + initrpy(i);
+            q_pinocchio_desired1[i] = rd_.q_virtual_[i] + initrpy(i);
 
-        q_pinocchio_desired1[3] = rd_.q_virtual_[3];//q1.getX();
+        /*q_pinocchio_desired1[3] = rd_.q_virtual_[3];//q1.getX();
         q_pinocchio_desired1[4] = rd_.q_virtual_[4];//q1.getY();
         q_pinocchio_desired1[5] = rd_.q_virtual_[5];//q1.getZ();
         q_pinocchio_desired1[6] = rd_.q_virtual_[MODEL_DOF_VIRTUAL];//q1.getW();
+        */
+        
+        q_pinocchio_desired1[3] = q1.getX();
+        q_pinocchio_desired1[4] = q1.getY();
+        q_pinocchio_desired1[5] = q1.getZ();
+        q_pinocchio_desired1[6] = q1.getW();
 
         for (int i = 6; i < MODEL_DOF_VIRTUAL; i ++)
             q_pinocchio_desired1[i+1] = rd_.q_virtual_[i];
@@ -764,8 +770,6 @@ void CustomController::computeSlow()
     pinocchio::updateFramePlacements(model, model_data2);
     pinocchio::computeFrameJacobian(model, model_data2, q_pinocchio, RFframe_id, pinocchio::ReferenceFrame::LOCAL_WORLD_ALIGNED, RFj);
     pinocchio::computeFrameJacobian(model, model_data2, q_pinocchio, LFframe_id, pinocchio::ReferenceFrame::LOCAL_WORLD_ALIGNED, LFj);
-    //pinocchio::computeFrameJacobian(model, model_data2, q_pinocchio, RFcframe_id, RFj);
-    //pinocchio::computeFrameJacobian(model, model_data2, q_pinocchio, LFcframe_id, LFj);
     pinocchio::getFrameJacobianTimeVariation(model, model_data2, RFcframe_id, pinocchio::ReferenceFrame::LOCAL_WORLD_ALIGNED, RFdj);
     pinocchio::getFrameJacobianTimeVariation(model, model_data2, LFcframe_id, pinocchio::ReferenceFrame::LOCAL_WORLD_ALIGNED, LFdj);
     cc_mutex.unlock();
@@ -781,20 +785,22 @@ void CustomController::computeSlow()
     }*/
 
 
-    /*RFj = InitRPYM2 * RFj;
+    RFj = InitRPYM2 * RFj;
     LFj = InitRPYM2 * LFj;
     RFdj = InitRPYM2 * RFdj;
-    LFdj = InitRPYM2 * LFdj;*/
+    LFdj = InitRPYM2 * LFdj;
 
-    /*RFc_float_current.translation() = DyrosMath::multiplyIsometry3dVector3d(InitRPYM, model_data2.oMf[RFcframe_id].translation());
+    RFc_float_current.translation() = DyrosMath::multiplyIsometry3dVector3d(InitRPYM, model_data2.oMf[RFcframe_id].translation());
     LFc_float_current.translation() = DyrosMath::multiplyIsometry3dVector3d(InitRPYM, model_data2.oMf[LFcframe_id].translation());
     RFc_float_current.linear() = InitRPYM.linear() * rd_.link_[Right_Foot].rotm;
-    LFc_float_current.linear() = InitRPYM.linear() * rd_.link_[Left_Foot].rotm;*/
+    LFc_float_current.linear() = InitRPYM.linear() * rd_.link_[Left_Foot].rotm;
 
-    RFc_float_current.translation() = model_data2.oMf[RFcframe_id].translation();//DyrosMath::multiplyIsometry3dVector3d(InitRPYM, model_data2.oMf[RFcframe_id].translation());
-    LFc_float_current.translation() = model_data2.oMf[LFcframe_id].translation();//DyrosMath::multiplyIsometry3dVector3d(InitRPYM, model_data2.oMf[LFcframe_id].translation());
-    RFc_float_current.linear() = /*InitRPYM.linear() */ rd_.link_[Right_Foot].rotm;
-    LFc_float_current.linear() = /*InitRPYM.linear() */ rd_.link_[Left_Foot].rotm;
+    /*
+    RFc_float_current.translation() = model_data2.oMf[RFcframe_id].translation();
+    LFc_float_current.translation() = model_data2.oMf[LFcframe_id].translation();
+    RFc_float_current.linear() = rd_.link_[Right_Foot].rotm;
+    LFc_float_current.linear() = rd_.link_[Left_Foot].rotm;
+    */
 
 
     if(as == 0)
@@ -1976,29 +1982,29 @@ void CustomController::computeFast()
         time_tick_next = false;
 
         cc_mutex2.lock();
-        //PELV_float_current.linear() = InitRPYM.linear() * rd_.link_[Pelvis].rotm;
-        PELV_float_current.linear() = rd_.link_[Pelvis].rotm;
+        PELV_float_current.linear() = InitRPYM.linear() * rd_.link_[Pelvis].rotm;
+        //PELV_float_current.linear() = rd_.link_[Pelvis].rotm;
         
-        /*RF_float_current.translation() = DyrosMath::multiplyIsometry3dVector3d(InitRPYM, rd_.link_[Right_Foot].xipos);
+        RF_float_current.translation() = DyrosMath::multiplyIsometry3dVector3d(InitRPYM, rd_.link_[Right_Foot].xipos);
         LF_float_current.translation() = DyrosMath::multiplyIsometry3dVector3d(InitRPYM, rd_.link_[Left_Foot].xipos);
         RF_float_current.linear() = InitRPYM.linear() * rd_.link_[Right_Foot].rotm;
         LF_float_current.linear() = InitRPYM.linear() * rd_.link_[Left_Foot].rotm;
-        */
-        RF_float_current.translation() = rd_.link_[Right_Foot].xipos;
-        LF_float_current.translation() = rd_.link_[Left_Foot].xipos;
-        RF_float_current.linear() = rd_.link_[Right_Foot].rotm;
-        LF_float_current.linear() = rd_.link_[Left_Foot].rotm;
+        
+        //RF_float_current.translation() = rd_.link_[Right_Foot].xipos;
+        //LF_float_current.translation() = rd_.link_[Left_Foot].xipos;
+        //RF_float_current.linear() = rd_.link_[Right_Foot].rotm;
+        //LF_float_current.linear() = rd_.link_[Left_Foot].rotm;
 
-        //COM_float_current.translation() = DyrosMath::multiplyIsometry3dVector3d(InitRPYM, rd_.link_[COM_id].xpos);
-        //COMv_float_current.translation() = DyrosMath::multiplyIsometry3dVector3d(InitRPYM, rd_.link_[COM_id].v);
+        COM_float_current.translation() = DyrosMath::multiplyIsometry3dVector3d(InitRPYM, rd_.link_[COM_id].xpos);
+        COMv_float_current.translation() = DyrosMath::multiplyIsometry3dVector3d(InitRPYM, rd_.link_[COM_id].v);
 
-        COM_float_current.translation() = rd_.link_[COM_id].xpos;//DyrosMath::multiplyIsometry3dVector3d(InitRPYM, rd_.link_[COM_id].xpos);
-        COMv_float_current.translation() = rd_.link_[COM_id].v;//DyrosMath::multiplyIsometry3dVector3d(InitRPYM, rd_.link_[COM_id].v);
+        //COM_float_current.translation() = rd_.link_[COM_id].xpos;//DyrosMath::multiplyIsometry3dVector3d(InitRPYM, rd_.link_[COM_id].xpos);
+        //COMv_float_current.translation() = rd_.link_[COM_id].v;//DyrosMath::multiplyIsometry3dVector3d(InitRPYM, rd_.link_[COM_id].v);
 
-        //J_RFF = InitRPYM2 * rd_.link_[Right_Foot].Jac();//.block(0,0,6,18);
-        //J_LFF = InitRPYM2 * rd_.link_[Left_Foot].Jac();//.block(0,0,6,18);
-        J_RFF = rd_.link_[Right_Foot].Jac();//.block(0,0,6,18);
-        J_LFF = rd_.link_[Left_Foot].Jac();//.block(0,0,6,18);
+        J_RFF = InitRPYM2 * rd_.link_[Right_Foot].Jac();//.block(0,0,6,18);
+        J_LFF = InitRPYM2 * rd_.link_[Left_Foot].Jac();//.block(0,0,6,18);
+        //J_RFF = rd_.link_[Right_Foot].Jac();//.block(0,0,6,18);
+        //J_LFF = rd_.link_[Left_Foot].Jac();//.block(0,0,6,18);
         
         cc_mutex2.unlock();
 
