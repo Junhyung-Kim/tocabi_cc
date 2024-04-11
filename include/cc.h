@@ -121,8 +121,10 @@ public:
 
     Eigen::VectorXd initrpy;
     Eigen::Matrix6d InitRPYM2;
+    tf2::Matrix3x3  InitRPYM3;
 
     Eigen::Isometry3d InitRPYM;
+    tf2::Quaternion q1;
             
     
     Eigen::Vector3d rfoot_mpc, lfoot_mpc;
