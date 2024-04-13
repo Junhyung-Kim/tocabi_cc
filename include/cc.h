@@ -129,9 +129,11 @@ public:
     
     Eigen::Vector3d rfoot_mpc, lfoot_mpc;
     double com_x_int = 0.0;
+    double zmp_x_int = 0.0;
     double foot_x_int = 0.0;
     double com_y_int = 0.0;
     double foot_y_int = 0.0;
+    double zmp_y_int = 0.0;
 
     int solved = 0;
     double vector_tes = 0;
@@ -160,7 +162,8 @@ public:
     Eigen::MatrixXd RFj1, LFj1;
 
     int as = 0;
-    bool q_desired_bool = true;
+    bool q_desired_bool = false;
+    bool pelv_frame = false;
 
     Eigen::Isometry3d RFc_float_current;
     Eigen::Isometry3d LFc_float_current;
