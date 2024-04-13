@@ -1107,11 +1107,13 @@ void CustomController::computeSlow()
                 
                 lb1.setConstant(variable_size1, -100000);
                 ub1.setConstant(variable_size1, 100000);
+                
 
-                H1(2,2) = 5;//0.1;
-                H1(8,8) = 5;//0.1;
-                g1(2) = - com_alpha * nle(2) * 5;
-                g1(8) = - (1-com_alpha) * nle(2) * 5;
+                //wpwkfl
+                H1(2,2) = 0.1;//0.1;
+                H1(8,8) = 0.1;//0.1;
+                g1(2) = - com_alpha * nle(2) * 0.1;
+                g1(8) = - (1-com_alpha) * nle(2) * 0.1;
                 lb1(2) = 0.0;
                 lb1(8) = 0.0;
 
@@ -1955,7 +1957,8 @@ void CustomController::computeSlow()
     if(walk_start == true && mpc_cycle < controlwalk_time && mpc_cycle >= 1)
     {
         //file[0] <<double_temp  << " " << mpc_cycle << " " << walking_tick << " " << solved << " " << "0 ";//<<lfoot_mpc(2) -0.159 + foot_temp(1) << " " << rd_.link_[Left_Foot].xipos(2) << " " << rd_.link_[Left_Foot].xpos(0)<< " " << rd_.link_[Right_Foot].xpos(0) << " "<<zmpy << " " << zmpx<< " " << ZMP_FT_law(1) << " " <<ZMP_FT_law(0) << " " << com_alpha<< " " << com_mpc[0] << " " <<com_mpc[1] << " " << rd_.link_[COM_id].xpos(0)<< " " << rd_.link_[COM_id].xpos(1);
-        file[0] << mpc_cycle << " " << walking_tick << " " <<contactMode << " "<<(RFc_float_current.translation()(1)  - zmpy) << " " << (LFc_float_current.translation()(1)  - zmpy) << " " << com_mpc[0] << " "<< model_data2.com[0][0]<< " "<< com_mpc[1] << " " << model_data2.com[0][1]<<" " <<model_data2.oMf[RFcframe_id].translation()(0) << " " << model_data2.oMf[RFcframe_id].translation()(1)  << " " << zmpx << " " << ZMP_FT_law(0) << " " << zmpy << " " << ZMP_FT_law(1) << " " << comdt_(1) << " " << 0 << std::endl;
+        file[0] << mpc_cycle << " " << walking_tick << " " <<solved << " "<<qp_solved << " " << qd_pinocchio(3) << " " << qd_pinocchio(4) << " "<< comt_[0] << " "<<COM_float_current.translation()(0)<< " "<< comt_[1] << " " << COM_float_current.translation()(1)<<" " <<model_data2.oMf[RFcframe_id].translation()(0) << " " << model_data2.oMf[RFcframe_id].translation()(1)  << " " << zmpx << " " << ZMP_FT_law(0) << " " << zmpy << " " << ZMP_FT_law(1) << " " << comdt_(1) << " " << 0 << " " <<pelv_ori_c(0) << " " <<pelv_ori_c(1) << " " << lfoot_ori(0) << " " << lfoot_ori(1) << " " <<rfootd1(2) << " "<< qp_result(15) << " " << qp_result(16) << " " << qp_result(2)<<  " " << qp_result(25) << std::endl;
+        
         //q_pinocchio_desired1(0) << " " << rd_.q_virtual_(0)<< " " << q_pinocchio_desired1(1) << " " << rd_.q_virtual_(1);
         
         //qp_result(3) << " " << qp_result(9)  << " " <<-1* rd_.LF_FT(3) << " " <<-1* rd_.RF_FT(3)<< " " << rd_.LF_CF_FT(3) << " " << rd_.RF_CF_FT(3) << " " << zmpx << " " << zmpy << " " << ZMP_FT_law(0)<< " " << ZMP_FT_law(1)  << " "<< pelv_ori_c(0) << " " << pelv_ori_c(1);
@@ -2145,7 +2148,7 @@ void CustomController::computeFast()
                 
                 if(walking_tick <= 6000)
                 {
-                    if(walking_tick <= 3000)//6000)
+                    if(walking_tick <= 1000)//6000)
                     {
                         for (int i = 0; i < 33; i++)
                         {
@@ -2197,12 +2200,20 @@ void CustomController::computeFast()
             InitRPYM.translation()(2) = rd_.link_[Pelvis].xpos(2);
             InitRPYM = DyrosMath::inverseIsometry3d(InitRPYM);
 
+            InitRPYM4.linear() = rd_.link_[Pelvis].rotm;;
+            InitRPYM4 = DyrosMath::inverseIsometry3d(InitRPYM4);
+            
             initrpy(0) =  -1 * rd_.link_[Pelvis].xpos(0);
             initrpy(1) =  -1 * rd_.link_[Pelvis].xpos(1);
             initrpy(2) =  -1 * rd_.link_[Pelvis].xpos(2);
 
-            InitRPYM2.block(0,0,3,3) = InitRPYM.linear();
-            InitRPYM2.block(3,3,3,3) = InitRPYM.linear();
+            if(pelv_frame == true)
+            {
+                InitRPYM2.block(0,0,3,3) = InitRPYM.linear();
+                InitRPYM2.block(3,3,3,3) = InitRPYM.linear();
+            }
+            else
+                InitRPYM2.setIdentity();
             
             if(print_cout == false)
             {
@@ -2338,7 +2349,7 @@ void CustomController::computeFast()
 
                     if(q_desired_bool == false)
                     {
-                        comd_(0) = comdt_(0)+ 90.0 * (comdt_(0) - COMv_float_current.translation()(0)) + 500.0 * (comt_[0] - COM_float_current.translation()(0));
+                        comd_(0) = comdt_(0)+ 30.0 * (comdt_(0) - COMv_float_current.translation()(0)) + 500.0 * (comt_[0] - COM_float_current.translation()(0));
                         comd_(1) = comdt_(1)+ 30.0 * (comdt_(1) - COMv_float_current.translation()(1)) + 100.0 * (comt_[1] - COM_float_current.translation()(1));
                         comd_(2) = 0.0 + 10.0 * (com_z_init - COM_float_current.translation()(2));
                     }
@@ -2361,7 +2372,11 @@ void CustomController::computeFast()
 
                     rfoot_ori_c = DyrosMath::rot2Euler(RF_float_current.linear());
                     lfoot_ori_c = DyrosMath::rot2Euler(LF_float_current.linear());
-                    pelv_ori_c = DyrosMath::rot2Euler(PELV_float_current.linear());
+
+                    if(pelv_frame == false)
+                        pelv_ori_c = DyrosMath::rot2Euler((InitRPYM4.linear() * PELV_float_current.linear()));
+                    else
+                        pelv_ori_c = DyrosMath::rot2Euler((PELV_float_current.linear()));
 
                     rfootd1 = rfootd;
                     lfootd1 = lfootd;
@@ -2369,8 +2384,8 @@ void CustomController::computeFast()
 
                     if(q_desired_bool == false)
                     {
-                        gain_xz = 60.0;
-                        gain_ori = 40.00;
+                        gain_xz = 60.0;//60.0;
+                        gain_ori = 1.0;//40.00;
                     }
                     else
                     {
@@ -2406,6 +2421,7 @@ void CustomController::computeFast()
                     
                     if(rfoot_mpc(2)>0.159)
                     {
+                        std::cout << "KKK" << std::endl;
                         rfoot_ori(0) = gain_ori * (-rfoot_ori_c(0));
                         rfoot_ori(1) = gain_ori * (-rfoot_ori_c(1));
                     
@@ -2417,6 +2433,8 @@ void CustomController::computeFast()
                     }
                     else if(lfoot_mpc(2)>0.159)
                     {
+
+                        std::cout << "KKK1" << std::endl;
                         lfoot_ori(0) = gain_ori * (-lfoot_ori_c(0));
                         lfoot_ori(1) = gain_ori * (-lfoot_ori_c(1));
 
@@ -2432,7 +2450,7 @@ void CustomController::computeFast()
                         lfoot_ori(1) = 0.5*gain_ori * (pelv_ori_c(1));
                         rfoot_ori(0) = 0.5*gain_ori * (pelv_ori_c(0));
                         rfoot_ori(1) = 0.5*gain_ori * (pelv_ori_c(1));
-
+                        
                         rfoot_mpc(2) = 0.159;
                         lfoot_mpc(2) = 0.159;
                     }
@@ -2463,6 +2481,8 @@ void CustomController::computeFast()
                             cc_mutex2.unlock();
                         }
                     }
+                    
+
                     qd_pinocchio_prev = qd_pinocchio;
 
                     ZMPx_test = (zmp_mpcx * walking_tick + ZMPx_prev *(40-walking_tick))/40;

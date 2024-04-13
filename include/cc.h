@@ -122,6 +122,7 @@ public:
     Eigen::VectorXd initrpy;
     Eigen::Matrix6d InitRPYM2;
     tf2::Matrix3x3  InitRPYM3;
+    Eigen::Isometry3d InitRPYM4;
 
     Eigen::Isometry3d InitRPYM;
     tf2::Quaternion q1;
@@ -161,7 +162,7 @@ public:
     string rf,rf1,rf2,rf3,rf4,rf5,rf6,rf7;
     Eigen::MatrixXd RFj1, LFj1;
 
-    int as = 0;
+    int as = 1;
     bool q_desired_bool = true;
     bool pelv_frame = false;
 
