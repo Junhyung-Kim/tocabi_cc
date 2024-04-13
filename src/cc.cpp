@@ -2189,6 +2189,9 @@ void CustomController::computeFast()
         {
             if(pelv_frame == true)
                 InitRPYM.linear()= rd_.link_[Pelvis].rotm;
+            else
+                InitRPYM.linear().setIdentity();
+
             InitRPYM.translation()(0) = rd_.link_[Pelvis].xpos(0);
             InitRPYM.translation()(1) = rd_.link_[Pelvis].xpos(1);
             InitRPYM.translation()(2) = rd_.link_[Pelvis].xpos(2);
@@ -2256,7 +2259,7 @@ void CustomController::computeFast()
                             
                             if(contactMode == 1)
                             {
-                                foot_temp(1) = RF_float_current.translation()(2);
+                                foot_temp(0) = RF_float_current.translation()(2);
                                 foot_temp(1) = LF_float_current.translation()(2);
                             }
                         }
@@ -2341,10 +2344,11 @@ void CustomController::computeFast()
                     }
                     else
                     {
-                        comd_(0) = comdt_(0);
-                        comd_(1) = comdt_(1);
-                        //comd_(0) = comdt_(0)+ 3.0 * (comdt_(0) - COMv_float_current.translation()(0)) + 10.0 * (comt_[0] - COM_float_current.translation()(0));
-                        //comd_(1) = comdt_(1)+ 3.0 * (comdt_(1) - COMv_float_current.translation()(1)) + 10.0 * (comt_[1] - COM_float_current.translation()(1));
+                        //comd_(0) = comdt_(0);
+                        //comd_(1) = comdt_(1);
+                        comd_(0) = comdt_(0)+ 3.0 * (comdt_(0) - COMv_float_current.translation()(0)) + 20.0 * (comt_[0] - COM_float_current.translation()(0));
+                        comd_(1) = comdt_(1)+ 3.0 * (comdt_(1) - COMv_float_current.translation()(1)) + 20.0 * (comt_[1] - COM_float_current.translation()(1));
+                        comd_(2) = 0.0 + 10.0 * (com_z_init - COM_float_current.translation()(2));
                     }
 
                     angd_(0) = (angm(0) * walking_tick + angm_prev(0) * (40 -walking_tick))/40;
@@ -2407,7 +2411,7 @@ void CustomController::computeFast()
                     
                         lfoot_ori(0) = 2.5*gain_ori * (pelv_ori_c(0));
                         lfoot_ori(1) = 2.5*gain_ori * (pelv_ori_c(1));
-                        rfootd1(2) = rfootd1(2)+ gain_xz * (rfoot_mpc(2) -0.159 - RF_float_current.translation()(2) + foot_temp(1));
+                        rfootd1(2) = rfootd1(2)+ gain_xz * (rfoot_mpc(2) -0.159 - RF_float_current.translation()(2) + foot_temp(0));
                         rfootd1(1) = rfootd1(1) + 10.00 * (-0.1025 - RF_float_current.translation()(1) - virtual_temp1(1));
                         rfootd1(0) = rfootd1(0)+ gain_xz * (rfoot_mpc(0) - RF_float_current.translation()(0));
                     }
@@ -2418,7 +2422,7 @@ void CustomController::computeFast()
 
                         rfoot_ori(0) = 2.5*gain_ori * (pelv_ori_c(0));
                         rfoot_ori(1) = 2.5*gain_ori * (pelv_ori_c(1));
-                        lfootd1(2) = lfootd1(2)+ gain_xz * (lfoot_mpc(2) -0.159 - LF_float_current.translation()(2) + foot_temp(1));
+                        lfootd1(2) = lfootd1(2)+ gain_xz * (lfoot_mpc(2) -0.159 - LF_float_current.translation()(2) + foot_temp(0));
                         lfootd1(1) = lfootd1(1) + 10.00 * (0.1025 - LF_float_current.translation()(1) - virtual_temp1(1));
                         lfootd1(0) = lfootd1(0)+ gain_xz * (lfoot_mpc(0) - LF_float_current.translation()(0));
                     }  
@@ -2566,7 +2570,7 @@ void CustomController::momentumControl(RobotData &Robot, Eigen::Vector3d comd,  
         H1(5,5) = 100.0;
         //std::cout << "Jac" << std::endl;
         //std::cout << Robot.link_[COM_id].Jac().block(0,0,3,3) << std::endl;
-        J.block(0,0,3,18) = Robot.link_[COM_id].Jac().block(0,0,3,18);
+        J.block(0,0,3,18) = InitRPYM.linear() *Robot.link_[COM_id].Jac().block(0,0,3,18);
         J.block(3,0,6,18) = J_RFF.block(0,0,6,18);
         J.block(9,0,6,18) = J_LFF.block(0,0,6,18);
         
