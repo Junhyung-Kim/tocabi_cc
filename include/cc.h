@@ -111,6 +111,9 @@ public:
    std::chrono::system_clock::time_point startTime_init;
    std::chrono::system_clock::time_point endTime;
 
+   std::chrono::system_clock::time_point startTime1;
+   std::chrono::system_clock::time_point endTime1;
+
    bool print_cout = false;
 
     double com_z_init;
@@ -153,6 +156,7 @@ public:
     bool cod_first = false;
     double mpc_latency;
 
+    Eigen::VectorVQd Mqddot;
 
     ros::Subscriber gui_sub_;
     ros::CallbackQueue queue_cc_;
@@ -162,7 +166,7 @@ public:
     string rf,rf1,rf2,rf3,rf4,rf5,rf6,rf7;
     Eigen::MatrixXd RFj1, LFj1;
 
-    int as = 1;
+    int as = 0;
     bool q_desired_bool = true;
     bool pelv_frame = false;
 
@@ -198,6 +202,15 @@ public:
     double H_temp_22;
 
     int dist;
+
+   MatrixXd J2, H2, A2;
+   VectorXd X2, g2, lb2, ub2, lbA2, ubA2;
+
+   MatrixXd J1, H1, A1;
+   VectorXd X1, g1, lb1, ub1, lbA1, ubA1;
+
+   Eigen::MatrixXd H1_temp;
+   Eigen::VectorXd g1_temp;
 
     std::atomic<int> mpc_cycle;
     std::atomic<int> mpc_cycle_prev;
