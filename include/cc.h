@@ -168,7 +168,7 @@ public:
 
     int as = 0;
     bool q_desired_bool = true;
-    bool pelv_frame = false;
+    bool pelv_frame = true;
 
     Eigen::Isometry3d RFc_float_current;
     Eigen::Isometry3d LFc_float_current;
@@ -222,6 +222,9 @@ public:
     Eigen::VectorVQd qd_pinocchio;
     Eigen::VectorVQd qd_pinocchio_;
     Eigen::Vector2d ZMP_FT_law;
+
+
+    Eigen::Vector2d ZMP_l, ZMP_r, ZMP;
 
    int mpc_cycle_int = 0;
    int mpc_cycle_int1 = 0;

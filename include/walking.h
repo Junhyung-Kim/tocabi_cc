@@ -98,6 +98,7 @@ public:
     //mutex
     std::mutex cc_mutex;
     std::mutex cc_mutex2;
+    std::mutex cc_mutex3;
     std::mutex cc_mutex1;
 
     //walkingInit
