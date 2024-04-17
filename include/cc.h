@@ -118,7 +118,7 @@ public:
 
     double com_z_init;
 
-    Eigen::MatrixXd RFj, LFj, RFdj, LFdj;
+    Eigen::MatrixXd RFj, LFj, RFdj, LFdj, comj;
     MatrixXd G_temp;
     Vector12d g_temp;
 
@@ -168,7 +168,7 @@ public:
 
     int as = 0;
     bool q_desired_bool = true;
-    bool pelv_frame = true;
+    bool pelv_frame = false;
 
     Eigen::Isometry3d RFc_float_current;
     Eigen::Isometry3d LFc_float_current;
