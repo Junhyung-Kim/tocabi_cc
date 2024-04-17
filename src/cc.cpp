@@ -1059,9 +1059,7 @@ void CustomController::computeSlow()
                 nle = model_data2.nle;
 
                 H1.setIdentity();
-                H1(3,3) = 15.0;
-                H1(9,9) = 15.0;
-
+                
                 g1.setZero();
                 H1.block(12,12,MODEL_DOF_VIRTUAL,MODEL_DOF_VIRTUAL) = 100 *H1.block(12,12,MODEL_DOF_VIRTUAL,MODEL_DOF_VIRTUAL);
                
@@ -1818,9 +1816,9 @@ void CustomController::computeSlow()
                 file[0]  << q_pinocchio_desired1[i] << " " << rd_.q_virtual_[i-1] << " ";
             */
 
-        file[0] << mpc_cycle << " " << walking_tick << " " <<comt_[0] << " "<<COM_float_current.translation()(0)<< " " <<model_data2.com[0][0] << " "<<rd_.link_[COM_id].xpos(0)<< " " << comt_[1] << " " << COM_float_current.translation()(1)<< " " <<model_data2.com[0][1] << " " <<comdt_(0)<< " "  << comdt_(1)<< " " <<COMv_float_current.translation()(0) << " "<<COMv_float_current.translation()(1) << " "<<model_data2.oMf[RFcframe_id].translation()(1) << " " << model_data2.oMf[LFcframe_id].translation()(1) << " " << A1.block(22,6,1,6)(0,2)<< " " << A1.block(22,0,1,6)(0,2) << " " << zmpy << " " << ZMP_FT_law(1) << " "<< zmpx << " " << ZMP_FT_law(0) << " "<<zmp_x_int<< " " << zmp_y_int << " ";//<< rfoot_ori_c(1) << " " <<rfoot_ori_c(0) << " "<< DyrosMath::rot2Euler(model_data2.oMf[RFcframe_id].rotation())(1) << " " <<DyrosMath::rot2Euler(model_data2.oMf[RFcframe_id].rotation())(0) << " " << lfoot_ori_c(1) << " " <<lfoot_ori_c(0) << " "<< DyrosMath::rot2Euler(model_data2.oMf[LFcframe_id].rotation())(1) << " " <<DyrosMath::rot2Euler(model_data2.oMf[LFcframe_id].rotation())(0) << " " << "333" << " ";
+        file[0] << mpc_cycle << " " << walking_tick << " " <<comt_[0] << " "<<COM_float_current.translation()(0)<< " " <<model_data2.com[0][0] << " "<<rd_.link_[COM_id].xpos(0)<< " " << comt_[1] << " " << COM_float_current.translation()(1)<< " " <<model_data2.com[0][1] << " " <<comdt_(0)<< " "  << comdt_(1)<< " " <<COMv_float_current.translation()(0) << " "<<COMv_float_current.translation()(1) << " "<<model_data2.oMf[RFcframe_id].translation()(1) << " " << model_data2.oMf[LFcframe_id].translation()(1) << " " << A1.block(22,6,1,6)(0,2)<< " " << A1.block(22,0,1,6)(0,2) << " " << zmpy << " " << ZMP_FT_law(1) << " "<< zmpx << " " << ZMP_FT_law(0) << " "<<zmp_x_int<< " " << zmp_y_int << " "<< rfoot_ori_c(1) << " " <<rfoot_ori_c(0) << " " << pelv_ori_c(0) << " "  << pelv_ori_c(1);//<< DyrosMath::rot2Euler(model_data2.oMf[RFcframe_id].rotation())(1) << " " <<DyrosMath::rot2Euler(model_data2.oMf[RFcframe_id].rotation())(0) << " " << lfoot_ori_c(1) << " " <<lfoot_ori_c(0) << " "<< DyrosMath::rot2Euler(model_data2.oMf[LFcframe_id].rotation())(1) << " " <<DyrosMath::rot2Euler(model_data2.oMf[LFcframe_id].rotation())(0) << " " << "333" << " ";
         
-        file[0] << q_pinocchio_desired1(19) << " " << rd_.q_[12]<< " "<< q_pinocchio_desired1(20) << " " << rd_.q_[13]<< " " << q_pinocchio_desired1(21) << " " << rd_.q_[14]<< " " << pelv_ori_c(0) << " " << pelv_ori_c(1) << " " <<lfoot_ori(0 )<< " " <<lfoot_ori(1); 
+        //file[0] << q_pinocchio_desired1(19) << " " << rd_.q_[12]<< " "<< q_pinocchio_desired1(20) << " " << rd_.q_[13]<< " " << q_pinocchio_desired1(21) << " " << rd_.q_[14]<< " " << pelv_ori_c(0) << " " << pelv_ori_c(1) << " " <<lfoot_ori(0 )<< " " <<lfoot_ori(1); 
         //file[0] << 0 <<" ";
         //for(int i = 0; i < 12 ;i++ )
         //    file[0] << qp_result(i) << " ";
@@ -1867,7 +1865,7 @@ void CustomController::computeFast()
         LF_float_current.linear() = InitRPYM.linear() * rd_.link_[Left_Foot].rotm;
        
         COM_float_current.translation() = DyrosMath::multiplyIsometry3dVector3d(InitRPYM, rd_.link_[COM_id].xpos);
-        COMv_float_current.translation() = DyrosMath::multiplyIsometry3dVector3d(InitRPYM, rd_.link_[COM_id].v);
+        COMv_float_current.translation() = InitRPYM.linear() * rd_.link_[COM_id].v;
 
         J_RFF = InitRPYM2 * rd_.link_[Right_Foot].Jac();//.block(0,0,6,18);
         J_LFF = InitRPYM2 * rd_.link_[Left_Foot].Jac();//.block(0,0,6,18);
@@ -1881,7 +1879,7 @@ void CustomController::computeFast()
             {
                 wk_Hz = 2000;
                 wk_dt = 1 / wk_Hz;
-                controlwalk_time = 100;//217;//360;
+                controlwalk_time = 190;//217;//360;
 
                 if (walking_tick == 0)
                 {
@@ -1999,7 +1997,7 @@ void CustomController::computeFast()
                 LF_float_current.linear() = InitRPYM.linear() * rd_.link_[Left_Foot].rotm;
             
                 COM_float_current.translation() = DyrosMath::multiplyIsometry3dVector3d(InitRPYM, rd_.link_[COM_id].xpos);
-                COMv_float_current.translation() = DyrosMath::multiplyIsometry3dVector3d(InitRPYM, rd_.link_[COM_id].v);
+                COMv_float_current.translation() = InitRPYM.linear() * rd_.link_[COM_id].v;
 
 
                 sleep(1);
@@ -2157,8 +2155,8 @@ void CustomController::computeFast()
 
                     if(q_desired_bool == false)
                     {   //30, 500
-                        comd_(0) = comdt_(0)+ 0.0 * (comdt_(0) - COMv_float_current.translation()(0)) + 30.0 * (comt_[0] - COM_float_current.translation()(0));
-                        comd_(1) = comdt_(1)+ 0.0 * (comdt_(1) - COMv_float_current.translation()(1)) + 30.0 * (comt_[1] - COM_float_current.translation()(1));
+                        comd_(0) = comdt_(0)+ 5.0 * (comdt_(0) - COMv_float_current.translation()(0)) + 70.0 * (comt_[0] - COM_float_current.translation()(0));
+                        comd_(1) = comdt_(1)+ 5.0 * (comdt_(1) - COMv_float_current.translation()(1)) + 70.0 * (comt_[1] - COM_float_current.translation()(1));
                         comd_(2) = 0.0 + 10.0 * (com_z_init - COM_float_current.translation()(2));
                     }
                     else
