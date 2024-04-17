@@ -258,7 +258,7 @@ CustomController::CustomController(RobotData &rd) : rd_(rd) //, wbc_(dc.wbc_)
 
     q_dm.setZero();
     qdot_command.setZero();
-   
+
     int shm_id_;
     if ((shm_id_ = shmget(key_t(1), sizeof(sizeof(int) * 3), IPC_CREAT | 0666)) == -1)
     {
@@ -676,17 +676,17 @@ void CustomController::computeSlow()
         if(lfootz <= 0.159 && rfootz <= 0.159)
         {
             contactMode = 1;
-            //setContact_1(rd_, 1, 1, 0, 0);
+            setContact_1(rd_, 1, 1, 0, 0);
         }
         else if(lfootz <= 0.159)
         {
             contactMode = 2;
-            //setContact_1(rd_, 1, 0, 0, 0);
+            setContact_1(rd_, 1, 0, 0, 0);
         }
         else if(rfootz <= 0.159)
         {
             contactMode = 3;
-            //setContact_1(rd_, 0, 1, 0, 0);
+            setContact_1(rd_, 0, 1, 0, 0);
         }
     }
     else
@@ -715,16 +715,17 @@ void CustomController::computeSlow()
     }
     else
     {
-        /*
+        
         q_pinocchio[3] = rd_.q_virtual_[3];
         q_pinocchio[4] = rd_.q_virtual_[4];
         q_pinocchio[5] = rd_.q_virtual_[5];
         q_pinocchio[6] = rd_.q_virtual_[MODEL_DOF_VIRTUAL];
-        */
+        /*
         q_pinocchio[3] = q1.getX();
         q_pinocchio[4] = q1.getY();
         q_pinocchio[5] = q1.getZ();
         q_pinocchio[6] = q1.getW();
+        */
     }
  
     for (int i = 6; i < MODEL_DOF_VIRTUAL; i ++)
@@ -745,15 +746,16 @@ void CustomController::computeSlow()
         }
         else
         {
-            
+            /*
             q_pinocchio_desired1[3] = q1.getX();
             q_pinocchio_desired1[4] = q1.getY();
             q_pinocchio_desired1[5] = q1.getZ();
             q_pinocchio_desired1[6] = q1.getW();
-            /*q_pinocchio_desired1[3] = rd_.q_virtual_[3];
+            */
+            q_pinocchio_desired1[3] = rd_.q_virtual_[3];
             q_pinocchio_desired1[4] = rd_.q_virtual_[4];
             q_pinocchio_desired1[5] = rd_.q_virtual_[5];
-            q_pinocchio_desired1[6] = rd_.q_virtual_[MODEL_DOF_VIRTUAL];*/
+            q_pinocchio_desired1[6] = rd_.q_virtual_[MODEL_DOF_VIRTUAL];
         }
 
         for (int i = 6; i < MODEL_DOF_VIRTUAL; i ++)
@@ -984,8 +986,8 @@ void CustomController::computeSlow()
             zmp_init  = true;
         }
    
-        ZMP_FT_law(0) = ZMP(0);// - zmp_x_int;//DyrosMath::lpf(ZMP(0), ZMP_FT_law(0), 2000, 10);
-        ZMP_FT_law(1) = ZMP(1);// - zmp_y_int;//DyrosMath::lpf(ZMP(1), ZMP_FT_law(1), 2000, 10);
+        ZMP_FT_law(0) = DyrosMath::lpf(ZMP(0), ZMP_FT_law(0), 2000, 10);
+        ZMP_FT_law(1) = DyrosMath::lpf(ZMP(1), ZMP_FT_law(1), 2000, 10);
        
         q_dot_virtual_lpf_ = rd_.q_dot_virtual_;
 
@@ -1067,10 +1069,10 @@ void CustomController::computeSlow()
                 ub1.setConstant(variable_size1, 100000);
 
                 //wpwkfl
-                H1(2,2) = 0.01;//0.1;
-                H1(8,8) = 0.01;//0.1;
-                g1(2) = - com_alpha * nle(2) * 0.01;
-                g1(8) = - (1-com_alpha) * nle(2) * 0.01;
+                H1(2,2) = 0.05;//0.1;
+                H1(8,8) = 0.05;//0.1;
+                g1(2) = - com_alpha * nle(2) * 0.05;
+                g1(8) = - (1-com_alpha) * nle(2) * 0.05;
                 lb1(2) = 0.0;
                 lb1(8) = 0.0;
 
@@ -1816,13 +1818,13 @@ void CustomController::computeSlow()
                 file[0]  << q_pinocchio_desired1[i] << " " << rd_.q_virtual_[i-1] << " ";
             */
 
-        file[0] << mpc_cycle << " " << walking_tick << " " <<comt_[0] << " "<<COM_float_current.translation()(0)<< " " <<model_data2.com[0][0] << " "<<rd_.link_[COM_id].xpos(0)<< " " << comt_[1] << " " << COM_float_current.translation()(1)<< " " <<model_data2.com[0][1] << " " <<rd_.link_[COM_id].xpos(1)<< " "  << rd_.link_[Pelvis].xpos(0)<< " " << rd_.link_[Pelvis].xpos(1) << " "<<model_data2.oMf[RFcframe_id].translation()(1) << " " << model_data2.oMf[LFcframe_id].translation()(1) << " " << A1.block(22,6,1,6)(0,2)<< " " << A1.block(22,0,1,6)(0,2) << " " << zmpy << " " << ZMP_FT_law(1) << " "<< zmpx << " " << ZMP_FT_law(0) << " "<<zmp_x_int<< " " << zmp_y_int << " ";//<< rfoot_ori_c(1) << " " <<rfoot_ori_c(0) << " "<< DyrosMath::rot2Euler(model_data2.oMf[RFcframe_id].rotation())(1) << " " <<DyrosMath::rot2Euler(model_data2.oMf[RFcframe_id].rotation())(0) << " " << lfoot_ori_c(1) << " " <<lfoot_ori_c(0) << " "<< DyrosMath::rot2Euler(model_data2.oMf[LFcframe_id].rotation())(1) << " " <<DyrosMath::rot2Euler(model_data2.oMf[LFcframe_id].rotation())(0) << " " << "333" << " ";
+        file[0] << mpc_cycle << " " << walking_tick << " " <<comt_[0] << " "<<COM_float_current.translation()(0)<< " " <<model_data2.com[0][0] << " "<<rd_.link_[COM_id].xpos(0)<< " " << comt_[1] << " " << COM_float_current.translation()(1)<< " " <<model_data2.com[0][1] << " " <<comdt_(0)<< " "  << comdt_(1)<< " " <<COMv_float_current.translation()(0) << " "<<COMv_float_current.translation()(1) << " "<<model_data2.oMf[RFcframe_id].translation()(1) << " " << model_data2.oMf[LFcframe_id].translation()(1) << " " << A1.block(22,6,1,6)(0,2)<< " " << A1.block(22,0,1,6)(0,2) << " " << zmpy << " " << ZMP_FT_law(1) << " "<< zmpx << " " << ZMP_FT_law(0) << " "<<zmp_x_int<< " " << zmp_y_int << " ";//<< rfoot_ori_c(1) << " " <<rfoot_ori_c(0) << " "<< DyrosMath::rot2Euler(model_data2.oMf[RFcframe_id].rotation())(1) << " " <<DyrosMath::rot2Euler(model_data2.oMf[RFcframe_id].rotation())(0) << " " << lfoot_ori_c(1) << " " <<lfoot_ori_c(0) << " "<< DyrosMath::rot2Euler(model_data2.oMf[LFcframe_id].rotation())(1) << " " <<DyrosMath::rot2Euler(model_data2.oMf[LFcframe_id].rotation())(0) << " " << "333" << " ";
         
-        
+        file[0] << q_pinocchio_desired1(19) << " " << rd_.q_[12]<< " "<< q_pinocchio_desired1(20) << " " << rd_.q_[13]<< " " << q_pinocchio_desired1(21) << " " << rd_.q_[14]<< " " << pelv_ori_c(0) << " " << pelv_ori_c(1) << " " <<lfoot_ori(0 )<< " " <<lfoot_ori(1); 
         //file[0] << 0 <<" ";
-        for(int i = 0; i < 12 ;i++ )
-            file[0] << qp_result(i) << " ";
-        file[0] << qp_result(3)/qp_result(2) << " " << qp_result(9)/qp_result(8) << " " << qp_result(4)/qp_result(2) << " " << qp_result(10)/qp_result(8);
+        //for(int i = 0; i < 12 ;i++ )
+        //    file[0] << qp_result(i) << " ";
+        //file[0] << qp_result(3)/qp_result(2) << " " << qp_result(9)/qp_result(8) << " " << qp_result(4)/qp_result(2) << " " << qp_result(10)/qp_result(8);
         //for (int i = 0; i < 12; i++) //tau_[i+6] << " " << rd_.torque_desired[i] << " "
         //    file[0]  <<(RFj.transpose() * qp_result.head(6) + LFj.transpose() * qp_result.segment<6>(6))(i+6) <<" " << (M_ * (qdd_pinocchio_desired1_ + qp_result.segment<MODEL_DOF_VIRTUAL>(12)))(i) << " ";
         //for(int i = 0; i < 19;i++ )
@@ -1988,7 +1990,6 @@ void CustomController::computeFast()
             
             if(print_cout == false)
             {
-
                 PELV_float_current.linear() = InitRPYM.linear() * rd_.link_[Pelvis].rotm;
        
                 RF_float_current.translation() = DyrosMath::multiplyIsometry3dVector3d(InitRPYM, rd_.link_[Right_Foot].xpos);
@@ -2068,8 +2069,9 @@ void CustomController::computeFast()
                             com_y_int = com_matrix_matrix(mpc_cycle,1) - COM_float_current.translation()(1);
                             com_z_init = COM_float_current.translation()(2);
 
-                            zmp_x_int = com_x_int;
+                            zmp_x_int = com_x_int - 0.03;
                             zmp_y_int = com_y_int;
+                            zmp_y_int = -(RFc_float_current.translation()(1)+LFc_float_current.translation()(1))/2;//com_y_int;  
                             
                             virtual_temp1(0) = -0.1025 - RF_float_current.translation()(1);
                             virtual_temp1(1) = 0.1025 - LF_float_current.translation()(1);
@@ -2155,8 +2157,8 @@ void CustomController::computeFast()
 
                     if(q_desired_bool == false)
                     {   //30, 500
-                        comd_(0) = comdt_(0)+ 0.5 * (comdt_(0) - COMv_float_current.translation()(0)) + 5.0 * (comt_[0] - COM_float_current.translation()(0));
-                        comd_(1) = comdt_(1)+ 0.5 * (comdt_(1) - COMv_float_current.translation()(1)) + 10.0 * (comt_[1] - COM_float_current.translation()(1));
+                        comd_(0) = comdt_(0)+ 0.0 * (comdt_(0) - COMv_float_current.translation()(0)) + 30.0 * (comt_[0] - COM_float_current.translation()(0));
+                        comd_(1) = comdt_(1)+ 0.0 * (comdt_(1) - COMv_float_current.translation()(1)) + 30.0 * (comt_[1] - COM_float_current.translation()(1));
                         comd_(2) = 0.0 + 10.0 * (com_z_init - COM_float_current.translation()(2));
                     }
                     else
@@ -2191,7 +2193,7 @@ void CustomController::computeFast()
                     if(q_desired_bool == false)
                     {
                         gain_xz = 60.0;//60.0;
-                        gain_ori = 3.0;//40.00;
+                        gain_ori = 10.0;//40.00;
                     }
                     else
                     {
@@ -2446,9 +2448,9 @@ void CustomController::momentumControl(RobotData &Robot, Eigen::Vector3d comd,  
         H2(4,4) = 100.0;
         H2(5,5) = 100.0;
        
-        J2.block(0,0,3,18) = /*InitRPYM.linear() * Robot.link_[COM_id].Jac().block(0,0,3,18);*/comj.block(0,0,3,18);
-        J2.block(3,0,6,18) = RFj.block(0,0,6,18);//J_RFF
-        J2.block(9,0,6,18) = LFj.block(0,0,6,18);//J_LFF
+        J2.block(0,0,3,18) = InitRPYM.linear() * Robot.link_[COM_id].Jac().block(0,0,3,18);
+        J2.block(3,0,6,18) = J_RFF.block(0,0,6,18);//J_RFF RFj comj
+        J2.block(9,0,6,18) = J_LFF.block(0,0,6,18);//J_LFF LFj
        
         X2.segment<3>(0) = comd;
         X2.segment<3>(3) = rfootd;
