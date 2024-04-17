@@ -2000,7 +2000,7 @@ void CustomController::computeFast()
                 COMv_float_current.translation() = InitRPYM.linear() * rd_.link_[COM_id].v;
 
 
-                sleep(1);
+                //sleep(1);
                 std::cout << "rd_ " << std::endl;
                 //tf2::Quaternion q(rd_.q_virtual(3), rd_.q_virtual(4), rd_.q_virtual(5), rd_.q_virtual_(MODEL_DOF_VIRTUAL));
                 //tf2::Quaternion q(7.91422e-03, -2.88212e-03,  1.94139e-04, 9.99965e-01);
@@ -2163,7 +2163,7 @@ void CustomController::computeFast()
                     {
                         //comd_(0) = comdt_(0);
                         //comd_(1) = comdt_(1);
-                        comd_(0) = comdt_(0)+ 0.0 * (comdt_(0) - COMv_float_current.translation()(0)) + 0.0 * (comt_[0] - COM_float_current.translation()(0));
+                        comd_(0) = comdt_(0)+ 1.0 * (comdt_(0) - COMv_float_current.translation()(0)) + 5.0 * (comt_[0] - COM_float_current.translation()(0));
                         comd_(1) = comdt_(1)+ 0.0 * (comdt_(1) - COMv_float_current.translation()(1)) + 0.0 * (comt_[1] - COM_float_current.translation()(1));
                         comd_(2) = 0.0 + 0.0 * (com_z_init - COM_float_current.translation()(2));
                     }
@@ -2196,7 +2196,7 @@ void CustomController::computeFast()
                     else
                     {
                         gain_xz = 0;//10.0;
-                        gain_ori = 0.0;//3.0;
+                        gain_ori = 3.0;//3.0;
                     }
                    
                     if(mpc_cycle  == 0)
