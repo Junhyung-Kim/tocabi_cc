@@ -776,11 +776,11 @@ void CustomController::computeSlow()
     
     //qddot_virtual은 다시해보기
     //pinocchio::forwardKinematics(model, model_data2, q_pinocchio);
-    pinocchio::centerOfMass(model, model_data2, q_pinocchio);
+    //pinocchio::centerOfMass(model, model_data2, q_pinocchio);
     pinocchio::crba(model, model_data2, q_pinocchio);
     pinocchio::nonLinearEffects(model, model_data2, q_pinocchio, qd_pinocchio);//rd_.q_dot_virtual_);
     pinocchio::computeJointJacobiansTimeVariation(model, model_data2, q_pinocchio, qd_pinocchio);//rd_.q_dot_virtual_);
-    comj = pinocchio::jacobianCenterOfMass(model, model_data2, q_pinocchio);
+    //comj = pinocchio::jacobianCenterOfMass(model, model_data2, q_pinocchio);
 
     pinocchio::updateFramePlacements(model, model_data2);//LOCAL_WORLD_ALIGNED
     pinocchio::computeFrameJacobian(model, model_data2, q_pinocchio, RFcframe_id, pinocchio::ReferenceFrame::LOCAL_WORLD_ALIGNED, RFj);
@@ -1965,7 +1965,7 @@ void CustomController::computeFast()
             if(pelv_frame == true)
                 InitRPYM.linear()= rd_.link_[Pelvis].rotm;
             else
-                InitRPYM.linear().setIdentity();// = rd_.link_[Right_Foot].rotm;//
+                InitRPYM.linear() = rd_.link_[Right_Foot].rotm;//
 
             InitRPYM.translation()(0) = model_data2.oMf[RFcframe_id].translation()(0);//(model_data2.oMf[RFcframe_id].translation()(0)+model_data2.oMf[LFcframe_id].translation()(0))/2;//rd_.link_[Pelvis].xpos(0);
             InitRPYM.translation()(1) = model_data2.oMf[RFcframe_id].translation()(1);//(model_data2.oMf[RFcframe_id].translation()(1)+model_data2.oMf[LFcframe_id].translation()(1))/2;//rd_.link_[Pelvis].xpos(1);
@@ -2069,7 +2069,7 @@ void CustomController::computeFast()
 
                             zmp_x_int = com_x_int - 0.03;
                             zmp_y_int = com_y_int;
-                            zmp_y_int = -(RFc_float_current.translation()(1)+LFc_float_current.translation()(1))/2;//com_y_int;  
+                            //zmp_y_int = -(RFc_float_current.translation()(1)+LFc_float_current.translation()(1))/2;//com_y_int;  
                             
                             virtual_temp1(0) = -0.1025 - RF_float_current.translation()(1);
                             virtual_temp1(1) = 0.1025 - LF_float_current.translation()(1);
