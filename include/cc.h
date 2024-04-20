@@ -47,6 +47,7 @@ public:
     void zmpControl(RobotData &rd_l);
     void dspForceControl(RobotData &Robot, double alpha);
     void setContact_1(RobotData &Robot, bool left_foot, bool right_foot, bool left_hand, bool right_hand);
+    void computeIkControl(Eigen::Isometry3d float_trunk_transform, Eigen::Isometry3d float_lleg_transform, Eigen::Isometry3d float_rleg_transform, Eigen::Vector12d& desired_leg_q);
     
 
     std::future<void> solverx;
@@ -101,7 +102,8 @@ public:
     Eigen::VectorVQd qdd_pinocchio_desired1;
     Eigen::VectorVQd qdd_pinocchio_desired1_raw;
     Eigen::VectorVQd qdd_pinocchio_desired1_;
-    Eigen::VectorXd qp_result, qp_result_prev, qp_result1;
+    Eigen::VectorVQd qdd_pinocchio_desired1_lpf;
+    Eigen::VectorXd qp_result, qp_result_prev, qp_result1, qp_result_lpf;
 
     std::atomic<bool> time_tick;
     std::atomic<bool> time_tick_next;
@@ -167,7 +169,7 @@ public:
     Eigen::MatrixXd RFj1, LFj1;
 
     int as = 0;
-    bool q_desired_bool = true;
+    bool q_desired_bool = false;
     bool pelv_frame = false;
 
     Eigen::Isometry3d RFc_float_current;
@@ -322,6 +324,7 @@ public :
     void setupSharedMemoryRead(int size);
     void attachSharedMemory();
     void attachSharedMemoryint();
+
     void close();
     int m_shmid;   
     key_t m_key;
