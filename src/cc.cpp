@@ -1062,7 +1062,7 @@ void CustomController::computeSlow()
                 H1.setIdentity();
                 
                 g1.setZero();
-                H1.block(12,12,MODEL_DOF_VIRTUAL,MODEL_DOF_VIRTUAL) = 1.0 *H1.block(12,12,MODEL_DOF_VIRTUAL,MODEL_DOF_VIRTUAL);
+                H1.block(12,12,MODEL_DOF_VIRTUAL,MODEL_DOF_VIRTUAL) = 1000.0 *H1.block(12,12,MODEL_DOF_VIRTUAL,MODEL_DOF_VIRTUAL);
                
                 lb1.setConstant(variable_size1, -100000);
                 ub1.setConstant(variable_size1, 100000);
@@ -1103,7 +1103,7 @@ void CustomController::computeSlow()
                 }
                 
                 //H1.block(12,12,2,2) = 1000 * H1.block(12,12,2,2);
-                H1.block(15,15,3,3) = 1000 * H1.block(15,15,3,3);
+                H1.block(15,15,3,3) = 10 * H1.block(15,15,3,3);
 
                 H1 = H1 + H1_temp;
                 g1_temp = -qp_result * 1.0;
