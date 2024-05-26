@@ -34,7 +34,7 @@ CustomController::CustomController(RobotData &rd) : rd_(rd)
    
     pinocchio::JointModelFreeFlyer root_joint;
     pinocchio::Model model1;
-    pinocchio::urdf::buildModel("/home/dyros/catkin_ws/src/dyros_tocabi_v2/tocabi_description/robots/dyros_tocabi_0714.urdf", root_joint, model1);/*_0714*/
+    pinocchio::urdf::buildModel("/home/jhk/catkin_ws/src/dyros_tocabi_v2/tocabi_description/robots/dyros_tocabi.urdf", root_joint, model1);/*_0714*/
     model = model1;
     model_state = model1;
     model = model1;
@@ -90,36 +90,36 @@ CustomController::CustomController(RobotData &rd) : rd_(rd)
 
     if(as == 0)
     {
-        rf = "/home/dyros/catkin_ws/src/tocabi_cc/wpwkfl/lfpos1.txt";
-        rf1 = "/home/dyros/catkin_ws/src/tocabi_cc/wpwkfl/rfpos1.txt";
-        rf2 = "/home/dyros/catkin_ws/src/tocabi_cc/wpwkfl/zmpbx1.txt";
-        rf3 = "/home/dyros/catkin_ws/src/tocabi_cc/wpwkfl/com_ref_lipm.txt";
-        rf4 = "/home/dyros/catkin_ws/src/tocabi_cc/wpwkfl/comd_re_lipm.txt";
-        rf5 = "/home/dyros/catkin_ws/src/tocabi_cc/wpwkfl/angmom_de_lipm.txt";
-        rf6 = "/home/dyros/catkin_ws/src/tocabi_cc/wpwkfl/zmp_des_lipm.txt";
-        rf7 = "/home/dyros/catkin_ws/src/tocabi_cc/wpwkfl/zmpby1.txt";
+        rf = "/home/jhk/catkin_ws/src/tocabi_cc/wpwkfl/lfpos1.txt";
+        rf1 = "/home/jhk/catkin_ws/src/tocabi_cc/wpwkfl/rfpos1.txt";
+        rf2 = "/home/jhk/catkin_ws/src/tocabi_cc/wpwkfl/zmpbx1.txt";
+        rf3 = "/home/jhk/catkin_ws/src/tocabi_cc/wpwkfl/com_ref_lipm.txt";
+        rf4 = "/home/jhk/catkin_ws/src/tocabi_cc/wpwkfl/comd_re_lipm.txt";
+        rf5 = "/home/jhk/catkin_ws/src/tocabi_cc/wpwkfl/angmom_de_lipm.txt";
+        rf6 = "/home/jhk/catkin_ws/src/tocabi_cc/wpwkfl/zmp_des_lipm.txt";
+        rf7 = "/home/jhk/catkin_ws/src/tocabi_cc/wpwkfl/zmpby1.txt";
     }
     else if(as == 1)
     {
-        rf = "/home/dyros/catkin_ws/src/tocabi_cc/wpwkflup1/lfpos1.txt";
-        rf1 = "/home/dyros/catkin_ws/src/tocabi_cc/wpwkflup1/rfpos1.txt";
-        rf2 = "/home/dyros/catkin_ws/src/tocabi_cc/wpwkflup1/zmpbx1.txt";
-        rf3 = "/home/dyros/catkin_ws/src/tocabi_cc/wpwkflup1/com_ref_lipm.txt";
-        rf4 = "/home/dyros/catkin_ws/src/tocabi_cc/wpwkflup1/comd_re_lipm.txt";
-        rf5 = "/home/dyros/catkin_ws/src/tocabi_cc/wpwkflup1/angmom_de_lipm.txt";
-        rf6 = "/home/dyros/catkin_ws/src/tocabi_cc/wpwkflup1/zmp_des_lipm.txt";
-        rf7 = "/home/dyros/catkin_ws/src/tocabi_cc/wpwkflup1/zmpby1.txt";
+        rf = "/home/jhk/catkin_ws/src/tocabi_cc/wpwkflup1/lfpos1.txt";
+        rf1 = "/home/jhk/catkin_ws/src/tocabi_cc/wpwkflup1/rfpos1.txt";
+        rf2 = "/home/jhk/catkin_ws/src/tocabi_cc/wpwkflup1/zmpbx1.txt";
+        rf3 = "/home/jhk/catkin_ws/src/tocabi_cc/wpwkflup1/com_ref_lipm.txt";
+        rf4 = "/home/jhk/catkin_ws/src/tocabi_cc/wpwkflup1/comd_re_lipm.txt";
+        rf5 = "/home/jhk/catkin_ws/src/tocabi_cc/wpwkflup1/angmom_de_lipm.txt";
+        rf6 = "/home/jhk/catkin_ws/src/tocabi_cc/wpwkflup1/zmp_des_lipm.txt";
+        rf7 = "/home/jhk/catkin_ws/src/tocabi_cc/wpwkflup1/zmpby1.txt";
     }
     else
     {
-        rf = "/home/dyros/catkin_ws/src/tocabi_cc/LIPFM_CEN/lfpos.txt";
-        rf1 = "/home/dyros/catkin_ws/src/tocabi_cc/LIPFM_CEN/rfpos.txt";
-        rf2 = "/home/dyros/catkin_ws/src/tocabi_cc/LIPFM_CEN/zmpb.txt";
-        rf3 = "/home/dyros/catkin_ws/src/tocabi_cc/LIPFM_CEN/com_ref.txt";
-        rf4 = "/home/dyros/catkin_ws/src/tocabi_cc/LIPFM_CEN/comd_re.txt";
-        rf5 = "/home/dyros/catkin_ws/src/tocabi_cc/LIPFM_CEN/angmom_de.txt";
-        rf6 = "/home/dyros/catkin_ws/src/tocabi_cc/LIPFM_CEN/zmp_des.txt";
-        rf7 = "/home/dyros/catkin_ws/src/tocabi_cc/LIPFM_CEN/zmpb.txt";
+        rf = "/home/jhk/catkin_ws/src/tocabi_cc/LIPFM_CEN/lfpos.txt";
+        rf1 = "/home/jhk/catkin_ws/src/tocabi_cc/LIPFM_CEN/rfpos.txt";
+        rf2 = "/home/jhk/catkin_ws/src/tocabi_cc/LIPFM_CEN/zmpb.txt";
+        rf3 = "/home/jhk/catkin_ws/src/tocabi_cc/LIPFM_CEN/com_ref.txt";
+        rf4 = "/home/jhk/catkin_ws/src/tocabi_cc/LIPFM_CEN/comd_re.txt";
+        rf5 = "/home/jhk/catkin_ws/src/tocabi_cc/LIPFM_CEN/angmom_de.txt";
+        rf6 = "/home/jhk/catkin_ws/src/tocabi_cc/LIPFM_CEN/zmp_des.txt";
+        rf7 = "/home/jhk/catkin_ws/src/tocabi_cc/LIPFM_CEN/zmpb.txt";
     }
 
     contactMode = 1; //2 LF
@@ -411,6 +411,7 @@ CustomController::CustomController(RobotData &rd) : rd_(rd)
 
     nonlineareff.resize(MODEL_DOF_VIRTUAL,1);
     tau_.setZero(MODEL_DOF_VIRTUAL);
+    tau_1.setZero(MODEL_DOF_VIRTUAL);
 
     variable_size2 = 18;
     constraint_size2 = 15;
@@ -1020,7 +1021,7 @@ void CustomController::computeSlow()
         if(initial_tick_mj <= 2.0 * hz_)
         {
             Eigen::Vector12d q_leg;
-            q_leg.head(12) << 0, 0, -0.55, 1.26, -0.71, 0, 0, 0, -0.55, 1.26, -0.71, 0;
+            q_leg.head(12) << 0, 0, -0.24, 0.6, -0.36, 0, 0, 0, -0.24, 0.6, -0.36, 0;//0, 0, -0.55, 1.26, -0.71, 0, 0, 0, -0.55, 1.26, -0.71, 0;
             for (int i = 0; i < 12; i++)
                 ref_q_(i) = DyrosMath::cubic(initial_tick_mj, 0, 2.0 * hz_, Initial_ref_q_(i), q_leg(i), 0.0, 0.0);
 
@@ -1078,7 +1079,7 @@ void CustomController::computeSlow()
             updateInitialState();
             getRobotState();
             floatToSupportFootstep();
-            if (current_step_num_ <= 5)
+            if (current_step_num_ < total_step_num_)
             {
                 getZmpTrajectory();
                 getComTrajectory();
@@ -1097,6 +1098,18 @@ void CustomController::computeSlow()
                 }
 
                 getPelvTrajectory();
+                
+                if(momentumControlMode == true)
+                {
+                    //rfoot_trajectory_support_.translation()(0) = rfoot_trajectory_support_.translation()(0) + 10 * (rfoot_trajectory_support_.translation()(0) - rfoot_support_current_.translation()(0));
+                    //rfoot_trajectory_support_.translation()(1) = rfoot_trajectory_support_.translation()(1) + 10 * (rfoot_trajectory_support_.translation()(1) - rfoot_support_current_.translation()(1));
+                    //rfoot_trajectory_support_.translation()(2) = rfoot_trajectory_support_.translation()(2) + 3 * (rfoot_trajectory_support_.translation()(2) - rfoot_support_current_.translation()(2));
+
+                    //lfoot_trajectory_support_.translation()(0) = lfoot_trajectory_support_.translation()(0) + 10 * (lfoot_trajectory_support_.translation()(0) - lfoot_support_current_.translation()(0));
+                    //lfoot_trajectory_support_.translation()(1) = lfoot_trajectory_support_.translation()(1) + 10 * (lfoot_trajectory_support_.translation()(1) - lfoot_support_current_.translation()(1));
+                    //lfoot_trajectory_support_.translation()(2) = lfoot_trajectory_support_.translation()(2) + 3 * (lfoot_trajectory_support_.translation()(2) - lfoot_support_current_.translation()(2));
+                } 
+
                 supportToFloatPattern();
 
                 Eigen::Vector2d upper_d;
@@ -1112,16 +1125,17 @@ void CustomController::computeSlow()
                     lfoot_trajectory_float_pre = lfoot_trajectory_float_;
                     rfoot_trajectory_float_pre = rfoot_trajectory_float_;
                     pelv_trajectory_float_pre = pelv_trajectory_float_;
+
                     computeIkControl_MJ(pelv_trajectory_float_, lfoot_trajectory_float_, rfoot_trajectory_float_, q_des_);
                 }
                 else
                 {
-                    com_d = (pelv_trajectory_float_.translation() - pelv_trajectory_float_pre.translation()) * 2000;
-                    rfoot_d = (rfoot_trajectory_float_.translation() - rfoot_trajectory_float_pre.translation()) * 2000;
-                    lfoot_d = (lfoot_trajectory_float_.translation() - lfoot_trajectory_float_pre.translation()) * 2000;
-                    lfoot_ori = -DyrosMath::getPhi(lfoot_trajectory_float_pre.linear(), lfoot_trajectory_float_.linear()) * 5.0;
-                    rfoot_ori = -DyrosMath::getPhi(rfoot_trajectory_float_pre.linear(), rfoot_trajectory_float_.linear()) * 5.0;
-                   
+                    com_d = (pelv_trajectory_float_.translation() - pelv_trajectory_float_pre.translation());
+                    rfoot_d = (rfoot_trajectory_float_.translation() - rfoot_trajectory_float_pre.translation());
+                    lfoot_d = (lfoot_trajectory_float_.translation() - lfoot_trajectory_float_pre.translation());
+                    lfoot_ori = -DyrosMath::getPhi(lfoot_trajectory_float_pre.linear(), lfoot_trajectory_float_.linear()) * 3.0;
+                    rfoot_ori = -DyrosMath::getPhi(rfoot_trajectory_float_pre.linear(), rfoot_trajectory_float_.linear()) * 3.0;
+
                     lfoot_trajectory_float_pre = lfoot_trajectory_float_;
                     rfoot_trajectory_float_pre = rfoot_trajectory_float_;
                     pelv_trajectory_float_pre = pelv_trajectory_float_;
@@ -1141,12 +1155,7 @@ void CustomController::computeSlow()
                 else
                 {
                     momentumControl(rd_, com_d, ang_d, rfoot_d, lfoot_d, upper_d, rfoot_ori, lfoot_ori);
-                    if(walking_tick_mj % 200 == 0)
-                    {
-                        q_des_.head(12) = rd_.q_.head(12) + q_dm.segment<12>(6)/2000;
-                    }
-                    else
-                        q_des_.head(12) = q_des_.head(12) + q_dm.segment<12>(6)/2000;
+                    q_des_.head(12) = q_des_.head(12) + q_dm.segment<12>(6);
                 }
 
                 Compliant_control(q_des_);
@@ -1246,23 +1255,6 @@ void CustomController::computeSlow()
                             qdd_des_ = (qd_des_lpf - qd_des_prev) * 2000;
                         }
 
-                        /*for (int i = 0; i < 18; i++)
-                        {
-                            if(i == 0)
-                                qdd_des_virtual[i] = qdd_des_virtual[i] + 50.0 * (com_desired_(i) - 0.15 * damping_x - com_support_current_(i));
-                            else if(i == 1)
-                                qdd_des_virtual[i] = qdd_des_virtual[i] + 50.0 *  (com_desired_(i) - 0.6 * damping_y - com_support_current_(i));
-                            else if(i == 2)
-                                qdd_des_virtual[i] = qdd_des_virtual[i];
-                           // else if(i == 3)
-                           //     qdd_des_virtual[i] = qdd_des_virtual[i] + 30.0 *(- R_angle);
-                           // else if(i == 4)
-                            //    qdd_des_virtual[i] = qdd_des_virtual[i] + 30.0 *(- P_angle);
-                            //else if(i == 5)
-                            //    qdd_des_virtual[i] = qdd_des_virtual[i];                            
-                            else if(i >= 6)
-                                qdd_des_[i-6] = qdd_des_[i-6] + 0.001 * (Kp(i-6) * (ref_q_(i-6) - rd_.q_(i-6)) - Kd(i-6) * rd_.q_dot_(i-6));
-                        }*/
 
                         qdd_des_lpf =  1 / (1 + 0.1 * M_PI * 6.0 * del_t) * qdd_des_lpf + (0.1 * M_PI * 6.0 * del_t) / (1 + 0.1 * M_PI * 6.0 * del_t) * qdd_des_;
                         qdd_des_virtual_lpf =  1 / (1 + 0.1 * M_PI * 6.0 * del_t) * qdd_des_virtual_lpf + (0.1 * M_PI * 6.0 * del_t) / (1 + 0.1 * M_PI * 6.0 * del_t) * qdd_des_virtual;
@@ -1277,26 +1269,6 @@ void CustomController::computeSlow()
                     {
                         atb_qddot_update_ = true;
                         qdd_des_virtual_fast = qdd_des_virtual_;
-                       
-                        /*
-                        for (int i = 0; i < 18; i++)
-                        {
-                            if(i == 0)
-                                qdd_des_virtual_fast[i] = qdd_des_virtual_[i];// + 50.0 * (com_desired_(i) - 0.15 * damping_x - com_support_current_(i));
-                            else if(i == 1)
-                                qdd_des_virtual_fast[i] = qdd_des_virtual_[i];// + 50.0 *  (com_desired_(i) - 0.6 * damping_y - com_support_current_(i));
-                            else if(i == 2)
-                                qdd_des_virtual_fast[i] = qdd_des_virtual_[i];
-                            else if(i == 3)
-                                qdd_des_virtual_fast[i] = qdd_des_virtual_[i] + 30.0 *(- R_angle);
-                            else if(i == 4)
-                                qdd_des_virtual_fast[i] = qdd_des_virtual_[i] + 30.0 *(- P_angle);
-                            else if(i == 5)
-                                qdd_des_virtual_fast[i] = qdd_des_virtual_[i];                            
-                            else
-                                qdd_des_virtual_fast[i] = qdd_des_virtual_[i] + 0.02 * (Kp(i-6) * (ref_q_(i-6) - rd_.q_(i-6)) - Kd(i-6) * rd_.q_dot_(i-6));
-                        }*/
-
                         atb_qddot_update_ = false;
                     }
    
@@ -1353,34 +1325,37 @@ void CustomController::computeSlow()
                     }
                 }
                
-                file[0] << mpc_cycle << " " << contactMode << " " << contactMode_fast<< " " << l_ft_LPF(2) << " " << r_ft_LPF(2) << " " << com_alpha<< " "  << walking_tick_mj << " " <<current_step_num_ << " " <<com_alpha << " " << solved << " "<< com_support_current_(0)<< " " << com_support_current_(1) << " " << com_desired_(0)<< " " << com_desired_(1)<< " " << zmpx_ << " "<< zmpx_d << " " << zmp_measured_mj_(0) << " " << zmpy_ << " "<< zmpy_d << " " << zmp_measured_mj_(1) << " " << lfoot_trajectory_support_.translation()(0) << " " << rfoot_trajectory_support_.translation()(0) << " " << lfoot_support_current_.translation()(0)<< " " << rfoot_support_current_.translation()(0)<< " " ;//<<com_alpha<< " "<< qp_result(2) << " " << qp_result(8) << " " <<del_zmp(0)<< " " <<del_zmp(1)<< " ";
+                //file[0] << mpc_cycle << " " << contactMode << " " << contactMode_fast<< " " << l_ft_LPF(2) << " " << r_ft_LPF(2) << " " << com_alpha<< " "  << walking_tick_mj << " " <<current_step_num_ << " " <<com_alpha << " " << solved << " "<< com_support_current_(0)<< " " << com_support_current_(1) << " " << com_desired_(0)<< " " << com_desired_(1)<< " " << zmpx_ << " "<< zmpx_d << " " << zmp_measured_mj_(0) << " " << zmpy_ << " "<< zmpy_d << " " << zmp_measured_mj_(1) << " " << lfoot_trajectory_support_.translation()(0) << " " << rfoot_trajectory_support_.translation()(0) << " " << lfoot_support_current_.translation()(0)<< " " << rfoot_support_current_.translation()(0)<< " "<< lfoot_trajectory_support_.translation()(1) << " " << rfoot_trajectory_support_.translation()(1) << " " << lfoot_support_current_.translation()(1)<< " " << rfoot_support_current_.translation()(1)<< " " ;//<<com_alpha<< " "<< qp_result(2) << " " << qp_result(8) << " " <<del_zmp(0)<< " " <<del_zmp(1)<< " ";
            
-                file[0] << "111  ";
+                //file[0] << "111  ";
                
-                file[0] << qp_result[0] << " "<< qp_result[1] << " "<< qp_result[2] << " "<< qp_result[3] << " "<< qp_result[4] << " "<< qp_result[5] <<  " "<< qp_result[0+6] << " "<< qp_result[1+6] << " "<< qp_result[2+6] << " "<< qp_result[3+6] << " "<< qp_result[4+6] << " "<< qp_result[5+6] <<  " ";
                
-                if(contactMode_fast == 1)
+                /*if(contactMode_fast == 1)
                     file[0] << zmpy_d << " " << zmpx_d << " " << ((rfoot_sy + qp_result(3)/qp_result(2)) * qp_result(2) + (lfoot_sy + qp_result(9)/qp_result(8)) * qp_result(8))/(qp_result(8) + qp_result(2))<< " " << ((rfoot_sx - qp_result(4)/qp_result(2)) * qp_result(2) + (lfoot_sx - qp_result(10)/qp_result(8)) * qp_result(8))/(qp_result(8) + qp_result(2));
                 else if(contactMode_fast == 2)
                     file[0] << zmpy_d << " " << zmpx_d << " " << ((lfoot_sy + qp_result(9)/qp_result(8)) * qp_result(8))/(qp_result(8) )<< " " << ((lfoot_sx - qp_result(10)/qp_result(8)) * qp_result(8))/(qp_result(8));
                 else
                     file[0] << zmpy_d << " " << zmpx_d << " " << ((rfoot_sy + qp_result(3)/qp_result(2)) * qp_result(2))/(qp_result(2))<< " " << ((rfoot_sx - qp_result(4)/qp_result(2)) * qp_result(2))/(qp_result(2));
-               
-                file[0] << " " << qp_result.tail(2).head(1)<< " " << qp_result.tail(1) << " ";
-               
+                */
+                //file[0] << " " << qp_result.tail(2).head(1)<< " " << qp_result.tail(1) << " ";
+                file[1] << walking_tick_mj << " " << contactMode << " " << walking_tick_jk << " " << qp_solved << " ";
                 file[1] << "12 ";
                 for (int i = 0; i < 12 ; i++)
                     file[1] << Gravity_MJ_fast_(i) << " ";// << rd_.torque_desired(i) << " ";// << qdd_des_virtual_[i] << " ";
                 //Gravity_MJ_fast_(i) << " ";
-                for (int i = 0; i < 30 ; i++)
-                    file[1]<< qp_result(i) << " ";//<< " " << qdd_des_virtual_[i] << " ";// <<  q_temp(i) << " ";                */
+                file[1] << "14 ";
+                for(int i = 0; i < 12; i++)
+                    file[1] << q_des_(i) << " " << rd_.q_(i) << " ";
+                file[0] << walking_tick_mj << " " << com_support_current_(0)<< " " << com_support_current_(1) << " " << com_desired_(0)<< " " << com_desired_(1) << " "  << lfoot_trajectory_support_.translation()(0)<< " " << lfoot_trajectory_support_.translation()(1)<< " " << lfoot_trajectory_support_.translation()(2)<< " " << rfoot_trajectory_support_.translation()(0)<< " " << rfoot_trajectory_support_.translation()(1)<< " " << rfoot_trajectory_support_.translation()(2) << " " <<lfoot_support_current_.translation()(0) << " " <<lfoot_support_current_.translation()(1) << " " <<lfoot_support_current_.translation()(2) << " " <<rfoot_support_current_.translation()(0)<< " " <<rfoot_support_current_.translation()(1)<< " " <<rfoot_support_current_.translation()(2) << " " << pelv_trajectory_float_.translation()(0) << " " << pelv_trajectory_float_.translation()(1)<< " " << zmpx_d << " " << zmp_measured_mj_(0) << " " << zmpy_ << " "<< zmp_measured_mj_(1) << std::endl;
+                //for (int i = 0; i < 30 ; i++)
+                //    file[1]<< qp_result(i) << " ";//<< " " << qdd_des_virtual_[i] << " ";// <<  q_temp(i) << " ";                */
                
                 Eigen::Vector12d X_temp;
                 X_temp = g_temp.tail(12) + G_temp *qp_result.segment<MODEL_DOF_VIRTUAL>(12);
 
-                file[0] << std::endl;
+                //file[0] << std::endl;
                
-                file[1] << com_alpha << std::endl;
+                file[1] << zmpy_ << " " << zmpx_ << std::endl;
                
                 desired_q_not_compensated_ = ref_q_;
                 updateNextStepTime();
@@ -1480,6 +1455,7 @@ void CustomController::computeFast()
                     else
                     {
                         setContact_custom();
+                        
                         X1.setZero();
                         J1.setZero();
                         H1.setZero();
@@ -1491,835 +1467,845 @@ void CustomController::computeFast()
                         ub1.setZero();
 
                         RigidBodyDynamics::NonlinearEffects(model_c_, rd_.q_virtual_, rd_.q_dot_virtual_, nonlineareff);
-                       
-                        if(contactMode_fast == 1)
-                        {    
-                            double lx, ly, mu;
-                            ly = 0.048;
-                            lx = 0.11;
-                            mu = 0.8;
 
-                            if(lfoot_sx >  rfoot_sx)
-                            {
-                                if(zmpx_fast > lfoot_sx + lx)
-                                    zmpx_d  = lfoot_sx + lx;
-                                else if(zmpx_fast < rfoot_sx - lx)
-                                    zmpx_d  = rfoot_sx - lx;
+                        if(true)//torquecontrol_first == true || (torquecontrol_first == false && walking_tick_jk >= 300))
+                        {
+                            if(contactMode_fast == 1)
+                            {    
+                                double lx, ly, mu;
+                                ly = 0.048;
+                                lx = 0.11;
+                                mu = 0.8;
+
+                                if(lfoot_sx >  rfoot_sx)
+                                {
+                                    if(zmpx_fast > lfoot_sx + lx)
+                                        zmpx_d  = lfoot_sx + lx;
+                                    else if(zmpx_fast < rfoot_sx - lx)
+                                        zmpx_d  = rfoot_sx - lx;
+                                    else
+                                        zmpx_d = zmpx_fast;
+
+                                    zmp_bx(0) =  lfoot_sx + lx;
+                                    zmp_bx(1) =  rfoot_sx - lx;
+                                }
+                                else if(lfoot_sx <  rfoot_sx)
+                                {
+                                    if(zmpx_fast > rfoot_sx + lx)
+                                        zmpx_d  = rfoot_sx + lx;
+                                    else if(zmpx_fast < lfoot_sx - lx)
+                                        zmpx_d  = lfoot_sx - lx;
+                                    else
+                                        zmpx_d = zmpx_fast;
+                                    zmp_bx(0) =  rfoot_sx + lx;
+                                    zmp_bx(1) =  lfoot_sx - lx;
+                                }
                                 else
-                                    zmpx_d = zmpx_fast;
+                                {
+                                    if(zmpx_fast > rfoot_sx + lx)
+                                        zmpx_d  = rfoot_sx + lx;
+                                    else if(zmpx_fast < lfoot_sx - lx)
+                                        zmpx_d  = lfoot_sx - lx;
+                                    else
+                                        zmpx_d = zmpx_fast;
+                                    zmp_bx(0) =  lfoot_sx + lx;
+                                    zmp_bx(1) =  rfoot_sx - lx;
+                                }
 
-                                zmp_bx(0) =  lfoot_sx + lx;
-                                zmp_bx(1) =  rfoot_sx - lx;
-                            }
-                            else if(lfoot_sx <  rfoot_sx)
-                            {
-                                if(zmpx_fast > rfoot_sx + lx)
-                                    zmpx_d  = rfoot_sx + lx;
-                                else if(zmpx_fast < lfoot_sx - lx)
-                                    zmpx_d  = lfoot_sx - lx;
+                                if(zmpy_fast > lfoot_sy + ly)
+                                    zmpy_d = lfoot_sy + ly;
                                 else
-                                    zmpx_d = zmpx_fast;
-                                zmp_bx(0) =  rfoot_sx + lx;
-                                zmp_bx(1) =  lfoot_sx - lx;
-                            }
-                            else
-                            {
-                                if(zmpx_fast > rfoot_sx + lx)
-                                    zmpx_d  = rfoot_sx + lx;
-                                else if(zmpx_fast < lfoot_sx - lx)
-                                    zmpx_d  = lfoot_sx - lx;
+                                    zmpy_d = zmpy_fast;
+
+                                if(zmpy_fast < rfoot_sy - ly)
+                                    zmpy_d = rfoot_sy - ly;
                                 else
-                                    zmpx_d = zmpx_fast;
-                                zmp_bx(0) =  lfoot_sx + lx;
-                                zmp_bx(1) =  rfoot_sx - lx;
-                            }
+                                    zmpy_d = zmpy_fast;
+                        
+                                ly = 0.05;
+                                lx = 0.13;
+                        
+                                M_ = rd_.A_;
+                                nle = nonlineareff;
 
-                            if(zmpy_fast > lfoot_sy + ly)
-                                zmpy_d = lfoot_sy + ly;
-                            else
-                                zmpy_d = zmpy_fast;
+                                H1.setIdentity();
+                        
+                                g1.setZero();
+                                H1.block(12,12,MODEL_DOF_VIRTUAL,MODEL_DOF_VIRTUAL) = 1000000.0 * H1.block(12,12,MODEL_DOF_VIRTUAL,MODEL_DOF_VIRTUAL);
+                            
+                                lb1.setConstant(variable_size1, -100000);
+                                ub1.setConstant(variable_size1, 100000);
 
-                            if(zmpy_fast < rfoot_sy - ly)
-                                zmpy_d = rfoot_sy - ly;
-                            else
-                                zmpy_d = zmpy_fast;
-                       
-                            ly = 0.05;
-                            lx = 0.13;
-                       
-                            M_ = rd_.A_;
-                            nle = nonlineareff;
-
-                            H1.setIdentity();
-                       
-                            g1.setZero();
-                            H1.block(12,12,MODEL_DOF_VIRTUAL,MODEL_DOF_VIRTUAL) = 1000000.0 * H1.block(12,12,MODEL_DOF_VIRTUAL,MODEL_DOF_VIRTUAL);
-                           
-                            lb1.setConstant(variable_size1, -100000);
-                            ub1.setConstant(variable_size1, 100000);
-
-                            //wpwkfl
-                            H1(2,2) = 10.0;//0.1;
-                            H1(8,8) = 10.0;//0.1;
-                            g1(2) = - (1-com_alpha_fast) * rd_.link_[COM_id].mass * GRAVITY * 10.0;
-                            g1(8) = - (com_alpha_fast) * rd_.link_[COM_id].mass * GRAVITY * 10.0;
-                            lb1(2) = 0.0;
-                            lb1(8) = 0.0;
-
-                            lb1(15) = 0.0;
-                            lb1(16) = 0.0;
-                            ub1(15) = 0.0;
-                            ub1(16) = 0.0;
-
-                            lb1(17) = 0.0;
-                            ub1(17) = 0.0;
-                           
-                            H1_temp.setIdentity();
-
-                            H1.block(12,12,6,6) = 1 * H1.block(12,12,6,6);
-                            //H1.block(12,12,MODEL_DOF_VIRTUAL-6,MODEL_DOF_VIRTUAL-6) = 10 * H1.block(18,18,MODEL_DOF_VIRTUAL-6,MODEL_DOF_VIRTUAL-6);
-
-                            if(torquecontrol_first)
-                            {
-                                H1_temp = 1 * H1_temp;
+                                //wpwkfl
+                                H1(2,2) = 10.0;//0.1;
+                                H1(8,8) = 10.0;//0.1;
                                 g1(2) = - (1-com_alpha_fast) * rd_.link_[COM_id].mass * GRAVITY * 10.0;
                                 g1(8) = - (com_alpha_fast) * rd_.link_[COM_id].mass * GRAVITY * 10.0;
-                                H1 = H1 + H1_temp;
-                                g1_temp = -qp_result * 1.0;
-                                g1 = g1 + g1_temp;
-                                torquecontrol_first = false;
+                                lb1(2) = 0.0;
+                                lb1(8) = 0.0;
+
+                                lb1(15) = 0.0;
+                                lb1(16) = 0.0;
+                                ub1(15) = 0.0;
+                                ub1(16) = 0.0;
+
+                                lb1(17) = 0.0;
+                                ub1(17) = 0.0;
+                            
+                                H1_temp.setIdentity();
+
+                                H1.block(12,12,6,6) = 1 * H1.block(12,12,6,6);
+                                
+                                if(torquecontrol_first)
+                                {
+                                    H1_temp = 1 * H1_temp;
+                                    g1(2) = - (1-com_alpha_fast) * rd_.link_[COM_id].mass * GRAVITY * 10.0;
+                                    g1(8) = - (com_alpha_fast) * rd_.link_[COM_id].mass * GRAVITY * 10.0;
+                                    H1 = H1 + H1_temp;
+                                    qp_result(2) = (1-com_alpha_fast) * rd_.link_[COM_id].mass * GRAVITY * 1.0;
+                                    qp_result(8) = (com_alpha_fast) * rd_.link_[COM_id].mass * GRAVITY * 1.0;;
+                                    g1_temp = -qp_result * 1.0;
+                                    g1 = g1 + g1_temp;
+                                    torquecontrol_first = false;
+                                }
+                                else
+                                {
+                                    H1_temp.setZero();
+                                    double weight_s = 100.0;
+                                    H1_temp(2,2) = 1.0;
+                                    H1_temp(8,8) = 1.0;
+                                    H1_temp.block(12+MODEL_DOF_VIRTUAL,12+MODEL_DOF_VIRTUAL,2,2).setIdentity();
+                                    H1_temp = 0.03 * H1_temp;
+                                    H1_temp.block(12+MODEL_DOF_VIRTUAL,12+MODEL_DOF_VIRTUAL,2,2) = weight_s * H1_temp.block(12+MODEL_DOF_VIRTUAL,12+MODEL_DOF_VIRTUAL,2,2);
+                                    H1_temp.block(12+MODEL_DOF_VIRTUAL,12+MODEL_DOF_VIRTUAL,2,2) = 1000 * H1_temp.block(12+MODEL_DOF_VIRTUAL,12+MODEL_DOF_VIRTUAL,2,2);
+                            
+
+                                    H1 = H1 + H1_temp;
+                                    g1_temp.setZero();
+                                    g1_temp(2) = -qp_result(2) * 0.03;
+                                    g1_temp(8) = -qp_result(8) * 0.03;
+                                    g1_temp.tail(2) = -qp_result.tail(2) * 0.03 * weight_s;
+                                    g1 = g1 + g1_temp;
+                                }
+
+                                lbA1.head(6) = (nle + M_ * qdd_pinocchio_desired1_).head(6);
+                                ubA1.head(6) = (nle + M_ * qdd_pinocchio_desired1_).head(6);
+                            
+                                double weight_resi = 0.0;
+                                G_temp.setZero();
+                                g_temp.setZero();
+                                G_temp.block(0,0,6,MODEL_DOF_VIRTUAL) = RFj;
+                                G_temp.block(6,0,6,MODEL_DOF_VIRTUAL) = LFj;
+
+                                g_temp.tail(12) <<  RFdj * rd_.q_dot_virtual_ + RFj * qdd_pinocchio_desired1_, LFdj * rd_.q_dot_virtual_ + LFj * qdd_pinocchio_desired1_;
+                                g1.tail(MODEL_DOF_VIRTUAL) = g1.tail(MODEL_DOF_VIRTUAL) + weight_resi * G_temp.transpose() * g_temp;
+                                H1.block(12, 12, MODEL_DOF_VIRTUAL, MODEL_DOF_VIRTUAL) = H1.block(12, 12, MODEL_DOF_VIRTUAL, MODEL_DOF_VIRTUAL) + weight_resi * G_temp.transpose() * G_temp;
+                    
+                                //H1(12+MODEL_DOF_VIRTUAL,12+MODEL_DOF_VIRTUAL) = 100.0;//1.0;//0.0000001;
+
+                                //H1(13+MODEL_DOF_VIRTUAL,13+MODEL_DOF_VIRTUAL) = 100.0;//1.0;//0.00000001;
+
+                                A1.block(0,0,6,6) = RFj.transpose().block(0,0,6,6);
+                                A1.block(0,6,6,6) = LFj.transpose().block(0,0,6,6);
+                                A1.block(0,12,6, MODEL_DOF_VIRTUAL) = -M_.block(0,0,6,MODEL_DOF_VIRTUAL);
+                        
+                                A1.block(6,0,1,6)(0,2) = ly;
+                                A1.block(6,0,1,6)(0,3) = -1;
+                                lbA1(6) = 0.0;
+                                ubA1(6) = 100000.0;
+                                A1.block(7,0,1,6)(0,2) = ly;
+                                A1.block(7,0,1,6)(0,3) = 1;
+                                lbA1(7) = 0.0;
+                                ubA1(7) = 100000.0;
+                                A1.block(8,0,1,6)(0,2) = lx;
+                                A1.block(8,0,1,6)(0,4) = -1;
+                                lbA1(8) = 0.0;
+                                ubA1(8) = 100000.0;
+                                A1.block(9,0,1,6)(0,2) = lx;
+                                A1.block(9,0,1,6)(0,4) = 1;
+                                lbA1(9) = 0.0;
+                                ubA1(9) = 100000.0;
+                                A1.block(10,6,1,6)(0,2) = ly;
+                                A1.block(10,6,1,6)(0,3) = -1;
+                                lbA1(10) = 0.0;
+                                ubA1(10) = 100000.0;
+                                A1.block(11,6,1,6)(0,2) = ly;
+                                A1.block(11,6,1,6)(0,3) = 1;
+                                lbA1(11) = 0.0;
+                                ubA1(11) = 100000.0;
+                                A1.block(12,6,1,6)(0,2) = lx;
+                                A1.block(12,6,1,6)(0,4) = -1;
+                                lbA1(12) = 0.0;
+                                ubA1(12) = 100000.0;
+                                A1.block(13,6,1,6)(0,2) = lx;
+                                A1.block(13,6,1,6)(0,4) = 1;
+                                lbA1(13) = 0.0;
+                                ubA1(13) = 100000.0;
+
+                                A1.block(14,0,1,6)(0,2) = mu;
+                                A1.block(24,0,1,6)(0,0) = -1;
+                                lbA1(14) = 0.0;
+                                ubA1(14) = 100000.0;
+                                A1.block(15,0,1,6)(0,2) = mu;
+                                A1.block(15,0,1,6)(0,0) = 1;
+                                lbA1(15) = 0.0;
+                                ubA1(15) = 100000.0;
+                                A1.block(16,0,1,6)(0,2) = mu;
+                                A1.block(16,0,1,6)(0,1) = -1;
+                                lbA1(16) = 0.0;
+                                ubA1(16) = 100000.0;
+                                A1.block(17,0,1,6)(0,2) = mu;
+                                A1.block(17,0,1,6)(0,1) = 1;
+                                lbA1(17) = 0.0;
+                                ubA1(17) = 100000.0;
+                                A1.block(18,6,1,6)(0,2) = mu;
+                                A1.block(18,6,1,6)(0,0) = -1;
+                                lbA1(18) = 0.0;
+                                ubA1(18) = 100000.0;
+                                A1.block(19,6,1,6)(0,2) = mu;
+                                A1.block(19,6,1,6)(0,0) = 1;
+                                lbA1(19) = 0.0;
+                                ubA1(19) = 100000.0;
+                                A1.block(20,6,1,6)(0,2) = mu;
+                                A1.block(20,6,1,6)(0,1) = -1;
+                                lbA1(20) = 0.0;
+                                ubA1(20) = 100000.0;
+                                A1.block(21,6,1,6)(0,2) = mu;
+                                A1.block(21,6,1,6)(0,1) = 1;
+                                lbA1(21) = 0.0;
+                                ubA1(21) = 100000.0;
+                    
+                                A1.block(22,0,1,6)(0,2) = (rfoot_sy  - zmpy_d);
+                                A1.block(22,0,1,6)(0,3) = 1;
+                                A1.block(22,6,1,6)(0,2) = (lfoot_sy  - zmpy_d);
+                                A1.block(22,6,1,6)(0,3) = 1;
+                                lbA1(22) = 0.0;
+                                ubA1(22) = 0.0;
+
+                                A1(22,MODEL_DOF_VIRTUAL+12) = 1.0;
+
+                                A1.block(23,0,1,6)(0,2) = (rfoot_sx  - zmpx_d);
+                                A1.block(23,0,1,6)(0,4) = -1;
+                                A1.block(23,6,1,6)(0,2) = (lfoot_sx  - zmpx_d);
+                                A1.block(23,6,1,6)(0,4) = -1;
+                                lbA1(23) = 0.0;
+                                ubA1(23) = 0.0;
+
+                                A1(23,MODEL_DOF_VIRTUAL+13) = 1.0;
+
+                                A1.block(24,18,MODEL_DOF_VIRTUAL-6, MODEL_DOF_VIRTUAL-6) = M_.block(6,6,MODEL_DOF_VIRTUAL-6, MODEL_DOF_VIRTUAL-6);
+                                A1.block(24,0,MODEL_DOF_VIRTUAL-6,6) = -1 * RFj.transpose().block(6,0,MODEL_DOF_VIRTUAL-6,6);
+                                A1.block(24,6,MODEL_DOF_VIRTUAL-6,6) = -1 * LFj.transpose().block(6,0,MODEL_DOF_VIRTUAL-6,6);
+                    
+                                Eigen::VectorVQd Mqddot;
+                                Mqddot = M_ * qdd_pinocchio_desired1_;
+                            
+                                lbA1(24) = -333-nle(6)-Mqddot(6);
+                                ubA1(24) = 333-nle(6)-Mqddot(6);
+                                lbA1(25) = -232-nle(7)-Mqddot(7);
+                                ubA1(25) = 232-nle(7)-Mqddot(7);
+                                lbA1(26) = -263-nle(8)-Mqddot(8);
+                                ubA1(26) = 263-nle(8)-Mqddot(8);
+                                lbA1(27) = -289-nle(9)-Mqddot(9);
+                                ubA1(27) = 289-nle(9)-Mqddot(9);
+                                lbA1(28) = -222-nle(10)-Mqddot(10);
+                                ubA1(28) = 222-nle(10)-Mqddot(10);
+                                lbA1(29) = -166-nle(11)-Mqddot(11);
+                                ubA1(29) = 166-nle(11)-Mqddot(11);
+
+                                lbA1(30) = -333-nle(12)-Mqddot(12);
+                                ubA1(30) = 333-nle(12)-Mqddot(12);
+                                lbA1(31) = -232-nle(13)-Mqddot(13);
+                                ubA1(31) = 232-nle(13)-Mqddot(13);
+                                lbA1(32) = -263-nle(14)-Mqddot(14);
+                                ubA1(32) = 263-nle(14)-Mqddot(14);
+                                lbA1(33) = -289-nle(15)-Mqddot(15);
+                                ubA1(33) = 289-nle(15)-Mqddot(15);
+                                lbA1(34) = -222-nle(16)-Mqddot(16);
+                                ubA1(34) = 222-nle(16)-Mqddot(16);
+                                lbA1(35) = -166-nle(17)-Mqddot(17);
+                                ubA1(35) = 166-nle(17)-Mqddot(17);
+
+                                lbA1(36) = -303-nle(18)-Mqddot(18);
+                                ubA1(36) = 303-nle(18)-Mqddot(18);
+                                lbA1(37) = -303-nle(19)-Mqddot(19);
+                                ubA1(37) = 303-nle(19)-Mqddot(19);
+                                lbA1(38) = -303-nle(20)-Mqddot(20);
+                                ubA1(38) = 303-nle(20)-Mqddot(20);
+
+                                lbA1(39) = -64-nle(21)-Mqddot(21);
+                                ubA1(39) = 64-nle(21)-Mqddot(21);
+                                lbA1(40) = -64-nle(22)-Mqddot(22);
+                                ubA1(40) = 64-nle(22)-Mqddot(22);
+                                lbA1(41) = -64-nle(23)-Mqddot(23);
+                                ubA1(41) = 64-nle(23)-Mqddot(23);
+                                lbA1(42) = -64-nle(24)-Mqddot(24);
+                                ubA1(42) = 64-nle(24)-Mqddot(24);
+                                lbA1(43) = -23-nle(25)-Mqddot(25);
+                                ubA1(43) = 23-nle(25)-Mqddot(25);
+                                lbA1(44) = -23-nle(26)-Mqddot(26);
+                                ubA1(44) = 23-nle(26)-Mqddot(26);
+                                lbA1(45) = -10-nle(27)-Mqddot(27);
+                                ubA1(45) = 10-nle(27)-Mqddot(27);
+                                lbA1(46) = -10-nle(28)-Mqddot(28);
+                                ubA1(46) = 10-nle(28)-Mqddot(28);
+
+                                lbA1(47) = -10-nle(29)-Mqddot(29);
+                                ubA1(47) = 10-nle(29)-Mqddot(29);
+                                lbA1(48) = -10-nle(30)-Mqddot(30);
+                                ubA1(48) = 10-nle(30)-Mqddot(30);
+
+                                lbA1(49) = -64-nle(31)-Mqddot(31);
+                                ubA1(49) = 64-nle(31)-Mqddot(31);
+                                lbA1(50) = -64-nle(32)-Mqddot(32);
+                                ubA1(50) = 64-nle(32)-Mqddot(32);
+                                lbA1(51) = -64-nle(33)-Mqddot(33);
+                                ubA1(51) = 64-nle(33)-Mqddot(33);
+                                lbA1(52) = -64-nle(34)-Mqddot(34);
+                                ubA1(52) = 64-nle(34)-Mqddot(34);
+                                lbA1(53) = -23-nle(35)-Mqddot(35);
+                                ubA1(53) = 23-nle(35)-Mqddot(35);
+                                lbA1(54) = -23-nle(36)-Mqddot(36);
+                                ubA1(54) = 23-nle(36)-Mqddot(36);
+                                lbA1(55) = -10-nle(37)-Mqddot(37);
+                                ubA1(55) = 10-nle(37)-Mqddot(37);
+                                lbA1(56) = -10-nle(38)-Mqddot(38);
+                                ubA1(56) = 10-nle(38)-Mqddot(38);
+                            
+                                A1(57, 2) = 1.0;
+                                lbA1(57) = 0.1;
+                                ubA1(57) = 1000.0;
+
+                                A1(58, 8) = 1.0;
+                                lbA1(58) = 0.1;
+                                ubA1(58) = 1000.0;
+
+                                A1.block(59,0,1,6)(0,2) = mu;
+                                A1.block(59,0,1,6)(0,5) = 1;
+                                lbA1(59) = 0.0;
+                                ubA1(59) = 100000.0;
+                                A1.block(60,0,1,6)(0,2) = mu;
+                                A1.block(60,0,1,6)(0,5) = -1;
+                                lbA1(60) = 0.0;
+                                ubA1(60) = 100000.0;
+
+                                A1.block(61,6,1,6)(0,2) = mu;
+                                A1.block(61,6,1,6)(0,5) = 1;
+                                lbA1(61) = 0.0;
+                                ubA1(61) = 100000.0;
+                                A1.block(62,6,1,6)(0,2) = mu;
+                                A1.block(62,6,1,6)(0,5) = -1;
+                                lbA1(62) = 0.0;
+                                ubA1(62) = 100000.0;
+
+                                qp_torque_control.UpdateMinProblem(H1, g1);
+                                qp_torque_control.UpdateSubjectToAx(A1, lbA1, ubA1);
+                                qp_torque_control.UpdateSubjectToX(lb1, ub1);
+                                solved = qp_torque_control.SolveQPoases(100, qp_result);
+                            
+                                if (solved == true)
+                                {
+                                    tau_ = ((M_ * (qdd_pinocchio_desired1_ + qp_result.segment<MODEL_DOF_VIRTUAL>(12))+  nle - (RFj.transpose() * qp_result.head(6) + LFj.transpose() * qp_result.segment<6>(6))).transpose());  
+                                }
+                                control_time = control_time + 1;
                             }
-                            else
+                            else if(contactMode_fast == 2)
                             {
+                                double lx, ly, mu;
+                                ly = 0.048;
+                                lx = 0.11;
+                                mu = 0.8;
+
+                                if(zmpx_fast > lfoot_sx + lx)
+                                    zmpx_d  = lfoot_sx + lx;
+                                else if(zmpx_fast < lfoot_sx - lx)
+                                    zmpx_d  = lfoot_sx - lx;
+                                else
+                                    zmpx_d = zmpx_fast;
+
+                                if(zmpy_fast > lfoot_sy + ly)
+                                    zmpy_d = lfoot_sy + ly;
+                                else if(zmpy_fast < lfoot_sy - ly)
+                                    zmpy_d = lfoot_sy - ly;
+                                else
+                                    zmpy_d = zmpy_fast;
+
+                                zmp_bx(0) =  lfoot_sx + lx;
+                                zmp_bx(1) =  lfoot_sx - lx;
+
+                                ly = 0.05;
+                                lx = 0.13;
+                    
+                                M_ = rd_.A_;//rd_.A_;
+                                nle = nonlineareff;;
+
+                                H1.setIdentity();
+
+                                g1.setZero();
+                                H1.block(12,12,MODEL_DOF_VIRTUAL,MODEL_DOF_VIRTUAL) = 1000000*H1.block(12,12,MODEL_DOF_VIRTUAL,MODEL_DOF_VIRTUAL);
+                                lb1.setConstant(variable_size1, -100000);
+                                ub1.setConstant(variable_size1, 100000);
+                    
+                                H1(8,8) = 5;
+                                g1(8) = - (com_alpha_fast) * rd_.link_[COM_id].mass * GRAVITY * 5.0;
+                                //g1(8) = - com_alpha_fast * rd_.link_[COM_id].mass * GRAVITY * 5;
+                                lb1(2) = 0.0;
+                                lb1(8) = 0.0;
+                                lb1(15) = 0.0;
+                                lb1(16) = 0.0;
+                                ub1(15) = 0.0;
+                                ub1(16) = 0.0;
+
+                                lb1(17) = 0.0;
+                                ub1(17) = 0.0;
+
+
+                                H1.block(12,12,6,6) = 1 * H1.block(12,12,6,6);//10.0 * H1.block(12,12,6,6);revise
+                                //H1.block(12,12,MODEL_DOF_VIRTUAL-6,MODEL_DOF_VIRTUAL-6) = 10 * H1.block(18,18,MODEL_DOF_VIRTUAL-6,MODEL_DOF_VIRTUAL-6);
+
                                 H1_temp.setZero();
-                                double weight_s = 100.0;
+                                double weight_s = 10000.0;
                                 H1_temp(2,2) = 1.0;
                                 H1_temp(8,8) = 1.0;
                                 H1_temp.block(12+MODEL_DOF_VIRTUAL,12+MODEL_DOF_VIRTUAL,2,2).setIdentity();
                                 H1_temp = 0.03 * H1_temp;
                                 H1_temp.block(12+MODEL_DOF_VIRTUAL,12+MODEL_DOF_VIRTUAL,2,2) = weight_s * H1_temp.block(12+MODEL_DOF_VIRTUAL,12+MODEL_DOF_VIRTUAL,2,2);
-                                H1_temp.block(12+MODEL_DOF_VIRTUAL,12+MODEL_DOF_VIRTUAL,2,2) = 1000 * H1_temp.block(12+MODEL_DOF_VIRTUAL,12+MODEL_DOF_VIRTUAL,2,2);
-                           
-
+                                H1_temp.block(12+MODEL_DOF_VIRTUAL,12+MODEL_DOF_VIRTUAL,2,2) = 10 * H1_temp.block(12+MODEL_DOF_VIRTUAL,12+MODEL_DOF_VIRTUAL,2,2);
                                 H1 = H1 + H1_temp;
                                 g1_temp.setZero();
                                 g1_temp(2) = -qp_result(2) * 0.03;
                                 g1_temp(8) = -qp_result(8) * 0.03;
                                 g1_temp.tail(2) = -qp_result.tail(2) * 0.03 * weight_s;
                                 g1 = g1 + g1_temp;
+                    
+                                double weight_resi = 0.0;
+                                G_temp.setZero();
+                                g_temp.setZero();
+                                G_temp.block(0,0,6,MODEL_DOF_VIRTUAL) = LFj;
+                                g_temp.head(6) <<  LFdj * rd_.q_dot_virtual_ + LFj * qdd_pinocchio_desired1_;
+        
+                                g1.tail(MODEL_DOF_VIRTUAL) = g1.tail(MODEL_DOF_VIRTUAL) + weight_resi * G_temp.transpose() * g_temp;
+                                H1.block(12, 12, MODEL_DOF_VIRTUAL, MODEL_DOF_VIRTUAL) = H1.block(12, 12, MODEL_DOF_VIRTUAL, MODEL_DOF_VIRTUAL) + weight_resi * G_temp.transpose() * G_temp;
+                
+                                lbA1.head(6) = (nle + M_ * qdd_pinocchio_desired1_).head(6);
+                                ubA1.head(6) = (nle + M_ * qdd_pinocchio_desired1_).head(6);
+
+                                A1.block(0,6,6,6) = LFj.transpose().block(0,0,6,6);
+                                A1.block(0,12,6, MODEL_DOF_VIRTUAL) = -M_.block(0,0,6,MODEL_DOF_VIRTUAL);
+                    
+                                A1.block(6,6,1,6)(0,2) = ly;
+                                A1.block(6,6,1,6)(0,3) = -1;
+                                lbA1(6) = 0.0;
+                                ubA1(6) = 100000.0;
+                                A1.block(7,6,1,6)(0,2) = ly;
+                                A1.block(7,6,1,6)(0,3) = 1;
+                                lbA1(7) = 0.0;
+                                ubA1(7) = 100000.0;
+                                A1.block(8,6,1,6)(0,2) = lx;
+                                A1.block(8,6,1,6)(0,4) = -1;
+                                lbA1(8) = 0.0;
+                                ubA1(8) = 100000.0;
+                                A1.block(9,6,1,6)(0,2) = lx;
+                                A1.block(9,6,1,6)(0,4) = 1;
+                                lbA1(9) = 0.0;
+                                ubA1(9) = 100000.0;
+
+                                A1.block(14,6,1,6)(0,2) = mu;
+                                A1.block(24,6,1,6)(0,0) = -1;
+                                lbA1(14) = 0.0;
+                                ubA1(14) = 100000.0;
+                                A1.block(15,6,1,6)(0,2) = mu;
+                                A1.block(15,6,1,6)(0,0) = 1;
+                                lbA1(15) = 0.0;
+                                ubA1(15) = 100000.0;
+                                A1.block(16,6,1,6)(0,2) = mu;
+                                A1.block(16,6,1,6)(0,1) = -1;
+                                lbA1(16) = 0.0;
+                                ubA1(16) = 100000.0;
+                                A1.block(17,6,1,6)(0,2) = mu;
+                                A1.block(17,6,1,6)(0,1) = 1;
+                                lbA1(17) = 0.0;
+                                ubA1(17) = 100000.0;
+                
+                                A1.block(22,6,1,6)(0,2) = (lfoot_sy  - zmpy_d);
+                                A1.block(22,6,1,6)(0,3) = 1;
+
+                                lbA1(22) = 0.0;
+                                ubA1(22) = 0.0;
+
+                                A1(22,MODEL_DOF_VIRTUAL+12) = 1.0;
+                    
+                                A1.block(23,6,1,6)(0,2) = (lfoot_sx  - zmpx_d);
+                                A1.block(23,6,1,6)(0,4) = -1;
+            
+                                lbA1(23) = 0.0;
+                                ubA1(23) = 0.0;
+
+                                A1(23,MODEL_DOF_VIRTUAL+13) = 1.0;
+                    
+                                A1.block(24,18,MODEL_DOF_VIRTUAL-6, MODEL_DOF_VIRTUAL-6) = M_.block(6,6,MODEL_DOF_VIRTUAL-6, MODEL_DOF_VIRTUAL-6);
+                                A1.block(24,6,MODEL_DOF_VIRTUAL-6,6) = -1 * LFj.transpose().block(6,0,MODEL_DOF_VIRTUAL-6,6);
+                
+                                Eigen::VectorVQd Mqddot;
+                                Mqddot = M_ * qdd_pinocchio_desired1_;
+
+                                lbA1(24) = -333-nle(6)-Mqddot(6);
+                                ubA1(24) = 333-nle(6)-Mqddot(6);
+                                lbA1(25) = -232-nle(7)-Mqddot(7);
+                                ubA1(25) = 232-nle(7)-Mqddot(7);
+                                lbA1(26) = -263-nle(8)-Mqddot(8);
+                                ubA1(26) = 263-nle(8)-Mqddot(8);
+                                lbA1(27) = -289-nle(9)-Mqddot(9);
+                                ubA1(27) = 289-nle(9)-Mqddot(9);
+                                lbA1(28) = -222-nle(10)-Mqddot(10);
+                                ubA1(28) = 222-nle(10)-Mqddot(10);
+                                lbA1(29) = -166-nle(11)-Mqddot(11);
+                                ubA1(29) = 166-nle(11)-Mqddot(11);
+
+                                lbA1(30) = -333-nle(12)-Mqddot(12);
+                                ubA1(30) = 333-nle(12)-Mqddot(12);
+                                lbA1(31) = -232-nle(13)-Mqddot(13);
+                                ubA1(31) = 232-nle(13)-Mqddot(13);
+                                lbA1(32) = -263-nle(14)-Mqddot(14);
+                                ubA1(32) = 263-nle(14)-Mqddot(14);
+                                lbA1(33) = -289-nle(15)-Mqddot(15);
+                                ubA1(33) = 289-nle(15)-Mqddot(15);
+                                lbA1(34) = -222-nle(16)-Mqddot(16);
+                                ubA1(34) = 222-nle(16)-Mqddot(16);
+                                lbA1(35) = -166-nle(17)-Mqddot(17);
+                                ubA1(35) = 166-nle(17)-Mqddot(17);
+
+                                lbA1(36) = -303-nle(18)-Mqddot(18);
+                                ubA1(36) = 303-nle(18)-Mqddot(18);
+                                lbA1(37) = -303-nle(19)-Mqddot(19);
+                                ubA1(37) = 303-nle(19)-Mqddot(19);
+                                lbA1(38) = -303-nle(20)-Mqddot(20);
+                                ubA1(38) = 303-nle(20)-Mqddot(20);
+
+                                lbA1(39) = -64-nle(21)-Mqddot(21);
+                                ubA1(39) = 64-nle(21)-Mqddot(21);
+                                lbA1(40) = -64-nle(22)-Mqddot(22);
+                                ubA1(40) = 64-nle(22)-Mqddot(22);
+                                lbA1(41) = -64-nle(23)-Mqddot(23);
+                                ubA1(41) = 64-nle(23)-Mqddot(23);
+                                lbA1(42) = -64-nle(24)-Mqddot(24);
+                                ubA1(42) = 64-nle(24)-Mqddot(24);
+                                lbA1(43) = -23-nle(25)-Mqddot(25);
+                                ubA1(43) = 23-nle(25)-Mqddot(25);
+                                lbA1(44) = -23-nle(26)-Mqddot(26);
+                                ubA1(44) = 23-nle(26)-Mqddot(26);
+                                lbA1(45) = -10-nle(27)-Mqddot(27);
+                                ubA1(45) = 10-nle(27)-Mqddot(27);
+                                lbA1(46) = -10-nle(28)-Mqddot(28);
+                                ubA1(46) = 10-nle(28)-Mqddot(28);
+
+                                lbA1(47) = -10-nle(29)-Mqddot(29);
+                                ubA1(47) = 10-nle(29)-Mqddot(29);
+                                lbA1(48) = -10-nle(30)-Mqddot(30);
+                                ubA1(48) = 10-nle(30)-Mqddot(30);
+
+                                lbA1(49) = -64-nle(31)-Mqddot(31);
+                                ubA1(49) = 64-nle(31)-Mqddot(31);
+                                lbA1(50) = -64-nle(32)-Mqddot(32);
+                                ubA1(50) = 64-nle(32)-Mqddot(32);
+                                lbA1(51) = -64-nle(33)-Mqddot(33);
+                                ubA1(51) = 64-nle(33)-Mqddot(33);
+                                lbA1(52) = -64-nle(34)-Mqddot(34);
+                                ubA1(52) = 64-nle(34)-Mqddot(34);
+                                lbA1(53) = -23-nle(35)-Mqddot(35);
+                                ubA1(53) = 23-nle(35)-Mqddot(35);
+                                lbA1(54) = -23-nle(36)-Mqddot(36);
+                                ubA1(54) = 23-nle(36)-Mqddot(36);
+                                lbA1(55) = -10-nle(37)-Mqddot(37);
+                                ubA1(55) = 10-nle(37)-Mqddot(37);
+                                lbA1(56) = -10-nle(38)-Mqddot(38);
+                                ubA1(56) = 10-nle(38)-Mqddot(38);
+                
+                                A1(57, 8) = 1.0;
+                                lbA1(57) = 800.0;
+                                ubA1(57) = 1000.0;
+
+                                A1.block(58,6,1,6)(0,2) = mu;
+                                A1.block(58,6,1,6)(0,5) = 1;
+                                lbA1(58) = 0.0;
+                                ubA1(58) = 100000.0;
+                            
+                                A1.block(59,6,1,6)(0,2) = mu;
+                                A1.block(59,6,1,6)(0,5) = -1;
+                                lbA1(59) = 0.0;
+                                ubA1(59) = 100000.0;
+                            
+                                qp_torque_control.UpdateMinProblem(H1, g1);
+                                qp_torque_control.UpdateSubjectToAx(A1, lbA1, ubA1);
+                                qp_torque_control.UpdateSubjectToX(lb1, ub1);
+                                solved = qp_torque_control.SolveQPoases(100, qp_result);
+                                if (solved == true)
+                                {
+                                    tau_ = ((M_ * (qdd_pinocchio_desired1_ + qp_result.segment<MODEL_DOF_VIRTUAL>(12))+  nle - (LFj.transpose() * qp_result.segment<6>(6))).transpose());
+                                }
+                                control_time = control_time + 1;
                             }
-
-                            lbA1.head(6) = (nle + M_ * qdd_pinocchio_desired1_).head(6);
-                            ubA1.head(6) = (nle + M_ * qdd_pinocchio_desired1_).head(6);
-                           
-                            double weight_resi = 0.0;
-                            G_temp.setZero();
-                            g_temp.setZero();
-                            G_temp.block(0,0,6,MODEL_DOF_VIRTUAL) = RFj;
-                            G_temp.block(6,0,6,MODEL_DOF_VIRTUAL) = LFj;
-
-                            g_temp.tail(12) <<  RFdj * rd_.q_dot_virtual_ + RFj * qdd_pinocchio_desired1_, LFdj * rd_.q_dot_virtual_ + LFj * qdd_pinocchio_desired1_;
-                            g1.tail(MODEL_DOF_VIRTUAL) = g1.tail(MODEL_DOF_VIRTUAL) + weight_resi * G_temp.transpose() * g_temp;
-                            H1.block(12, 12, MODEL_DOF_VIRTUAL, MODEL_DOF_VIRTUAL) = H1.block(12, 12, MODEL_DOF_VIRTUAL, MODEL_DOF_VIRTUAL) + weight_resi * G_temp.transpose() * G_temp;
-                   
-                            //H1(12+MODEL_DOF_VIRTUAL,12+MODEL_DOF_VIRTUAL) = 100.0;//1.0;//0.0000001;
-
-                            //H1(13+MODEL_DOF_VIRTUAL,13+MODEL_DOF_VIRTUAL) = 100.0;//1.0;//0.00000001;
-
-                            A1.block(0,0,6,6) = RFj.transpose().block(0,0,6,6);
-                            A1.block(0,6,6,6) = LFj.transpose().block(0,0,6,6);
-                            A1.block(0,12,6, MODEL_DOF_VIRTUAL) = -M_.block(0,0,6,MODEL_DOF_VIRTUAL);
-                       
-                            A1.block(6,0,1,6)(0,2) = ly;
-                            A1.block(6,0,1,6)(0,3) = -1;
-                            lbA1(6) = 0.0;
-                            ubA1(6) = 100000.0;
-                            A1.block(7,0,1,6)(0,2) = ly;
-                            A1.block(7,0,1,6)(0,3) = 1;
-                            lbA1(7) = 0.0;
-                            ubA1(7) = 100000.0;
-                            A1.block(8,0,1,6)(0,2) = lx;
-                            A1.block(8,0,1,6)(0,4) = -1;
-                            lbA1(8) = 0.0;
-                            ubA1(8) = 100000.0;
-                            A1.block(9,0,1,6)(0,2) = lx;
-                            A1.block(9,0,1,6)(0,4) = 1;
-                            lbA1(9) = 0.0;
-                            ubA1(9) = 100000.0;
-                            A1.block(10,6,1,6)(0,2) = ly;
-                            A1.block(10,6,1,6)(0,3) = -1;
-                            lbA1(10) = 0.0;
-                            ubA1(10) = 100000.0;
-                            A1.block(11,6,1,6)(0,2) = ly;
-                            A1.block(11,6,1,6)(0,3) = 1;
-                            lbA1(11) = 0.0;
-                            ubA1(11) = 100000.0;
-                            A1.block(12,6,1,6)(0,2) = lx;
-                            A1.block(12,6,1,6)(0,4) = -1;
-                            lbA1(12) = 0.0;
-                            ubA1(12) = 100000.0;
-                            A1.block(13,6,1,6)(0,2) = lx;
-                            A1.block(13,6,1,6)(0,4) = 1;
-                            lbA1(13) = 0.0;
-                            ubA1(13) = 100000.0;
-
-                            A1.block(14,0,1,6)(0,2) = mu;
-                            A1.block(24,0,1,6)(0,0) = -1;
-                            lbA1(14) = 0.0;
-                            ubA1(14) = 100000.0;
-                            A1.block(15,0,1,6)(0,2) = mu;
-                            A1.block(15,0,1,6)(0,0) = 1;
-                            lbA1(15) = 0.0;
-                            ubA1(15) = 100000.0;
-                            A1.block(16,0,1,6)(0,2) = mu;
-                            A1.block(16,0,1,6)(0,1) = -1;
-                            lbA1(16) = 0.0;
-                            ubA1(16) = 100000.0;
-                            A1.block(17,0,1,6)(0,2) = mu;
-                            A1.block(17,0,1,6)(0,1) = 1;
-                            lbA1(17) = 0.0;
-                            ubA1(17) = 100000.0;
-                            A1.block(18,6,1,6)(0,2) = mu;
-                            A1.block(18,6,1,6)(0,0) = -1;
-                            lbA1(18) = 0.0;
-                            ubA1(18) = 100000.0;
-                            A1.block(19,6,1,6)(0,2) = mu;
-                            A1.block(19,6,1,6)(0,0) = 1;
-                            lbA1(19) = 0.0;
-                            ubA1(19) = 100000.0;
-                            A1.block(20,6,1,6)(0,2) = mu;
-                            A1.block(20,6,1,6)(0,1) = -1;
-                            lbA1(20) = 0.0;
-                            ubA1(20) = 100000.0;
-                            A1.block(21,6,1,6)(0,2) = mu;
-                            A1.block(21,6,1,6)(0,1) = 1;
-                            lbA1(21) = 0.0;
-                            ubA1(21) = 100000.0;
-                   
-                            A1.block(22,0,1,6)(0,2) = (rfoot_sy  - zmpy_d);
-                            A1.block(22,0,1,6)(0,3) = 1;
-                            A1.block(22,6,1,6)(0,2) = (lfoot_sy  - zmpy_d);
-                            A1.block(22,6,1,6)(0,3) = 1;
-                            lbA1(22) = 0.0;
-                            ubA1(22) = 0.0;
-
-                            A1(22,MODEL_DOF_VIRTUAL+12) = 1.0;
-
-                            A1.block(23,0,1,6)(0,2) = (rfoot_sx  - zmpx_d);
-                            A1.block(23,0,1,6)(0,4) = -1;
-                            A1.block(23,6,1,6)(0,2) = (lfoot_sx  - zmpx_d);
-                            A1.block(23,6,1,6)(0,4) = -1;
-                            lbA1(23) = 0.0;
-                            ubA1(23) = 0.0;
-
-                            A1(23,MODEL_DOF_VIRTUAL+13) = 1.0;
-
-                            A1.block(24,18,MODEL_DOF_VIRTUAL-6, MODEL_DOF_VIRTUAL-6) = M_.block(6,6,MODEL_DOF_VIRTUAL-6, MODEL_DOF_VIRTUAL-6);
-                            A1.block(24,0,MODEL_DOF_VIRTUAL-6,6) = -1 * RFj.transpose().block(6,0,MODEL_DOF_VIRTUAL-6,6);
-                            A1.block(24,6,MODEL_DOF_VIRTUAL-6,6) = -1 * LFj.transpose().block(6,0,MODEL_DOF_VIRTUAL-6,6);
-                   
-                            Eigen::VectorVQd Mqddot;
-                            Mqddot = M_ * qdd_pinocchio_desired1_;
-                           
-                            lbA1(24) = -333-nle(6)-Mqddot(6);
-                            ubA1(24) = 333-nle(6)-Mqddot(6);
-                            lbA1(25) = -232-nle(7)-Mqddot(7);
-                            ubA1(25) = 232-nle(7)-Mqddot(7);
-                            lbA1(26) = -263-nle(8)-Mqddot(8);
-                            ubA1(26) = 263-nle(8)-Mqddot(8);
-                            lbA1(27) = -289-nle(9)-Mqddot(9);
-                            ubA1(27) = 289-nle(9)-Mqddot(9);
-                            lbA1(28) = -222-nle(10)-Mqddot(10);
-                            ubA1(28) = 222-nle(10)-Mqddot(10);
-                            lbA1(29) = -166-nle(11)-Mqddot(11);
-                            ubA1(29) = 166-nle(11)-Mqddot(11);
-
-                            lbA1(30) = -333-nle(12)-Mqddot(12);
-                            ubA1(30) = 333-nle(12)-Mqddot(12);
-                            lbA1(31) = -232-nle(13)-Mqddot(13);
-                            ubA1(31) = 232-nle(13)-Mqddot(13);
-                            lbA1(32) = -263-nle(14)-Mqddot(14);
-                            ubA1(32) = 263-nle(14)-Mqddot(14);
-                            lbA1(33) = -289-nle(15)-Mqddot(15);
-                            ubA1(33) = 289-nle(15)-Mqddot(15);
-                            lbA1(34) = -222-nle(16)-Mqddot(16);
-                            ubA1(34) = 222-nle(16)-Mqddot(16);
-                            lbA1(35) = -166-nle(17)-Mqddot(17);
-                            ubA1(35) = 166-nle(17)-Mqddot(17);
-
-                            lbA1(36) = -303-nle(18)-Mqddot(18);
-                            ubA1(36) = 303-nle(18)-Mqddot(18);
-                            lbA1(37) = -303-nle(19)-Mqddot(19);
-                            ubA1(37) = 303-nle(19)-Mqddot(19);
-                            lbA1(38) = -303-nle(20)-Mqddot(20);
-                            ubA1(38) = 303-nle(20)-Mqddot(20);
-
-                            lbA1(39) = -64-nle(21)-Mqddot(21);
-                            ubA1(39) = 64-nle(21)-Mqddot(21);
-                            lbA1(40) = -64-nle(22)-Mqddot(22);
-                            ubA1(40) = 64-nle(22)-Mqddot(22);
-                            lbA1(41) = -64-nle(23)-Mqddot(23);
-                            ubA1(41) = 64-nle(23)-Mqddot(23);
-                            lbA1(42) = -64-nle(24)-Mqddot(24);
-                            ubA1(42) = 64-nle(24)-Mqddot(24);
-                            lbA1(43) = -23-nle(25)-Mqddot(25);
-                            ubA1(43) = 23-nle(25)-Mqddot(25);
-                            lbA1(44) = -23-nle(26)-Mqddot(26);
-                            ubA1(44) = 23-nle(26)-Mqddot(26);
-                            lbA1(45) = -10-nle(27)-Mqddot(27);
-                            ubA1(45) = 10-nle(27)-Mqddot(27);
-                            lbA1(46) = -10-nle(28)-Mqddot(28);
-                            ubA1(46) = 10-nle(28)-Mqddot(28);
-
-                            lbA1(47) = -10-nle(29)-Mqddot(29);
-                            ubA1(47) = 10-nle(29)-Mqddot(29);
-                            lbA1(48) = -10-nle(30)-Mqddot(30);
-                            ubA1(48) = 10-nle(30)-Mqddot(30);
-
-                            lbA1(49) = -64-nle(31)-Mqddot(31);
-                            ubA1(49) = 64-nle(31)-Mqddot(31);
-                            lbA1(50) = -64-nle(32)-Mqddot(32);
-                            ubA1(50) = 64-nle(32)-Mqddot(32);
-                            lbA1(51) = -64-nle(33)-Mqddot(33);
-                            ubA1(51) = 64-nle(33)-Mqddot(33);
-                            lbA1(52) = -64-nle(34)-Mqddot(34);
-                            ubA1(52) = 64-nle(34)-Mqddot(34);
-                            lbA1(53) = -23-nle(35)-Mqddot(35);
-                            ubA1(53) = 23-nle(35)-Mqddot(35);
-                            lbA1(54) = -23-nle(36)-Mqddot(36);
-                            ubA1(54) = 23-nle(36)-Mqddot(36);
-                            lbA1(55) = -10-nle(37)-Mqddot(37);
-                            ubA1(55) = 10-nle(37)-Mqddot(37);
-                            lbA1(56) = -10-nle(38)-Mqddot(38);
-                            ubA1(56) = 10-nle(38)-Mqddot(38);
-                           
-                            A1(57, 2) = 1.0;
-                            lbA1(57) = 0.1;
-                            ubA1(57) = 1000.0;
-
-                            A1(58, 8) = 1.0;
-                            lbA1(58) = 0.1;
-                            ubA1(58) = 1000.0;
-
-                            A1.block(59,0,1,6)(0,2) = mu;
-                            A1.block(59,0,1,6)(0,5) = 1;
-                            lbA1(59) = 0.0;
-                            ubA1(59) = 100000.0;
-                            A1.block(60,0,1,6)(0,2) = mu;
-                            A1.block(60,0,1,6)(0,5) = -1;
-                            lbA1(60) = 0.0;
-                            ubA1(60) = 100000.0;
-
-                            A1.block(61,6,1,6)(0,2) = mu;
-                            A1.block(61,6,1,6)(0,5) = 1;
-                            lbA1(61) = 0.0;
-                            ubA1(61) = 100000.0;
-                            A1.block(62,6,1,6)(0,2) = mu;
-                            A1.block(62,6,1,6)(0,5) = -1;
-                            lbA1(62) = 0.0;
-                            ubA1(62) = 100000.0;
-
-                            qp_torque_control.UpdateMinProblem(H1, g1);
-                            qp_torque_control.UpdateSubjectToAx(A1, lbA1, ubA1);
-                            qp_torque_control.UpdateSubjectToX(lb1, ub1);
-                            solved = qp_torque_control.SolveQPoases(100, qp_result);
-                           
-                            if (solved == true)
+                            else if(contactMode_fast == 3)//|| mpc_cycle == 49)
                             {
-                                tau_ = ((M_ * (qdd_pinocchio_desired1_ + qp_result.segment<MODEL_DOF_VIRTUAL>(12))+  nle - (RFj.transpose() * qp_result.head(6) + LFj.transpose() * qp_result.segment<6>(6))).transpose());  
+                                double lx, ly, mu;
+                                ly = 0.048;
+                                lx = 0.11;
+                                mu = 0.8;
+
+                                if(zmpx_fast > rfoot_sx + lx)
+                                    zmpx_d  = rfoot_sx + lx;
+                                else if(zmpx_fast < rfoot_sx - lx)
+                                    zmpx_d  = rfoot_sx - lx;
+                                else
+                                    zmpx_d = zmpx_fast;
+
+                                if(zmpy_fast < rfoot_sy - ly)
+                                    zmpy_d = rfoot_sy - ly;
+                                else if(zmpy_fast > rfoot_sy + ly)
+                                    zmpy_d = rfoot_sy + ly;
+                                else
+                                    zmpy_d = zmpy_fast;
+
+                                zmp_bx(0) =  rfoot_sx + lx;
+                                zmp_bx(1) =  rfoot_sx - lx;
+
+                                ly = 0.05;
+                                lx = 0.13;
+                    
+                                M_ = rd_.A_;//= rd_.A_;
+                                nle = nonlineareff;
+
+                                H1.setIdentity();
+
+                                g1.setZero();
+                                H1.block(12,12,MODEL_DOF_VIRTUAL,MODEL_DOF_VIRTUAL) = 1000000*H1.block(12,12,MODEL_DOF_VIRTUAL,MODEL_DOF_VIRTUAL);
+                                lb1.setConstant(variable_size1, -100000);
+                                ub1.setConstant(variable_size1, 100000);
+
+                                //H1(12+MODEL_DOF_VIRTUAL,12+MODEL_DOF_VIRTUAL) = 100.0;//0.001;
+                            
+                                //H1(13+MODEL_DOF_VIRTUAL,13+MODEL_DOF_VIRTUAL) = 100.0;//0.0001;
+
+                                H1(2,2) = 5;
+                                g1(2) = - (1-com_alpha_fast) * rd_.link_[COM_id].mass * GRAVITY * 5.0;
+                            
+                                //g1(2) = - com_alpha_fast * rd_.link_[COM_id].mass * GRAVITY * 5;
+                                lb1(2) = 0.0;
+                                lb1(8) = 0.0;
+                                lb1(15) = 0.0;
+                                lb1(16) = 0.0;
+                                ub1(15) = 0.0;
+                                ub1(16) = 0.0;
+                                lb1(17) = 0.0;
+                                ub1(17) = 0.0;
+
+                                H1.block(12,12,6,6) = 1 * H1.block(12,12,6,6);//revise
+                            
+                                /*H1_temp.setZero();
+                                H1_temp.block(0,0,12,12).setIdentity();
+                                H1_temp = 0.0003 * H1_temp;
+                                H1 = H1 + H1_temp;
+                                g1_temp.setZero();
+                                g1_temp.head(12) = -qp_result.head(12) * 0.0003;
+                                g1 = g1 + g1_temp;*/
+                                H1_temp.setZero();
+                                double weight_s = 10000.0;
+                                H1_temp(2,2) = 1.0;
+                                H1_temp(8,8) = 1.0;
+                                H1_temp.block(12+MODEL_DOF_VIRTUAL,12+MODEL_DOF_VIRTUAL,2,2).setIdentity();
+                                H1_temp = 0.03 * H1_temp;
+                                H1_temp.block(12+MODEL_DOF_VIRTUAL,12+MODEL_DOF_VIRTUAL,2,2) = weight_s * H1_temp.block(12+MODEL_DOF_VIRTUAL,12+MODEL_DOF_VIRTUAL,2,2);
+                                H1_temp.block(12+MODEL_DOF_VIRTUAL,12+MODEL_DOF_VIRTUAL,2,2) = 10 * H1_temp.block(12+MODEL_DOF_VIRTUAL,12+MODEL_DOF_VIRTUAL,2,2);                          
+                                H1 = H1 + H1_temp;
+                                g1_temp.setZero();
+                                g1_temp(2) = -qp_result(2) * 0.03;
+                                g1_temp(8) = -qp_result(8) * 0.03;
+                                g1_temp.tail(2) = -qp_result.tail(2) * 0.03 * weight_s;
+                                g1 = g1 + g1_temp;
+                    
+                                double weight_resi = 0.0;
+                                G_temp.setZero();
+                                g_temp.setZero();
+                                G_temp.block(0,0,6,MODEL_DOF_VIRTUAL) = RFj;
+                                g_temp.head(6) <<  RFdj * rd_.q_dot_virtual_ + RFj * qdd_pinocchio_desired1_;
+                            
+                                g1.tail(MODEL_DOF_VIRTUAL) = g1.tail(MODEL_DOF_VIRTUAL) + weight_resi * G_temp.transpose() * g_temp;
+                                H1.block(12, 12, MODEL_DOF_VIRTUAL, MODEL_DOF_VIRTUAL) = H1.block(12, 12, MODEL_DOF_VIRTUAL, MODEL_DOF_VIRTUAL) + weight_resi * G_temp.transpose() * G_temp;
+                
+                                lbA1.head(6) = (nle + M_ * qdd_pinocchio_desired1_).head(6);
+                                ubA1.head(6) = (nle + M_ * qdd_pinocchio_desired1_).head(6);
+
+                                A1.block(0,0,6,6) = RFj.transpose().block(0,0,6,6);
+                                A1.block(0,12,6, MODEL_DOF_VIRTUAL) = -M_.block(0,0,6,MODEL_DOF_VIRTUAL);
+
+                                A1.block(6,0,1,6)(0,2) = ly;
+                                A1.block(6,0,1,6)(0,3) = -1;
+                                lbA1(6) = 0.0;
+                                ubA1(6) = 100000.0;
+                                A1.block(7,0,1,6)(0,2) = ly;
+                                A1.block(7,0,1,6)(0,3) = 1;
+                                lbA1(7) = 0.0;
+                                ubA1(7) = 100000.0;
+                                A1.block(8,0,1,6)(0,2) = lx;
+                                A1.block(8,0,1,6)(0,4) = -1;
+                                lbA1(8) = 0.0;
+                                ubA1(8) = 100000.0;
+                                A1.block(9,0,1,6)(0,2) = lx;
+                                A1.block(9,0,1,6)(0,4) = 1;
+                                lbA1(9) = 0.0;
+                                ubA1(9) = 100000.0;
+
+                                A1.block(14,0,1,6)(0,2) = mu;
+                                A1.block(24,0,1,6)(0,0) = -1;
+                                lbA1(14) = 0.0;
+                                ubA1(14) = 100000.0;
+                                A1.block(15,0,1,6)(0,2) = mu;
+                                A1.block(15,0,1,6)(0,0) = 1;
+                                lbA1(15) = 0.0;
+                                ubA1(15) = 100000.0;
+                                A1.block(16,0,1,6)(0,2) = mu;
+                                A1.block(16,0,1,6)(0,1) = -1;
+                                lbA1(16) = 0.0;
+                                ubA1(16) = 100000.0;
+                                A1.block(17,0,1,6)(0,2) = mu;
+                                A1.block(17,0,1,6)(0,1) = 1;
+                                lbA1(17) = 0.0;
+                                ubA1(17) = 100000.0;
+                            
+                                A1.block(22,0,1,6)(0,2) = (rfoot_sy - zmpy_d);
+                                A1.block(22,0,1,6)(0,3) = 1;
+
+                                lbA1(22) = 0.0;
+                                ubA1(22) = 0.0;
+
+                                A1(22,MODEL_DOF_VIRTUAL+12) = 1.0;
+                    
+                                A1.block(23,0,1,6)(0,2) = (rfoot_sx - zmpx_d);
+                                A1.block(23,0,1,6)(0,4) = -1;
+            
+                                lbA1(23) = 0.0;
+                                ubA1(23) = 0.0;
+
+                                A1(23,MODEL_DOF_VIRTUAL+13) = 1.0;
+                            
+                                A1.block(24,18,MODEL_DOF_VIRTUAL-6, MODEL_DOF_VIRTUAL-6) = M_.block(6,6,MODEL_DOF_VIRTUAL-6, MODEL_DOF_VIRTUAL-6);
+                                A1.block(24,0,MODEL_DOF_VIRTUAL-6,6) = -1 * RFj.transpose().block(6,0,MODEL_DOF_VIRTUAL-6,6);
+                            
+                                Eigen::VectorVQd Mqddot;
+                                Mqddot = M_ * qdd_pinocchio_desired1_;
+
+                                lbA1(24) = -333-nle(6)-Mqddot(6);
+                                ubA1(24) = 333-nle(6)-Mqddot(6);
+                                lbA1(25) = -232-nle(7)-Mqddot(7);
+                                ubA1(25) = 232-nle(7)-Mqddot(7);
+                                lbA1(26) = -263-nle(8)-Mqddot(8);
+                                ubA1(26) = 263-nle(8)-Mqddot(8);
+                                lbA1(27) = -289-nle(9)-Mqddot(9);
+                                ubA1(27) = 289-nle(9)-Mqddot(9);
+                                lbA1(28) = -222-nle(10)-Mqddot(10);
+                                ubA1(28) = 222-nle(10)-Mqddot(10);
+                                lbA1(29) = -166-nle(11)-Mqddot(11);
+                                ubA1(29) = 166-nle(11)-Mqddot(11);
+
+                                lbA1(30) = -333-nle(12)-Mqddot(12);
+                                ubA1(30) = 333-nle(12)-Mqddot(12);
+                                lbA1(31) = -232-nle(13)-Mqddot(13);
+                                ubA1(31) = 232-nle(13)-Mqddot(13);
+                                lbA1(32) = -263-nle(14)-Mqddot(14);
+                                ubA1(32) = 263-nle(14)-Mqddot(14);
+                                lbA1(33) = -289-nle(15)-Mqddot(15);
+                                ubA1(33) = 289-nle(15)-Mqddot(15);
+                                lbA1(34) = -222-nle(16)-Mqddot(16);
+                                ubA1(34) = 222-nle(16)-Mqddot(16);
+                                lbA1(35) = -166-nle(17)-Mqddot(17);
+                                ubA1(35) = 166-nle(17)-Mqddot(17);
+
+                                lbA1(36) = -303-nle(18)-Mqddot(18);
+                                ubA1(36) = 303-nle(18)-Mqddot(18);
+                                lbA1(37) = -303-nle(19)-Mqddot(19);
+                                ubA1(37) = 303-nle(19)-Mqddot(19);
+                                lbA1(38) = -303-nle(20)-Mqddot(20);
+                                ubA1(38) = 303-nle(20)-Mqddot(20);
+
+                                lbA1(39) = -64-nle(21)-Mqddot(21);
+                                ubA1(39) = 64-nle(21)-Mqddot(21);
+                                lbA1(40) = -64-nle(22)-Mqddot(22);
+                                ubA1(40) = 64-nle(22)-Mqddot(22);
+                                lbA1(41) = -64-nle(23)-Mqddot(23);
+                                ubA1(41) = 64-nle(23)-Mqddot(23);
+                                lbA1(42) = -64-nle(24)-Mqddot(24);
+                                ubA1(42) = 64-nle(24)-Mqddot(24);
+                                lbA1(43) = -23-nle(25)-Mqddot(25);
+                                ubA1(43) = 23-nle(25)-Mqddot(25);
+                                lbA1(44) = -23-nle(26)-Mqddot(26);
+                                ubA1(44) = 23-nle(26)-Mqddot(26);
+                                lbA1(45) = -10-nle(27)-Mqddot(27);
+                                ubA1(45) = 10-nle(27)-Mqddot(27);
+                                lbA1(46) = -10-nle(28)-Mqddot(28);
+                                ubA1(46) = 10-nle(28)-Mqddot(28);
+
+                                lbA1(47) = -10-nle(29)-Mqddot(29);
+                                ubA1(47) = 10-nle(29)-Mqddot(29);
+                                lbA1(48) = -10-nle(30)-Mqddot(30);
+                                ubA1(48) = 10-nle(30)-Mqddot(30);
+
+                                lbA1(49) = -64-nle(31)-Mqddot(31);
+                                ubA1(49) = 64-nle(31)-Mqddot(31);
+                                lbA1(50) = -64-nle(32)-Mqddot(32);
+                                ubA1(50) = 64-nle(32)-Mqddot(32);
+                                lbA1(51) = -64-nle(33)-Mqddot(33);
+                                ubA1(51) = 64-nle(33)-Mqddot(33);
+                                lbA1(52) = -64-nle(34)-Mqddot(34);
+                                ubA1(52) = 64-nle(34)-Mqddot(34);
+                                lbA1(53) = -23-nle(35)-Mqddot(35);
+                                ubA1(53) = 23-nle(35)-Mqddot(35);
+                                lbA1(54) = -23-nle(36)-Mqddot(36);
+                                ubA1(54) = 23-nle(36)-Mqddot(36);
+                                lbA1(55) = -10-nle(37)-Mqddot(37);
+                                ubA1(55) = 10-nle(37)-Mqddot(37);
+                                lbA1(56) = -10-nle(38)-Mqddot(38);
+                                ubA1(56) = 10-nle(38)-Mqddot(38);
+                
+                                A1(57, 2) = 1.0;
+                                lbA1(57) = 800.0;
+                                ubA1(57) = 1000.0;
+
+                                A1.block(58,0,1,6)(0,2) = mu;
+                                A1.block(58,0,1,6)(0,5) = 1;
+                                lbA1(58) = 0.0;
+                                ubA1(58) = 100000.0;
+                                A1.block(59,0,1,6)(0,2) = mu;
+                                A1.block(59,0,1,6)(0,5) = -1;
+                                lbA1(59) = 0.0;
+                                ubA1(59) = 100000.0;
+                            
+                                qp_torque_control.UpdateMinProblem(H1, g1);
+                                qp_torque_control.UpdateSubjectToAx(A1, lbA1, ubA1);
+                                qp_torque_control.UpdateSubjectToX(lb1, ub1);
+                                solved = qp_torque_control.SolveQPoases(100, qp_result);
+                                if (solved == true)
+                                {
+                                    tau_ = ((M_ * (qdd_pinocchio_desired1_ + qp_result.segment<MODEL_DOF_VIRTUAL>(12))+  nle - (RFj.transpose() * qp_result.head(6))).transpose());
+                                }
+                                control_time = control_time + 1;
                             }
-                            control_time = control_time + 1;
                         }
-                        else if(contactMode_fast == 2)
+
+                        /*if(torquecontrol_first == false && walking_tick_jk == 0)
                         {
-                            double lx, ly, mu;
-                            ly = 0.048;
-                            lx = 0.11;
-                            mu = 0.8;
-
-                            if(zmpx_fast > lfoot_sx + lx)
-                                zmpx_d  = lfoot_sx + lx;
-                            else if(zmpx_fast < lfoot_sx - lx)
-                                zmpx_d  = lfoot_sx - lx;
-                            else
-                                zmpx_d = zmpx_fast;
-
-                            if(zmpy_fast > lfoot_sy + ly)
-                                zmpy_d = lfoot_sy + ly;
-                            else if(zmpy_fast < lfoot_sy - ly)
-                                zmpy_d = lfoot_sy - ly;
-                            else
-                                zmpy_d = zmpy_fast;
-
-                            zmp_bx(0) =  lfoot_sx + lx;
-                            zmp_bx(1) =  lfoot_sx - lx;
-
-                            ly = 0.05;
-                            lx = 0.13;
-                   
-                            M_ = rd_.A_;//rd_.A_;
-                            nle = nonlineareff;;
-
-                            H1.setIdentity();
-
-                            g1.setZero();
-                            H1.block(12,12,MODEL_DOF_VIRTUAL,MODEL_DOF_VIRTUAL) = 1000000*H1.block(12,12,MODEL_DOF_VIRTUAL,MODEL_DOF_VIRTUAL);
-                            lb1.setConstant(variable_size1, -100000);
-                            ub1.setConstant(variable_size1, 100000);
-
-                            //H1(12+MODEL_DOF_VIRTUAL,12+MODEL_DOF_VIRTUAL) = 100.0;//0.001;
-                           
-                            //H1(13+MODEL_DOF_VIRTUAL,13+MODEL_DOF_VIRTUAL) = 100.0;//0.0001;
-
-                   
-                            H1(8,8) = 5;
-                            g1(8) = - (com_alpha_fast) * rd_.link_[COM_id].mass * GRAVITY * 5.0;
-                            //g1(8) = - com_alpha_fast * rd_.link_[COM_id].mass * GRAVITY * 5;
-                            lb1(2) = 0.0;
-                            lb1(8) = 0.0;
-                            lb1(15) = 0.0;
-                            lb1(16) = 0.0;
-                            ub1(15) = 0.0;
-                            ub1(16) = 0.0;
-
-                            lb1(17) = 0.0;
-                            ub1(17) = 0.0;
-
-
-                            H1.block(12,12,6,6) = 1 * H1.block(12,12,6,6);//10.0 * H1.block(12,12,6,6);revise
-                            //H1.block(12,12,MODEL_DOF_VIRTUAL-6,MODEL_DOF_VIRTUAL-6) = 10 * H1.block(18,18,MODEL_DOF_VIRTUAL-6,MODEL_DOF_VIRTUAL-6);
-
-                            H1_temp.setZero();
-                            double weight_s = 10000.0;
-                            H1_temp(2,2) = 1.0;
-                            H1_temp(8,8) = 1.0;
-                            H1_temp.block(12+MODEL_DOF_VIRTUAL,12+MODEL_DOF_VIRTUAL,2,2).setIdentity();
-                            H1_temp = 0.03 * H1_temp;
-                            H1_temp.block(12+MODEL_DOF_VIRTUAL,12+MODEL_DOF_VIRTUAL,2,2) = weight_s * H1_temp.block(12+MODEL_DOF_VIRTUAL,12+MODEL_DOF_VIRTUAL,2,2);
-                            H1_temp.block(12+MODEL_DOF_VIRTUAL,12+MODEL_DOF_VIRTUAL,2,2) = 10 * H1_temp.block(12+MODEL_DOF_VIRTUAL,12+MODEL_DOF_VIRTUAL,2,2);
-                            H1 = H1 + H1_temp;
-                            g1_temp.setZero();
-                            g1_temp(2) = -qp_result(2) * 0.03;
-                            g1_temp(8) = -qp_result(8) * 0.03;
-                            g1_temp.tail(2) = -qp_result.tail(2) * 0.03 * weight_s;
-                            g1 = g1 + g1_temp;
-                   
-                            double weight_resi = 0.0;
-                            G_temp.setZero();
-                            g_temp.setZero();
-                            G_temp.block(0,0,6,MODEL_DOF_VIRTUAL) = LFj;
-                            g_temp.head(6) <<  LFdj * rd_.q_dot_virtual_ + LFj * qdd_pinocchio_desired1_;
-       
-                            g1.tail(MODEL_DOF_VIRTUAL) = g1.tail(MODEL_DOF_VIRTUAL) + weight_resi * G_temp.transpose() * g_temp;
-                            H1.block(12, 12, MODEL_DOF_VIRTUAL, MODEL_DOF_VIRTUAL) = H1.block(12, 12, MODEL_DOF_VIRTUAL, MODEL_DOF_VIRTUAL) + weight_resi * G_temp.transpose() * G_temp;
-               
-                            lbA1.head(6) = (nle + M_ * qdd_pinocchio_desired1_).head(6);
-                            ubA1.head(6) = (nle + M_ * qdd_pinocchio_desired1_).head(6);
-
-                            A1.block(0,6,6,6) = LFj.transpose().block(0,0,6,6);
-                            A1.block(0,12,6, MODEL_DOF_VIRTUAL) = -M_.block(0,0,6,MODEL_DOF_VIRTUAL);
-                   
-                            A1.block(6,6,1,6)(0,2) = ly;
-                            A1.block(6,6,1,6)(0,3) = -1;
-                            lbA1(6) = 0.0;
-                            ubA1(6) = 100000.0;
-                            A1.block(7,6,1,6)(0,2) = ly;
-                            A1.block(7,6,1,6)(0,3) = 1;
-                            lbA1(7) = 0.0;
-                            ubA1(7) = 100000.0;
-                            A1.block(8,6,1,6)(0,2) = lx;
-                            A1.block(8,6,1,6)(0,4) = -1;
-                            lbA1(8) = 0.0;
-                            ubA1(8) = 100000.0;
-                            A1.block(9,6,1,6)(0,2) = lx;
-                            A1.block(9,6,1,6)(0,4) = 1;
-                            lbA1(9) = 0.0;
-                            ubA1(9) = 100000.0;
-
-                            A1.block(14,6,1,6)(0,2) = mu;
-                            A1.block(24,6,1,6)(0,0) = -1;
-                            lbA1(14) = 0.0;
-                            ubA1(14) = 100000.0;
-                            A1.block(15,6,1,6)(0,2) = mu;
-                            A1.block(15,6,1,6)(0,0) = 1;
-                            lbA1(15) = 0.0;
-                            ubA1(15) = 100000.0;
-                            A1.block(16,6,1,6)(0,2) = mu;
-                            A1.block(16,6,1,6)(0,1) = -1;
-                            lbA1(16) = 0.0;
-                            ubA1(16) = 100000.0;
-                            A1.block(17,6,1,6)(0,2) = mu;
-                            A1.block(17,6,1,6)(0,1) = 1;
-                            lbA1(17) = 0.0;
-                            ubA1(17) = 100000.0;
-               
-                            A1.block(22,6,1,6)(0,2) = (lfoot_sy  - zmpy_d);
-                            A1.block(22,6,1,6)(0,3) = 1;
-
-                            lbA1(22) = 0.0;
-                            ubA1(22) = 0.0;
-
-                            A1(22,MODEL_DOF_VIRTUAL+12) = 1.0;
-                   
-                            A1.block(23,6,1,6)(0,2) = (lfoot_sx  - zmpx_d);
-                            A1.block(23,6,1,6)(0,4) = -1;
-           
-                            lbA1(23) = 0.0;
-                            ubA1(23) = 0.0;
-
-                            A1(23,MODEL_DOF_VIRTUAL+13) = 1.0;
-                   
-                            A1.block(24,18,MODEL_DOF_VIRTUAL-6, MODEL_DOF_VIRTUAL-6) = M_.block(6,6,MODEL_DOF_VIRTUAL-6, MODEL_DOF_VIRTUAL-6);
-                            A1.block(24,6,MODEL_DOF_VIRTUAL-6,6) = -1 * LFj.transpose().block(6,0,MODEL_DOF_VIRTUAL-6,6);
-               
-                            Eigen::VectorVQd Mqddot;
-                            Mqddot = M_ * qdd_pinocchio_desired1_;
-
-                            lbA1(24) = -333-nle(6)-Mqddot(6);
-                            ubA1(24) = 333-nle(6)-Mqddot(6);
-                            lbA1(25) = -232-nle(7)-Mqddot(7);
-                            ubA1(25) = 232-nle(7)-Mqddot(7);
-                            lbA1(26) = -263-nle(8)-Mqddot(8);
-                            ubA1(26) = 263-nle(8)-Mqddot(8);
-                            lbA1(27) = -289-nle(9)-Mqddot(9);
-                            ubA1(27) = 289-nle(9)-Mqddot(9);
-                            lbA1(28) = -222-nle(10)-Mqddot(10);
-                            ubA1(28) = 222-nle(10)-Mqddot(10);
-                            lbA1(29) = -166-nle(11)-Mqddot(11);
-                            ubA1(29) = 166-nle(11)-Mqddot(11);
-
-                            lbA1(30) = -333-nle(12)-Mqddot(12);
-                            ubA1(30) = 333-nle(12)-Mqddot(12);
-                            lbA1(31) = -232-nle(13)-Mqddot(13);
-                            ubA1(31) = 232-nle(13)-Mqddot(13);
-                            lbA1(32) = -263-nle(14)-Mqddot(14);
-                            ubA1(32) = 263-nle(14)-Mqddot(14);
-                            lbA1(33) = -289-nle(15)-Mqddot(15);
-                            ubA1(33) = 289-nle(15)-Mqddot(15);
-                            lbA1(34) = -222-nle(16)-Mqddot(16);
-                            ubA1(34) = 222-nle(16)-Mqddot(16);
-                            lbA1(35) = -166-nle(17)-Mqddot(17);
-                            ubA1(35) = 166-nle(17)-Mqddot(17);
-
-                            lbA1(36) = -303-nle(18)-Mqddot(18);
-                            ubA1(36) = 303-nle(18)-Mqddot(18);
-                            lbA1(37) = -303-nle(19)-Mqddot(19);
-                            ubA1(37) = 303-nle(19)-Mqddot(19);
-                            lbA1(38) = -303-nle(20)-Mqddot(20);
-                            ubA1(38) = 303-nle(20)-Mqddot(20);
-
-                            lbA1(39) = -64-nle(21)-Mqddot(21);
-                            ubA1(39) = 64-nle(21)-Mqddot(21);
-                            lbA1(40) = -64-nle(22)-Mqddot(22);
-                            ubA1(40) = 64-nle(22)-Mqddot(22);
-                            lbA1(41) = -64-nle(23)-Mqddot(23);
-                            ubA1(41) = 64-nle(23)-Mqddot(23);
-                            lbA1(42) = -64-nle(24)-Mqddot(24);
-                            ubA1(42) = 64-nle(24)-Mqddot(24);
-                            lbA1(43) = -23-nle(25)-Mqddot(25);
-                            ubA1(43) = 23-nle(25)-Mqddot(25);
-                            lbA1(44) = -23-nle(26)-Mqddot(26);
-                            ubA1(44) = 23-nle(26)-Mqddot(26);
-                            lbA1(45) = -10-nle(27)-Mqddot(27);
-                            ubA1(45) = 10-nle(27)-Mqddot(27);
-                            lbA1(46) = -10-nle(28)-Mqddot(28);
-                            ubA1(46) = 10-nle(28)-Mqddot(28);
-
-                            lbA1(47) = -10-nle(29)-Mqddot(29);
-                            ubA1(47) = 10-nle(29)-Mqddot(29);
-                            lbA1(48) = -10-nle(30)-Mqddot(30);
-                            ubA1(48) = 10-nle(30)-Mqddot(30);
-
-                            lbA1(49) = -64-nle(31)-Mqddot(31);
-                            ubA1(49) = 64-nle(31)-Mqddot(31);
-                            lbA1(50) = -64-nle(32)-Mqddot(32);
-                            ubA1(50) = 64-nle(32)-Mqddot(32);
-                            lbA1(51) = -64-nle(33)-Mqddot(33);
-                            ubA1(51) = 64-nle(33)-Mqddot(33);
-                            lbA1(52) = -64-nle(34)-Mqddot(34);
-                            ubA1(52) = 64-nle(34)-Mqddot(34);
-                            lbA1(53) = -23-nle(35)-Mqddot(35);
-                            ubA1(53) = 23-nle(35)-Mqddot(35);
-                            lbA1(54) = -23-nle(36)-Mqddot(36);
-                            ubA1(54) = 23-nle(36)-Mqddot(36);
-                            lbA1(55) = -10-nle(37)-Mqddot(37);
-                            ubA1(55) = 10-nle(37)-Mqddot(37);
-                            lbA1(56) = -10-nle(38)-Mqddot(38);
-                            ubA1(56) = 10-nle(38)-Mqddot(38);
-               
-                            A1(57, 8) = 1.0;
-                            lbA1(57) = 800.0;
-                            ubA1(57) = 1000.0;
-
-                            A1.block(58,6,1,6)(0,2) = mu;
-                            A1.block(58,6,1,6)(0,5) = 1;
-                            lbA1(58) = 0.0;
-                            ubA1(58) = 100000.0;
-                           
-                            A1.block(59,6,1,6)(0,2) = mu;
-                            A1.block(59,6,1,6)(0,5) = -1;
-                            lbA1(59) = 0.0;
-                            ubA1(59) = 100000.0;
-                           
-                            qp_torque_control.UpdateMinProblem(H1, g1);
-                            qp_torque_control.UpdateSubjectToAx(A1, lbA1, ubA1);
-                            qp_torque_control.UpdateSubjectToX(lb1, ub1);
-                            solved = qp_torque_control.SolveQPoases(100, qp_result);
-                            if (solved == true)
-                            {
-                                tau_ = ((M_ * (qdd_pinocchio_desired1_ + qp_result.segment<MODEL_DOF_VIRTUAL>(12))+  nle - (LFj.transpose() * qp_result.segment<6>(6))).transpose());
-                            }
-                            control_time = control_time + 1;
-                        }
-                        else if(contactMode_fast == 3)//|| mpc_cycle == 49)
-                        {
-                            double lx, ly, mu;
-                            ly = 0.048;
-                            lx = 0.11;
-                            mu = 0.8;
-
-                            if(zmpx_fast > rfoot_sx + lx)
-                                zmpx_d  = rfoot_sx + lx;
-                            else if(zmpx_fast < rfoot_sx - lx)
-                                zmpx_d  = rfoot_sx - lx;
-                            else
-                                zmpx_d = zmpx_fast;
-
-                            if(zmpy_fast < rfoot_sy - ly)
-                                zmpy_d = rfoot_sy - ly;
-                            else if(zmpy_fast > rfoot_sy + ly)
-                                zmpy_d = rfoot_sy + ly;
-                            else
-                                zmpy_d = zmpy_fast;
-
-                            zmp_bx(0) =  rfoot_sx + lx;
-                            zmp_bx(1) =  rfoot_sx - lx;
-
-                            ly = 0.05;
-                            lx = 0.13;
-                   
-                            M_ = rd_.A_;//= rd_.A_;
-                            nle = nonlineareff;
-
-                            H1.setIdentity();
-
-                            g1.setZero();
-                            H1.block(12,12,MODEL_DOF_VIRTUAL,MODEL_DOF_VIRTUAL) = 1000000*H1.block(12,12,MODEL_DOF_VIRTUAL,MODEL_DOF_VIRTUAL);
-                            lb1.setConstant(variable_size1, -100000);
-                            ub1.setConstant(variable_size1, 100000);
-
-                            //H1(12+MODEL_DOF_VIRTUAL,12+MODEL_DOF_VIRTUAL) = 100.0;//0.001;
-                           
-                            //H1(13+MODEL_DOF_VIRTUAL,13+MODEL_DOF_VIRTUAL) = 100.0;//0.0001;
-
-                            H1(2,2) = 5;
-                            g1(2) = - (1-com_alpha_fast) * rd_.link_[COM_id].mass * GRAVITY * 5.0;
-                           
-                            //g1(2) = - com_alpha_fast * rd_.link_[COM_id].mass * GRAVITY * 5;
-                            lb1(2) = 0.0;
-                            lb1(8) = 0.0;
-                            lb1(15) = 0.0;
-                            lb1(16) = 0.0;
-                            ub1(15) = 0.0;
-                            ub1(16) = 0.0;
-                            lb1(17) = 0.0;
-                            ub1(17) = 0.0;
-
-                            H1.block(12,12,6,6) = 1 * H1.block(12,12,6,6);//revise
-                           
-                            /*H1_temp.setZero();
-                            H1_temp.block(0,0,12,12).setIdentity();
-                            H1_temp = 0.0003 * H1_temp;
-                            H1 = H1 + H1_temp;
-                            g1_temp.setZero();
-                            g1_temp.head(12) = -qp_result.head(12) * 0.0003;
-                            g1 = g1 + g1_temp;*/
-                            H1_temp.setZero();
-                            double weight_s = 10000.0;
-                            H1_temp(2,2) = 1.0;
-                            H1_temp(8,8) = 1.0;
-                            H1_temp.block(12+MODEL_DOF_VIRTUAL,12+MODEL_DOF_VIRTUAL,2,2).setIdentity();
-                            H1_temp = 0.03 * H1_temp;
-                            H1_temp.block(12+MODEL_DOF_VIRTUAL,12+MODEL_DOF_VIRTUAL,2,2) = weight_s * H1_temp.block(12+MODEL_DOF_VIRTUAL,12+MODEL_DOF_VIRTUAL,2,2);
-                            H1_temp.block(12+MODEL_DOF_VIRTUAL,12+MODEL_DOF_VIRTUAL,2,2) = 10 * H1_temp.block(12+MODEL_DOF_VIRTUAL,12+MODEL_DOF_VIRTUAL,2,2);                          
-                            H1 = H1 + H1_temp;
-                            g1_temp.setZero();
-                            g1_temp(2) = -qp_result(2) * 0.03;
-                            g1_temp(8) = -qp_result(8) * 0.03;
-                            g1_temp.tail(2) = -qp_result.tail(2) * 0.03 * weight_s;
-                            g1 = g1 + g1_temp;
-                   
-                            double weight_resi = 0.0;
-                            G_temp.setZero();
-                            g_temp.setZero();
-                            G_temp.block(0,0,6,MODEL_DOF_VIRTUAL) = RFj;
-                            g_temp.head(6) <<  RFdj * rd_.q_dot_virtual_ + RFj * qdd_pinocchio_desired1_;
-                           
-                            g1.tail(MODEL_DOF_VIRTUAL) = g1.tail(MODEL_DOF_VIRTUAL) + weight_resi * G_temp.transpose() * g_temp;
-                            H1.block(12, 12, MODEL_DOF_VIRTUAL, MODEL_DOF_VIRTUAL) = H1.block(12, 12, MODEL_DOF_VIRTUAL, MODEL_DOF_VIRTUAL) + weight_resi * G_temp.transpose() * G_temp;
-               
-                            lbA1.head(6) = (nle + M_ * qdd_pinocchio_desired1_).head(6);
-                            ubA1.head(6) = (nle + M_ * qdd_pinocchio_desired1_).head(6);
-
-                            A1.block(0,0,6,6) = RFj.transpose().block(0,0,6,6);
-                            A1.block(0,12,6, MODEL_DOF_VIRTUAL) = -M_.block(0,0,6,MODEL_DOF_VIRTUAL);
-
-                            A1.block(6,0,1,6)(0,2) = ly;
-                            A1.block(6,0,1,6)(0,3) = -1;
-                            lbA1(6) = 0.0;
-                            ubA1(6) = 100000.0;
-                            A1.block(7,0,1,6)(0,2) = ly;
-                            A1.block(7,0,1,6)(0,3) = 1;
-                            lbA1(7) = 0.0;
-                            ubA1(7) = 100000.0;
-                            A1.block(8,0,1,6)(0,2) = lx;
-                            A1.block(8,0,1,6)(0,4) = -1;
-                            lbA1(8) = 0.0;
-                            ubA1(8) = 100000.0;
-                            A1.block(9,0,1,6)(0,2) = lx;
-                            A1.block(9,0,1,6)(0,4) = 1;
-                            lbA1(9) = 0.0;
-                            ubA1(9) = 100000.0;
-
-                            A1.block(14,0,1,6)(0,2) = mu;
-                            A1.block(24,0,1,6)(0,0) = -1;
-                            lbA1(14) = 0.0;
-                            ubA1(14) = 100000.0;
-                            A1.block(15,0,1,6)(0,2) = mu;
-                            A1.block(15,0,1,6)(0,0) = 1;
-                            lbA1(15) = 0.0;
-                            ubA1(15) = 100000.0;
-                            A1.block(16,0,1,6)(0,2) = mu;
-                            A1.block(16,0,1,6)(0,1) = -1;
-                            lbA1(16) = 0.0;
-                            ubA1(16) = 100000.0;
-                            A1.block(17,0,1,6)(0,2) = mu;
-                            A1.block(17,0,1,6)(0,1) = 1;
-                            lbA1(17) = 0.0;
-                            ubA1(17) = 100000.0;
-                           
-                            A1.block(22,0,1,6)(0,2) = (rfoot_sy - zmpy_d);
-                            A1.block(22,0,1,6)(0,3) = 1;
-
-                            lbA1(22) = 0.0;
-                            ubA1(22) = 0.0;
-
-                            A1(22,MODEL_DOF_VIRTUAL+12) = 1.0;
-                   
-                            A1.block(23,0,1,6)(0,2) = (rfoot_sx - zmpx_d);
-                            A1.block(23,0,1,6)(0,4) = -1;
-           
-                            lbA1(23) = 0.0;
-                            ubA1(23) = 0.0;
-
-                            A1(23,MODEL_DOF_VIRTUAL+13) = 1.0;
-                           
-                            A1.block(24,18,MODEL_DOF_VIRTUAL-6, MODEL_DOF_VIRTUAL-6) = M_.block(6,6,MODEL_DOF_VIRTUAL-6, MODEL_DOF_VIRTUAL-6);
-                            A1.block(24,0,MODEL_DOF_VIRTUAL-6,6) = -1 * RFj.transpose().block(6,0,MODEL_DOF_VIRTUAL-6,6);
-                           
-                            Eigen::VectorVQd Mqddot;
-                            Mqddot = M_ * qdd_pinocchio_desired1_;
-
-                            lbA1(24) = -333-nle(6)-Mqddot(6);
-                            ubA1(24) = 333-nle(6)-Mqddot(6);
-                            lbA1(25) = -232-nle(7)-Mqddot(7);
-                            ubA1(25) = 232-nle(7)-Mqddot(7);
-                            lbA1(26) = -263-nle(8)-Mqddot(8);
-                            ubA1(26) = 263-nle(8)-Mqddot(8);
-                            lbA1(27) = -289-nle(9)-Mqddot(9);
-                            ubA1(27) = 289-nle(9)-Mqddot(9);
-                            lbA1(28) = -222-nle(10)-Mqddot(10);
-                            ubA1(28) = 222-nle(10)-Mqddot(10);
-                            lbA1(29) = -166-nle(11)-Mqddot(11);
-                            ubA1(29) = 166-nle(11)-Mqddot(11);
-
-                            lbA1(30) = -333-nle(12)-Mqddot(12);
-                            ubA1(30) = 333-nle(12)-Mqddot(12);
-                            lbA1(31) = -232-nle(13)-Mqddot(13);
-                            ubA1(31) = 232-nle(13)-Mqddot(13);
-                            lbA1(32) = -263-nle(14)-Mqddot(14);
-                            ubA1(32) = 263-nle(14)-Mqddot(14);
-                            lbA1(33) = -289-nle(15)-Mqddot(15);
-                            ubA1(33) = 289-nle(15)-Mqddot(15);
-                            lbA1(34) = -222-nle(16)-Mqddot(16);
-                            ubA1(34) = 222-nle(16)-Mqddot(16);
-                            lbA1(35) = -166-nle(17)-Mqddot(17);
-                            ubA1(35) = 166-nle(17)-Mqddot(17);
-
-                            lbA1(36) = -303-nle(18)-Mqddot(18);
-                            ubA1(36) = 303-nle(18)-Mqddot(18);
-                            lbA1(37) = -303-nle(19)-Mqddot(19);
-                            ubA1(37) = 303-nle(19)-Mqddot(19);
-                            lbA1(38) = -303-nle(20)-Mqddot(20);
-                            ubA1(38) = 303-nle(20)-Mqddot(20);
-
-                            lbA1(39) = -64-nle(21)-Mqddot(21);
-                            ubA1(39) = 64-nle(21)-Mqddot(21);
-                            lbA1(40) = -64-nle(22)-Mqddot(22);
-                            ubA1(40) = 64-nle(22)-Mqddot(22);
-                            lbA1(41) = -64-nle(23)-Mqddot(23);
-                            ubA1(41) = 64-nle(23)-Mqddot(23);
-                            lbA1(42) = -64-nle(24)-Mqddot(24);
-                            ubA1(42) = 64-nle(24)-Mqddot(24);
-                            lbA1(43) = -23-nle(25)-Mqddot(25);
-                            ubA1(43) = 23-nle(25)-Mqddot(25);
-                            lbA1(44) = -23-nle(26)-Mqddot(26);
-                            ubA1(44) = 23-nle(26)-Mqddot(26);
-                            lbA1(45) = -10-nle(27)-Mqddot(27);
-                            ubA1(45) = 10-nle(27)-Mqddot(27);
-                            lbA1(46) = -10-nle(28)-Mqddot(28);
-                            ubA1(46) = 10-nle(28)-Mqddot(28);
-
-                            lbA1(47) = -10-nle(29)-Mqddot(29);
-                            ubA1(47) = 10-nle(29)-Mqddot(29);
-                            lbA1(48) = -10-nle(30)-Mqddot(30);
-                            ubA1(48) = 10-nle(30)-Mqddot(30);
-
-                            lbA1(49) = -64-nle(31)-Mqddot(31);
-                            ubA1(49) = 64-nle(31)-Mqddot(31);
-                            lbA1(50) = -64-nle(32)-Mqddot(32);
-                            ubA1(50) = 64-nle(32)-Mqddot(32);
-                            lbA1(51) = -64-nle(33)-Mqddot(33);
-                            ubA1(51) = 64-nle(33)-Mqddot(33);
-                            lbA1(52) = -64-nle(34)-Mqddot(34);
-                            ubA1(52) = 64-nle(34)-Mqddot(34);
-                            lbA1(53) = -23-nle(35)-Mqddot(35);
-                            ubA1(53) = 23-nle(35)-Mqddot(35);
-                            lbA1(54) = -23-nle(36)-Mqddot(36);
-                            ubA1(54) = 23-nle(36)-Mqddot(36);
-                            lbA1(55) = -10-nle(37)-Mqddot(37);
-                            ubA1(55) = 10-nle(37)-Mqddot(37);
-                            lbA1(56) = -10-nle(38)-Mqddot(38);
-                            ubA1(56) = 10-nle(38)-Mqddot(38);
-               
-                            A1(57, 2) = 1.0;
-                            lbA1(57) = 800.0;
-                            ubA1(57) = 1000.0;
-
-                            A1.block(58,0,1,6)(0,2) = mu;
-                            A1.block(58,0,1,6)(0,5) = 1;
-                            lbA1(58) = 0.0;
-                            ubA1(58) = 100000.0;
-                            A1.block(59,0,1,6)(0,2) = mu;
-                            A1.block(59,0,1,6)(0,5) = -1;
-                            lbA1(59) = 0.0;
-                            ubA1(59) = 100000.0;
-                           
-                            qp_torque_control.UpdateMinProblem(H1, g1);
-                            qp_torque_control.UpdateSubjectToAx(A1, lbA1, ubA1);
-                            qp_torque_control.UpdateSubjectToX(lb1, ub1);
-                            solved = qp_torque_control.SolveQPoases(100, qp_result);
-                            if (solved == true)
-                            {
-                                tau_ = ((M_ * (qdd_pinocchio_desired1_ + qp_result.segment<MODEL_DOF_VIRTUAL>(12))+  nle - (RFj.transpose() * qp_result.head(6))).transpose());
-                            }
-                            control_time = control_time + 1;
-                        }
-
+                            tau_1 = tau_;
+                        }*/
+                        
                         if (atb_grav_update_ == false)
                         {
                             atb_grav_update_ = true;
-                            Gravity_MJ_ = tau_.segment<MODEL_DOF_VIRTUAL-6>(6);
+                            if(torquecontrol_first == false && walking_tick_jk < 200)
+                            {
+                                Gravity_MJ_ =  1 / (1 + 2 * M_PI * 4.0 * del_t) * Gravity_MJ_ + (2 * M_PI * 4.0 * del_t) / (1 + 2 * M_PI * 4.0 * del_t) * tau_.segment<MODEL_DOF_VIRTUAL-6>(6);
+                                walking_tick_jk = walking_tick_jk + 1;
+                            }
+                            else
+                                Gravity_MJ_ = tau_.segment<MODEL_DOF_VIRTUAL-6>(6);
                             atb_grav_update_ = false;
                         }
                     }
@@ -2344,9 +2330,10 @@ void CustomController::computeFast()
             if (atb_grav_update_ == false)
             {
                 VectorQd Gravity_MJ_local = WBC::ContactForceRedistributionTorqueWalking(rd_, WBC::GravityCompensationTorque(rd_), 0.9, 1, support_foot);
-
+                            
                 atb_grav_update_ = true;
-                Gravity_MJ_ = Gravity_MJ_local;
+                Gravity_MJ_ =  1 / (1 + 2 * M_PI * 4.0 * del_t) * Gravity_MJ_ + (2 * M_PI * 4.0 * del_t) / (1 + 2 * M_PI * 4.0 * del_t) * Gravity_MJ_local;//tau_.segment<MODEL_DOF_VIRTUAL-6>(6);
+                //Gravity_MJ_ = Gravity_MJ_local;
                 atb_grav_update_ = false;
             }
         }
@@ -2655,7 +2642,7 @@ void CustomController::getRobotData()
         com_alpha_fast = com_alpha_;
         atb_phase_update_ = false;
     }
-   
+    
     if(supportFoot_fast == 0)
     {
         supportfoot_from_global = rfoot_transform_current_from_global_;
@@ -3393,10 +3380,10 @@ void CustomController::motionGenerator()
     //////LEFT LEG///////0 0 0.02 0.15 -0.17 0
     motion_q_(0) = 0;
     motion_q_(1) = 0;
-    motion_q_(2) = -0.55;
+    motion_q_(2) = -0.24;//-0.55;
     // motion_q_(3)   = DyrosMath::cubic(walking_phase_, 0.7, 1, knee_target_angle_, 2*knee_target_angle_, 0, 0); //0.1
-    motion_q_(3) = 1.26;
-    motion_q_(4) = -0.71;
+    motion_q_(3) = 0.6;//1.26;
+    motion_q_(4) = -0.36;
     motion_q_(5) = 0.0;
     pd_control_mask_(0) = 1;
     pd_control_mask_(1) = 1;
@@ -3408,10 +3395,10 @@ void CustomController::motionGenerator()
     /////RIFHT LEG////////0 0 0.02 0.15 -0.17 0
     motion_q_(6) = 0;
     motion_q_(7) = 0;
-    motion_q_(8) = -0.55;
+    motion_q_(8) = -0.24;//-0.55;
     // motion_q_(9)   = DyrosMath::cubic(walking_phase_, 0.7, 1, knee_target_angle_, 2*knee_target_angle_, 0, 0); //0.1
-    motion_q_(9) = 1.26;
-    motion_q_(10) = -0.71;
+    motion_q_(9) = 0.6;//1.26;
+    motion_q_(10) = -0.36;//-0.71;
     motion_q_(11) = 0.0;
     pd_control_mask_(6) = 1;
     pd_control_mask_(7) = 1;
@@ -5328,8 +5315,8 @@ void CustomController::addZmpOffset()
     // lfoot_zmp_offset_ = -0.02; // 1.1 초
     // rfoot_zmp_offset_ = 0.02;
 
-    lfoot_zmp_offset_ = -0.01; // simul 1.1 s
-    rfoot_zmp_offset_ = 0.01;
+    lfoot_zmp_offset_ = -0.02; // simul 1.1 s
+    rfoot_zmp_offset_ = 0.02;
 
     foot_step_support_frame_offset_ = foot_step_support_frame_;
 
@@ -5995,8 +5982,9 @@ void CustomController::getPelvTrajectory()
     //com_desired_(2) = pelv_support_current_init.translation()(2);
 
     pelv_trajectory_support_.linear() = pelv_support_current_init.linear();
+   
     pelv_trajectory_support_.translation()(0) = pelv_support_current_.translation()(0) + 0.7 * (com_desired_(0) - 0.15 * damping_x - com_support_current_(0)); //- 0.01 * zmp_err_(0) * 0;
-    pelv_trajectory_support_.translation()(1) = pelv_support_current_.translation()(1) + 0.7 * (com_desired_(1) - 0.6 * damping_y - com_support_current_(1));  //- 0.01 * zmp_err_(1) * 0;
+    pelv_trajectory_support_.translation()(1) = pelv_support_current_.translation()(1) + 0.9 * (com_desired_(1) - 0.3 * damping_y - com_support_current_(1));  //- 0.01 * zmp_err_(1) * 0;
     pelv_trajectory_support_.translation()(2) = com_desired_(2) - 0 * pelv_height_offset_;
 
     // MJ_graph << com_desired_(0) << "," << com_support_current_(0) << "," << com_desired_(1) << "," << com_support_current_(1) << endl;
@@ -6064,7 +6052,7 @@ void CustomController::getPelvTrajectory()
         }
 
         P_angle_input_dot = (1.5 * (0.0 - P_angle) - 0.01 * P_angle_input);
-        R_angle_input_dot =  0.2 * (1.0 * (0.0 - R_angle) - 0.2 * R_angle_input);
+        R_angle_input_dot =  0.2 * (1.0 * (0.0 - R_angle) - 0.01 * R_angle_input);
 
         P_angle_input = P_angle_input + P_angle_input_dot * del_t;
         R_angle_input = R_angle_input + R_angle_input_dot * del_t;
@@ -6103,25 +6091,28 @@ void CustomController::supportToFloatPattern()
 
     rfoot_trajectory_float_.translation()(2) = rfoot_trajectory_float_.translation()(2) + F_F_input * 0.5;
     lfoot_trajectory_float_.translation()(2) = lfoot_trajectory_float_.translation()(2) - F_F_input * 0.5;
-    /*
-    if(contactMode == 1)
+   
+    /*if(contactMode == 1)
     {
         rfoot_trajectory_float_.translation()(2) = rfoot_trajectory_float_.translation()(2) + F_F_input * 0.5;
         lfoot_trajectory_float_.translation()(2) = lfoot_trajectory_float_.translation()(2) - F_F_input * 0.5;
     }
     else if(contactMode == 2)
     {
-        lfoot_trajectory_float_.translation()(2) = lfoot_trajectory_float_.translation()(2) - F_F_input * 0.5;
-        rfoot_trajectory_float_.translation()(2) = rfoot_trajectory_float_.translation()(2) + F_F_input * 0.5 + 0.5 * (rfoot_trajectory_support_.translation()(2) - rfoot_support_current_.translation()(2));
+        lfoot_trajectory_float_.translation()(2) = lfoot_trajectory_float_.translation()(2) - F_F_input * 1.0;
+        //rfoot_trajectory_float_.translation()(2) = rfoot_trajectory_float_.translation()(2) + F_F_input * 0.5 + 0.5 * (rfoot_trajectory_support_.translation()(2) - rfoot_support_current_.translation()(2));
         rfoot_trajectory_float_.translation()(0) = rfoot_trajectory_float_.translation()(0) + 5.0 * (rfoot_trajectory_support_.translation()(0) - rfoot_support_current_.translation()(0));
+        rfoot_trajectory_float_.translation()(2) = rfoot_trajectory_float_.translation()(2) + 5.0 * (rfoot_trajectory_support_.translation()(2) - rfoot_support_current_.translation()(2));
+   
     }
     else
     {
-        rfoot_trajectory_float_.translation()(2) = rfoot_trajectory_float_.translation()(2) + F_F_input * 0.5;
-        lfoot_trajectory_float_.translation()(2) = lfoot_trajectory_float_.translation()(2) - F_F_input * 0.5 + 0.5 * (lfoot_trajectory_support_.translation()(2) - lfoot_support_current_.translation()(2));
+        rfoot_trajectory_float_.translation()(2) = rfoot_trajectory_float_.translation()(2) + F_F_input * 1.0;
+        //lfoot_trajectory_float_.translation()(2) = lfoot_trajectory_float_.translation()(2) - F_F_input * 0.5 + 0.5 * (lfoot_trajectory_support_.translation()(2) - lfoot_support_current_.translation()(2));
         lfoot_trajectory_float_.translation()(0) = lfoot_trajectory_float_.translation()(0) + 5.0 * (lfoot_trajectory_support_.translation()(0) - lfoot_support_current_.translation()(0));
-    }
-    */
+        lfoot_trajectory_float_.translation()(2) = lfoot_trajectory_float_.translation()(2) + 5.0 * (lfoot_trajectory_support_.translation()(2) - lfoot_support_current_.translation()(2));
+   
+    }*/
 }
 
 void CustomController::getComTrajectory()
@@ -6380,15 +6371,28 @@ void CustomController::GravityCalculate_MJ()
     }
     else
     {
-        WBC::SetContact(rd_, 1, 1);
+        /*WBC::SetContact(rd_, 1, 1);
         Gravity_DSP_ = WBC::ContactForceRedistributionTorqueWalking(rd_, WBC::GravityCompensationTorque(rd_));
+        Gravity_SSP_.setZero();*/
+        WBC::SetContact(rd_, 1, 1);
+        Gravity_DSP_ = WBC::GravityCompensationTorque(rd_);
         Gravity_SSP_.setZero();
+        contact_gain = 1.0;
+        if (foot_step_(current_step_num_, 6) == 0) // 왼발 지지
+        {
+            Gravity_DSP_ = WBC::ContactForceRedistributionTorqueWalking(rd_, Gravity_DSP_, eta, contact_gain, 1);
+        }
+        else if (foot_step_(current_step_num_, 6) == 1) // 오른발 지지
+        {
+            Gravity_DSP_ = WBC::ContactForceRedistributionTorqueWalking(rd_, Gravity_DSP_, eta, contact_gain, 0);
+        }
     }
     if (atb_grav_update_ == false)
     {
         atb_grav_update_ = true;
         Gravity_MJ_ = Gravity_DSP_ + Gravity_SSP_; // + contact_torque_MJ;
         atb_grav_update_ = false;
+        Gravity_MJ_1 = Gravity_MJ_;
     }
 
     //return grav_;
@@ -6436,7 +6440,7 @@ void CustomController::setContact_custom()
 
 void CustomController::parameterSetting()
 {
-    target_x_ = 0.0;
+    target_x_ = 0.4;
     target_y_ = 0.0;
     target_z_ = 0.0;
     com_height_ = 0.71;
@@ -6634,7 +6638,7 @@ void CustomController::hip_compensator()
         left_hip_pitch = 0.4 * DEG2RAD, right_hip_pitch = 0.4 * DEG2RAD, left_hip_pitch_first = 0.75 * DEG2RAD, right_hip_pitch_first = 0.75 * DEG2RAD,    // 실험 , 제자리 0.75deg
         left_ank_pitch = 0.0 * DEG2RAD, right_ank_pitch = 0.0 * DEG2RAD, left_ank_pitch_first = 0.0 * DEG2RAD, right_ank_pitch_first = 0.0 * DEG2RAD, temp_time = 0.05 * hz_;
       */    
-    double left_hip_roll = -0.2 * DEG2RAD, right_hip_roll = -0.2 * DEG2RAD, left_hip_roll_first = -0.2 * DEG2RAD, right_hip_roll_first = -0.2 * DEG2RAD, //실험, 제자리 0.6, 0.4
+    double left_hip_roll = -0.4 * DEG2RAD, right_hip_roll = -0.7 * DEG2RAD, left_hip_roll_first = -0.4 * DEG2RAD, right_hip_roll_first = -0.7 * DEG2RAD, //실험, 제자리 0.6, 0.4
         left_hip_pitch = 0.4 * DEG2RAD, right_hip_pitch = 0.4 * DEG2RAD, left_hip_pitch_first = 0.4 * DEG2RAD, right_hip_pitch_first = 0.4 * DEG2RAD,    // 실험 , 제자리 0.75deg
         left_ank_pitch = 0.0 * DEG2RAD, right_ank_pitch = 0.0 * DEG2RAD, left_ank_pitch_first = 0.0 * DEG2RAD, right_ank_pitch_first = 0.0 * DEG2RAD,
            left_hip_roll_temp = 0.0, right_hip_roll_temp = 0.0, left_hip_pitch_temp = 0.0, right_hip_pitch_temp = 0.0, left_ank_pitch_temp = 0.0, right_ank_pitch_temp = 0.0, temp_time = 0.05 * hz_;
@@ -6885,7 +6889,6 @@ void CustomController::CP_compen_MJ()
 
     Tau_CP(5) = -F_L * del_zmp(1);  // L roll
     Tau_CP(11) = -F_R * del_zmp(1); // R roll
-    file[1] << contactMode << " ";
 }
 
 void CustomController::CP_compen_MJ_FT()
@@ -6897,7 +6900,7 @@ void CustomController::CP_compen_MJ_FT()
     double zmp_offset = 0;
     double alpha_new = 0;
 
-    zmp_offset = 0.01; // zmp_offset 함수 참고
+    zmp_offset = 0.02; // zmp_offset 함수 참고
 
     // Preview를 이용한 COM 생성시 ZMP offset을 x cm 안쪽으로 넣었지만, alpha 계산은 x cm 넣으면 안되기 때문에 조정해주는 코드
     // 어떻게 보면 COM, CP 궤적은 ZMP offset이 반영되었고, CP 제어기는 반영안시킨게 안맞는거 같기도함
@@ -6976,8 +6979,7 @@ void CustomController::CP_compen_MJ_FT()
     {
         alpha_new = 0;
     }
-    //file[1] << alpha << " ";
-
+    
     //if(torque_control == false)
     //{
         F_R = -(1 - alpha) * rd_.link_[COM_id].mass * GRAVITY;
@@ -6998,8 +7000,7 @@ void CustomController::CP_compen_MJ_FT()
         //F_R = -(1 - alpha) * rd_.link_[COM_id].mass * GRAVITY;
         //F_L = -alpha * rd_.link_[COM_id].mass * GRAVITY;
     }*/
-    //file[1] << alpha << " ";
-
+   
     com_alpha = alpha;
    
     if (walking_tick_mj == 0)
@@ -7080,34 +7081,34 @@ void CustomController::CP_compen_MJ_FT()
 
     if (walking_tick_mj < t_start_ + t_rest_init_ + t_double1_)
     {
-        Kr_roll = 50.0;
-        Kl_roll = 50.0;
-        Kr_pitch = 50.0;
-        Kl_pitch = 50.0;
+        Kr_roll = 30.0;
+        Kl_roll = 30.0;
+        Kr_pitch = 30.0;
+        Kl_pitch = 30.0;
     }
     else if (walking_tick_mj >= t_start_ + t_rest_init_ + t_double1_ && walking_tick_mj < t_start_ + t_total_ - t_double2_ - t_rest_last_)
     {
         if (alpha == 1) // 왼발 지지
         {
-            Kl_roll = 50.0;
-            Kr_roll = 50.0;
-            Kl_pitch = 50.0;
-            Kr_pitch = 50.0;
+            Kl_roll = 30.0;
+            Kr_roll = 30.0;
+            Kl_pitch = 30.0;
+            Kr_pitch = 30.0;
         }
         if (alpha == 0) // 오른발 지지
         {
-            Kl_roll = 50.0;
-            Kr_roll = 50.0;
-            Kl_pitch = 50.0;
-            Kr_pitch = 50.0;
+            Kl_roll = 30.0;
+            Kr_roll = 30.0;
+            Kl_pitch = 30.0;
+            Kr_pitch = 30.0;
         }
     }
     else
     {
-        Kr_roll = 50.0;
-        Kl_roll = 50.0;
-        Kr_pitch = 50.0;
-        Kl_pitch = 50.0;
+        Kr_roll = 30.0;
+        Kl_roll = 30.0;
+        Kr_pitch = 30.0;
+        Kl_pitch = 30.0;
     }
 
     //Roll 방향 -0.3,50 -> High performance , -0.1, 50 평지 보행 적당
@@ -7129,10 +7130,10 @@ void CustomController::CP_compen_MJ_FT()
     }
     else
     {
-        F_T_L_x_input_dot = -0.07 * (Tau_L_x - l_ft_LPF(3)) - Kl_roll * F_T_L_x_input;
+        F_T_L_x_input_dot = -0.1 * (Tau_L_x - l_ft_LPF(3)) - Kl_roll * F_T_L_x_input;
         F_T_L_x_input = F_T_L_x_input + F_T_L_x_input_dot * del_t;
         //F_T_L_x_input = 0;
-        F_T_R_x_input_dot = -0.07 * (Tau_R_x - r_ft_LPF(3)) - Kr_roll * F_T_R_x_input;
+        F_T_R_x_input_dot = -0.1 * (Tau_R_x - r_ft_LPF(3)) - Kr_roll * F_T_R_x_input;
         F_T_R_x_input = F_T_R_x_input + F_T_R_x_input_dot * del_t;
         //F_T_R_x_input = 0;
 
@@ -7224,7 +7225,7 @@ void CustomController::CP_compen_MJ_FT()
     {
         F_T_R_y_input = -0.2;
     }  
-    file[1]<<alpha << " "<<Tau_L_y << " " << Tau_R_y << " " << l_ft_LPF(4) << " " << r_ft_LPF(4) << " "<< F_T_L_y_input << " " << F_T_R_y_input << " " << Tau_CP(4) << " " << Tau_CP(10) << " " << l_ft_(2)<< " " << r_ft_(2) << " " << F_L << " " << F_R << " " << -qp_result(8) << " "<< -qp_result(2) << " " << (l_ft_(2) - r_ft_(2)) << " " << F_L - F_R << " " << 11 <<  " "<< lfoot_trajectory_support_.translation()(2) <<  " "<< rfoot_trajectory_support_.translation()(2) << " " << lfoot_support_current_.translation()(2)<< " " << rfoot_support_current_.translation()(2)<<  " " << zmp_measured_mj_(0) << " " << zmp_measured_mj_(1) << " ";
+//    file[1]<<alpha << " "<<Tau_L_y << " " << Tau_R_y << " " << l_ft_LPF(4) << " " << r_ft_LPF(4) << " "<<Tau_L_x << " " << Tau_R_x << " " << l_ft_LPF(3) << " " << r_ft_LPF(3) << " "<< F_T_L_y_input << " " << F_T_R_y_input << " " << Tau_CP(4) << " " << Tau_CP(10) << " " << l_ft_(2)<< " " << r_ft_(2) << " " << F_L << " " << F_R << " " << -qp_result(8) << " "<< -qp_result(2) << " " << (l_ft_(2) - r_ft_(2)) << " " << F_L - F_R << " " << 11 <<  " "<< lfoot_trajectory_support_.translation()(2) <<  " "<< rfoot_trajectory_support_.translation()(2) << " " << lfoot_support_current_.translation()(2)<< " " << rfoot_support_current_.translation()(2)<<  " " << zmp_measured_mj_(0) << " " << zmp_measured_mj_(1) << " ";
 }
 
 void CustomController::computePlanner()
@@ -7238,9 +7239,9 @@ void CustomController::copyRobotData(RobotData &rd_l)
 
 void CustomController::CentroidalMomentCalculator()
 {
-    del_cmp(0) = 2.0 * (cp_measured_(0) - cp_desired_(0));//1.6, 1.6
-    del_cmp(1) = 2.0 * (cp_measured_(1) - cp_desired_(1));
-   
+    del_zmp(0) = 2.2 * (cp_measured_(0) - cp_desired_(0));//1.6, 1.6
+    del_zmp(1) = 2.2 * (cp_measured_(1) - cp_desired_(1));
+    /*
     double support_ratio = 0.0;
     double M_G = rd_.link_[COM_id].mass * GRAVITY;
     support_ratio = (ZMP_Y_REF_alpha - rfoot_support_current_.translation()(1))/(lfoot_support_current_.translation()(1) - rfoot_support_current_.translation()(1));
@@ -7319,7 +7320,7 @@ void CustomController::CentroidalMomentCalculator()
         del_zmp(1) = -foot_width_y;
         del_tau_(0) = -(del_cmp(1) - del_zmp(1)) * M_G;  
     }
-   
+    */
     CLIPM_ZMP_compen_MJ(del_zmp(0), del_zmp(1)); // 원래 previewcontroller 자리에 있던 함수.
 }
 
@@ -7362,6 +7363,5 @@ void CustomController::momentumControl(RobotData &Robot, Eigen::Vector3d comd,  
     else
         q_dm.setZero();
 }
-
 
 
