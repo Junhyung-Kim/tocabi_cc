@@ -1294,8 +1294,8 @@ void CustomController::computeSlow()
                         rfoot_d = rfootd1;
                         lfoot_d = lfootd1;
 
-                        lfoot_ori = -DyrosMath::getPhi(lfoot_trajectory_float_pre.linear(), lfoot_trajectory_float_.linear()) * 0.5/1.0;
-                        rfoot_ori = -DyrosMath::getPhi(rfoot_trajectory_float_pre.linear(), rfoot_trajectory_float_.linear()) * 0.5/1.0;
+                        lfoot_ori = -DyrosMath::getPhi(lfoot_trajectory_float_pre.linear(), lfoot_trajectory_float_.linear()) * 0.5/2.0;
+                        rfoot_ori = -DyrosMath::getPhi(rfoot_trajectory_float_pre.linear(), rfoot_trajectory_float_.linear()) * 0.5/2.0;
 
                         com_d1 = com_d;
                         rfoot_d1 = rfoot_d;
@@ -1306,8 +1306,8 @@ void CustomController::computeSlow()
                         com_d = com_d1;
                         rfoot_d = rfoot_d1;
                         lfoot_d = lfoot_d1;
-                        lfoot_ori = -DyrosMath::getPhi(lfoot_trajectory_float_pre.linear(), lfoot_trajectory_float_.linear()) * 0.5/1.0;
-                        rfoot_ori = -DyrosMath::getPhi(rfoot_trajectory_float_pre.linear(), rfoot_trajectory_float_.linear()) * 0.5/1.0;
+                        lfoot_ori = -DyrosMath::getPhi(lfoot_trajectory_float_pre.linear(), lfoot_trajectory_float_.linear()) * 0.5/2.0;
+                        rfoot_ori = -DyrosMath::getPhi(rfoot_trajectory_float_pre.linear(), rfoot_trajectory_float_.linear()) * 0.5/2.0;
                     }
 
                     pelv_vtran = (pelv_trajectory_float_.translation() - pelv_trajectory_float_pre.translation()) * 2000;
@@ -1366,15 +1366,15 @@ void CustomController::computeSlow()
                             
                             if(rfoot_trajectory_support_.translation()(2) > 0 && contactMode != 1)
                             {
-                                rfoot_d2(2) = rfoot_d(2) + 0.00 * (rfoot_trajectory_support_.translation()(2) - rfoot_support_current_.translation()(2)) + F_F_input * 0.005/3;     
-                                rfoot_d2(0) = rfoot_d(0) + 0.00 * (rfoot_trajectory_support_.translation()(0) - rfoot_support_current_.translation()(0));
-                                rfoot_d2(1) = rfoot_d(1) + 0.00 * (rfoot_trajectory_support_.translation()(1) - rfoot_support_current_.translation()(1));
+                                rfoot_d2(2) = rfoot_d(2) + 0.006 * (rfoot_trajectory_support_.translation()(2) - rfoot_support_current_.translation()(2)) + F_F_input * 0.005/3;     
+                                rfoot_d2(0) = rfoot_d(0) + 0.003 * (rfoot_trajectory_support_.translation()(0) - rfoot_support_current_.translation()(0));
+                                rfoot_d2(1) = rfoot_d(1) + 0.003 * (rfoot_trajectory_support_.translation()(1) - rfoot_support_current_.translation()(1));
                             }
                             else if(lfoot_trajectory_support_.translation()(2) > 0 && contactMode != 1)
                             {
-                                lfoot_d2(2) = lfoot_d(2) + 0.00 * (lfoot_trajectory_support_.translation()(2) - lfoot_support_current_.translation()(2)) - F_F_input * 0.005/3;
-                                lfoot_d2(0) = lfoot_d(0) + 0.00 * (lfoot_trajectory_support_.translation()(0) - lfoot_support_current_.translation()(0));
-                                lfoot_d2(1) = lfoot_d(1) + 0.00 * (lfoot_trajectory_support_.translation()(1) - lfoot_support_current_.translation()(1));
+                                lfoot_d2(2) = lfoot_d(2) + 0.006 * (lfoot_trajectory_support_.translation()(2) - lfoot_support_current_.translation()(2)) - F_F_input * 0.005/3;
+                                lfoot_d2(0) = lfoot_d(0) + 0.003 * (lfoot_trajectory_support_.translation()(0) - lfoot_support_current_.translation()(0));
+                                lfoot_d2(1) = lfoot_d(1) + 0.003 * (lfoot_trajectory_support_.translation()(1) - lfoot_support_current_.translation()(1));
                             }
                             else
                             {
@@ -1384,18 +1384,13 @@ void CustomController::computeSlow()
 
                             com_d2(0) = com_d(0) + 0.00 * (com_desired_(0) - com_support_current_(0));
                             com_d2(1) = com_d(1) + 0.00 * (com_desired_(1) - com_support_current_(1));
-                            com_d2(2) = 0.0 + 0.00 * (com_desired_(2) - com_support_current_(2));
+                            com_d2(2) = 0.0 + 0.003 * (com_desired_(2) - com_support_current_(2));
                             
                             //ang_d_temp(0) = ang_d_temp(0) + 10 * (ang_d_temp(0) - model_data_cen.hg.angular()(0)/2000);
                             //ang_d_temp(1) = ang_d_temp(1) + 10 * (ang_d_temp(1) - model_data_cen.hg.angular()(1)/2000);
 
                             momentumControl(rd_, com_d2, ang_d_temp, rfoot_d2, lfoot_d2, upperd, rfoot_ori, lfoot_ori);
 
-                            if(mpc_cycle >= 0)
-                            {
-                                //for (int i = 0; i < 18; i ++)
-                                //    q_dm[i] = desired_val.m_shared_memory[i+21]/2000;
-                            }
                             if(mpc_cycle < 0)
                                 q_des_.head(12) = desired_q_not_compensated_1.head(12) + q_dm.segment<12>(6);
                             else
@@ -7955,10 +7950,10 @@ void CustomController::momentumControl(RobotData &Robot, Eigen::Vector3d comd,  
             lbA2 = X2;
             ubA2 = X2;
 
-            /*lbA2(15) = lbA2(15)-0.5;
-            ubA2(15) = ubA2(15)+0.5;
-            lbA2(16) = lbA2(16)-0.5;
-            ubA2(16) = ubA2(16)+0.5;*/
+            lbA2(15) = lbA2(15)-0.3;
+            ubA2(15) = ubA2(15)+0.3;
+            lbA2(16) = lbA2(16)-0.3;
+            ubA2(16) = ubA2(16)+0.3;
 
             qp_momentum_control.UpdateMinProblem(H2, g2);
             qp_momentum_control.UpdateSubjectToAx(A2, lbA2, ubA2);
