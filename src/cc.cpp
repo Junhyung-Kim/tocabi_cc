@@ -3203,8 +3203,8 @@ void CustomController::computeFast()
                     for (int i = 0; i < 18; i ++)
                         state_init[i+21] = rd_.q_dot_virtual_[i];
                 
-                    state_init[20] = rd_.q_virtual_[19];
-                    state_init[21] = rd_.q_virtual_[20];
+                    state_init[19] = rd_.q_virtual_[19];
+                    state_init[20] = rd_.q_virtual_[20];
 
                     state_init[41] = rd_.link_[COM_id].xpos(0);
                     state_init[42] = rd_.link_[COM_id].v(0);//rd_.link_[COM_id].xpos(0);
