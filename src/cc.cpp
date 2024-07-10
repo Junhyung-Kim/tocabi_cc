@@ -1234,6 +1234,66 @@ void CustomController::computeSlow()
                                 ZMP_Y_REF_1 = ZMP_Y_REF;
                                 ZMP_X_REF = ZMP_gl(0);
                                 ZMP_Y_REF = ZMP_gl(1);
+
+                                double lx, ly, mu;
+                                ly = 0.048;
+                                lx = 0.11;
+
+                                if(contactMode == 1)
+                                {
+                                    if(lfoot_sx >  rfoot_sx)
+                                    {
+                                        if(ZMP_X_REF > lfoot_sx + lx)
+                                            ZMP_X_REF  = lfoot_sx + lx;
+                                        else if(ZMP_X_REF < rfoot_sx - lx)
+                                            ZMP_X_REF  = rfoot_sx - lx;
+                                    }
+                                    else if(lfoot_sx <  rfoot_sx)
+                                    {
+                                        if(ZMP_X_REF > rfoot_sx + lx)
+                                            ZMP_X_REF  = rfoot_sx + lx;
+                                        else if(ZMP_X_REF < lfoot_sx - lx)
+                                            ZMP_X_REF  = lfoot_sx - lx;
+                                    }
+                                    else
+                                    {
+                                        if(ZMP_X_REF > rfoot_sx + lx)
+                                            ZMP_X_REF  = rfoot_sx + lx;
+                                        else if(ZMP_X_REF < lfoot_sx - lx)
+                                            ZMP_X_REF  = lfoot_sx - lx;
+                                    }
+
+                                    if(ZMP_Y_REF > lfoot_sy + ly)
+                                        ZMP_Y_REF = lfoot_sy + ly;
+                                    
+                                    if(ZMP_Y_REF < rfoot_sy - ly)
+                                        ZMP_Y_REF = rfoot_sy - ly;
+                                }
+                                else if(contactMode == 2)
+                                {
+                                    if(ZMP_X_REF > lfoot_sx + lx)
+                                        ZMP_X_REF  = lfoot_sx + lx;
+                                    else if(ZMP_X_REF < lfoot_sx - lx)
+                                        ZMP_X_REF  = lfoot_sx - lx;
+                                    
+                                    if(ZMP_Y_REF > lfoot_sy + ly)
+                                        ZMP_Y_REF = lfoot_sy + ly;
+                                    else if(ZMP_Y_REF < lfoot_sy - ly)
+                                        ZMP_Y_REF = lfoot_sy - ly;
+                                }
+                                else
+                                {
+                                    if(ZMP_X_REF > rfoot_sx + lx)
+                                        ZMP_X_REF  = rfoot_sx + lx;
+                                    else if(ZMP_X_REF < rfoot_sx - lx)
+                                        ZMP_X_REF  = rfoot_sx - lx;
+                                    
+                                    if(ZMP_Y_REF < rfoot_sy - ly)
+                                        ZMP_Y_REF = rfoot_sy - ly;
+                                    else if(ZMP_Y_REF > rfoot_sy + ly)
+                                        ZMP_Y_REF = rfoot_sy + ly;
+                                }
+
                                 cp_desired_(0) = com_mpc[0] + comd_s[0]/wn;
                                 cp_desired_(1) = com_mpc[1] + comd_s[1]/wn;
                                 com_dot_desired_(0) = comd_s[0];
@@ -1527,40 +1587,22 @@ void CustomController::computeSlow()
                 if(mpc_cycle < controlwalk_time-1)
                 {
                     file[1] << mpc_cycle << " " <<walking_tick << " " <<mpc_cycle_int1<< " "<<virtual_temp(0) << " " <<virtual_temp(1)<< " " <<virtual_temp1(0) << " " <<virtual_temp1(1) << " " <<contactMode << " " << com_mpcx << " " << com_mpcy << " "<<desired_val.m_shared_memory[41] << " " << desired_val.m_shared_memory[45] << " ";
-                    //<< walking_tick << " " << walking_tick_stop <<  " " <<solved << " " << walking_tick_mj << " " << walking_tick_stop<< " "<< contactMode << " "  << a_temp1<< " "<< virtual_temp(0) << " " << virtual_temp1(0) << " " << com_alpha << " "; //<< ref_zmp_mj_(0,1) << " ";
-                   
-                    for(int i = 0; i < 12; i ++)
-                    {
-                        file[1] << qp_result(i) << " ";
-                    }
-
-                    for(int i = 0; i < 6; i ++)
-                    {
-                        file[1] << Gravity_MJ_fast_(i) << " ";
-                    }
-
-                    /*for(int i = 0; i < 18; i ++)
-                    {
-                        file[1] << qdd_des_virtual_(i) << " ";
-                    }*/
+                    
+                    file[1] << "12  " << zmpy_d << " " << zmpx_d << " " << zmpy_ << " " <<zmpx_ << " " << (1-com_alpha_fast) * rd_.link_[COM_id].mass * GRAVITY * 1.0 << " " << (com_alpha_fast) * rd_.link_[COM_id].mass * GRAVITY * 1.0 << " ";
+                    
 
                     file[1] << "123  ";
-                    file[1] << com_desired_(0) << " " << com_support_current_(0) << " "<< com_desired_(1) << " " << com_support_current_(1) << " ";
+                    file[1] << com_desired_(0) << " " << com_support_current_(0) << " "<< com_desired_(1) << " " << com_support_current_(1) << " " << com_mpc1[1] << " "<< com_float_current_(1) << " " << com_float_current_(2) << " ";
 
                     
                     file[1] << "56 ";
                    
-                    //for(int i = 0; i < 12; i ++)
-                    //    file[1] << qp_result(i) << " " ;
-
-                    file[1] << rd_.q_(12) << " " << rd_.q_(13) << " " << rd_.q_(14) << " " << q_dm_test(19) << " " << q_dm_test(20) << " ";
-
                     file[1] << "213 " <<qp_solved << " " << model_data_cen.hg.angular()(0) << " " << model_data_cen.hg.angular()(1)<< " "<< ang_d(0) << " " << ang_d(1);
-                    file[1] << " 55 "  << ZMP_Y_REF << " " << zmp_measured_mj_(1) << " " <<ZMPy_test << " " << zmp_bx(0)<< " " << zmp_bx(1)<<" "<<contactMode<< " "<< ZMP_float(1)+virtual_temp(1) <<" " <<ZMP_gl(1) << " "<< zmp_mpcy << " " << ZMPy_test<< " " << desired_val.m_shared_memory[47]-virtual_temp1(1);//<< std::endl;//<<cp_desired_(1) << " " << cp_desired_(0) << std::endl;
+                    file[1] << " 55 "  << ZMP_Y_REF << " " << zmp_measured_mj_(1) << " " <<ZMPy_test << " "<<state_init.m_shared_memory[47]<< " " << desired_val.m_shared_memory[47] << " " ;//<< std::endl;//<<cp_desired_(1) << " " << cp_desired_(0) << std::endl;
+                    file[1] << " 66 "  << ZMP_X_REF << " " << zmp_measured_mj_(0) << " " <<ZMPx_test << " "<<state_init.m_shared_memory[43]<< " " << desired_val.m_shared_memory[43] << " " ;//<< std::endl;//<<cp_desired_(1) << " " << cp_desired_(0) << std::endl;
+                    
                     file[1] << " 77 " << com_vel_current_(1) << " " <<desired_val.m_shared_memory[46]<<  " " << com_float_current_(1) << " "<< desired_val.m_shared_memory[45]-virtual_temp1(1)<< " "<<com_mpc1[1] << " " << com_desired_(1) << " " << com_support_current_(1) << " " << virtual_temp1(0) << " " << virtual_temp1(1)<<std::endl;
-                    //com_float_current_(1) + com_vel_current_(1)/wn << " " << desired_val.m_shared_memory[45] + desired_val.m_shared_memory[46]/wn <<  std::endl;
-                    //<< desired_val.m_shared_memory[47] << " " << virtual_temp(1) << " " << virtual_temp(2) << " " << rd_.q_virtual_(2) <<  " " << rfoot_support_current_.translation()(2)<<" "<< lfoot_support_current_.translation()(2)<< " "<< rfoot_trajectory_support_.translation()(2)<< " "<< lfoot_trajectory_support_.translation()(2)<< " " << a_temp1 << std::endl;
-                    file[0] << rfoot_trajectory_support_.translation()(0) << " " << rfoot_trajectory_support_.translation()(1) << " " <<rfoot_trajectory_support_.translation()(2) << " " << rfoot_support_current_.translation()(0) << " " << rfoot_support_current_.translation()(1) << " " <<rfoot_support_current_.translation()(2) << " " << com_d2(0) << " " << com_d2(1) << " " << com_d2(2) << " " << ang_d_temp(0)<< " " << ang_d_temp(1)<< " " << rfoot_ori(0)<< " " << rfoot_ori(1)<< " " << rfoot_ori(2)<< " " << lfoot_ori(0)<< " " << lfoot_ori(1)<< " " << lfoot_ori(2) << std::endl; 
+                    file[0] << rfoot_trajectory_support_.translation()(0) << " " << rfoot_trajectory_support_.translation()(1) << " " <<rfoot_trajectory_support_.translation()(2) << " " << rfoot_support_current_.translation()(0) << " " << rfoot_support_current_.translation()(1) << " " <<rfoot_support_current_.translation()(2) << " " << rd_.link_[Left_Foot].xipos(2) << " " << rd_.link_[Right_Foot].xipos(2) << std::endl; 
                 }
                 lfoot_trajectory_float_pre = lfoot_trajectory_float_;
                 rfoot_trajectory_float_pre = rfoot_trajectory_float_;
@@ -1790,10 +1832,10 @@ void CustomController::computeFast()
                                 ub1.setConstant(variable_size1, 100000);
 
                                 //wpwkfl
-                                H1(2,2) = 100.0;//0.1;
-                                H1(8,8) = 100.0;//0.1;
-                                g1(2) = - (1-com_alpha_fast) * rd_.link_[COM_id].mass * GRAVITY * 100.0;
-                                g1(8) = - (com_alpha_fast) * rd_.link_[COM_id].mass * GRAVITY * 100.0;
+                                H1(2,2) = 1000.0;//0.1;
+                                H1(8,8) = 1000.0;//0.1;
+                                g1(2) = - (1-com_alpha_fast) * rd_.link_[COM_id].mass * GRAVITY * 1000.0;
+                                g1(8) = - (com_alpha_fast) * rd_.link_[COM_id].mass * GRAVITY * 1000.0;
                                 lb1(2) = 0.0;
                                 lb1(8) = 0.0;
 
@@ -1824,20 +1866,28 @@ void CustomController::computeFast()
                                 else
                                 {
                                     H1_temp.setZero();
-                                    double weight_s = 100.0;
+                                    double weight_s = 0.005;
                                     //Experimental gain 0.03
                                     
-                                    H1_temp(2,2) = 1.0;
-                                    H1_temp(8,8) = 1.0;
+                                    //H1_temp(2,2) = 1.0;
+                                    //H1_temp(8,8) = 1.0;
+
+                                    H1_temp.block(0,0,12,12).setIdentity();
+                                    H1_temp(2,2) = 0.0;
+                                    H1_temp(8,8) = 0.0;
+
                                     H1_temp.block(12+MODEL_DOF_VIRTUAL,12+MODEL_DOF_VIRTUAL,2,2).setIdentity();
                                     H1_temp = 60.0 * H1_temp;
                                     H1_temp.block(12+MODEL_DOF_VIRTUAL,12+MODEL_DOF_VIRTUAL,2,2) = weight_s * H1_temp.block(12+MODEL_DOF_VIRTUAL,12+MODEL_DOF_VIRTUAL,2,2);
-                                    H1_temp.block(12+MODEL_DOF_VIRTUAL,12+MODEL_DOF_VIRTUAL,2,2) = 1000 * H1_temp.block(12+MODEL_DOF_VIRTUAL,12+MODEL_DOF_VIRTUAL,2,2);
+                                    H1_temp.block(12+MODEL_DOF_VIRTUAL,12+MODEL_DOF_VIRTUAL,2,2) = 60 * H1_temp.block(12+MODEL_DOF_VIRTUAL,12+MODEL_DOF_VIRTUAL,2,2);
                             
                                     H1 = H1 + H1_temp;
                                     g1_temp.setZero();
-                                    g1_temp(2) = -qp_result(2) * 60.0;
-                                    g1_temp(8) = -qp_result(8) * 60.0;
+                                    g1_temp.head(12) = -qp_result.head(12) * 60.0;
+                                    g1_temp(2) = 0.0;
+                                    g1_temp(8) = 0.0;
+                                    //g1_temp(2) = -qp_result(2) * 60.0;
+                                    //g1_temp(8) = -qp_result(8) * 60.0;
                                     g1_temp.tail(2) = -qp_result.tail(2) * 60.0 * weight_s;
                                     g1 = g1 + g1_temp;
                                 }
@@ -7068,12 +7118,20 @@ void CustomController::parameterSetting()
 
     if(as == 1)
     {
-        t_rest_init_ = 0.19 * hz_; // slack 18
+        t_rest_init_ = 0.196 * hz_; // slack 18
+        t_rest_last_ = 0.206 * hz_; // slack 22
+        t_rest_init_1 = 0.196 * hz_; 
+        t_rest_last_1 = 0.206 * hz_;
+        t_rest_init_2 = 0.196 * hz_;
+        t_rest_last_2 = 0.206 * hz_;
+
+        /*t_rest_init_ = 0.19 * hz_; // slack 18
         t_rest_last_ = 0.21 * hz_; // slack 22
-        t_rest_init_1 = 0.20 * hz_;
+        t_rest_init_1 = 0.20 * hz_; 
         t_rest_last_1 = 0.20 * hz_;
         t_rest_init_2 = 0.19 * hz_;
-        t_rest_last_2 = 0.21 * hz_;
+        t_rest_last_2 = 0.21 * hz_;*/
+
         t_double1_ = 0.00 * hz_;
         t_double2_ = 0.00 * hz_;
         t_total_ = 1.0 * hz_;
@@ -7950,10 +8008,10 @@ void CustomController::momentumControl(RobotData &Robot, Eigen::Vector3d comd,  
             lbA2 = X2;
             ubA2 = X2;
 
-            lbA2(15) = lbA2(15)-0.3;
-            ubA2(15) = ubA2(15)+0.3;
-            lbA2(16) = lbA2(16)-0.3;
-            ubA2(16) = ubA2(16)+0.3;
+            lbA2(15) = lbA2(15)-0.1;
+            ubA2(15) = ubA2(15)+0.1;
+            lbA2(16) = lbA2(16)-0.1;
+            ubA2(16) = ubA2(16)+0.1;
 
             qp_momentum_control.UpdateMinProblem(H2, g2);
             qp_momentum_control.UpdateSubjectToAx(A2, lbA2, ubA2);
