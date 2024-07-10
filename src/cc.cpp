@@ -1497,27 +1497,32 @@ void CustomController::computeSlow()
                 {
                     if(momentumControlMode == true)
                     {
-                        qdd_des_virtual = (q_dm_mom.head(3) - qd_des_virtual_prev.head(3))*2000;
-                        qdd_des_virtual_ori = (q_dm_mom.segment<3>(3) - qd_des_ori_prev) * 2000;
-                        qdd_des_.head(12) = (q_dm_mom.segment<12>(6) - qd_des_prev.head(12))*2000;
+                        qdd_des_virtual = (q_dm_test.head(3) - qd_des_virtual_prev.head(3))*2000;
+                        qdd_des_virtual_ori = (q_dm_test.segment<3>(3) - qd_des_ori_prev) * 2000;
+                        qdd_des_.head(12) = (q_dm_test.segment<12>(6) - qd_des_prev.head(12))*2000;
+                        qdd_des_upper = (upperd - upperd_prev) * 2000;
 
                         if(step_change == false)
                         {
                             qdd_des_lpf =  1 / (1 + 0.1 * M_PI * 6.0 * del_t) * qdd_des_lpf + (0.1 * M_PI * 6.0 * del_t) / (1 + 0.1 * M_PI * 6.0 * del_t) * qdd_des_;
                             qdd_des_virtual_lpf =  1 / (1 + 0.1 * M_PI * 6.0 * del_t) * qdd_des_virtual_lpf + (0.1 * M_PI * 6.0 * del_t) / (1 + 0.1 * M_PI * 6.0 * del_t) * qdd_des_virtual;
                             qdd_des_virtual_ori_lpf = 1 / (1 + 0.1 * M_PI * 6.0 * del_t) * qdd_des_virtual_ori_lpf + (0.1 * M_PI * 6.0 * del_t) / (1 + 0.1 * M_PI * 6.0 * del_t) * qdd_des_virtual_ori;
+                            qdd_des_upper_lpf = 1 / (1 + 0.1 * M_PI * 6.0 * del_t) * qdd_des_upper_lpf + (0.1 * M_PI * 6.0 * del_t) / (1 + 0.1 * M_PI * 6.0 * del_t) * qdd_des_upper;
+
 
                             qdd_des_virtual_.head(3) =  qdd_des_virtual_lpf.head(3);
                             qdd_des_virtual_.segment<3>(3) = qdd_des_virtual_ori_lpf.head(3);
                             qdd_des_virtual_.segment<12>(6) =  qdd_des_lpf.head(12);
+                            qdd_des_virtual_.segment<2>(19) = qdd_des_upper_lpf;
                         }
                         else
                         {
                             std::cout << "walking_ms " << walking_tick_mj << std::endl;
                         }
-                        qd_des_virtual_prev.head(3) = q_dm_mom.head(3);
-                        qd_des_prev.head(12) = q_dm_mom.segment<12>(6);
-                        qd_des_ori_prev.head(3) = q_dm_mom.segment<3>(3);
+                        qd_des_virtual_prev.head(3) = q_dm_test.head(3);
+                        qd_des_prev.head(12) = q_dm_test.segment<12>(6);
+                        qd_des_ori_prev.head(3) = q_dm_test.segment<3>(3);
+                        upperd_prev = upperd;
                     }
                     else
                     {
@@ -1595,7 +1600,13 @@ void CustomController::computeSlow()
                     file[1] << com_desired_(0) << " " << com_support_current_(0) << " "<< com_desired_(1) << " " << com_support_current_(1) << " " << com_mpc1[1] << " "<< com_float_current_(1) << " " << com_float_current_(2) << " ";
 
                     
-                    file[1] << "56 ";
+
+                    /*file[1] << "56 ";
+
+                    for(int i = 0; i < 12; i++)
+                    {
+                        file[1] << q_des_(i) << " " << qdd_des_virtual_(i) << " ";
+                    }*/
                    
                     file[1] << "213 " <<qp_solved << " " << model_data_cen.hg.angular()(0) << " " << model_data_cen.hg.angular()(1)<< " "<< ang_d(0) << " " << ang_d(1);
                     file[1] << " 55 "  << ZMP_Y_REF << " " << zmp_measured_mj_(1) << " " <<ZMPy_test << " "<<state_init.m_shared_memory[47]<< " " << desired_val.m_shared_memory[47] << " " ;//<< std::endl;//<<cp_desired_(1) << " " << cp_desired_(0) << std::endl;

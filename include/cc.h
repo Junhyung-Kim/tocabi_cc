@@ -1211,8 +1211,11 @@ public:
     Eigen::Vector12d q_des_1;
     Eigen::Vector3d q_des_virtual;
     Eigen::Vector12d qd_des_;
+    Eigen::Vector2d qdd_des_upper;
+    Eigen::Vector2d upperd_prev;
     Eigen::Vector3d qd_des_virtual;
     Eigen::Vector12d qdd_des_;
+    Eigen::Vector2d qdd_des_upper_lpf;
     Eigen::Vector3d qdd_des_virtual;
     Eigen::Vector3d qdd_des_virtual_ori;
     Eigen::Vector3d qd_des_ori_prev;
