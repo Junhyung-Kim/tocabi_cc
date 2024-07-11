@@ -178,6 +178,8 @@ public:
     void updateCMM_DG();
     void CentroidalMomentCalculator();
 
+    void setContact_1(RobotData &Robot, bool left_foot, bool right_foot, bool left_hand, bool right_hand);
+
     void savePreData();
     void printOutTextFile();
 
@@ -207,6 +209,8 @@ public:
     double walking_duration_cmd_;
     double walking_duration_start_delay_;
     double walking_phase_;
+
+    std::atomic<double> step_test;
 
     Eigen::VectorXd COMX, MOMX;
     Eigen::MatrixXd CMM;
@@ -1320,7 +1324,7 @@ public:
     CQuadraticProgram qp_torque_control;
     bool control_start = false;
     bool solved;
-    std::atomic<double>  com_alpha, lfoot_sx, lfoot_sy, rfoot_sx, rfoot_sy;
+    std::atomic<double>  com_alpha, lfoot_sx, lfoot_sy, rfoot_sx, rfoot_sy, lfoot_sx_float, lfoot_sy_float, rfoot_sx_float, rfoot_sy_float;
     double zmpx_, zmpy_, com_alpha_;
     double zmpx_fast, zmpy_fast;
     double com_alpha_fast = 0.5;
