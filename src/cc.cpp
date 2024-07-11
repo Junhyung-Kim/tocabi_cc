@@ -1627,7 +1627,8 @@ void CustomController::computeSlow()
                 
                 if(mpc_cycle < controlwalk_time-1 && mpc_cycle > 0)
                 {
-                    /*file[1] << mpc_cycle << " " <<walking_tick << " " <<mpc_cycle_int1<< " "<<virtual_temp(0) << " " <<virtual_temp(1)<< " " <<virtual_temp1(0) << " " <<virtual_temp1(1) << " " <<contactMode << " " << com_mpcx << " " << com_mpcy << " "<<desired_val.m_shared_memory[41] << " " << desired_val.m_shared_memory[45] << " ";
+                    /*
+                    file[1] << mpc_cycle << " " <<walking_tick << " " <<mpc_cycle_int1<< " "<<virtual_temp(0) << " " <<virtual_temp(1)<< " " <<virtual_temp1(0) << " " <<virtual_temp1(1) << " " <<contactMode << " " << com_mpcx << " " << com_mpcy << " "<<desired_val.m_shared_memory[41] << " " << desired_val.m_shared_memory[45] << " ";
                     
                     file[1] << "12  " << zmpy_d << " " << zmpx_d << " " << zmpy_ << " " <<zmpx_ << " " << (1-com_alpha_fast) * rd_.link_[COM_id].mass * GRAVITY * 1.0 << " " << (com_alpha_fast) * rd_.link_[COM_id].mass * GRAVITY * 1.0 << " ";
                     
@@ -1651,11 +1652,13 @@ void CustomController::computeSlow()
                     file[1] << " 77 " << com_vel_current_(1) << " " <<desired_val.m_shared_memory[46]<<  " " << com_float_current_(1) << " "<< desired_val.m_shared_memory[45]-virtual_temp1(1)<< " "<<com_mpc1[1] << " " << com_desired_(1) << " " << com_support_current_(1) << " " << virtual_temp1(0) << " " << virtual_temp1(1)<<std::endl;
                     file[0] << rfoot_trajectory_support_.translation()(0) << " " << rfoot_trajectory_support_.translation()(1) << " " <<rfoot_trajectory_support_.translation()(2) << " " << rfoot_support_current_.translation()(0) << " " << rfoot_support_current_.translation()(1) << " " <<rfoot_support_current_.translation()(2) << " " << rd_.link_[Left_Foot].xipos(2) << " " << rd_.link_[Right_Foot].xipos(2) << std::endl; 
                     */
-                    file[1] << mpc_cycle << " "<<step_test << " " << virtual_temp(0) << " " << virtual_temp(1) << " "  << virtual_temp1(0) << " " << virtual_temp1(1) << " " << rd_.link_[Left_Foot].xipos(2) << " " << rd_.link_[Right_Foot].xipos(2) << " "<< rd_.link_[Left_Foot].xipos(0) << " " << rd_.link_[Right_Foot].xipos(0) << " "<< rd_.link_[Left_Foot].xipos(1) << " " << rd_.link_[Right_Foot].xipos(1) << " " << rfoot_ori(0)<< " " << rfoot_ori(1)<< " " << rfoot_ori1(0)<< " " << rfoot_ori1(1);
+                    
+                    file[1] << mpc_cycle << " " << contactMode << " " << virtual_temp(0) << " " << virtual_temp(1) << " "  << virtual_temp1(0) << " " << virtual_temp1(1) << " " << rd_.link_[Left_Foot].xipos(2) << " " << rd_.link_[Right_Foot].xipos(2) << " "<< rd_.link_[Left_Foot].xipos(0) << " " << rd_.link_[Right_Foot].xipos(0) << " "<< rd_.link_[Left_Foot].xipos(1) << " " << rd_.link_[Right_Foot].xipos(1) << " " << rfoot_ori(0)<< " " << rfoot_ori(1)<< " " << rfoot_ori1(0)<< " " << rfoot_ori1(1);
                     
                     file[1] << " 6 ";
                     
                     file[1] << ZMP_Y_REF << " " << zmp_measured_mj_(1) << " " <<ZMPy_test<< " "<< ZMP_X_REF << " " << zmp_measured_mj_(0) << " " << rfoot_rpy_current_(0)  << " " << rfoot_rpy_current_(1) << " " << F_T_R_x_input <<" "<< F_T_R_y_input<< " "<< lfoot_rpy_current_(0)  << " " << lfoot_rpy_current_(1) << " " << F_T_L_x_input <<" "<< F_T_L_y_input << std::endl;
+                    
                 }
                 lfoot_trajectory_float_pre = lfoot_trajectory_float_;
                 rfoot_trajectory_float_pre = rfoot_trajectory_float_;
@@ -8637,7 +8640,7 @@ void CustomController::getMPCTrajectory()
         }
         else if(contactMode == 2)
         {
-            if(mpc_cycle == 20 && walking_tick == 39)
+            /*if(mpc_cycle == 20 && walking_tick == 39)
             {
                 virtual_temp1(0) = virtual_temp(0);
                 virtual_temp1(1) = virtual_temp(1);
@@ -8662,11 +8665,16 @@ void CustomController::getMPCTrajectory()
             {
                 virtual_temp1(0) = virtual_temp(0);
                 virtual_temp1(1) = virtual_temp(1);
+            }*/
+            if(walking_tick == 39)
+            {
+                virtual_temp1(0) = virtual_temp(0);
+                virtual_temp1(1) = virtual_temp(1);
             }
         }
         else
         {
-            if(mpc_cycle == 120 && walking_tick == 39)
+            /*if(mpc_cycle == 120 && walking_tick == 39)
             {
                 virtual_temp1(0) = virtual_temp(0);
                 virtual_temp1(1) = virtual_temp(1);
@@ -8689,6 +8697,11 @@ void CustomController::getMPCTrajectory()
                 virtual_temp1(1) = virtual_temp(1);
             }
             else if(mpc_cycle == 48 && walking_tick == 39)
+            {
+                virtual_temp1(0) = virtual_temp(0);
+                virtual_temp1(1) = virtual_temp(1);
+            }*/
+            if(walking_tick == 39)
             {
                 virtual_temp1(0) = virtual_temp(0);
                 virtual_temp1(1) = virtual_temp(1);
