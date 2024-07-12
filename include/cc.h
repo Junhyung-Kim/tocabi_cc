@@ -13,18 +13,26 @@
 #include <sstream>
 #include <fstream>
 
-//lexls
-// #include <lexls/lexlsi.h>
-// #include <lexls/tools.h>
-// #include <lexls>
+#include <stdio.h>
+#include <unistd.h>
 
 #include <iomanip>
 #include <iostream>
+#include <string.h>
+#include <stdlib.h>
 
-// pedal
 #include <ros/ros.h>
 #include "tocabi_msgs/WalkingCommand.h"
 #include <std_msgs/Float32.h>
+
+#include <sys/socket.h>
+#include <arpa/inet.h>
+#include <sys/shm.h>
+#include <sys/types.h>
+#include <sys/ipc.h>
+
+#include <future>
+
 
 const int FILE_CNT1 = 15;
 
@@ -179,6 +187,9 @@ public:
     void CentroidalMomentCalculator();
 
     void setContact_1(RobotData &Robot, bool left_foot, bool right_foot, bool left_hand, bool right_hand);
+
+    void proc_recv();
+    void proc_recv1();
 
     void savePreData();
     void printOutTextFile();
@@ -1524,6 +1535,40 @@ public:
     Eigen::VectorQd Initial_current_q_;
     Eigen::VectorQd Initial_ref_q_walk_;
     bool walking_enable_ ;
+
+    int new_socket;
+    bool mpc_start_init_bool = false;
+    bool mpc_start_init_bool1 = false;
+    bool mpc_start_init_bool2 = false;
+    bool mpc_start_init_bool3 = false;
+
+    std::atomic<int> mpc_start_init_;
+    std::atomic<int> statemachine_;
+
+    int socket_send, socket_receive;
+
+    std::mutex thread1_lock, thread2_lock;
+
+    Eigen::VectorXd state_init_;
+    Eigen::VectorXd desired_val_;
+    Eigen::VectorXd state_init_mu;
+    Eigen::VectorXd desired_val_mu;
+
+    double buffer[51] = {1.0, 2, 3, 4, 5, 6, 
+    0, 0, 0, 0, 0, 0, 
+    0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 
+    0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 
+    0, 0, 0, 0, 1.0, 2, 
+    3, 4, 5, 6, 0, 0,
+    0, 99, 100};
+
+    double buffer1[50] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 
     Eigen::Vector3d pelv_vtran, rf_vtran, lf_vtran;
     int delay_time = 0;

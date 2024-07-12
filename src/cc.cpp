@@ -83,6 +83,10 @@ CustomController::CustomController(RobotData &rd) : rd_(rd)
     q_virtual_state(5) = 0.0;
     q_virtual_state(6) = 1.0;
 
+    init_shm(shm_msg_key, shm_msg_id, &mj_shm_);
+
+    //Disturbance
+    //mj_shm_->dis_check = false;
     walking_tick_stop = true;
 
     for (int i = 0; i < FILE_CNT1; i++)
@@ -478,6 +482,73 @@ CustomController::CustomController(RobotData &rd) : rd_(rd)
     com_prev.resize(50);
     a_temp = 50;
     q_upper.setZero();
+
+    state_init_.setZero(50);
+    desired_val_.setZero(49);
+    state_init_mu.setZero(50);
+    desired_val_mu.setZero(49);
+
+    mpc_start_init_ = 4;
+
+    socket_send = socket(PF_INET, SOCK_STREAM, 0);
+    socket_receive = socket(PF_INET, SOCK_STREAM, 0);
+
+    if (socket_send < 0) {
+        std::cerr << "socket_send creation error" << std::endl;
+    }
+
+    if (socket_receive < 0) {
+        std::cerr << "socket_receive creation error" << std::endl;
+    }
+
+    sockaddr_in serveraddr;
+    sockaddr_in serveraddr1;
+    bzero(&serveraddr, sizeof(serveraddr));
+    bzero(&serveraddr1, sizeof(serveraddr1)); 
+    serveraddr.sin_family=PF_INET;
+    serveraddr.sin_port=htons(7072);
+    serveraddr1.sin_family=PF_INET;
+    serveraddr1.sin_port=htons(7071);
+
+    if(inet_pton(PF_INET, "127.0.0.1", &serveraddr.sin_addr)<=0) 
+    {
+        std::cerr << "Invalid address/ Address not supported" << std::endl;
+    }
+
+    if(inet_pton(PF_INET, "127.0.0.1", &serveraddr1.sin_addr)<=0) 
+    {
+        std::cerr << "Invalid address/ Address not supported" << std::endl;
+    }
+    
+    //8081
+    while (bind(socket_receive, (struct sockaddr *)&serveraddr1, sizeof(serveraddr1)) < 0) {
+        std::cerr << "Connection2 .... " <<  strerror(errno) << std::endl;
+    }
+
+    if(listen(socket_receive, 3) < 0){
+        std::cout << "listen err" << std::endl;
+    }
+
+    socklen_t addrlen = sizeof(serveraddr1);    
+    //8080
+    while (connect(socket_send, (sockaddr*)&serveraddr, sizeof(serveraddr)) < 0) {
+        std::cerr << "Connection1 ...." << std::endl;
+        //break;
+    }
+
+    if ((new_socket = accept(socket_receive, (struct sockaddr*)&serveraddr1, &addrlen))
+        < 0) {
+            std::cout << "accept err" << std::endl;
+    }
+    sockaddr_in clientaddr;
+
+    upper_on = true;
+
+    thread proc1(&CustomController::proc_recv, this);
+    thread proc2(&CustomController::proc_recv1, this);
+
+    proc2.detach();
+    proc1.detach();
 }
 
 void CustomController::setGains()
@@ -1161,16 +1232,9 @@ void CustomController::computeSlow()
             updateInitialState();
             getRobotState();
 
-            controlwalk_time = 255;
+            controlwalk_time = 5;
             if (mpc_cycle < controlwalk_time-1)
             {
-                if(atb_hg_update_ == false)
-                {
-                    atb_hg_update_ = true;
-                    //Hg_slow_ = Hg_;
-                    //hg_slow_ = hg_;
-                    atb_hg_update_ = false;
-                }
                 for (int i = 0; i < 3; i++)
                     q_pinocchio1[i] = rd_.q_virtual_[i];
             
@@ -1308,6 +1372,42 @@ void CustomController::computeSlow()
                         getFootTrajectory();
                     }
                 }
+
+
+                //Disturbance
+                /*
+                if(mpc_cycle >= 174  && mpc_cycle <= 178)//&& (walking_tick >= 1  && walking_tick <= 20))
+                    mj_shm_->dis_check = true;
+                else if(mpc_cycle == 179)
+                    mj_shm_->dis_check = false;
+
+                if(mpc_cycle >= 374  && mpc_cycle <= 378)//&& (walking_tick >= 1  && walking_tick <= 20))
+                    mj_shm_->dis_check = true;
+                else if(mpc_cycle == 379)
+                    mj_shm_->dis_check = false;
+                
+                if(mpc_cycle >= 203  && mpc_cycle <= 207)//&& (walking_tick >= 1  && walking_tick <= 20))
+                    mj_shm_->dis_check = true;
+                else if(mpc_cycle == 208)
+                    mj_shm_->dis_check = false;
+                
+                if(mpc_cycle >= 403 && mpc_cycle <= 407)//&& (walking_tick >= 1  && walking_tick <= 20))
+                    mj_shm_->dis_check = true;
+                else if(mpc_cycle == 408)
+                    mj_shm_->dis_check = false;
+                */
+                //y-direction
+                /*
+                if(mpc_cycle >= 192  && mpc_cycle <= 196)//&& (walking_tick >= 1  && walking_tick <= 20))
+                    mj_shm_->dis_check = true;
+                else if(mpc_cycle == 197)
+                    mj_shm_->dis_check = false;
+                
+                if(mpc_cycle >= 392 && mpc_cycle <= 396)//&& (walking_tick >= 1  && walking_tick <= 20))
+                    mj_shm_->dis_check = true;
+                else if(mpc_cycle ==397)
+                    mj_shm_->dis_check = false;
+                */
 
                 if(atb_phase_update_ == false)
                 {
@@ -1625,10 +1725,10 @@ void CustomController::computeSlow()
                     }
                 }
                 
-                if(mpc_cycle < controlwalk_time-1 && mpc_cycle > 0)
+                if(mpc_cycle < controlwalk_time-1)
                 {
-                    /*
-                    file[1] << mpc_cycle << " " <<walking_tick << " " <<mpc_cycle_int1<< " "<<virtual_temp(0) << " " <<virtual_temp(1)<< " " <<virtual_temp1(0) << " " <<virtual_temp1(1) << " " <<contactMode << " " << com_mpcx << " " << com_mpcy << " "<<desired_val.m_shared_memory[41] << " " << desired_val.m_shared_memory[45] << " ";
+                    
+                    file[1] << mpc_cycle << " " << mpc_start_init_<< " " <<mpc_start_init_bool << " " << mpc_start_init_bool1 << " " << mpc_start_init_bool2 << " " << mpc_start_init_bool3 << " "<<walking_tick << " " <<mpc_cycle_int1<< " "<<virtual_temp(0) << " " <<virtual_temp(1)<< " " <<virtual_temp1(0) << " " <<virtual_temp1(1) << " " <<contactMode << " " << com_mpcx << " " << com_mpcy << " "<<desired_val_mu[41] << " " << desired_val_mu[45] << " ";
                     
                     file[1] << "12  " << zmpy_d << " " << zmpx_d << " " << zmpy_ << " " <<zmpx_ << " " << (1-com_alpha_fast) * rd_.link_[COM_id].mass * GRAVITY * 1.0 << " " << (com_alpha_fast) * rd_.link_[COM_id].mass * GRAVITY * 1.0 << " ";
                     
@@ -1645,20 +1745,21 @@ void CustomController::computeSlow()
                         file[1] << qp_result(i) << " ";
                     }
                    
-                    file[1] << "213 " <<qp_solved << " " << model_data_cen.hg.angular()(0) << " " << model_data_cen.hg.angular()(1)<< " "<< ang_d(0) << " " << ang_d(1);
-                    file[1] << " 55 "  << ZMP_Y_REF << " " << zmp_measured_mj_(1) << " " <<ZMPy_test << " "<<state_init.m_shared_memory[47]<< " " << desired_val.m_shared_memory[47] << " " ;//<< std::endl;//<<cp_desired_(1) << " " << cp_desired_(0) << std::endl;
-                    file[1] << " 66 "  << ZMP_X_REF << " " << zmp_measured_mj_(0) << " " <<ZMPx_test << " "<<state_init.m_shared_memory[43]<< " " << desired_val.m_shared_memory[43] << " " ;//<< std::endl;//<<cp_desired_(1) << " " << cp_desired_(0) << std::endl;
+                    file[1] << std::endl;
+                    /*file[1] << "213 " << qp_solved << " " << model_data_cen.hg.angular()(0) << " " << model_data_cen.hg.angular()(1)<< " "<< ang_d(0) << " " << ang_d(1);
+                    file[1] << " 55 "  << ZMP_Y_REF << " " << zmp_measured_mj_(1) << " " <<ZMPy_test << " "<<state_init_[47]<< " " << desired_val_mu[47] << " " ;//<< std::endl;//<<cp_desired_(1) << " " << cp_desired_(0) << std::endl;
+                    file[1] << " 66 "  << ZMP_X_REF << " " << zmp_measured_mj_(0) << " " <<ZMPx_test << " "<<state_init_[43]<< " " << desired_val_mu[43] << " " ;//<< std::endl;//<<cp_desired_(1) << " " << cp_desired_(0) << std::endl;
                     
-                    file[1] << " 77 " << com_vel_current_(1) << " " <<desired_val.m_shared_memory[46]<<  " " << com_float_current_(1) << " "<< desired_val.m_shared_memory[45]-virtual_temp1(1)<< " "<<com_mpc1[1] << " " << com_desired_(1) << " " << com_support_current_(1) << " " << virtual_temp1(0) << " " << virtual_temp1(1)<<std::endl;
+                    file[1] << " 77 " << com_vel_current_(1) << " " <<desired_val_mu[46]<<  " " << com_float_current_(1) << " "<< desired_val_mu[45]-virtual_temp1(1)<< " "<<com_mpc1[1] << " " << com_desired_(1) << " " << com_support_current_(1) << " " << virtual_temp1(0) << " " << virtual_temp1(1)<<std::endl;
                     file[0] << rfoot_trajectory_support_.translation()(0) << " " << rfoot_trajectory_support_.translation()(1) << " " <<rfoot_trajectory_support_.translation()(2) << " " << rfoot_support_current_.translation()(0) << " " << rfoot_support_current_.translation()(1) << " " <<rfoot_support_current_.translation()(2) << " " << rd_.link_[Left_Foot].xipos(2) << " " << rd_.link_[Right_Foot].xipos(2) << std::endl; 
                     */
-                    
+                    /*
                     file[1] << mpc_cycle << " " << contactMode << " " << virtual_temp(0) << " " << virtual_temp(1) << " "  << virtual_temp1(0) << " " << virtual_temp1(1) << " " << rd_.link_[Left_Foot].xipos(2) << " " << rd_.link_[Right_Foot].xipos(2) << " "<< rd_.link_[Left_Foot].xipos(0) << " " << rd_.link_[Right_Foot].xipos(0) << " "<< rd_.link_[Left_Foot].xipos(1) << " " << rd_.link_[Right_Foot].xipos(1) << " " << rfoot_ori(0)<< " " << rfoot_ori(1)<< " " << rfoot_ori1(0)<< " " << rfoot_ori1(1);
                     
                     file[1] << " 6 ";
                     
                     file[1] << ZMP_Y_REF << " " << zmp_measured_mj_(1) << " " <<ZMPy_test<< " "<< ZMP_X_REF << " " << zmp_measured_mj_(0) << " " << rfoot_rpy_current_(0)  << " " << rfoot_rpy_current_(1) << " " << F_T_R_x_input <<" "<< F_T_R_y_input<< " "<< lfoot_rpy_current_(0)  << " " << lfoot_rpy_current_(1) << " " << F_T_L_x_input <<" "<< F_T_L_y_input << std::endl;
-                    
+                    */
                 }
                 lfoot_trajectory_float_pre = lfoot_trajectory_float_;
                 rfoot_trajectory_float_pre = rfoot_trajectory_float_;
@@ -8188,54 +8289,58 @@ void CustomController::getMPCTrajectory()
 
     if(walking_tick >= 0)
     {  
-        state_init.m_shared_memory[0] = rd_.q_virtual_[0] +virtual_temp(0);
-        state_init.m_shared_memory[1] = rd_.q_virtual_[1] +virtual_temp(1);
-        state_init.m_shared_memory[2] = rd_.q_virtual_[2] +virtual_temp(2);
+        state_init_[0] = rd_.q_virtual_[0] +virtual_temp(0);
+        state_init_[1] = rd_.q_virtual_[1] +virtual_temp(1);
+        state_init_[2] = rd_.q_virtual_[2] +virtual_temp(2);
 
         for (int i = 3; i < 6; i ++)
-            state_init.m_shared_memory[i] = rd_.q_virtual_[i];
+            state_init_[i] = rd_.q_virtual_[i];
    
-        state_init.m_shared_memory[6] = rd_.q_virtual_[39];
+        state_init_[6] = rd_.q_virtual_[39];
    
         for (int i = 6; i < 18; i ++)
-            state_init.m_shared_memory[i+1] = rd_.q_virtual_[i];
-        //state_init.m_shared_memory[20] = rd_.q_virtual_[19];
-        //state_init.m_shared_memory[21] = rd_.q_virtual_[20];
-        state_init.m_shared_memory[19] = rd_.q_virtual_[19];
-        state_init.m_shared_memory[20] = rd_.q_virtual_[20];
+            state_init_[i+1] = rd_.q_virtual_[i];
+        //state_init_[20] = rd_.q_virtual_[19];
+        //state_init_[21] = rd_.q_virtual_[20];
+        state_init_[19] = rd_.q_virtual_[19];
+        state_init_[20] = rd_.q_virtual_[20];
 
         for (int i = 0; i < 18; i ++)
-            state_init.m_shared_memory[i+21] = rd_.q_dot_virtual_[i];
+            state_init_[i+21] = rd_.q_dot_virtual_[i];
    
-        state_init.m_shared_memory[39] =  rd_.q_dot_virtual_[19];
-        state_init.m_shared_memory[40] =  rd_.q_dot_virtual_[20];
+        state_init_[39] =  rd_.q_dot_virtual_[19];
+        state_init_[40] =  rd_.q_dot_virtual_[20];
    
-        state_init.m_shared_memory[41] = rd_.link_[COM_id].xpos(0) + virtual_temp(0);//com_float_current_(0)+virtual_temp(0);//+virtual_temp_sup(0);
-        state_init.m_shared_memory[45] = rd_.link_[COM_id].xpos(1) + virtual_temp(1);//com_float_current_(1)+virtual_temp(1);//+virtual_temp_sup(1);
-        state_init.m_shared_memory[42] = rd_.link_[COM_id].v(0);//com_float_current_dot(0);
-        state_init.m_shared_memory[46] = rd_.link_[COM_id].v(1);//com_float_current_dot(1);
+        state_init_[41] = rd_.link_[COM_id].xpos(0) + virtual_temp(0);//com_float_current_(0)+virtual_temp(0);//+virtual_temp_sup(0);
+        state_init_[45] = rd_.link_[COM_id].xpos(1) + virtual_temp(1);//com_float_current_(1)+virtual_temp(1);//+virtual_temp_sup(1);
+        state_init_[42] = rd_.link_[COM_id].v(0);//com_float_current_dot(0);
+        state_init_[46] = rd_.link_[COM_id].v(1);//com_float_current_dot(1);
    
-        state_init.m_shared_memory[43] = ZMP_float(0) + virtual_temp(0);//+virtual_temp(0);//zmp_measured_mj_(0);//+virtual_temp_sup(0);
-        state_init.m_shared_memory[47] = ZMP_float(1) + virtual_temp(1);//+virtual_temp(1);//zmp_measured_mj_(1);//+virtual_temp_sup(1);
+        state_init_[43] = ZMP_float(0) + virtual_temp(0);//+virtual_temp(0);//zmp_measured_mj_(0);//+virtual_temp_sup(0);
+        state_init_[47] = ZMP_float(1) + virtual_temp(1);//+virtual_temp(1);//zmp_measured_mj_(1);//+virtual_temp_sup(1);
        
-        state_init.m_shared_memory[44] = model_data_cen.hg.angular()(1);
-        state_init.m_shared_memory[48] = model_data_cen.hg.angular()(0);//model_data1.hg.angular()[0];
+        state_init_[44] = model_data_cen.hg.angular()(1);
+        state_init_[48] = model_data_cen.hg.angular()(0);//model_data1.hg.angular()[0];
 
-        state_init.m_shared_memory[49] = rd_.link_[COM_id].xpos(2) + virtual_temp(2);//com_support_current_(2);//model_data1.hg.angular()[0];
+        state_init_[49] = rd_.link_[COM_id].xpos(2) + virtual_temp(2);//com_support_current_(2);//model_data1.hg.angular()[0];
+        
+        thread2_lock.lock();
+        state_init_mu = state_init_;
+        thread2_lock.unlock();
     }
     
-    if(statemachine.m_shared_memory_int[0] == 2)
-        mpc_start_init.m_shared_memory_int[0] = 3;
+    if(statemachine_ == 2 && walking_tick > 3)
+        mpc_start_init_ = 3;
 
-    if(statemachine.m_shared_memory_int[0] == 1 || statemachine.m_shared_memory_int[0] == 2 && mpc_cycle < controlwalk_time)
+    if(statemachine_ == 1 || statemachine_ == 2 && mpc_cycle < controlwalk_time)
     {
         if(walking_tick == 0)
         {
             qd_pinocchio_.setZero();
         }  
-        if((statemachine.m_shared_memory_int[0] == 1 && walking_tick_stop == true && walking_tick == 0 && walking_tick_stop == true))
+        if((statemachine_ == 1 && walking_tick_stop == true && walking_tick == 0 && walking_tick_stop == true))
         {  
-            mpc_start_init.m_shared_memory_int[0] = 2;
+            mpc_start_init_ = 2;
             if (walking_tick == 0)
             {
                 q_pinocchio_desired.head(19) = q_pinocchio.head(19);
@@ -8254,81 +8359,85 @@ void CustomController::getMPCTrajectory()
                     std::cout << "mpc_cycle " << " : " << mpc_cycle << " " << walking_tick <<  " " << rfoot_mpc(2) << " " << lfoot_mpc(2) << " " << contactMode << std::endl;
 
                     qd_pinocchio.setZero();
+
+                    thread1_lock.lock();
+                    desired_val_mu = desired_val_;
+                    thread1_lock.unlock();
                    
-                    if(desired_val.m_shared_memory[19] < -0.4000 || rd_.q_(13) < -0.4000)
+                    if(desired_val_mu[19] < -0.4000 || rd_.q_(13) < -0.4000)
                     {  
                         std::cout << "Pitch over" << std::endl;
-                        if(desired_val.m_shared_memory[39] < 0.0)
+                        if(desired_val_mu[39] < 0.0)
                         {
                             qd_pinocchio(19) = 0.0;
                             upperd[0] = 0.0;
                         }
                         else
                         {
-                            qd_pinocchio(19) = desired_val.m_shared_memory[39];
-                            upperd[0] = desired_val.m_shared_memory[39];
+                            qd_pinocchio(19) = desired_val_mu[39];
+                            upperd[0] = desired_val_mu[39];
                         }
                     }
-                    else if(desired_val.m_shared_memory[19] > 0.4000 || rd_.q_(13) > 0.4000)
+                    else if(desired_val_mu[19] > 0.4000 || rd_.q_(13) > 0.4000)
                     {  
                         std::cout << "Pitch over" << std::endl;
-                        if(desired_val.m_shared_memory[39] > 0.0)
+                        if(desired_val_mu[39] > 0.0)
                         {
                             qd_pinocchio(19) = 0.0;
                             upperd[0] = 0.0;
-                            //qd_pinocchio(19) = desired_val.m_shared_memory[39];
-                            //upperd[0] = desired_val.m_shared_memory[39];
+                            //qd_pinocchio(19) = desired_val_mu[39];
+                            //upperd[0] = desired_val_mu[39];
                         }
                         else
                         {
-                            qd_pinocchio(19) = desired_val.m_shared_memory[39];
-                            upperd[0] = desired_val.m_shared_memory[39];
+                            qd_pinocchio(19) = desired_val_mu[39];
+                            upperd[0] = desired_val_mu[39];
                         }
                     }
                     else
                     {  
-                        qd_pinocchio(19) = desired_val.m_shared_memory[39];
-                        upperd[0] = desired_val.m_shared_memory[39];
+                        qd_pinocchio(19) = desired_val_mu[39];
+                        upperd[0] = desired_val_mu[39];
                     }
 
-                    if(desired_val.m_shared_memory[20] < -0.4000 || rd_.q_(14) < -0.4000)
+                    if(desired_val_mu[20] < -0.4000 || rd_.q_(14) < -0.4000)
                     {
                         std::cout << "Roll over" << std::endl;
-                        if(desired_val.m_shared_memory[40] < 0.0)
+                        if(desired_val_mu[40] < 0.0)
                         {
                             qd_pinocchio(20) = 0.0;
                             upperd[1] = 0.0;
                         }
                         else
                         {
-                            qd_pinocchio(20) = desired_val.m_shared_memory[40];
-                            upperd[1] = desired_val.m_shared_memory[40];
+                            qd_pinocchio(20) = desired_val_mu[40];
+                            upperd[1] = desired_val_mu[40];
                         }
                     }
-                    else if(desired_val.m_shared_memory[20] > 0.4000 || rd_.q_(14) > 0.4000)
+                    else if(desired_val_mu[20] > 0.4000 || rd_.q_(14) > 0.4000)
                     {
                         std::cout << "Roll over" << std::endl;
-                        if(desired_val.m_shared_memory[40] > 0.0)
+                        if(desired_val_mu[40] > 0.0)
                         {
                             qd_pinocchio(20) = 0.0;
                             upperd[1] = 0.0;
-                            //qd_pinocchio(20) = desired_val.m_shared_memory[40];
-                            //upperd[1] = desired_val.m_shared_memory[40];
+                            //qd_pinocchio(20) = desired_val_mu[40];
+                            //upperd[1] = desired_val_mu[40];
                         }
                         else
                         {
-                            qd_pinocchio(20) = desired_val.m_shared_memory[40];
-                            upperd[1] = desired_val.m_shared_memory[40];
+                            qd_pinocchio(20) = desired_val_mu[40];
+                            upperd[1] = desired_val_mu[40];
                         }  
                     }
                     else
                     {
-                        qd_pinocchio(20) = desired_val.m_shared_memory[40];
-                        upperd[1] = desired_val.m_shared_memory[40];
+                        qd_pinocchio(20) = desired_val_mu[40];
+                        upperd[1] = desired_val_mu[40];
                     }
                 }
                
-                std::cout << "JOint " <<mpc_cycle << " "<< rd_.q_(13) << " " << rd_.q_(14) << "  " << qd_pinocchio(19) << " " << qd_pinocchio(20) << " " << desired_val.m_shared_memory[39] << " " << desired_val.m_shared_memory[40]<< " " << q_pinocchio_desired(20) << " " << q_pinocchio_desired(21) <<std::endl;//DyrosMath::rot2Euler(rd_.link_[Pelvis].rotm)(0) << " " << DyrosMath::rot2Euler(rd_.link_[Pelvis].rotm)(1) << " " << q_pinocchio_desired(20) << " " << q_pinocchio_desired(21) << std::endl;
+                std::cout << "JOint " <<mpc_cycle << " "<< rd_.q_(13) << " " << rd_.q_(14) << "  " << qd_pinocchio(19) << " " << qd_pinocchio(20) << " " << desired_val_mu[39] << " " << desired_val_mu[40]<< " " << q_pinocchio_desired(20) << " " << q_pinocchio_desired(21) <<std::endl;//DyrosMath::rot2Euler(rd_.link_[Pelvis].rotm)(0) << " " << DyrosMath::rot2Euler(rd_.link_[Pelvis].rotm)(1) << " " << q_pinocchio_desired(20) << " " << q_pinocchio_desired(21) << std::endl;
                    
                
                 if(mpc_cycle == 0)
@@ -8340,12 +8449,12 @@ void CustomController::getMPCTrajectory()
                     comprev = comd;
                 }
 
-                comd[0] = desired_val.m_shared_memory[42] + 0.0;
-                comd[1] = desired_val.m_shared_memory[46] + 0.0;
+                comd[0] = desired_val_mu[42] + 0.0;
+                comd[1] = desired_val_mu[46] + 0.0;
                 comd[2] = 0.0;
 
-                //angm[0] = desired_val.m_shared_memory[48];
-                //angm[1] = desired_val.m_shared_memory[44];
+                //angm[0] = desired_val_mu[48];
+                //angm[1] = desired_val_mu[44];
 
                 zmp_temp1(0) = ZMP_X_REF;
                 zmp_temp1(1) = ZMP_Y_REF;
@@ -8382,8 +8491,8 @@ void CustomController::getMPCTrajectory()
                     com_mpcx_prev = com_mpc1[0];
                 }
 
-                zmp_mpcx = desired_val.m_shared_memory[43]-virtual_temp1(0);
-                zmp_mpcy = desired_val.m_shared_memory[47]-virtual_temp1(1); 
+                zmp_mpcx = desired_val_mu[43]-virtual_temp1(0);
+                zmp_mpcy = desired_val_mu[47]-virtual_temp1(1); 
 
                 double lx, ly, mu;
                 ly = 0.048;
@@ -8444,14 +8553,14 @@ void CustomController::getMPCTrajectory()
                         zmp_mpcy = rfoot_sy_float + ly /*- virtual_temp1(1)*/;
                 }
 
-                com_mpcx = desired_val.m_shared_memory[41]-virtual_temp1(0);
-                com_mpcy = desired_val.m_shared_memory[45]-virtual_temp1(1);  
-                angm(0) = desired_val.m_shared_memory[48] + 0.0;
-                angm(1) = desired_val.m_shared_memory[44] + 0.0;
+                com_mpcx = desired_val_mu[41]-virtual_temp1(0);
+                com_mpcy = desired_val_mu[45]-virtual_temp1(1);  
+                angm(0) = desired_val_mu[48] + 0.0;
+                angm(1) = desired_val_mu[44] + 0.0;
 
                 for(int i = 0; i < 18; i++)
                 {
-                    q_desireddot(i) = desired_val.m_shared_memory[i+21];
+                    q_desireddot(i) = desired_val_mu[i+21];
                 }
                 
                 if(comd[0] > 0.5)
@@ -8496,8 +8605,8 @@ void CustomController::getMPCTrajectory()
             //comd_s[0] = comd[0];
             //comd_s[1] = comd[1];
 
-            //com_mpc1[0] = com_float_current_(0) + comd[0] * 0.02/40;//desired_val.m_shared_memory[41] - virtual_temp(0);
-            //com_mpc1[1] = com_float_current_(1) + comd[1] * 0.02/40;//desired_val.m_shared_memory[41] - virtual_temp(0);
+            //com_mpc1[0] = com_float_current_(0) + comd[0] * 0.02/40;//desired_val_mu[41] - virtual_temp(0);
+            //com_mpc1[1] = com_float_current_(1) + comd[1] * 0.02/40;//desired_val_mu[41] - virtual_temp(0);
             com_mpc1[2] = com_float_current_(2);
 
             com_mpc1[1] = (com_mpcy_prev *(40-(walking_tick+1)) + com_mpcy*(walking_tick+1))/40;
@@ -8515,7 +8624,7 @@ void CustomController::getMPCTrajectory()
             comd_s[0] = (comd_init[0] *(40-(walking_tick+1)) + comd[0]*(walking_tick+1))/40;
             comd_s[1] = (comd_init[1] *(40-(walking_tick+1)) + comd[1]*(walking_tick+1))/40;
             
-            com_mpc1[0] = com_mpc1[0] + comd[0] * 0.02/40;//desired_val.m_shared_memory[41] - virtual_temp(0);
+            com_mpc1[0] = com_mpc1[0] + comd[0] * 0.02/40;//desired_val_mu[41] - virtual_temp(0);
             //com_mpc1[1] = com_mpc1[1] + comd[1] * 0.02/40;
             com_mpc1[1] = (com_mpcy_prev *(40-(walking_tick+1)) + com_mpcy*(walking_tick+1))/40;
             com_mpc1[0] = (com_mpcx_prev *(40-(walking_tick+1)) + com_mpcx*(walking_tick+1))/40;
@@ -8737,58 +8846,119 @@ void CustomController::getMPCTrajectory()
     if(walking_tick == 1)
     {
         if(mpc_cycle <= controlwalk_time)
-            mpc_start_init.m_shared_memory_int[0] = 1;
+            mpc_start_init_ = 1;
     }
 }
 
 void CustomController::getMPCTrajectoryInit()
 {
-    mpc_start_init.m_shared_memory_int[0] = 4;
+    mpc_start_init_ = 4;
 
     virtual_temp(0) = -((rfoot_float_current_.translation()(0) + lfoot_float_current_.translation()(0))/2 - 6.479871019999999704e-02);
     virtual_temp(1) = -((rfoot_float_current_.translation()(1) + lfoot_float_current_.translation()(1))/2);
     virtual_temp(2) = -((rd_.link_[Right_Foot].xipos(2)+rd_.link_[Left_Foot].xipos(2))/2 - 0.0724);
     if(walking_tick >= 0)
     {  
-        state_init.m_shared_memory[0] = rd_.q_virtual_[0]+virtual_temp(0);
-        state_init.m_shared_memory[1] = rd_.q_virtual_[1]+virtual_temp(1);
-        state_init.m_shared_memory[2] = rd_.q_virtual_[2]+virtual_temp(2);
+        state_init_[0] = rd_.q_virtual_[0]+virtual_temp(0);
+        state_init_[1] = rd_.q_virtual_[1]+virtual_temp(1);
+        state_init_[2] = rd_.q_virtual_[2]+virtual_temp(2);
 
         for (int i = 3; i < 6; i ++)
-            state_init.m_shared_memory[i] = rd_.q_virtual_[i];
+            state_init_[i] = rd_.q_virtual_[i];
    
-        state_init.m_shared_memory[6] = rd_.q_virtual_[39];
+        state_init_[6] = rd_.q_virtual_[39];
    
         for (int i = 6; i < 18; i ++)
-            state_init.m_shared_memory[i+1] = rd_.q_virtual_[i];
-        state_init.m_shared_memory[19] = rd_.q_virtual_[19];
-        state_init.m_shared_memory[20] = rd_.q_virtual_[20];
+            state_init_[i+1] = rd_.q_virtual_[i];
+        state_init_[19] = rd_.q_virtual_[19];
+        state_init_[20] = rd_.q_virtual_[20];
 
         for (int i = 0; i < 18; i ++)
-            state_init.m_shared_memory[i+21] = rd_.q_dot_virtual_[i];
+            state_init_[i+21] = rd_.q_dot_virtual_[i];
    
-        state_init.m_shared_memory[39] =  rd_.q_dot_virtual_[19];
-        state_init.m_shared_memory[40] =  rd_.q_dot_virtual_[20];
+        state_init_[39] =  rd_.q_dot_virtual_[19];
+        state_init_[40] =  rd_.q_dot_virtual_[20];
    
-        state_init.m_shared_memory[41] = com_float_current_(0)+virtual_temp(0);
-        state_init.m_shared_memory[45] = com_float_current_(1)+virtual_temp(1);
-        state_init.m_shared_memory[42] = com_float_current_dot(0);
-        state_init.m_shared_memory[46] = com_float_current_dot(1);
+        state_init_[41] = com_float_current_(0)+virtual_temp(0);
+        state_init_[45] = com_float_current_(1)+virtual_temp(1);
+        state_init_[42] = com_float_current_dot(0);
+        state_init_[46] = com_float_current_dot(1);
    
-        state_init.m_shared_memory[43] = ZMP_float(0)+virtual_temp(0);//zmp_measured_mj_(0);
-        state_init.m_shared_memory[47] = ZMP_float(1)+virtual_temp(1);//zmp_measured_mj_(1);
+        state_init_[43] = ZMP_float(0)+virtual_temp(0);//zmp_measured_mj_(0);
+        state_init_[47] = ZMP_float(1)+virtual_temp(1);//zmp_measured_mj_(1);
        
-        state_init.m_shared_memory[44] = model_data_cen.hg.angular()(1);
-        state_init.m_shared_memory[48] = model_data_cen.hg.angular()(0);//model_data1.hg.angular()[0];
+        state_init_[44] = model_data_cen.hg.angular()(1);
+        state_init_[48] = model_data_cen.hg.angular()(0);//model_data1.hg.angular()[0];
 
-        state_init.m_shared_memory[49] = rd_.link_[COM_id].xpos(2) + virtual_temp(2);//com_support_current_(2);//model_data1.hg.angular()[0];
+        state_init_[49] = rd_.link_[COM_id].xpos(2) + virtual_temp(2);//com_support_current_(2);//model_data1.hg.angular()[0];
     
-        //state_init.m_shared_memory[49] = 1.0;//com_support_current_(2) + 0.1585;//model_data1.hg.angular()[0];
+        //state_init_[49] = 1.0;//com_support_current_(2) + 0.1585;//model_data1.hg.angular()[0];
         std::cout << "com " <<com_support_current_(2); 
         //com_float_current_(0)+virtual_temp(0) << " " << com_float_current_dot_LPF(0) << " "<<com_float_current_(1)+virtual_temp(1) << " " << com_float_current_dot_LPF(1) << " " << wn << " " << com_float_current_(0)+virtual_temp(0) + com_float_current_dot_LPF(0)/wn << " " <<com_float_current_(1) +virtual_temp(1)+ com_float_current_dot_LPF(1)/wn << std::endl;
+        thread2_lock.lock();
+        state_init_mu = state_init_;
+        thread2_lock.unlock();
     }
 
-    mpc_start_init.m_shared_memory_int[0] = 1;
+    mpc_start_init_ = 1;
     std::cout << " CP " << std::endl;
     std::cout << (com_float_current_ + com_float_current_dot/wn).transpose()<< std::endl;
+}
+
+void CustomController::proc_recv(){
+
+    while(true)
+    {
+        int valread = recv(new_socket, buffer1, sizeof(buffer1), MSG_WAITALL);
+        if(valread == sizeof(buffer1))
+        {
+            statemachine_ = buffer1[0];
+            thread1_lock.lock();
+            std::copy(&buffer1[1], &buffer1[1] + 49, &desired_val_[0]);
+            thread1_lock.unlock();
+        }
+    }
+}
+
+void CustomController::proc_recv1(){
+
+    while(true)
+    {
+        thread2_lock.lock();
+        std::copy(&state_init_mu[0], &state_init_mu[0] + 50,&buffer[1]);
+        thread2_lock.unlock();
+        
+        if (mpc_start_init_ == 1 && mpc_start_init_bool == false)
+        {   
+            buffer[0] = 1;
+            send(socket_send,buffer,sizeof(buffer),0);
+            
+            mpc_start_init_bool = true;
+            mpc_start_init_bool1 = false;
+            mpc_start_init_bool2 = false;
+        }
+        else if(mpc_start_init_ == 2 && mpc_start_init_bool1 == false)
+        {
+            buffer[0] = 2;
+            send(socket_send,buffer,sizeof(buffer),0);
+            //std::cout << "FFF" << std::endl;
+            mpc_start_init_bool1 = true;
+            mpc_start_init_bool = false; 
+        }
+        else if(mpc_start_init_ == 3 && mpc_start_init_bool2 == false)
+        {
+            buffer[0] = 3;
+            send(socket_send,buffer,sizeof(buffer),0);
+            //std::cout << "FFF5" << std::endl;
+            mpc_start_init_bool2 = true; 
+            mpc_start_init_bool = false; 
+        }
+        else if(mpc_start_init_ == 4 && mpc_start_init_bool3 == false)
+        {
+            buffer[0] = 4;
+            std::cout << "FFF6" << std::endl;
+            mpc_start_init_bool3 = true;
+            send(socket_send,buffer,sizeof(buffer),0);
+        }
+    }
 }
