@@ -134,7 +134,8 @@ public:
     std::atomic<bool> atb_desired_q_update_{false};
     std::atomic<bool> atb_walking_traj_update_{false};
     std::atomic<bool> atb_qddot_update_{false};
-    std::atomic<bool> atb_hg_update_{false};
+    std::atomic<bool> atb_desired_update_{false};
+    std::atomic<bool> atb_state_update_{false};
     std::atomic<bool> atb_phase_update_{false};
 
     RigidBodyDynamics::Model model_d_;  //updated by desired q
@@ -190,7 +191,7 @@ public:
 
     void proc_recv();
     void proc_recv1();
-
+    
     void savePreData();
     void printOutTextFile();
 
@@ -1549,8 +1550,11 @@ public:
 
     std::mutex thread1_lock, thread2_lock;
 
-    Eigen::VectorXd state_init_;
+    
     Eigen::VectorXd desired_val_;
+    Eigen::VectorXd desired_val_slow;
+    Eigen::VectorXd state_init_;
+    Eigen::VectorXd state_init_slow;
     Eigen::VectorXd state_init_mu;
     Eigen::VectorXd desired_val_mu;
 
@@ -1585,6 +1589,10 @@ public:
     void calculateFootStepTotal_MJoy();
     void calculateFootStepTotal_MJoy_End();
     void updateNextStepTimeJoy();
+    void comGainTrajectory();
+
+    double alpha_temp1 = 0;
+    double alpha;
     int joy_index_ = 0;
     int walking_tick_jk = 0;
     Eigen::MatrixXd foot_step_joy_temp_;
@@ -1594,6 +1602,8 @@ public:
 
     Eigen::VectorQd q_mj;
     Eigen::VectorQd q_mj_prev;
+
+
 private:    
     //////////////////////////////// Myeong-Ju
     unsigned int walking_tick_mj = 0;
