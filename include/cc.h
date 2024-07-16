@@ -30,7 +30,7 @@
 #include <sys/shm.h>
 #include <sys/types.h>
 #include <sys/ipc.h>
-
+#include <thread>
 #include <future>
 
 
@@ -39,8 +39,8 @@ const int FILE_CNT1 = 15;
 const std::string FILE_NAMES1[FILE_CNT1] =
 {
   ///change this directory when you use this code on the other computer///
-    "/home/jhk/data/0_flag_mj.txt",
-    "/home/jhk/data/1_flag_mj.txt",
+    "/home/dyros/data/0_flag_mj.txt",
+    "/home/dyros/data/1_flag_mj.txt",
     "/home/dh-sung/data/dg/1_com_.txt",
     "/home/dh-sung/data/dg/2_zmp_.txt",
     "/home/dh-sung/data/dg/3_foot_.txt",
@@ -303,7 +303,7 @@ public:
     Eigen::Vector3d com_vel_est2_;  // Jv*q_dot + r X w_f
 
     Eigen::Matrix3d kp_compos_; // 196(sim) (tune)
-	Eigen::Matrix3d kd_compos_;	 // 28(sim) (tune)
+    Eigen::Matrix3d kd_compos_;  // 28(sim) (tune)
 
     // Pevlis related variables
     Eigen::Vector3d pelv_pos_current_;
@@ -325,13 +325,13 @@ public:
     Eigen::Isometry3d pelv_trajectory_support_init_;
 
 
-	Eigen::Vector3d phi_pelv_;
-	Eigen::Vector3d torque_pelv_;
-	Eigen::VectorQd torque_stance_hip_;
-	Eigen::VectorQd torque_swing_assist_;
+    Eigen::Vector3d phi_pelv_;
+    Eigen::Vector3d torque_pelv_;
+    Eigen::VectorQd torque_stance_hip_;
+    Eigen::VectorQd torque_swing_assist_;
 
     Eigen::Matrix3d kp_pelv_ori_; // 196(sim) (tune)
-	Eigen::Matrix3d kd_pelv_ori_;	 // 28(sim) (tune)
+    Eigen::Matrix3d kd_pelv_ori_;    // 28(sim) (tune)
     // Joint related variables
     Eigen::VectorQd current_q_;
     Eigen::VectorQd current_q_dot_;
@@ -373,15 +373,15 @@ public:
     Eigen::VectorVQd nonlinear_torque_;
 
     Eigen::VectorQd kp_joint_;
-	Eigen::VectorQd kv_joint_;
+    Eigen::VectorQd kv_joint_;
 
-	Eigen::VectorQd kp_stiff_joint_;
-	Eigen::VectorQd kv_stiff_joint_;
-	Eigen::VectorQd kp_soft_joint_;
-	Eigen::VectorQd kv_soft_joint_;
+    Eigen::VectorQd kp_stiff_joint_;
+    Eigen::VectorQd kv_stiff_joint_;
+    Eigen::VectorQd kp_soft_joint_;
+    Eigen::VectorQd kv_soft_joint_;
     // walking controller variables
     double alpha_x_;
-	double alpha_y_;
+    double alpha_y_;
     double alpha_lpf_;
     double alpha_x_command_;    
     double alpha_y_command_;
@@ -419,11 +419,11 @@ public:
 
     //getLegIK
     Eigen::Isometry3d lfoot_transform_desired_;
-	Eigen::Isometry3d rfoot_transform_desired_;
-	Eigen::Isometry3d pelv_transform_desired_;
+    Eigen::Isometry3d rfoot_transform_desired_;
+    Eigen::Isometry3d pelv_transform_desired_;
     Eigen::Isometry3d lfoot_transform_desired_last_;
-	Eigen::Isometry3d rfoot_transform_desired_last_;
-	Eigen::Isometry3d pelv_transform_desired_last_;
+    Eigen::Isometry3d rfoot_transform_desired_last_;
+    Eigen::Isometry3d pelv_transform_desired_last_;
 
     Eigen::MatrixXd jac_com_;
     Eigen::MatrixXd jac_com_pos_;
@@ -433,7 +433,7 @@ public:
     Eigen::MatrixXd jac_lfoot_;
 
     Eigen::MatrixXd lfoot_to_com_jac_from_global_;
-	Eigen::MatrixXd rfoot_to_com_jac_from_global_;
+    Eigen::MatrixXd rfoot_to_com_jac_from_global_;
     
     Eigen::Isometry3d pelv_transform_start_from_global_;
     Eigen::Isometry3d rfoot_transform_start_from_global_;
@@ -639,10 +639,10 @@ public:
     Eigen::Vector2d f_star_xy_pre_;
     Eigen::Vector6d f_star_6d_;
     Eigen::Vector6d f_star_6d_pre_;
-	Eigen::Vector6d f_star_l_;   
-	Eigen::Vector6d f_star_r_;
-	Eigen::Vector6d f_star_l_pre_;   
-	Eigen::Vector6d f_star_r_pre_;
+    Eigen::Vector6d f_star_l_;   
+    Eigen::Vector6d f_star_r_;
+    Eigen::Vector6d f_star_l_pre_;   
+    Eigen::Vector6d f_star_r_pre_;
 
     Eigen::VectorQd torque_task_;
     Eigen::VectorQd torque_init_;
@@ -721,9 +721,9 @@ public:
 
     //dampingControlCompute
     Vector3d f_lfoot_damping_;
-	Vector3d f_rfoot_damping_;	
+    Vector3d f_rfoot_damping_;  
     Vector3d f_lfoot_damping_pre_;
-	Vector3d f_rfoot_damping_pre_;	
+    Vector3d f_rfoot_damping_pre_;  
     Matrix3d support_foot_damping_gain_;
 
     //MotionRetargeting variables
@@ -892,7 +892,7 @@ public:
     Eigen::Isometry3d hmd_pelv_pose_init_;
 
     Eigen::Vector3d hmd2robot_lhand_pos_mapping_;
-	Eigen::Vector3d hmd2robot_rhand_pos_mapping_;
+    Eigen::Vector3d hmd2robot_rhand_pos_mapping_;
     Eigen::Vector3d hmd2robot_lelbow_pos_mapping_;
     Eigen::Vector3d hmd2robot_relbow_pos_mapping_;
 
@@ -962,15 +962,15 @@ public:
     /////////////QPIK UPPERBODY /////////////////
     const int hierarchy_num_upperbody_ = 4;
     const int variable_size_upperbody_ = 21;
-	const int constraint_size1_upperbody_ = 21;	//[lb <=	x	<= 	ub] form constraints
-	const int constraint_size2_upperbody_ = 12;	//[lb <=	Ax 	<=	ub] from constraints
-   	const int control_size_upperbody_[4] = {3, 14, 4, 4};		//1: upperbody, 2: head + hand, 3: upperarm, 4: shoulder
+    const int constraint_size1_upperbody_ = 21; //[lb <=    x   <=  ub] form constraints
+    const int constraint_size2_upperbody_ = 12; //[lb <=    Ax  <=  ub] from constraints
+    const int control_size_upperbody_[4] = {3, 14, 4, 4};       //1: upperbody, 2: head + hand, 3: upperarm, 4: shoulder
 
-	// const int control_size_hand = 12;		//2
-	// const int control_size_upperbody = 3;	//1
-	// const int control_size_head = 2;		//2
-	// const int control_size_upperarm = 4; 	//3
-	// const int control_size_shoulder = 4;	//4
+    // const int control_size_hand = 12;        //2
+    // const int control_size_upperbody = 3;    //1
+    // const int control_size_head = 2;     //2
+    // const int control_size_upperarm = 4;     //3
+    // const int control_size_shoulder = 4; //4
 
     double w1_upperbody_;
     double w2_upperbody_;
@@ -991,9 +991,9 @@ public:
     /////////////HQPIK//////////////////////////
     const unsigned int hierarchy_num_hqpik_ = 4;
     const unsigned int variable_size_hqpik_ = 21;
-	const unsigned int constraint_size1_hqpik_ = 21;	//[lb <=	x	<= 	ub] form constraints
-	const unsigned int constraint_size2_hqpik_[4] = {12, 15, 17, 21};	//[lb <=	Ax 	<=	ub] or [Ax = b]
-	const unsigned int control_size_hqpik_[4] = {3, 14, 4, 4};		//1: upperbody, 2: head + hand, 3: upperarm, 4: shoulder
+    const unsigned int constraint_size1_hqpik_ = 21;    //[lb <=    x   <=  ub] form constraints
+    const unsigned int constraint_size2_hqpik_[4] = {12, 15, 17, 21};   //[lb <=    Ax  <=  ub] or [Ax = b]
+    const unsigned int control_size_hqpik_[4] = {3, 14, 4, 4};      //1: upperbody, 2: head + hand, 3: upperarm, 4: shoulder
 
     double w1_hqpik_[4];
     double w2_hqpik_[4];
@@ -1015,9 +1015,9 @@ public:
     /////////////HQPIK2//////////////////////////
     const int hierarchy_num_hqpik2_ = 5;
     const int variable_size_hqpik2_ = 21;
-	const int constraint_size1_hqpik2_ = 21;	//[lb <=	x	<= 	ub] form constraints
-	const int constraint_size2_hqpik2_[5] = {12, 16, 19, 19, 23};	//[lb <=	Ax 	<=	ub] or [Ax = b]
-	const int control_size_hqpik2_[5] = {4, 3, 12, 4, 4};		//1: head ori(2)+pos(2), 2: hand, 3: upper body ori, 4: upper arm ori(2) 5: shoulder ori(2)
+    const int constraint_size1_hqpik2_ = 21;    //[lb <=    x   <=  ub] form constraints
+    const int constraint_size2_hqpik2_[5] = {12, 16, 19, 19, 23};   //[lb <=    Ax  <=  ub] or [Ax = b]
+    const int control_size_hqpik2_[5] = {4, 3, 12, 4, 4};       //1: head ori(2)+pos(2), 2: hand, 3: upper body ori, 4: upper arm ori(2) 5: shoulder ori(2)
 
     double w1_hqpik2_[5];
     double w2_hqpik2_[5];
@@ -1034,9 +1034,9 @@ public:
 
     ////////////QP RETARGETING//////////////////////////////////
     const int variable_size_retargeting_ = 6;
-	const int constraint_size1_retargeting_ = 6;	//[lb <=	x	<= 	ub] form constraints
-	const int constraint_size2_retargeting_[3] = {6, 6, 9};	//[lb <=	Ax 	<=	ub] from constraints
-   	const int control_size_retargeting_[3] = {3, 3, 3};		//1: left hand, 2: right hand, 3: relative hand
+    const int constraint_size1_retargeting_ = 6;    //[lb <=    x   <=  ub] form constraints
+    const int constraint_size2_retargeting_[3] = {6, 6, 9}; //[lb <=    Ax  <=  ub] from constraints
+    const int control_size_retargeting_[3] = {3, 3, 3};     //1: left hand, 2: right hand, 3: relative hand
 
     Eigen::Vector3d robot_still_pose_lhand_, robot_t_pose_lhand_, robot_forward_pose_lhand_, robot_still_pose_rhand_, robot_t_pose_rhand_, robot_forward_pose_rhand_;
     Eigen::Vector3d lhand_mapping_vector_, rhand_mapping_vector_, lhand_mapping_vector_pre_, rhand_mapping_vector_pre_, lhand_mapping_vector_dot_, rhand_mapping_vector_dot_;
@@ -1060,9 +1060,9 @@ public:
     /////////////CAM-HQP//////////////////////////
     const int hierarchy_num_camhqp_ = 2;
     const int variable_size_camhqp_ = 8; // original number -> 6 (DG)
-    const int constraint_size1_camhqp_ = 8; //[lb <=	x	<= 	ub] form constraints // original number -> 6 (DG)
-    //const int constraint_size2_camhqp_[2] = {0, 3};	//[lb <=	Ax 	<=	ub] or [Ax = b]/ 0223 except Z axis control
-    const int constraint_size2_camhqp_[2] = {0, 2};	//[lb <=	Ax 	<=	ub] or [Ax = b] 
+    const int constraint_size1_camhqp_ = 8; //[lb <=    x   <=  ub] form constraints // original number -> 6 (DG)
+    //const int constraint_size2_camhqp_[2] = {0, 3};   //[lb <=    Ax  <=  ub] or [Ax = b]/ 0223 except Z axis control
+    const int constraint_size2_camhqp_[2] = {0, 2}; //[lb <=    Ax  <=  ub] or [Ax = b] 
     //const int control_size_camhqp_[2] = {3, 8}; //1: CAM control, 2: init pose // original number -> 6 (DG)
     const int control_size_camhqp_[2] = {2, 8}; //1: CAM control, 2: init pose // original number -> 6 (DG) / 0223 except Z axis control
 
@@ -1602,6 +1602,9 @@ public:
 
     Eigen::VectorQd q_mj;
     Eigen::VectorQd q_mj_prev;
+
+    sockaddr_in serveraddr;
+    sockaddr_in serveraddr1;
 
 
 private:    
