@@ -1169,7 +1169,6 @@ void CustomController::computeSlow()
 
         while(std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::system_clock::now() - startTime).count() < 500)
         {
-
             torque_upper_.setZero();
             torque_lower_.setZero();
             if(torque_control == false)
@@ -1208,6 +1207,9 @@ void CustomController::computeSlow()
 
             rd_.torque_desired = torque_lower_ + torque_upper_;
         }
+        int K_ = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::system_clock::now() - startTime).count();
+        
+            
         rd_.torque_desired = torque_lower_ + torque_upper_;
         startTime = std::chrono::system_clock::now();
         time_tick_next = true;
@@ -1730,9 +1732,9 @@ void CustomController::computeSlow()
                 if(mpc_cycle < controlwalk_time-1)
                 {
                     
-                    file[1] <<walking_tick_mj << " "<<mpc_cycle <<" "<< mpc_start_init_<< " " <<mpc_start_init_bool << " " << mpc_start_init_bool1 << " " << mpc_start_init_bool2 << " " << mpc_start_init_bool3 << " "<<walking_tick << " " <<mpc_cycle_int1<< " "<<virtual_temp(0) << " " <<virtual_temp(1)<< " " <<virtual_temp1(0) << " " <<virtual_temp1(1) << " " <<contactMode << " " << com_mpcx << " " << com_mpcy << " "<<desired_val_slow[41] << " " << desired_val_slow[45] << " ";
+                    file[1] <<walking_tick_mj << " "<<mpc_cycle <<" "<<walking_tick << " " <<mpc_cycle_int1<< " "<<virtual_temp(0) << " " <<virtual_temp(1)<< " " <<virtual_temp1(0) << " " <<virtual_temp1(1) << " " <<contactMode << " " << com_mpcx << " " << com_mpcy << " "<<desired_val_slow[41] << " " << desired_val_slow[45] << " ";
                     
-                    /*file[1] << "12  " << zmpy_d << " " << zmpx_d << " " << zmpy_ << " " <<zmpx_ << " " << (1-com_alpha_fast) * rd_.link_[COM_id].mass * GRAVITY * 1.0 << " " << (com_alpha_fast) * rd_.link_[COM_id].mass * GRAVITY * 1.0 << " ";
+                    file[1] << "12  " << zmpy_d << " " << zmpx_d << " "  << zmpy_ << " " << zmp_measured_mj_(1)  << " "<<zmpx_ << " " <<  zmp_measured_mj_(0) << " " << (1-com_alpha_fast) * rd_.link_[COM_id].mass * GRAVITY * 1.0 << " " << (com_alpha_fast) * rd_.link_[COM_id].mass * GRAVITY * 1.0 << " ";
                     
 
                     file[1] << "123  ";
@@ -1745,9 +1747,9 @@ void CustomController::computeSlow()
                     for(int i = 0; i < 12; i++)
                     {
                         file[1] << qp_result(i) << " ";
-                    }*/
+                    }
                    
-                    file[1] << std::endl;
+                    file[1] << K_ << std::endl;
                     /*file[1] << "213 " << qp_solved << " " << model_data_cen.hg.angular()(0) << " " << model_data_cen.hg.angular()(1)<< " "<< ang_d(0) << " " << ang_d(1);
                     file[1] << " 55 "  << ZMP_Y_REF << " " << zmp_measured_mj_(1) << " " <<ZMPy_test << " "<<state_init_[47]<< " " << desired_val_slow[47] << " " ;//<< std::endl;//<<cp_desired_(1) << " " << cp_desired_(0) << std::endl;
                     file[1] << " 66 "  << ZMP_X_REF << " " << zmp_measured_mj_(0) << " " <<ZMPx_test << " "<<state_init_[43]<< " " << desired_val_slow[43] << " " ;//<< std::endl;//<<cp_desired_(1) << " " << cp_desired_(0) << std::endl;
