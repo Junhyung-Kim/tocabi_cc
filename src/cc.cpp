@@ -8697,7 +8697,7 @@ void CustomController::proc_recv1(){
             atb_state_update_ = false;
         }
 
-        //std::copy(&state_init_mu[0], &state_init_mu[0] + 50, &buffer[1]);
+        std::copy(&state_init_mu[0], &state_init_mu[0] + 50, &buffer[1]);
         
         if (mpc_start_init_ == 1 && mpc_start_init_bool == false)
         {  
