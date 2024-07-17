@@ -148,13 +148,12 @@ void proc_recv(){
         if(buffer[0] == 2 && mpc_start_init_bool == true && mpc_start_init_bool2 == false)
         {
             mpc_start_init.m_shared_memory_int[0] = 2;
-            //std::cout << "55 "  << statemachine.m_shared_memory_int[0] << " " << mpc_start_init.m_shared_memory_int[0]<< " " << mpc_start_init_bool<< " " << mpc_start_init_bool1<< " " << mpc_start_init_bool2<<std::endl;
         
         }   
 
         if(buffer[0] == 1 && mpc_start_init_bool == false)
         { 
-            //std::cout << "send oK "<< buffer[0] << std::endl;
+            std::cout << "send oK "<< buffer[0] << std::endl;
             send(sock1, buffer, sizeof(buffer), 0);
             mpc_start_init_bool = true;
             mpc_start_init_bool1 = false;
@@ -197,10 +196,11 @@ void proc_recv1(){
         auto startTime2 = std::chrono::system_clock::now();
         auto elapsed2 = std::chrono::duration_cast<std::chrono::microseconds>(startTime2 - startTime1).count();
       
+        if(valread > 0)
+                std::cout << "val read" << valread << std::endl;
+            
         if(valread == sizeof(buffer1))// && elapsed2 > 1)
         {
-            //if(elapsed2 > 600)
-            //    std::cout << "val read" << elapsed2 << std::endl;
             
             std::copy(&buffer1[1], &buffer1[1] + 50, &state_init.m_shared_memory[0]);
 
@@ -219,8 +219,6 @@ void proc_recv1(){
 }
 
 int main(int argc, char const *argv[]) {
-    
-
     // Create socket file descriptor
     /*if ((sock = socket(AF_INET, SOCK_DGRAM, 0)) < 0) {
         std::cerr << "Socket creation error" << std::endl;
@@ -242,19 +240,19 @@ int main(int argc, char const *argv[]) {
     }
 
     serv_addr.sin_family = PF_INET;
-    serv_addr.sin_port = htons(7072);//8080
+    serv_addr.sin_port = htons(8076);//8080
 
     serv_addr1.sin_family = PF_INET;
-    serv_addr1.sin_port = htons(7071);//8081
+    serv_addr1.sin_port = htons(7073);//8081
 
     // Convert IPv4 and IPv6 addresses from text to binary form
-    if(inet_pton(PF_INET, "127.0.0.1", &serv_addr.sin_addr)<=0)
+    if(inet_pton(PF_INET, "10.112.1.20", &serv_addr.sin_addr)<=0)
     {
         std::cout << "Invalid address/ Address not supported" << std::endl;
         return -1;
     }
 
-    if(inet_pton(PF_INET, "127.0.0.1", &serv_addr1.sin_addr)<=0) 
+    if(inet_pton(PF_INET, "10.112.1.10", &serv_addr1.sin_addr)<=0) 
     {
         std::cout << "Invalid address/ Address not supported" << std::endl;
         return -1;
@@ -334,11 +332,11 @@ int main(int argc, char const *argv[]) {
     mpc_start_init.setKey(1); //receive
     mpc_start_init.setupSharedMemory(sizeof(int) * 3); //1
     mpc_start_init.attachSharedMemoryint();
-    std::cout << "SHAREDMEMORY FIRST OK"<< std::endl;
+    std::cout << "SHAREDMEMORY FIRST OK" << std::endl;
     state_init.setKey(2); //receive
     state_init.setupSharedMemory(sizeof(double) * 50);
     state_init.attachSharedMemory();
-    std::cout << "SHAREDMEMORY Second OK"<< std::endl;
+    std::cout << "SHAREDMEMORY Second OK" << std::endl;
     statemachine.setKey(3); //send
     statemachine.setupSharedMemoryRead(sizeof(int) * 3);
     statemachine.attachSharedMemoryint();
@@ -347,7 +345,7 @@ int main(int argc, char const *argv[]) {
     desired_val.setupSharedMemoryRead(sizeof(double) * 49);
     desired_val.attachSharedMemory();
 
-    std::cout << "SHAREDMEMORY Fourth OK"<< std::endl;
+    std::cout << "SHAREDMEMORY Fourth OK" << std::endl;
     
     statemachine.m_shared_memory_int[0] = 90;
 

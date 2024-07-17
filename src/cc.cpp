@@ -291,7 +291,7 @@ CustomController::CustomController(RobotData &rd) : rd_(rd)
 
    
 
-    if(inet_pton(PF_INET, "10.112.1.10", &serveraddr1.sin_addr)<=0)
+    if(inet_pton(PF_INET, "10.112.1.10"/*"10.112.1.10"*/, &serveraddr1.sin_addr)<=0)
     {
         std::cout << "Invalid address/ Address not supported" << std::endl;
     }
@@ -8697,9 +8697,8 @@ void CustomController::proc_recv1(){
             atb_state_update_ = false;
         }
 
-        std::copy(&state_init_mu[0], &state_init_mu[0] + 50, &buffer[1]);
-        send(socket_send,buffer,sizeof(buffer),0);
-
+        //std::copy(&state_init_mu[0], &state_init_mu[0] + 50, &buffer[1]);
+        
         if (mpc_start_init_ == 1 && mpc_start_init_bool == false)
         {  
             std::cout <<"sned" << std::endl;
