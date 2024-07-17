@@ -8697,7 +8697,7 @@ void CustomController::proc_recv1(){
             atb_state_update_ = false;
         }
 
-        //std::copy(&state_init_mu[0], &state_init_mu[0] + 50, &buffer[1]);
+        std::copy(&state_init_mu[0], &state_init_mu[0] + 50, &buffer[1]);
         
         if (mpc_start_init_ == 1 && mpc_start_init_bool == false)
         {  
@@ -8728,7 +8728,7 @@ void CustomController::proc_recv1(){
             mpc_start_init_bool3 = true;
             send(socket_send,buffer,sizeof(buffer),0);
         }
-        std::this_thread::sleep_for(std::chrono::microseconds(300));
+        std::this_thread::sleep_for(std::chrono::microseconds(3));
     }
 }
 
