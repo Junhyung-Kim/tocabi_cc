@@ -8728,7 +8728,7 @@ void CustomController::proc_recv1(){
             mpc_start_init_bool3 = true;
             send(socket_send,buffer,sizeof(buffer),0);
         }
-        std::this_thread::sleep_for(std::chrono::microseconds(300));
+        std::this_thread::sleep_for(std::chrono::microseconds(3));
     }
 }
 
