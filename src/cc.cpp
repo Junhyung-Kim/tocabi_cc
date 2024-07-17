@@ -508,9 +508,9 @@ CustomController::CustomController(RobotData &rd) : rd_(rd)
     bzero(&serveraddr, sizeof(serveraddr));
     bzero(&serveraddr1, sizeof(serveraddr1)); 
     serveraddr.sin_family=PF_INET;
-    serveraddr.sin_port=htons(7072);
+    serveraddr.sin_port=htons(8076);
     serveraddr1.sin_family=PF_INET;
-    serveraddr1.sin_port=htons(7071);
+    serveraddr1.sin_port=htons(7073);
 
     if(inet_pton(PF_INET, "127.0.0.1", &serveraddr.sin_addr)<=0) 
     {
@@ -524,8 +524,8 @@ CustomController::CustomController(RobotData &rd) : rd_(rd)
     
     //8081
     while (bind(socket_receive, (struct sockaddr *)&serveraddr1, sizeof(serveraddr1)) < 0) {
-        std::cerr << "Connection2 .... " <<  strerror(errno) << std::endl;
     }
+    std::cerr << "Connection2 .... " << std::endl;
 
     if(listen(socket_receive, 3) < 0){
         std::cout << "listen err" << std::endl;
@@ -534,14 +534,15 @@ CustomController::CustomController(RobotData &rd) : rd_(rd)
     socklen_t addrlen = sizeof(serveraddr1);    
     //8080
     while (connect(socket_send, (sockaddr*)&serveraddr, sizeof(serveraddr)) < 0) {
-        std::cerr << "Connection1 ...." << std::endl;
         //break;
     }
+    std::cerr << "Connection1 ...." << std::endl;
 
     if ((new_socket = accept(socket_receive, (struct sockaddr*)&serveraddr1, &addrlen))
         < 0) {
-            std::cout << "accept err" << std::endl;
     }
+
+    std::cout << "accept ok" << std::endl;
     sockaddr_in clientaddr;
 
     upper_on = true;
@@ -1236,7 +1237,7 @@ void CustomController::computeSlow()
             updateInitialState();
             getRobotState();
 
-            controlwalk_time = 1;
+            controlwalk_time = 4;//254;
             if (mpc_cycle < controlwalk_time-1)
             {
                 for (int i = 0; i < 3; i++)
@@ -1749,7 +1750,7 @@ void CustomController::computeSlow()
                         file[1] << qp_result(i) << " ";
                     }
                    
-                    file[1] << K_ << std::endl;
+                    file[1] << buffer[0] << std::endl;
                     /*file[1] << "213 " << qp_solved << " " << model_data_cen.hg.angular()(0) << " " << model_data_cen.hg.angular()(1)<< " "<< ang_d(0) << " " << ang_d(1);
                     file[1] << " 55 "  << ZMP_Y_REF << " " << zmp_measured_mj_(1) << " " <<ZMPy_test << " "<<state_init_[47]<< " " << desired_val_slow[47] << " " ;//<< std::endl;//<<cp_desired_(1) << " " << cp_desired_(0) << std::endl;
                     file[1] << " 66 "  << ZMP_X_REF << " " << zmp_measured_mj_(0) << " " <<ZMPx_test << " "<<state_init_[43]<< " " << desired_val_slow[43] << " " ;//<< std::endl;//<<cp_desired_(1) << " " << cp_desired_(0) << std::endl;
