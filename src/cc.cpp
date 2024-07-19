@@ -1237,7 +1237,7 @@ void CustomController::computeSlow()
             updateInitialState();
             getRobotState();
 
-            controlwalk_time = 4;//254;
+            controlwalk_time = 250;//254;
             if (mpc_cycle < controlwalk_time-1)
             {
                 for (int i = 0; i < 3; i++)
@@ -1309,7 +1309,7 @@ void CustomController::computeSlow()
                                 ly = 0.048;
                                 lx = 0.11;
 
-                                if(contactMode == 1)
+                                /*if(contactMode == 1)
                                 {
                                     if(lfoot_sx >  rfoot_sx)
                                     {
@@ -1360,10 +1360,10 @@ void CustomController::computeSlow()
                                     
                                     if(ZMP_Y_REF < rfoot_sy - ly)
                                         ZMP_Y_REF = rfoot_sy - ly;
-                                    else if(ZMP_Y_REF > rfoot_sy + ly)
+                    2                else if(ZMP_Y_REF > rfoot_sy + ly)
                                         ZMP_Y_REF = rfoot_sy + ly;
-                                }
-                                
+                                }*/
+2
                                 cp_desired_(0) = com_mpc[0] + comd_s[0]/wn;
                                 cp_desired_(1) = com_mpc[1] + comd_s[1]/wn;
                                 com_dot_desired_(0) = comd_s[0];
@@ -1380,12 +1380,12 @@ void CustomController::computeSlow()
 
 
                 //Disturbance
-                /*
+                
                 if(mpc_cycle >= 174  && mpc_cycle <= 178)//&& (walking_tick >= 1  && walking_tick <= 20))
                     mj_shm_->dis_check = true;
                 else if(mpc_cycle == 179)
                     mj_shm_->dis_check = false;
-
+                /*
                 if(mpc_cycle >= 374  && mpc_cycle <= 378)//&& (walking_tick >= 1  && walking_tick <= 20))
                     mj_shm_->dis_check = true;
                 else if(mpc_cycle == 379)
@@ -1730,18 +1730,19 @@ void CustomController::computeSlow()
                     }
                 }
                 
-                if(mpc_cycle < controlwalk_time-1)
+                if(mpc_cycle < controlwalk_time-1 && mpc_cycle >= 0)
                 {
                     
                     file[1] <<walking_tick_mj << " "<<mpc_cycle <<" "<<walking_tick << " " <<mpc_cycle_int1<< " "<<virtual_temp(0) << " " <<virtual_temp(1)<< " " <<virtual_temp1(0) << " " <<virtual_temp1(1) << " " <<contactMode << " " << com_mpcx << " " << com_mpcy << " "<<desired_val_slow[41] << " " << desired_val_slow[45] << " ";
                     
-                    file[1] << "12  " << zmpy_d << " " << zmpx_d << " "  << zmpy_ << " " << zmp_measured_mj_(1)  << " "<<zmpx_ << " " <<  zmp_measured_mj_(0) << " " << (1-com_alpha_fast) * rd_.link_[COM_id].mass * GRAVITY * 1.0 << " " << (com_alpha_fast) * rd_.link_[COM_id].mass * GRAVITY * 1.0 << " ";
+                    file[1] << "12  " << lfoot_sx << " "<< rfoot_sx << " " << zmp_mpcx << " " << rfoot_sx_float << " " << lfoot_sx_float << " "<< desired_val_slow[43]-virtual_temp1(0) << " " << zmp_bx(0) << " " << zmp_bx(1) << " "<<zmpx_ << " " <<  zmp_measured_mj_(0) << " " << zmpx_d << " ";
                     
 
                     file[1] << "123  ";
                     file[1] << com_desired_(0) << " " << com_support_current_(0) << " "<< com_desired_(1) << " " << com_support_current_(1) << " " << com_mpc1[1] << " "<< com_float_current_(1) << " " << com_float_current_(2) << " ";
 
-                    
+                    file[1] << "124 ";
+                    file[1] << ang_d_temp(0) * 2000 << " " << model_data_cen.hg.angular()(0) << " " << ang_d_temp(1) * 2000<< " " << model_data_cen.hg.angular()(1)<< " ";
 
                     file[1] << "56 ";
 
@@ -1945,8 +1946,8 @@ void CustomController::computeFast()
                                     else
                                         zmpx_d = zmpx_fast;
 
-                                    zmp_bx(0) =  lfoot_sy + ly;
-                                    zmp_bx(1) =  rfoot_sy - ly;
+                                    zmp_bx(0) =  lfoot_sx + lx;
+                                    zmp_bx(1) =  rfoot_sx - lx;
                                 }
                                 else if(lfoot_sx <  rfoot_sx)
                                 {
@@ -1956,8 +1957,8 @@ void CustomController::computeFast()
                                         zmpx_d  = lfoot_sx - lx;
                                     else
                                         zmpx_d = zmpx_fast;
-                                    zmp_bx(0) =  lfoot_sy + ly;
-                                    zmp_bx(1) =  rfoot_sy - ly;
+                                    zmp_bx(0) =  rfoot_sx + lx;
+                                    zmp_bx(1) =  lfoot_sx - lx;
                                 }
                                 else
                                 {
@@ -1967,8 +1968,8 @@ void CustomController::computeFast()
                                         zmpx_d  = lfoot_sx - lx;
                                     else
                                         zmpx_d = zmpx_fast;
-                                    zmp_bx(0) =  lfoot_sy + ly;
-                                    zmp_bx(1) =  rfoot_sy - ly;
+                                    zmp_bx(0) =  lfoot_sx + lx;
+                                    zmp_bx(1) =  rfoot_sx - lx;
                                 }
 
                                 if(zmpy_fast > lfoot_sy + ly)
@@ -2298,8 +2299,8 @@ void CustomController::computeFast()
                                 else
                                     zmpy_d = zmpy_fast;
 
-                                zmp_bx(0) =  lfoot_sy + ly;
-                                zmp_bx(1) =  lfoot_sy - ly;
+                                zmp_bx(0) =  lfoot_sx + lx;
+                                zmp_bx(1) =  lfoot_sx - lx;
 
                                 ly = 0.05;
                                 lx = 0.13;
@@ -2534,8 +2535,8 @@ void CustomController::computeFast()
                                 else
                                     zmpy_d = zmpy_fast;
 
-                                zmp_bx(0) =  rfoot_sy + ly;
-                                zmp_bx(1) =  rfoot_sy - ly;
+                                zmp_bx(0) =  rfoot_sx + lx;
+                                zmp_bx(1) =  rfoot_sx - lx;
 
                                 ly = 0.05;
                                 lx = 0.13;
@@ -3143,10 +3144,10 @@ void CustomController::getRobotData()
     rfoot_sx = rfootc_transform_current_from_support_.translation()(0);
     rfoot_sy  = rfootc_transform_current_from_support_.translation()(1);
 
-    lfoot_sx_float = lfoot_transform_current_from_global_.translation()(0);
-    lfoot_sy_float  = lfoot_transform_current_from_global_.translation()(1);
-    rfoot_sx_float = rfoot_transform_current_from_global_.translation()(0);
-    rfoot_sy_float  = rfoot_transform_current_from_global_.translation()(1);
+    lfoot_sx_float = lfootc_transform_current_from_global_.translation()(0);
+    lfoot_sy_float  = lfootc_transform_current_from_global_.translation()(1);
+    rfoot_sx_float = rfootc_transform_current_from_global_.translation()(0);
+    rfoot_sy_float  = rfootc_transform_current_from_global_.translation()(1);
 
     RFj = rot_sup * rot_float * RFj;
     LFj = rot_sup * rot_float * LFj;
@@ -7846,12 +7847,12 @@ void CustomController::CP_compen_MJ_FT()
     //////////// Force
     if(mpc_cycle >= 0)
     {
-        F_F_input_dot = 0.0002 * ((l_ft_(2) - r_ft_(2)) - (F_L - F_R)) - 3.0 * F_F_input; // F_F_input이 크면 다리를 원래대로 빨리줄인다. 이정도 게인 적당한듯0.001/0.00001 // SSP, DSP 게인값 바꿔야?
+        F_F_input_dot = 0.001 * ((l_ft_(2) - r_ft_(2)) - (F_L - F_R)) - 3.0 * F_F_input; // F_F_input이 크면 다리를 원래대로 빨리줄인다. 이정도 게인 적당한듯0.001/0.00001 // SSP, DSP 게인값 바꿔야?
         F_F_input = F_F_input + F_F_input_dot * del_t;
     }
     else
     {//0.0004
-        F_F_input_dot = 0.0002 * ((l_ft_(2) - r_ft_(2)) - (F_L - F_R)) - 5.0 * F_F_input; // F_F_input이 크면 다리를 원래대로 빨리줄인다. 이정도 게인 적당한듯0.001/0.00001 // SSP, DSP 게인값 바꿔야?
+        F_F_input_dot = 0.001 * ((l_ft_(2) - r_ft_(2)) - (F_L - F_R)) - 5.0 * F_F_input; // F_F_input이 크면 다리를 원래대로 빨리줄인다. 이정도 게인 적당한듯0.001/0.00001 // SSP, DSP 게인값 바꿔야?
         F_F_input = F_F_input + F_F_input_dot * del_t;
     }
     if (F_F_input >= 0.02)
