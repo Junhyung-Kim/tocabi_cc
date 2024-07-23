@@ -578,7 +578,8 @@ def PCAlearning(time_step):
         #"timestep=20_finish_re_add",
         "timestep=21_finish_re_add",
         "timestep=21_finish_re_add",
-        "timestep=22_finish_re_add",
+        #"timestep=22_finish_re_add",
+        "timestep=23_finish_re_add",
         "timestep=23_finish_re_add",
         "timestep=24_finish_re_add",
         "timestep=25_finish_re",
@@ -685,7 +686,8 @@ def PCAlearning(time_step):
         #"timestep=20_finish_re_add",
         "timestep=21_finish_re_add",
         "timestep=21_finish_re_add",
-        "timestep=22_finish_re_add",
+        #"timestep=22_finish_re_add",
+        "timestep=23_finish_re_add",
         "timestep=23_finish_re_add",
         "timestep=24_finish_re_add",
         "timestep=25_finish_re",
@@ -799,7 +801,8 @@ def PCAlearning(time_step):
         #[1,1,15,54], #20 68
         [2,1,25,52], #21
         [2,1,25,52], #21
-        [1,1,19,54], #22
+        #[1,1,19,54], #22
+        [1,1,13,55], #23
         [1,1,13,55], #23
         [1,1,39,55], #24
         [3,1,35,55], #25
@@ -1354,7 +1357,8 @@ def talker():
         #[1,1,15,54], #20 68
         [2,1,25,52], #21
         [2,1,25,52], #21
-        [1,1,19,54], #22
+        #[1,1,19,54], #22
+        [1,1,13,55], #23
         [1,1,13,55], #23
         [1,1,39,55], #24
         [3,1,35,55], #25
@@ -1396,7 +1400,7 @@ def talker():
     T = 1
     MAXITER = 300
     dt_ = 1.2 / float(N)
-    total_time = 255
+    total_time = 350
 
     crocs_data = dict()
     crocs_data['left'] = dict()
@@ -1519,7 +1523,7 @@ def talker():
     weight_quad_camy = 2.9
     weight_quad_zmp = np.array([0.01, 0.01])#([weight_quad_zmpx] + [weight_quad_zmpy])
     weight_quad_zmp1 = np.array([3.0, 3.0])#np.array([3.0, 3.0]) ##5, 10
-    weight_quad_zmp2 = np.array([3.0, 15.0])#np.array([3.0, 10.0]) ##11
+    weight_quad_zmp2 = np.array([9.0, 15.0])#np.array([3.0, 10.0]) ##11
     weight_quad_cam = np.array([0.03, 0.03])#([0.008, 0.008])([weight_quad_camy] + [weight_quad_camx])
     weight_quad_upper = np.array([25.0, 25.0])
     weight_quad_pelvis = np.array([130.0, 130.0, 0.005])
@@ -1528,7 +1532,7 @@ def talker():
     weight_quad_lf = np.array([13.0, 3.0, 5.0, 0.2, 0.2, 0.2])#np.array([weight_quad_lfx] + [weight_quad_lfy] + [weight_quad_lfz] + [weight_quad_lfroll] + [weight_quad_lfpitch] + [weight_quad_lfyaw])
     lb_ = np.ones([2, N])
     ub_ = np.ones([2, N])
-    weight_quad_cp = np.array([50.0, 50.0])
+    weight_quad_cp = np.array([80.0, 80.0])
     
     actuation_vector = [None] * (N)
     state_vector = [None] * (N)
@@ -1645,10 +1649,10 @@ def talker():
     ZMP_x_ref = []
     ZMP_y_ref = []
     
-    zmp_offset = [0.0, -0.02]
+    zmp_offset = [0.01, -0.00]
 
     for t in np.arange(0, len(array_boundx)):
-        ZMP_x_ref.append((array_boundx[t + time_step][0] + array_boundx[t + time_step][1])/2)
+        ZMP_x_ref.append((array_boundx[t + time_step][0] + array_boundx[t + time_step][1])/2 + zmp_offset[0])
         if((array_boundy[t + time_step][0] + array_boundy[t + time_step][1])/2 > 0):
             ZMP_y_ref.append((array_boundy[t + time_step][0] + array_boundy[t + time_step][1])/2 - zmp_offset[1])
         else:
@@ -1722,7 +1726,7 @@ def talker():
     ZMP_y_ref = []
 
     for t in np.arange(0, len(array_boundx)):
-        ZMP_x_ref.append((array_boundxssp2[t + time_step][0] + array_boundxssp2[t + time_step][1])/2)
+        ZMP_x_ref.append((array_boundxssp2[t + time_step][0] + array_boundxssp2[t + time_step][1])/2 + zmp_offset[0]) 
         #ZMP_y_ref.append((array_boundyssp2[t + time_step][0] + array_boundyssp2[t + time_step][1])/2)
 
         if((array_boundyssp2[t + time_step][0] + array_boundyssp2[t + time_step][1])/2 > 0):
@@ -1747,8 +1751,8 @@ def talker():
         capturePoint_ref_ssp2[k][0] = COM_x_1[0,k] + COM_x_1[1,k]/np.sqrt(g/z_c)
         capturePoint_ref_ssp2[k][state.nx + 7] = COM_y_1[0,k] + COM_y_1[1,k]/np.sqrt(g/z_c)
 
-        capturePoint_ref_ssp2[k-3][1] = ZMP_x
-        capturePoint_ref_ssp2[k-3][2] = ZMP_y
+        capturePoint_ref_ssp2[k][1] = ZMP_x
+        capturePoint_ref_ssp2[k][2] = ZMP_y
 
         if k == 50:
             COM_x_2  = COM_x_1 
@@ -1768,7 +1772,7 @@ def talker():
     ZMP_y_ref = []
 
     for t in np.arange(0, len(array_boundx)):
-        ZMP_x_ref.append((array_boundxssp1[t + time_step][0] + array_boundxssp1[t + time_step][1])/2)
+        ZMP_x_ref.append((array_boundxssp1[t + time_step][0] + array_boundxssp1[t + time_step][1])/2 + zmp_offset[0]) 
         #ZMP_y_ref.append((array_boundyssp1[t + time_step][0] + array_boundyssp1[t + time_step][1])/2)
         if((array_boundyssp1[t + time_step][0] + array_boundyssp1[t + time_step][1])/2 > 0):
             ZMP_y_ref.append((array_boundyssp1[t + time_step][0] + array_boundyssp1[t + time_step][1])/2 - zmp_offset[1])
@@ -1792,8 +1796,8 @@ def talker():
         capturePoint_ref_ssp1[k][0] = COM_x_1[0,k] + COM_x_1[1,k]/np.sqrt(g/z_c)
         capturePoint_ref_ssp1[k][state.nx + 7] = COM_y_1[0,k] + COM_y_1[1,k]/np.sqrt(g/z_c)
 
-        capturePoint_ref_ssp1[k-3][1] = ZMP_x
-        capturePoint_ref_ssp1[k-3][2] = ZMP_y
+        capturePoint_ref_ssp1[k][1] = ZMP_x
+        capturePoint_ref_ssp1[k][2] = ZMP_y
 
         if k == 50:
             COM_x_2  = COM_x_1 
@@ -1813,8 +1817,11 @@ def talker():
     ZMP_y_ref = []
 
     for t in np.arange(0, len(array_boundx)):
-        ZMP_x_ref.append((array_boundxssp2[t + time_step][0] + array_boundxssp2[t + time_step][1])/2)
-        ZMP_y_ref.append((array_boundyssp2[t + time_step][0] + array_boundyssp2[t + time_step][1])/2)
+        ZMP_x_ref.append((array_boundxssp2[t + time_step][0] + array_boundxssp2[t + time_step][1])/2 + zmp_offset[0])
+        if((array_boundyssp2[t + time_step][0] + array_boundyssp2[t + time_step][1])/2 > 0):
+            ZMP_y_ref.append((array_boundyssp2[t + time_step][0] + array_boundyssp2[t + time_step][1])/2 - zmp_offset[1])
+        else:
+            ZMP_y_ref.append((array_boundyssp2[t + time_step][0] + array_boundyssp2[t + time_step][1])/2 + zmp_offset[1])
 
     for k in range(N_simulation):
         ZMP_x_preview = np.asmatrix(ZMP_x_ref[k:k+N_preview]).T
@@ -1831,6 +1838,9 @@ def talker():
 
         capturePoint_ref_ssp2_1[k][0] = COM_x_1[0,k] + COM_x_1[1,k]/np.sqrt(g/z_c)
         capturePoint_ref_ssp2_1[k][state.nx + 7] = COM_y_1[0,k] + COM_y_1[1,k]/np.sqrt(g/z_c)
+
+        capturePoint_ref_ssp2_1[k][1] = ZMP_x
+        capturePoint_ref_ssp2_1[k][2] = ZMP_y
 
         if k == 50:
             COM_x_2  = COM_x_1 
@@ -1924,7 +1934,7 @@ def talker():
 
     ddp = crocoddyl.SolverFDDP(problemWithRK4)
     first_time = True
-    ddp.th_stop = 0.00000005
+    ddp.th_stop = 0.00000005#0.00000005
     #ddp.th_stop = 0.00000001
    
     for time_step in range(0, total_time):
@@ -2015,8 +2025,8 @@ def talker():
             contactswitch, time_step_num = divmod(time_step - 149, 50)
             if(contactswitch % 2 == 0):
                 for i in range(1, N-1):
-                    traj_[43] = capturePoint_ref_ssp2[i+time_step_num][1]#(array_boundxssp2[i + time_step_num][0] + array_boundxssp2[i + time_step_num][1])/2 #zmp_refx_[i][0]
-                    traj_[47] = capturePoint_ref_ssp2[i+time_step_num][2]#(array_boundyssp2[i + time_step_num][0] + array_boundyssp2[i + time_step_num][1])/2#zmp_refy_[i][0]
+                    traj_[43] = capturePoint_ref_ssp2_1[i+time_step_num][1]#(array_boundxssp2[i + time_step_num][0] + array_boundxssp2[i + time_step_num][1])/2 #zmp_refx_[i][0]#capturePoint_ref_ssp2_1[i+time_step_num][1]#
+                    traj_[47] = capturePoint_ref_ssp2_1[i+time_step_num][2]#(array_boundyssp2[i + time_step_num][0] + array_boundyssp2[i + time_step_num][1])/2#zmp_refy_[i][0]#capturePoint_ref_ssp2_1[i+time_step_num][2]#
                   
                     runningCostModel_vector[i].costs["stateReg1"].cost.residual.reference = traj_
                 
@@ -2158,7 +2168,7 @@ def talker():
                 thread_manager[:] = [1, 1, 1]    
                 problemWithRK4.x0 = x0
                 
-                #
+                
                 while True:
                     if (thread_manager[0] == 0 and thread_manager[1] == 0 and thread_manager[2] == 0):
                         for i in range(0, N):
@@ -2169,7 +2179,7 @@ def talker():
                 #print(xs_pca)
                 xs_pca[0] = x0
                 c_start = time.time()
-                css = ddp.solve(xs_pca, us_pca, 15, False, 0.000001)
+                css = ddp.solve(xs_pca, us_pca, 15, False, 0.0000003)
                 #css = ddp.solve(xs_pca, us_pca, 10, False, 0.0000003)
                 c_end = time.time()
                
@@ -2178,14 +2188,14 @@ def talker():
                     desired_value.write(X)
                     
                 
-                statemachine.write(np.array([1, 0, 0], dtype=np.int8))
-                cp_err.append([time_step,runningCostModel_vector[1].costs["stateReg3"].cost.residual.reference[0], (ddp.xs[1][41]+ddp.xs[1][42]/3.51462),(x0[41]+x0[42]/3.51462), runningCostModel_vector[1].costs["stateReg3"].cost.residual.reference[48], (ddp.xs[1][45]+ddp.xs[1][46]/3.51462),(x0[45]+ x0[46]/3.51462), x0[41], x0[45], ddp.xs[1][41], ddp.xs[1][45],ddp.xs[1][42], ddp.xs[1][46], ddp.xs[1][43], ddp.xs[1][47],x0[43], x0[47]])
+                statemachine.write(np.array([1, 0, 0], dtype=np.int8)) #, 
+                cp_err.append([time_step,runningCostModel_vector[1].costs["stateReg3"].cost.residual.reference[0], runningCostModel_vector[1].costs["stateReg1"].cost.residual.reference[43], runningCostModel_vector[1].costs["footReg1"].cost.residual.reference.translation[0], runningCostModel_vector[1].costs["footReg2"].cost.residual.reference.translation[0], (ddp.xs[1][41]+ddp.xs[1][42]/3.51462),(x0[41]+x0[42]/3.51462), runningCostModel_vector[1].costs["stateReg3"].cost.residual.reference[48], (ddp.xs[1][45]+ddp.xs[1][46]/3.51462),(x0[45]+ x0[46]/3.51462), x0[41], x0[45], ddp.xs[1][41], ddp.xs[1][45],ddp.xs[1][42], ddp.xs[1][46], ddp.xs[1][43], ddp.xs[1][47],x0[43], x0[47]])
                 duration = (1e3 * (c_end - c_start))
 
                 #if(time_step > 208):
                 print('ddp.iter {0},{1},{2},{3},{4}'.format(time_step, ddp.iter, duration, css, ddp.cost))
                     #print([runningCostModel_vector[1].costs["stateReg3"].cost.residual.reference, ddp.xs[1][41]+ddp.xs[1][42]/3.51462, ddp.xs[1][45]+ddp.xs[1][46]/3.51462])
-                total_time_.append([time_step, ddp.cost, duration, ddp.iter])
+                total_time_.append([time_step, ddp.cost, duration, ddp.iter, divmod(time_step - 149, 50)[0]/10])
                 #print(ddp.xs[1])
                 ok_ = True
                 
