@@ -1207,6 +1207,9 @@ public:
     Eigen::VectorQd Tau_CP;
 
     Eigen::Vector2d q_upper;
+    Eigen::Vector2d q_upper_init;
+    Eigen::Vector2d q_upper_d;
+    Eigen::Vector2d q_upper_d_prev;
 
     Eigen::Vector12d pre_motor_q_leg_;
     Eigen::Vector12d current_motor_q_leg_;
@@ -1501,6 +1504,7 @@ public:
     double zmp_start_time_mj_;
     double UX_mj_, UY_mj_; 
     Eigen::Vector3d com_desired_;
+    Eigen::Vector3d com_desired_init;
     Eigen::Vector3d com_dot_desired_;
     Eigen::MatrixXd foot_step_;
     Eigen::MatrixXd foot_step_support_frame_;
