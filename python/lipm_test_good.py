@@ -1400,7 +1400,7 @@ def talker():
     T = 1
     MAXITER = 300
     dt_ = 1.2 / float(N)
-    total_time = 350
+    total_time = 255
 
     crocs_data = dict()
     crocs_data['left'] = dict()
@@ -1523,7 +1523,7 @@ def talker():
     weight_quad_camy = 2.9
     weight_quad_zmp = np.array([0.01, 0.01])#([weight_quad_zmpx] + [weight_quad_zmpy])
     weight_quad_zmp1 = np.array([3.0, 3.0])#np.array([3.0, 3.0]) ##5, 10
-    weight_quad_zmp2 = np.array([9.0, 15.0])#np.array([3.0, 10.0]) ##11
+    weight_quad_zmp2 = np.array([10.0, 15.0])#np.array([3.0, 10.0]) ##11
     weight_quad_cam = np.array([0.03, 0.03])#([0.008, 0.008])([weight_quad_camy] + [weight_quad_camx])
     weight_quad_upper = np.array([25.0, 25.0])
     weight_quad_pelvis = np.array([130.0, 130.0, 0.005])
@@ -1649,7 +1649,7 @@ def talker():
     ZMP_x_ref = []
     ZMP_y_ref = []
     
-    zmp_offset = [0.01, -0.00]
+    zmp_offset = [-0.05, -0.00]
 
     for t in np.arange(0, len(array_boundx)):
         ZMP_x_ref.append((array_boundx[t + time_step][0] + array_boundx[t + time_step][1])/2 + zmp_offset[0])
@@ -1934,7 +1934,7 @@ def talker():
 
     ddp = crocoddyl.SolverFDDP(problemWithRK4)
     first_time = True
-    ddp.th_stop = 0.00000005#0.00000005
+    ddp.th_stop = 0.00000001#0.00000005
     #ddp.th_stop = 0.00000001
    
     for time_step in range(0, total_time):
@@ -2201,6 +2201,10 @@ def talker():
                 
                 #print(["time_step", time_step])
                 #print(x0)
+
+                #print(x0[0:21])
+                #print(ddp.xs[1][0:21])
+                #print(ddp.xs[1][21:41])
                 '''
                 print("ZMP")
                 print(x0[43], x0[47])

@@ -623,7 +623,9 @@ public:
     Eigen::Vector6d r_ft_LPF;
 
     double F_F_input_dot = 0;
+    double F_F_input_dot_d = 0;
     double F_F_input = 0;
+    double F_F_input_prev =0;
 
     double F_T_L_x_input = 0;
     double F_T_L_x_input_dot = 0;
@@ -1443,6 +1445,7 @@ public:
     Eigen::Vector6d r_ft_mj_;
     Eigen::Vector6d l_ft_mj_;
     Eigen::Vector2d zmp_measured_mj_;
+    Eigen::Vector2d zmp_measured_jk_;
     Eigen::Vector2d zmp_err_;
     Eigen::Vector2d zmp_measured_LPF_;
 
@@ -1595,6 +1598,10 @@ public:
     void updateNextStepTimeJoy();
     void comGainTrajectory();
 
+
+    double Tau_all_y = 0, Tau_R_y = 0, Tau_L_y = 0;
+    double Tau_all_x = 0, Tau_R_x = 0, Tau_L_x = 0;
+
     double alpha_temp1 = 0;
     double alpha;
     int joy_index_ = 0;
@@ -1602,7 +1609,7 @@ public:
     Eigen::MatrixXd foot_step_joy_temp_;
     bool joy_enable_ = false;
     bool joy_input_enable_ = false;
-    int a_temp = 0;
+    double a_temp = 0;
 
     Eigen::VectorQd q_mj;
     Eigen::VectorQd q_mj_prev;
