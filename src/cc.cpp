@@ -1170,7 +1170,7 @@ void CustomController::computeSlow()
             time_tick = true;      
         }      
 
-        while(std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::system_clock::now() - startTime).count() < 500)
+        while(std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::system_clock::now() - startTime).count() < 400)
         {
             torque_upper_.setZero();
             torque_lower_.setZero();
@@ -1539,12 +1539,12 @@ void CustomController::computeSlow()
                             
                             Eigen::Vector3d rpy_foot;
                             rpy_foot = DyrosMath::rot2Euler(rfoot_trajectory_float_.linear());
-                            rfoot_ori1(0) = rfoot_ori(0) + 0.000 * (rpy_foot(0) - rfoot_rpy_current_(0));
-                            rfoot_ori1(1) = rfoot_ori(1) + 0.000 * (rpy_foot(1) - rfoot_rpy_current_(1));
+                            rfoot_ori1(0) = rfoot_ori(0) + 0.01 * (rpy_foot(0) - rfoot_rpy_current_(0));
+                            rfoot_ori1(1) = rfoot_ori(1) + 0.03 * (rpy_foot(1) - rfoot_rpy_current_(1));
                             
                             rpy_foot = DyrosMath::rot2Euler(lfoot_trajectory_float_.linear());
-                            lfoot_ori1(0) = lfoot_ori(0) + 0.000 * (rpy_foot(0) - lfoot_rpy_current_(0));
-                            lfoot_ori1(1) = lfoot_ori(1) + 0.000 * (rpy_foot(1) - lfoot_rpy_current_(1));
+                            lfoot_ori1(0) = lfoot_ori(0) + 0.01 * (rpy_foot(0) - lfoot_rpy_current_(0));
+                            lfoot_ori1(1) = lfoot_ori(1) + 0.03 * (rpy_foot(1) - lfoot_rpy_current_(1));
 
                             momentumControl(rd_, com_d, ang_d_temp, rfoot_d, lfoot_d, upperd, rfoot_ori1, lfoot_ori1);
                             
@@ -1574,17 +1574,17 @@ void CustomController::computeSlow()
                             
                             if(rfoot_trajectory_support_.translation()(2) > 0 && contactMode != 1)
                             {
-                                rfoot_d2(2) = rfoot_d(2) + 0.006 * (rfoot_trajectory_support_.translation()(2) - rfoot_support_current_.translation()(2));// + F_F_input * 0.005/20;     
-                                rfoot_d2(0) = rfoot_d(0) + 0.003 * (rfoot_trajectory_support_.translation()(0) - rfoot_support_current_.translation()(0));
-                                rfoot_d2(1) = rfoot_d(1) + 0.01 * (rfoot_trajectory_support_.translation()(1) - rfoot_support_current_.translation()(1));
+                                rfoot_d2(2) = rfoot_d(2) + 0.001 * (rfoot_trajectory_support_.translation()(2) - rfoot_support_current_.translation()(2));// + F_F_input * 0.005/20;     
+                                rfoot_d2(0) = rfoot_d(0) + 0.001 * (rfoot_trajectory_support_.translation()(0) - rfoot_support_current_.translation()(0));
+                                rfoot_d2(1) = rfoot_d(1) + 0.001 * (rfoot_trajectory_support_.translation()(1) - rfoot_support_current_.translation()(1));
                                 
                                 lfoot_d2(2) = lfoot_d(2) + 0.000 * (lfoot_trajectory_support_.translation()(2) - lfoot_support_current_.translation()(2));// - F_F_input * 0.005/20;
                             }
                             else if(lfoot_trajectory_support_.translation()(2) > 0 && contactMode != 1)
                             {
-                                lfoot_d2(2) = lfoot_d(2) + 0.006 * (lfoot_trajectory_support_.translation()(2) - lfoot_support_current_.translation()(2));// - F_F_input * 0.005/20;
-                                lfoot_d2(1) = lfoot_d(1) + 0.003 * (lfoot_trajectory_support_.translation()(1) - lfoot_support_current_.translation()(1));
-                                lfoot_d2(0) = lfoot_d(0) + 0.01 * (lfoot_trajectory_support_.translation()(0) - lfoot_support_current_.translation()(0));
+                                lfoot_d2(2) = lfoot_d(2) + 0.001 * (lfoot_trajectory_support_.translation()(2) - lfoot_support_current_.translation()(2));// - F_F_input * 0.005/20;
+                                lfoot_d2(1) = lfoot_d(1) + 0.001 * (lfoot_trajectory_support_.translation()(1) - lfoot_support_current_.translation()(1));
+                                lfoot_d2(0) = lfoot_d(0) + 0.001 * (lfoot_trajectory_support_.translation()(0) - lfoot_support_current_.translation()(0));
                                 
                                 rfoot_d2(2) = rfoot_d(2) + 0.00 * (rfoot_trajectory_support_.translation()(2) - rfoot_support_current_.translation()(2));// + F_F_input * 0.005/20;     
                             }
@@ -1598,16 +1598,16 @@ void CustomController::computeSlow()
                             com_d2(1) = com_d(1) + 0.00 * (com_desired_(1) - com_support_current_(1));
                             com_d2(2) = 0.0 + 0.003 * (com_desired_init(2) - com_support_current_(2));
                             
-                            //ang_d_temp(0) = ang_d_temp(0) + 10 * (ang_d_temp(0) - model_data_cen.hg.angular()(0)/2000);
-                            //ang_d_temp(1) = ang_d_temp(1) + 10 * (ang_d_temp(1) - model_data_cen.hg.angular()(1)/2000);
+                            //ang_d_temp(0) = ang_d_temp(0) + 0.01 * (ang_d_temp(0) - model_data_cen.hg.angular()(0)/2000);
+                            //ang_d_temp(1) = ang_d_temp(1) + 0.01 * (ang_d_temp(1) - model_data_cen.hg.angular()(1)/2000);
 
                             rpy_foot = DyrosMath::rot2Euler(rfoot_trajectory_float_.linear());
-                            rfoot_ori1(0) = rfoot_ori(0) + 0.002 * (rpy_foot(0) - rfoot_rpy_current_(0));
-                            rfoot_ori1(1) = rfoot_ori(1) + 0.002 * (rpy_foot(1) - rfoot_rpy_current_(1));
+                            rfoot_ori1(0) = rfoot_ori(0) + 0.001 * (rpy_foot(0) - rfoot_rpy_current_(0));
+                            rfoot_ori1(1) = rfoot_ori(1) + 0.001 * (rpy_foot(1) - rfoot_rpy_current_(1));
                             
                             rpy_foot = DyrosMath::rot2Euler(lfoot_trajectory_float_.linear());
-                            lfoot_ori1(0) = lfoot_ori(0) + 0.002 * (rpy_foot(0) - lfoot_rpy_current_(0));
-                            lfoot_ori1(1) = lfoot_ori(1) + 0.002 * (rpy_foot(1) - lfoot_rpy_current_(1));
+                            lfoot_ori1(0) = lfoot_ori(0) + 0.001 * (rpy_foot(0) - lfoot_rpy_current_(0));
+                            lfoot_ori1(1) = lfoot_ori(1) + 0.001 * (rpy_foot(1) - lfoot_rpy_current_(1));
 
                             momentumControl(rd_, com_d2, ang_d_temp, rfoot_d2, lfoot_d2, upperd, rfoot_ori1, lfoot_ori1);
                             
@@ -1779,10 +1779,11 @@ void CustomController::computeSlow()
             
                     file[1] << "100 ";
                     file[1] << Tau_L_y << " " << l_ft_LPF(4) << " "<< Tau_R_y << " " << r_ft_LPF(4) << " ";
-                    /*for(int i = 0; i < 6; i++)
+                    file[1] << "101 ";
+                    for(int i = 0; i < 6; i++)
                     {
                         file[1] << q_des_(i) << " ";
-                    }*/
+                    }
                     file[1] << buffer[0] << " " << com_desired_init(2) << " " << com_support_current_(2) << " " << pelv_support_current_.translation()(2)<< std::endl;
                     /*file[1] << "213 " << qp_solved << " " << model_data_cen.hg.angular()(0) << " " << model_data_cen.hg.angular()(1)<< " "<< ang_d(0) << " " << ang_d(1);
                     file[1] << " 55 "  << ZMP_Y_REF << " " << zmp_measured_mj_(1) << " " <<ZMPy_test << " "<<state_init_[47]<< " " << desired_val_slow[47] << " " ;//<< std::endl;//<<cp_desired_(1) << " " << cp_desired_(0) << std::endl;
