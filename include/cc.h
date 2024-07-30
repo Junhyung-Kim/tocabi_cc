@@ -942,24 +942,7 @@ public:
     int hmd_chest_abrupt_motion_count_;
     int hmd_pelv_abrupt_motion_count_;
 
-    ///////////QPIK///////////////////////////
-    Eigen::Vector3d lhand_pos_error_;
-    Eigen::Vector3d rhand_pos_error_;
-    Eigen::Vector3d lhand_ori_error_;
-    Eigen::Vector3d rhand_ori_error_;
-
-    Eigen::Vector3d lelbow_ori_error_;
-    Eigen::Vector3d relbow_ori_error_;
-    Eigen::Vector3d lshoulder_ori_error_;
-    Eigen::Vector3d rshoulder_ori_error_;
-
-    Eigen::Vector6d lhand_vel_error_;
-    Eigen::Vector6d rhand_vel_error_;
-    Eigen::Vector3d lelbow_vel_error_;
-    Eigen::Vector3d relbow_vel_error_;
-    Eigen::Vector3d lacromion_vel_error_;
-    Eigen::Vector3d racromion_vel_error_;
-    //////////////////////////////////////////
+    Eigen::Vector3d rf_fl, lf_fl;
 
     /////////////QPIK UPPERBODY /////////////////
     const int hierarchy_num_upperbody_ = 4;
@@ -1448,6 +1431,10 @@ public:
     Eigen::Vector2d zmp_measured_jk_;
     Eigen::Vector2d zmp_err_;
     Eigen::Vector2d zmp_measured_LPF_;
+
+
+    sockaddr_in serveraddr;
+    sockaddr_in serveraddr1;
 
     double P_angle_i = 0;
     double P_angle = 0;

@@ -1400,7 +1400,7 @@ def talker():
     T = 1
     MAXITER = 300
     dt_ = 1.2 / float(N)
-    total_time = 255
+    total_time = 254
 
     crocs_data = dict()
     crocs_data['left'] = dict()
@@ -1649,7 +1649,7 @@ def talker():
     ZMP_x_ref = []
     ZMP_y_ref = []
     
-    zmp_offset = [-0.05, -0.00]
+    zmp_offset = [-0.00, -0.00]
 
     for t in np.arange(0, len(array_boundx)):
         ZMP_x_ref.append((array_boundx[t + time_step][0] + array_boundx[t + time_step][1])/2 + zmp_offset[0])
@@ -1663,8 +1663,11 @@ def talker():
             [0, 0, 1]))
     B = np.mat((dt**3/6, dt**2/2, dt)).T
     C = np.mat((1, 0, -z_c/g))
+    #Q = 1
+    #R = 1e-6
+
     Q = 1
-    R = 1e-6
+    R = 1e-4
 
     # Calculate Preview control parameters
     K, f = calculatePreviewControlParams(A, B, C, Q, R, N_preview)
@@ -1713,14 +1716,20 @@ def talker():
             
         if k <= 50:  
             COM_x_record_1.append([capturePoint_ref_for[k][0],capturePoint_ref_for[k][state.nx + 7], COM_x_1[0,k], COM_y_1[0,k],COM_x_1[1,k], COM_y_1[1,k], COM_x_1[2,k], COM_y_1[2,k],ZMP_x[0,0], ZMP_y[0,0]])
-
-    
+        
     COM_x_1 = np.asmatrix(np.zeros((3, N_simulation+1)))
     COM_y_1 = np.asmatrix(np.zeros((3, N_simulation+1)))
 
-    COM_x_1[:,0] = COM_x_2[:,50]
-    COM_y_1[:,0] = COM_y_2[:,50]
-    COM_x_1[0,0] = COM_x_1[0,0] - 0.04957
+    #COM_x_1[:,0] = COM_x_2[:,50]
+    #COM_y_1[:,0] = COM_y_2[:,50]
+
+    for k in range(0, N_simulation+1):
+        COM_x_1[:, k] = COM_x_2[:,50] - 0.04957
+        COM_y_1[:, k] = COM_y_2[:,50]
+    #COM_x_1[0,0] = COM_x_1[0,0] - 0.04957
+
+    print(np.shape(COM_x_1))
+    print(np.shape(COM_x_2))
     
     ZMP_x_ref = []
     ZMP_y_ref = []
@@ -1759,21 +1768,24 @@ def talker():
             COM_y_2  = COM_y_1
         if k <= 50:  
             COM_x_record_1.append([capturePoint_ref_ssp2[k][0] + 0.04957, COM_y_1[0,k],COM_x_1[1,k], COM_y_1[1,k], COM_x_1[2,k], COM_y_1[2,k],ZMP_x[0,0] + 0.04957, ZMP_y[0,0]])
-    
+       
     COM_x_1 = np.asmatrix(np.zeros((3, N_simulation+1)))
     COM_y_1 = np.asmatrix(np.zeros((3, N_simulation+1)))
 
-    COM_x_1[:,0] = COM_x_2[:,50]
-    COM_y_1[:,0] = COM_y_2[:,50]
+    #COM_x_1[:,0] = COM_x_2[:,50]
+    #COM_y_1[:,0] = COM_y_2[:,50]
 
-    COM_x_1[0,0] = COM_x_1[0,0] - 0.1
+    #COM_x_1[0,0] = COM_x_1[0,0] - 0.1
+
+    for k in range(0, N_simulation+1):
+        COM_x_1[:, k] = COM_x_2[:,50] - 0.1
+        COM_y_1[:, k] = COM_y_2[:,50]
 
     ZMP_x_ref = []
     ZMP_y_ref = []
 
     for t in np.arange(0, len(array_boundx)):
         ZMP_x_ref.append((array_boundxssp1[t + time_step][0] + array_boundxssp1[t + time_step][1])/2 + zmp_offset[0]) 
-        #ZMP_y_ref.append((array_boundyssp1[t + time_step][0] + array_boundyssp1[t + time_step][1])/2)
         if((array_boundyssp1[t + time_step][0] + array_boundyssp1[t + time_step][1])/2 > 0):
             ZMP_y_ref.append((array_boundyssp1[t + time_step][0] + array_boundyssp1[t + time_step][1])/2 - zmp_offset[1])
         else:
@@ -1808,10 +1820,14 @@ def talker():
     COM_x_1 = np.asmatrix(np.zeros((3, N_simulation+1)))
     COM_y_1 = np.asmatrix(np.zeros((3, N_simulation+1)))
 
-    COM_x_1[:,0] = COM_x_2[:,50]
-    COM_y_1[:,0] = COM_y_2[:,50]
+    #COM_x_1[:,0] = COM_x_2[:,50]
+    #COM_y_1[:,0] = COM_y_2[:,50]
 
-    COM_x_1[0,0] = COM_x_1[0,0] - 0.1
+    #COM_x_1[0,0] = COM_x_1[0,0] - 0.1
+
+    for k in range(0, N_simulation+1):
+        COM_x_1[:, k] = COM_x_2[:,50] - 0.1
+        COM_y_1[:, k] = COM_y_2[:,50]
 
     ZMP_x_ref = []
     ZMP_y_ref = []
@@ -1847,7 +1863,7 @@ def talker():
             COM_y_2  = COM_y_1
         if k <= 50:  
             COM_x_record_1.append([capturePoint_ref_ssp2_1[k][0] + 0.2 + 0.04957, COM_y_1[0,k],COM_x_1[1,k], COM_y_1[1,k], COM_x_1[2,k], COM_y_1[2,k],ZMP_x[0,0] + 0.2 + 0.04957, ZMP_y[0,0]])
-
+        
     for i in range(0,N-1):
         traj_[43] = (array_boundx[i][0] + array_boundx[i][1])/2 #zmp_refx_[i][0]
         traj_[47] = (array_boundy[i][0] + array_boundy[i][1])/2#zmp_refy_[i][0]
@@ -2189,7 +2205,7 @@ def talker():
                     
                 
                 statemachine.write(np.array([1, 0, 0], dtype=np.int8)) #, 
-                cp_err.append([time_step,runningCostModel_vector[1].costs["stateReg3"].cost.residual.reference[0], runningCostModel_vector[1].costs["stateReg1"].cost.residual.reference[43], runningCostModel_vector[1].costs["footReg1"].cost.residual.reference.translation[0], runningCostModel_vector[1].costs["footReg2"].cost.residual.reference.translation[0], (ddp.xs[1][41]+ddp.xs[1][42]/3.51462),(x0[41]+x0[42]/3.51462), runningCostModel_vector[1].costs["stateReg3"].cost.residual.reference[48], (ddp.xs[1][45]+ddp.xs[1][46]/3.51462),(x0[45]+ x0[46]/3.51462), x0[41], x0[45], ddp.xs[1][41], ddp.xs[1][45],ddp.xs[1][42], ddp.xs[1][46], ddp.xs[1][43], ddp.xs[1][47],x0[43], x0[47]])
+                cp_err.append([time_step,runningCostModel_vector[1].costs["stateReg3"].cost.residual.reference[0], (ddp.xs[1][41]+ddp.xs[1][42]/3.51462), (x0[41]+x0[42]/3.51462), x0[41], x0[43], ddp.xs[1][43], runningCostModel_vector[1].costs["stateReg1"].cost.residual.reference[43], rf_foot_pos_vector[1].translation[0], lf_foot_pos_vector[1].translation[0]])
                 duration = (1e3 * (c_end - c_start))
 
                 #if(time_step > 208):
