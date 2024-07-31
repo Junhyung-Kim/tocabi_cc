@@ -858,7 +858,7 @@ void CustomController::computeSlow()
             time_tick = true;      
         }      
 
-        while(std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::system_clock::now() - startTime).count() < 450)
+        while(std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::system_clock::now() - startTime).count() < 400)
         {
             torque_upper_.setZero();
             torque_lower_.setZero();
@@ -2833,10 +2833,10 @@ void CustomController::getRobotData()
     rfoot_sx = rfootc_transform_current_from_support_.translation()(0);
     rfoot_sy  = rfootc_transform_current_from_support_.translation()(1);
 
-    lfoot_sx_float = lfoot_transform_current_from_global_.translation()(0);
-    lfoot_sy_float  = lfoot_transform_current_from_global_.translation()(1);
-    rfoot_sx_float = rfoot_transform_current_from_global_.translation()(0);
-    rfoot_sy_float  = rfoot_transform_current_from_global_.translation()(1);
+    lfoot_sx_float = lfootc_transform_current_from_global_.translation()(0);
+    lfoot_sy_float  = lfootc_transform_current_from_global_.translation()(1);
+    rfoot_sx_float = rfootc_transform_current_from_global_.translation()(0);
+    rfoot_sy_float  = rfootc_transform_current_from_global_.translation()(1);
 
     RFj = rot_sup * rot_float * RFj;
     LFj = rot_sup * rot_float * LFj;
@@ -4342,7 +4342,7 @@ void CustomController::getRobotState()
     J_RFF = PELV_YaW6D * (rd_.link_[Right_Foot].jac.cast<double>());
     comj = PELV_YaW6D * (rd_.link_[COM_id].jac.cast<double>());
 
-    if(contactMode == 1)
+    /*if(contactMode == 1)
     {
         zero_center(0) = (lfoot_float_current_.translation()(0) + rfoot_float_current_.translation()(0))/2;
         zero_center(1) = (lfoot_float_current_.translation()(1) + rfoot_float_current_.translation()(1))/2;
@@ -4359,7 +4359,7 @@ void CustomController::getRobotState()
         zero_center(0) = (rfoot_float_current_.translation()(0)) - 0.08;//Reivse
         zero_center(1) = (rfoot_float_current_.translation()(1) - (-0.1025));
         zero_center(2) = (rfoot_float_current_.translation()(2));  
-    }
+    }*/
 
     com_float_current_ = DyrosMath::multiplyIsometry3dVector3d(DyrosMath::inverseIsometry3d(pelv_yaw_rot_current_from_global_mj_), rd_.link_[COM_id].xpos); // 지면에서 CoM 위치
     com_float_current_dot = DyrosMath::multiplyIsometry3dVector3d(DyrosMath::inverseIsometry3d(pelv_yaw_rot_current_from_global_mj_), rd_.link_[COM_id].v);
@@ -5620,6 +5620,7 @@ void CustomController::getFootTrajectory()
 
                 lfoot_trajectory_support_.linear() = DyrosMath::rotateWithZ(lfoot_trajectory_euler_support_(2)) * DyrosMath::rotateWithY(F_T_L_y_input) * DyrosMath::rotateWithX(-F_T_L_x_input);
                 lfootd1.setZero();
+                
                 if (walking_tick_mj < t_start_ + t_rest_init_1 + t_double1_ + (t_total_ - t_rest_init_1 - t_rest_last_1 - t_double1_ - t_double2_) / 2.0)
                 {
                     contactMode = 2;
@@ -5714,7 +5715,7 @@ void CustomController::getFootTrajectory()
         {
             lfootd1.setZero();
             rfootd1.setZero();
-           
+            
             double t_rest_temp = 0.00 * hz_;
             contactMode = 1;
             if (foot_step_(current_step_num_, 6) == 1) // 왼발 지지
@@ -5756,10 +5757,10 @@ void CustomController::getFootTrajectory()
             {
                 lfoot_trajectory_support_.translation() = lfoot_support_init_.translation();
                 lfoot_trajectory_euler_support_.setZero();
-
+                
                 lfoot_trajectory_support_.linear() = DyrosMath::rotateWithZ(lfoot_trajectory_euler_support_(2)) * DyrosMath::rotateWithY(F_T_L_y_input) * DyrosMath::rotateWithX(-F_T_L_x_input);
                 lfootd1.setZero();
-           
+            
                 if (walking_tick_mj < t_start_ + t_rest_init_2 + t_double1_ + (t_total_ - t_rest_init_2 - t_rest_last_2 - t_double1_ - t_double2_) / 2.0)
                 {
                     contactMode = 2;
@@ -5788,7 +5789,7 @@ void CustomController::getFootTrajectory()
             {
                 rfoot_trajectory_support_.translation() = rfoot_support_init_.translation();
                 rfoot_trajectory_euler_support_.setZero();
-
+                
                 rfoot_trajectory_support_.linear() = DyrosMath::rotateWithZ(rfoot_trajectory_euler_support_(2)) * DyrosMath::rotateWithY(F_T_R_y_input) * DyrosMath::rotateWithX(-F_T_R_x_input);
                 rfootd1.setZero();
 
@@ -5822,9 +5823,10 @@ void CustomController::getFootTrajectory()
             contactMode = 1;
             lfootd1.setZero();
             rfootd1.setZero();
-           
+            
             if (foot_step_(current_step_num_, 6) == 1)
             {
+                
                 lfoot_trajectory_euler_support_.setZero();
                 lfoot_trajectory_support_.linear() = DyrosMath::rotateWithZ(lfoot_trajectory_euler_support_(2)) * DyrosMath::rotateWithY(F_T_L_y_input) * DyrosMath::rotateWithX(-F_T_L_x_input);
 
@@ -5838,6 +5840,7 @@ void CustomController::getFootTrajectory()
             }
             else if (foot_step_(current_step_num_, 6) == 0)
             {
+                
                 rfoot_trajectory_euler_support_.setZero();
                 rfoot_trajectory_support_.linear() = DyrosMath::rotateWithZ(rfoot_trajectory_euler_support_(2)) * DyrosMath::rotateWithY(F_T_R_y_input) * DyrosMath::rotateWithX(-F_T_R_x_input);
 
@@ -5859,10 +5862,9 @@ void CustomController::getFootTrajectory()
             //com_alpha = 0.5;
             lfootd1.setZero();
             rfootd1.setZero();
-           
+            
             if (foot_step_(current_step_num_, 6) == 1) // 왼발 지지
             {
-                a_temp = 0.0;
                 lfoot_trajectory_support_.translation().setZero();
                 lfoot_trajectory_euler_support_.setZero();
 
@@ -5882,7 +5884,6 @@ void CustomController::getFootTrajectory()
             }
             else if (foot_step_(current_step_num_, 6) == 0) // 오른발 지지
             {
-                a_temp = 1.0;
                 rfoot_trajectory_support_.translation().setZero();
                 rfoot_trajectory_euler_support_.setZero();
 
@@ -5904,12 +5905,11 @@ void CustomController::getFootTrajectory()
             double t_rest_temp = 0.00 * hz_;
             if (foot_step_(current_step_num_, 6) == 1)
             {
-                a_temp = 2.0;
-                //com_alpha = 1.0;
                 lfootd1.setZero();
                 lfoot_trajectory_support_.translation() = lfoot_support_init_.translation();
                 lfoot_trajectory_euler_support_.setZero();
-
+                target_swing_foot(0) = rfoot_support_init_.translation()(0) + step_length_x_ * 2;
+                
                 lfoot_trajectory_support_.linear() = DyrosMath::rotateWithZ(lfoot_trajectory_euler_support_(2)) * DyrosMath::rotateWithY(F_T_L_y_input) * DyrosMath::rotateWithX(-F_T_L_x_input);
            
                 if (walking_tick_mj < t_start_ + t_rest_init_ + t_double1_ + (t_total_ - t_rest_init_ - t_rest_last_ - t_double1_ - t_double2_) / 2.0)
@@ -5938,11 +5938,10 @@ void CustomController::getFootTrajectory()
             }
             else if (foot_step_(current_step_num_, 6) == 0)
             {
-                a_temp = 3.0;
-                //com_alpha = 1.0;
                 rfoot_trajectory_support_.translation() = rfoot_support_init_.translation();
                 rfoot_trajectory_euler_support_.setZero();
-
+                target_swing_foot(0) = lfoot_support_init_.translation()(0) + step_length_x_ * 2;
+                
                 rfoot_trajectory_support_.linear() = DyrosMath::rotateWithZ(rfoot_trajectory_euler_support_(2)) * DyrosMath::rotateWithY(F_T_R_y_input) * DyrosMath::rotateWithX(-F_T_R_x_input);
                 rfootd1.setZero();
 
@@ -5977,12 +5976,13 @@ void CustomController::getFootTrajectory()
             contactMode = 1;
             lfootd1.setZero();
             rfootd1.setZero();
-           
+            
             if (foot_step_(current_step_num_, 6) == 1)
             {
-                a_temp = 4.0;
                 //com_alpha = DyrosMath::QuinticSpline(walking_tick_mj, t_start_ + t_total_ - t_double2_ - t_rest_last_, t_start_ + t_total_ - t_rest_last_, 0.0, 0.5, 0.0, 0.0);
                 lfoot_trajectory_euler_support_.setZero();
+                target_swing_foot(0) = rfoot_support_init_.translation()(0) + step_length_x_ * 2;
+                
                 //lfoot_trajectory_support_.linear() = DyrosMath::rotateWithZ(lfoot_trajectory_euler_support_(2)) * DyrosMath::rotateWithY(lfoot_trajectory_euler_support_(1)) * DyrosMath::rotateWithX(lfoot_trajectory_euler_support_(0));
                 lfoot_trajectory_support_.linear() = DyrosMath::rotateWithZ(lfoot_trajectory_euler_support_(2)) * DyrosMath::rotateWithY(F_T_L_y_input) * DyrosMath::rotateWithX(-F_T_L_x_input);
 
@@ -5997,9 +5997,11 @@ void CustomController::getFootTrajectory()
             }
             else if (foot_step_(current_step_num_, 6) == 0)
             {
-                a_temp = 5.0;
+                
                 //com_alpha = DyrosMath::QuinticSpline(walking_tick_mj, t_start_ + t_total_ - t_double2_ - t_rest_last_, t_start_ + t_total_ - t_rest_last_, 1.0, 0.5, 0.0, 0.0);
                 rfoot_trajectory_euler_support_.setZero();
+                target_swing_foot(0) = lfoot_support_init_.translation()(0) + step_length_x_ * 2;
+                
                 rfoot_trajectory_support_.linear() = DyrosMath::rotateWithZ(rfoot_trajectory_euler_support_(2)) * DyrosMath::rotateWithY(F_T_R_y_input) * DyrosMath::rotateWithX(-F_T_R_x_input);
 
                 //rfoot_trajectory_support_.linear() = DyrosMath::rotateWithZ(rfoot_trajectory_euler_support_(2)) * DyrosMath::rotateWithY(rfoot_trajectory_euler_support_(1)) * DyrosMath::rotateWithX(rfoot_trajectory_euler_support_(0));
@@ -8256,8 +8258,8 @@ void CustomController::getMPCTrajectory()
                         zmp_mpcy = rfoot_sy_float + ly /*- virtual_temp1(1)*/;
                 }
 
-                com_mpcx = desired_val_slow[41]-virtual_temp1(0);
-                com_mpcy = desired_val_slow[45]-virtual_temp1(1);  
+                //com_mpcx = desired_val_slow[41]-virtual_temp1(0);
+                //com_mpcy = desired_val_slow[45]-virtual_temp1(1);  
                 angm(0) = desired_val_slow[48] + 0.0;
                 angm(1) = desired_val_slow[44] + 0.0;
 
@@ -8658,7 +8660,7 @@ void CustomController::proc_recv(){
             desired_val_mu = desired_val_;
             thread2_lock.unlock();
         }
-        std::this_thread::sleep_for(std::chrono::microseconds(3));
+        std::this_thread::sleep_for(std::chrono::microseconds(1));
     }
 }
 
@@ -8708,7 +8710,7 @@ void CustomController::proc_recv1(){
             mpc_start_init_bool3 = true;
             send(socket_send,buffer,sizeof(buffer),0);
         }
-        std::this_thread::sleep_for(std::chrono::microseconds(3));
+        std::this_thread::sleep_for(std::chrono::microseconds(1));
     }
 }
 

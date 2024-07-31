@@ -1319,6 +1319,8 @@ public:
     Eigen::Vector3d RFc_vector_prev;
     Eigen::Vector3d LFc_vector_prev;
 
+    double F_R = 0, F_L = 0;
+
     Eigen::Isometry3d pelv_float_current_;
     Eigen::Isometry3d lfoot_float_current_;
     Eigen::Isometry3d rfoot_float_current_;
