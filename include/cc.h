@@ -1300,6 +1300,9 @@ public:
     Eigen::Vector3d com_support_current_prev;
     Eigen::Vector3d com_support_cp_;
 
+    double Tau_all_y = 0, Tau_R_y = 0, Tau_L_y = 0;
+    double Tau_all_x = 0, Tau_R_x = 0, Tau_L_x = 0;
+
     Eigen::Vector3d com_float_current_dot;
     Eigen::Vector3d com_float_current_dot_prev;
     Eigen::Vector3d com_float_current_dot_LPF;
