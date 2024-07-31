@@ -39,8 +39,8 @@ const int FILE_CNT1 = 15;
 const std::string FILE_NAMES1[FILE_CNT1] =
 {
   ///change this directory when you use this code on the other computer///
-    "/home/jhk/data/0_flag_mj.txt",
-    "/home/jhk/data/1_flag_mj.txt",
+    "/home/dyros/data/0_flag_mj.txt",
+    "/home/dyros/data/1_flag_mj.txt",
     "/home/dh-sung/data/dg/1_com_.txt",
     "/home/dh-sung/data/dg/2_zmp_.txt",
     "/home/dh-sung/data/dg/3_foot_.txt",
@@ -623,6 +623,8 @@ public:
     Eigen::Vector6d r_ft_LPF;
 
     double F_F_input_dot = 0;
+    double F_F_input_dot_d = 0;
+    double F_F_input_prev = 0;
     double F_F_input = 0;
 
     double F_T_L_x_input = 0;
@@ -1506,6 +1508,7 @@ public:
     double zmp_start_time_mj_;
     double UX_mj_, UY_mj_; 
     Eigen::Vector3d com_desired_;
+    Eigen::Vector3d com_desired_init;
     Eigen::Vector3d com_dot_desired_;
     Eigen::MatrixXd foot_step_;
     Eigen::MatrixXd foot_step_support_frame_;
