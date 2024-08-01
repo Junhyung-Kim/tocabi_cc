@@ -41,8 +41,8 @@ CustomController::CustomController(RobotData &rd) : rd_(rd)
    
     pinocchio::JointModelFreeFlyer root_joint;
     pinocchio::Model model1;
-    //pinocchio::urdf::buildModel("/home/dyros/catkin_ws/src/tocabi_cc/urdf/tocabi.urdf", root_joint, model1);/*_0714*/
-    pinocchio::urdf::buildModel("/usr/local/lib/python3.8/dist-packages/robot_properties_tocabi/resources/urdf/tocabi.urdf", root_joint, model1);/*_0714*/model = model1;
+    pinocchio::urdf::buildModel("/home/dyros/catkin_ws/src/tocabi_cc/urdf/tocabi.urdf", root_joint, model1);/*_0714*/
+    //pinocchio::urdf::buildModel("/usr/local/lib/python3.8/dist-packages/robot_properties_tocabi/resources/urdf/tocabi.urdf", root_joint, model1);/*_0714*/model = model1;
     model = model1;
     model_state = model1;
     model = model1;
