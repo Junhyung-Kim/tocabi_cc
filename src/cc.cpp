@@ -8557,7 +8557,7 @@ void CustomController::getMPCTrajectory()
         }
     }
 
-    if(walking_tick == 1)
+    if(walking_tick == 2)
     {
         if(mpc_cycle <= controlwalk_time)
             mpc_start_init_ = 1;
