@@ -1206,7 +1206,7 @@ void CustomController::computeSlow()
             updateInitialState();
             getRobotState();
 
-            controlwalk_time = 254;//254;
+            controlwalk_time = 15;//254;//254;
             if (mpc_cycle < controlwalk_time-1)
             {
                 for (int i = 0; i < 3; i++)
@@ -1714,7 +1714,7 @@ void CustomController::computeSlow()
                     }
                 }
                 
-                if(mpc_cycle < controlwalk_time-1)// && mpc_cycle >= 0)
+                if(mpc_cycle < controlwalk_time-1 && walking_tick_mj >= (walking_tick_mj ==  t_temp_ - t_mpc_init_ + t_total_ * 2 - 40 + 15))
                 {
                     Eigen::Vector3d rpy_foot;
                     rpy_foot = DyrosMath::rot2Euler(rfoot_trajectory_float_.linear());
@@ -1724,11 +1724,10 @@ void CustomController::computeSlow()
 
                     rf_fl = DyrosMath::multiplyIsometry3dVector3d(DyrosMath::inverseIsometry3d(supportfoot_float_current_yaw_only), rf_fl);
                     lf_fl = DyrosMath::multiplyIsometry3dVector3d(DyrosMath::inverseIsometry3d(supportfoot_float_current_yaw_only), rf_fl);
-                    
+                    /*
                     file[1] << temp_mom << " "<<walking_tick_mj << " "<<mpc_cycle <<" "<<walking_tick << " " << rfoot_float_current_.translation()(0)+ virtual_temp1(0)<< " "<< lfoot_float_current_.translation()(0)+ virtual_temp1(0)<< " "<<current_step_num_ << " "<<virtual_temp(0) << " " <<virtual_temp(1)<< " " <<virtual_temp1(0) << " " <<virtual_temp1(1) << " " <<contactMode << " " << com_mpcx << " " << com_mpcy << " "<<desired_val_slow[41] << " " << desired_val_slow[45] << " ";
                     
-                    //file[1] << "12  " << lfoot_sx << " "<< rfoot_sx << " " << rfoot_d(0) << " " << lfoot_d(0) << " " << rfoot_trajectory_support_.translation()(0) << " " << rfoot_support_current_.translation()(0) << " "<< zmp_mpcx << " " << rfoot_sx_float << " " << lfoot_sx_float << " "<< desired_val_slow[43]-virtual_temp1(0) << " " << zmp_bx(0) << " " << zmp_bx(1) << " "<<zmpx_ << " " <<  zmp_measured_mj_(0) << " " << zmpx_d << " ";
-
+                    
                     file[1] << "123  ";
                     file[1] << com_desired_(0) << " " << com_support_current_(0) << " "<< com_desired_(1) << " " << com_support_current_(1) << " " << com_mpc1[1] << " "<< com_float_current_(1) << " " << com_float_current_(2) << " ";
                     file[1] << "125 ";
@@ -1742,34 +1741,13 @@ void CustomController::computeSlow()
 
                     file[1] << "77 ";
                     file[1] << rd_.link_[Right_Foot].xpos(0) << " "<< rd_.link_[Left_Foot].xpos(0) << " "<<rd_.link_[Right_Foot].xpos(1) << " "<< rd_.link_[Left_Foot].xpos(1) << " ";
-                    /*for(int i = 0; i < 12; i++)
-                    {
-                        file[1] << q_dm(i+6) << " ";
-                    }*/
-                   
+                    
                     file[1] << "99 ";
                     file[1] << q_upper_d[0] << " " << rd_.q_(13) << " "  <<desired_val_slow(19) << " " << q_upper_d[1] << " " << rd_.q_(14) << " " <<desired_val_slow(20) << " " << desired_val_slow[39]  << " " << desired_val_slow[40] << " " << rd_.q_dot_(13) << " " << rd_.q_dot_(14) << " " ;
             
-                    /*file[1] << "101 ";
-                    for(int i = 0; i < 6; i++)
-                    {
-                        file[1] << q_des_(i) << " ";
-                    }*/
                     file[1] << buffer[0] << " " << com_desired_init(2) << " " << com_support_current_(2) << " " << pelv_support_current_.translation()(2)<< std::endl;
-                    /*file[1] << "213 " << qp_solved << " " << model_data_cen.hg.angular()(0) << " " << model_data_cen.hg.angular()(1)<< " "<< ang_d(0) << " " << ang_d(1);
-                    file[1] << " 55 "  << ZMP_Y_REF << " " << zmp_measured_mj_(1) << " " <<ZMPy_test << " "<<state_init_[47]<< " " << desired_val_slow[47] << " " ;//<< std::endl;//<<cp_desired_(1) << " " << cp_desired_(0) << std::endl;
-                    file[1] << " 66 "  << ZMP_X_REF << " " << zmp_measured_mj_(0) << " " <<ZMPx_test << " "<<state_init_[43]<< " " << desired_val_slow[43] << " " ;//<< std::endl;//<<cp_desired_(1) << " " << cp_desired_(0) << std::endl;
-                    
-                    file[1] << " 77 " << com_vel_current_(1) << " " <<desired_val_slow[46]<<  " " << com_float_current_(1) << " "<< desired_val_slow[45]-virtual_temp1(1)<< " "<<com_mpc1[1] << " " << com_desired_(1) << " " << com_support_current_(1) << " " << virtual_temp1(0) << " " << virtual_temp1(1)<<std::endl;
-                    file[0] << rfoot_trajectory_support_.translation()(0) << " " << rfoot_trajectory_support_.translation()(1) << " " <<rfoot_trajectory_support_.translation()(2) << " " << rfoot_support_current_.translation()(0) << " " << rfoot_support_current_.translation()(1) << " " <<rfoot_support_current_.translation()(2) << " " << rd_.link_[Left_Foot].xipos(2) << " " << rd_.link_[Right_Foot].xipos(2) << std::endl; 
                     */
-                    /*
-                    file[1] << mpc_cycle << " " << contactMode << " " << virtual_temp(0) << " " << virtual_temp(1) << " "  << virtual_temp1(0) << " " << virtual_temp1(1) << " " << rd_.link_[Left_Foot].xipos(2) << " " << rd_.link_[Right_Foot].xipos(2) << " "<< rd_.link_[Left_Foot].xipos(0) << " " << rd_.link_[Right_Foot].xipos(0) << " "<< rd_.link_[Left_Foot].xipos(1) << " " << rd_.link_[Right_Foot].xipos(1) << " " << rfoot_ori(0)<< " " << rfoot_ori(1)<< " " << rfoot_ori1(0)<< " " << rfoot_ori1(1);
-                    
-                    file[1] << " 6 ";
-                    
-                    file[1] << ZMP_Y_REF << " " << zmp_measured_mj_(1) << " " <<ZMPy_test<< " "<< ZMP_X_REF << " " << zmp_measured_mj_(0) << " " << rfoot_rpy_current_(0)  << " " << rfoot_rpy_current_(1) << " " << F_T_R_x_input <<" "<< F_T_R_y_input<< " "<< lfoot_rpy_current_(0)  << " " << lfoot_rpy_current_(1) << " " << F_T_L_x_input <<" "<< F_T_L_y_input << std::endl;
-                    */
+                    file[1]<<mpc_cycle<< " " <<mpc_cycle_1 << " "<<walking_tick << " " <<state_init_slow[0] << " " <<   mpc_start_init_ << " " <<statemachine_ <<" " <<walking_tick_stop << std::endl;
                 }
                 lfoot_trajectory_float_pre = lfoot_trajectory_float_;
                 rfoot_trajectory_float_pre = rfoot_trajectory_float_;
@@ -8368,8 +8346,13 @@ void CustomController::getMPCTrajectory()
         }
     }
     
-    if(statemachine_ == 2 && walking_tick > 3)
+    if(statemachine_ == 2 && walking_tick > 1)
         mpc_start_init_ = 3;
+
+    if(statemachine_ == 2 && (mpc_cycle == mpc_cycle_1 && walking_tick == 0))
+    {
+        mpc_start_init_ = 2;
+    }
 
     if(statemachine_ == 1 || statemachine_ == 2 && mpc_cycle < controlwalk_time)
     {
@@ -8377,7 +8360,7 @@ void CustomController::getMPCTrajectory()
         {
             qd_pinocchio_.setZero();
         }  
-        if((statemachine_ == 1 && walking_tick_stop == true && walking_tick == 0 && walking_tick_stop == true))
+        if(statemachine_ == 1 && walking_tick_stop == true  && walking_tick == 0 && (mpc_cycle == mpc_cycle_1 - 1))
         {  
             mpc_start_init_ = 2;
             if (walking_tick == 0)
@@ -8862,7 +8845,7 @@ void CustomController::getMPCTrajectory()
         }
     }
 
-    if(walking_tick == 1)
+    if(walking_tick == 2)
     {
         if(mpc_cycle <= controlwalk_time)
             mpc_start_init_ = 1;
@@ -8962,9 +8945,18 @@ void CustomController::proc_recv(){
         {
             std::copy(&buffer1[1], &buffer1[1] + 49, &desired_val_[0]);
             statemachine_ = buffer1[0];
+            mpc_cycle_1 = buffer1[50];
             thread2_lock.lock();
             desired_val_mu = desired_val_;
             thread2_lock.unlock();
+        }
+
+        if(mpc_cycle < 0 && statemachine_ == 1)
+        {
+            buffer[0] = 2;
+            //send(socket_send,buffer,sizeof(buffer),0);
+            mpc_start_init_ = 2;
+            walking_tick_stop = false;
         }
         std::this_thread::sleep_for(std::chrono::microseconds(1));
     }
@@ -8996,14 +8988,17 @@ void CustomController::proc_recv1(){
         if (mpc_start_init_ == 1 && mpc_start_init_bool == false)
         {   
             buffer[0] = 1;
+            buffer[51] = mpc_cycle_temp;
             send(socket_send,buffer,sizeof(buffer),0);
             mpc_start_init_bool = true;
             mpc_start_init_bool1 = false;
             mpc_start_init_bool2 = false;
+            mpc_cycle_temp = mpc_cycle_temp + 1;
         }
         else if(mpc_start_init_ == 2 && mpc_start_init_bool1 == false)
         {
             buffer[0] = 2;
+            buffer[51] = mpc_cycle_temp;
             send(socket_send,buffer,sizeof(buffer),0);
             mpc_start_init_bool1 = true;
             mpc_start_init_bool = false; 
@@ -9011,6 +9006,7 @@ void CustomController::proc_recv1(){
         else if(mpc_start_init_ == 3 && mpc_start_init_bool2 == false)
         {
             buffer[0] = 3;
+            buffer[51] = mpc_cycle_temp;
             send(socket_send,buffer,sizeof(buffer),0);
             mpc_start_init_bool2 = true; 
             mpc_start_init_bool = false; 
@@ -9018,6 +9014,7 @@ void CustomController::proc_recv1(){
         else if(mpc_start_init_ == 4 && mpc_start_init_bool3 == false)
         {
             buffer[0] = 4;
+            buffer[51] = mpc_cycle_temp;
             mpc_start_init_bool3 = true;
             send(socket_send,buffer,sizeof(buffer),0);
         }
