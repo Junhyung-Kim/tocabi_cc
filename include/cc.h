@@ -1553,6 +1553,9 @@ public:
 
     std::atomic<int> mpc_start_init_;
     std::atomic<int> statemachine_;
+    std::atomic<int> mpc_cycle_1;
+
+    int mpc_cycle_temp = -1;
 
     int socket_send, socket_receive;
 
@@ -1566,7 +1569,7 @@ public:
     Eigen::VectorXd state_init_mu;
     Eigen::VectorXd desired_val_mu;
 
-    double buffer[51] = {1.0, 2, 3, 4, 5, 6, 
+    double buffer[52] = {1.0, 2, 3, 4, 5, 6, 
     0, 0, 0, 0, 0, 0, 
     0, 0, 0, 0, 0, 0,
     0, 0, 0, 0, 0, 0, 
@@ -1574,13 +1577,13 @@ public:
     0, 0, 0, 0, 0, 0, 
     0, 0, 0, 0, 1.0, 2, 
     3, 4, 5, 6, 0, 0,
-    0, 99, 100};
+    0, 99, 100, 0};
 
-    double buffer1[50] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    double buffer1[51] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 
     Eigen::Vector3d pelv_vtran, rf_vtran, lf_vtran;
     int delay_time = 0;
