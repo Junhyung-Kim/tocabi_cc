@@ -189,8 +189,19 @@ public:
 
     void setContact_1(RobotData &Robot, bool left_foot, bool right_foot, bool left_hand, bool right_hand);
 
-    void proc_recv();
-    void proc_recv1();
+    void *proc_recv();
+    void *proc_recv1();
+
+    static void *Proc_recvStarter(void* object)
+    {
+        reinterpret_cast<CustomController*>(object)->proc_recv();
+        //return ((CustomController *)context->proc_recv());
+    }
+    static void *Proc_recvStarter1(void* object)
+    {
+        reinterpret_cast<CustomController*>(object)->proc_recv1();
+        //return ((CustomController *)context->proc_recv1());;
+    }
     
     void savePreData();
     void printOutTextFile();
