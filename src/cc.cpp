@@ -1282,20 +1282,22 @@ void CustomController::computeSlow()
 
                             if(rfoot_trajectory_support_.translation()(2) > 0 && contactMode != 1)
                             {
-                                rfoot_d(2) = rfoot_d(2) + 0.00 * (rfoot_trajectory_support_.translation()(2) - rfoot_support_current_.translation()(2)) + F_F_input_dot_d/1.3;    
-                                rfoot_d(0) = rfoot_d(0) + 0.003 * (rfoot_trajectory_support_.translation()(0) - rfoot_support_current_.translation()(0));
-                                rfoot_d(1) = rfoot_d(1) + 0.003 * (rfoot_trajectory_support_.translation()(1) - rfoot_support_current_.translation()(1));
+                                rfoot_d(2) = rfoot_d(2) + 0.00 * (rfoot_trajectory_support_.translation()(2) - rfoot_support_current_.translation()(2)) + F_F_input_dot_d/2;     
+                                rfoot_d(0) = rfoot_d(0) + 0.00 * (rfoot_trajectory_support_.translation()(0) - rfoot_support_current_.translation()(0));
+                                rfoot_d(1) = rfoot_d(1) + 0.00 * (rfoot_trajectory_support_.translation()(1) - rfoot_support_current_.translation()(1));
+                                lfoot_d(2) = lfoot_d(2) + 0.00 * (lfoot_trajectory_support_.translation()(2) - lfoot_support_current_.translation()(2)) - F_F_input_dot_d/2;
                             }
                             else if(lfoot_trajectory_support_.translation()(2) > 0 && contactMode != 1)
                             {
-                                lfoot_d(2) = lfoot_d(2) + 0.00 * (lfoot_trajectory_support_.translation()(2) - lfoot_support_current_.translation()(2)) - F_F_input_dot_d/1.3;
-                                lfoot_d(0) = lfoot_d(0) + 0.003 * (lfoot_trajectory_support_.translation()(0) - lfoot_support_current_.translation()(0));
-                                lfoot_d(1) = lfoot_d(1) + 0.003 * (lfoot_trajectory_support_.translation()(1) - lfoot_support_current_.translation()(1));
+                                lfoot_d(2) = lfoot_d(2) + 0.00 * (lfoot_trajectory_support_.translation()(2) - lfoot_support_current_.translation()(2)) - F_F_input_dot_d/2;
+                                lfoot_d(0) = lfoot_d(0) + 0.00 * (lfoot_trajectory_support_.translation()(0) - lfoot_support_current_.translation()(0));
+                                lfoot_d(1) = lfoot_d(1) + 0.00 * (lfoot_trajectory_support_.translation()(1) - lfoot_support_current_.translation()(1));
+                                rfoot_d(2) = rfoot_d(2) + 0.00 * (rfoot_trajectory_support_.translation()(2) - rfoot_support_current_.translation()(2)) + F_F_input_dot_d/2;    
                             }
                             else
                             {
-                                rfoot_d(2) = rfoot_d(2) + 0.00 * (rfoot_trajectory_support_.translation()(2) - rfoot_support_current_.translation()(2)) + F_F_input_dot_d/1.3;    
-                                lfoot_d(2) = lfoot_d(2) + 0.00 * (lfoot_trajectory_support_.translation()(2) - lfoot_support_current_.translation()(2)) - F_F_input_dot_d/1.3;
+                                rfoot_d(2) = rfoot_d(2) + 0.00 * (rfoot_trajectory_support_.translation()(2) - rfoot_support_current_.translation()(2)) + F_F_input_dot_d/2;    
+                                lfoot_d(2) = lfoot_d(2) + 0.00 * (lfoot_trajectory_support_.translation()(2) - lfoot_support_current_.translation()(2)) - F_F_input_dot_d/2;
                             }
                            
                             Eigen::Vector3d rpy_foot;
