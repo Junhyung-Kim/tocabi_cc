@@ -1192,7 +1192,7 @@ public:
     bool step_change = false;
     Eigen::VectorVQd qd_pinocchio_, q_dm_mom;
     Eigen::VectorVQd qd_pinocchio;
-    Eigen::VectorQVQd q_pinocchio_desired;
+    Eigen::VectorQVQd q_pinocchio_desired, q_pinocchio1_test2;
     Eigen::VectorQVQd q_pinocchio_desired1, qd_pinocchio1;
 
     Eigen::Vector3d rfootd, lfootd, rfootd1, lfootd1, comd, comd1, comd_init, com_mpc, com_mpc1, com_mpc2, comprev, rfoot_mpc, lfoot_mpc;
@@ -1580,7 +1580,7 @@ public:
     Eigen::VectorXd state_init_mu;
     Eigen::VectorXd desired_val_mu;
 
-    double buffer[52] = {1.0, 2, 3, 4, 5, 6, 
+    double buffer[52+6] = {1.0, 2, 3, 4, 5, 6, 
     0, 0, 0, 0, 0, 0, 
     0, 0, 0, 0, 0, 0,
     0, 0, 0, 0, 0, 0, 
@@ -1588,7 +1588,9 @@ public:
     0, 0, 0, 0, 0, 0, 
     0, 0, 0, 0, 1.0, 2, 
     3, 4, 5, 6, 0, 0,
-    0, 99, 100, 0};
+    0, 99, 100, 0,
+    
+    0, 0, 0, 0, 0, 0};
 
     double buffer1[51] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
