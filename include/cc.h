@@ -112,7 +112,7 @@ public:
     Eigen::VectorVQd q_temp;
     bool torque_control = true; 
     bool torquecontrol_first = true;
-    bool hipcompen = true; 
+    bool hipcompen = false; 
     bool momentumControlMode = true;
     bool pelvroll = false; 
     Eigen::Vector3d ZMP_float;
@@ -268,6 +268,7 @@ public:
     Eigen::Vector3d com_acc_current_;
 
     Eigen::Vector3d com_d, com_d2, rfoot_d, lfoot_d, com_d1, rfoot_d1, lfoot_d1, rfoot_d2, lfoot_d2, rfoot_ori, lfoot_ori, rfoot_ori1, lfoot_ori1, rfoot_ori_c, lfoot_ori_c;
+    Eigen::Vector12d q_dot_desired;
     Eigen::Vector2d ang_d;
     double gain_xz, gain_ori;
     std::atomic<double> lfootz, rfootz;
@@ -1138,7 +1139,7 @@ public:
     void CP_compen_MJ();
     void CP_compen_MJ_FT();
     void CLIPM_ZMP_compen_MJ(double XZMP_ref, double YZMP_ref);
-    void momentumControl(RobotData &Robot, Eigen::Vector3d comd,  Eigen::Vector2d ang_, Eigen::Vector3d rfootd, Eigen::Vector3d lfootd, Eigen::Vector2d upperd, Eigen::Vector3d rfootori, Eigen::Vector3d lfootori);
+    void momentumControl(RobotData &Robot, Eigen::Vector3d comd,  Eigen::Vector2d ang_, Eigen::Vector3d rfootd, Eigen::Vector3d lfootd, Eigen::Vector2d upperd1, Eigen::Vector3d rfootori, Eigen::Vector3d lfootori);
 
     //momentumControl
     bool qp_solved;
@@ -1314,6 +1315,8 @@ public:
     Eigen::Isometry3d pelv_float_init_;
     Eigen::Isometry3d lfoot_float_init_;
     Eigen::Isometry3d rfoot_float_init_;
+
+    Eigen::VectorVQd q_dot_virtual_lpf_;
     double wn = 0;
 
     MatrixXd J1, H1, A1;
@@ -1332,7 +1335,7 @@ public:
     double zmpx_d, zmpy_d;
     bool torquecontrol_Ok = false;
     Eigen::VectorXd qp_result, nle, g1_temp;
-    Eigen::VectorVQd q_dot_virtual_lpf_;
+    
     Eigen::MatrixXd RFj, LFj, RFdj, LFdj, H1_temp;
     Eigen::MatrixVQVQd M_;
     MatrixXd G_temp;
@@ -1347,7 +1350,7 @@ public:
     Eigen::Vector6d ang_de;
     Eigen::VectorXd q_desireddot;
 
-    Eigen::VectorQVQd q_pinocchio, q_pinocchio1, q_pinocchio1_test;
+    Eigen::VectorQVQd q_pinocchio, q_pinocchio1, q_pinocchio1_test, q_pinocchio1_test2;
 
     Eigen::Vector2d sc_err_before;
     Eigen::Vector2d sc_err_after;
@@ -1556,7 +1559,7 @@ public:
     Eigen::VectorXd state_init_mu;
     Eigen::VectorXd desired_val_mu;
 
-    double buffer[52] = {1.0, 2, 3, 4, 5, 6, 
+    double buffer[52 + 6] = {1.0, 2, 3, 4, 5, 6, 
     0, 0, 0, 0, 0, 0, 
     0, 0, 0, 0, 0, 0,
     0, 0, 0, 0, 0, 0, 
@@ -1564,7 +1567,8 @@ public:
     0, 0, 0, 0, 0, 0, 
     0, 0, 0, 0, 1.0, 2, 
     3, 4, 5, 6, 0, 0,
-    0, 99, 100, 0};
+    0, 99, 100, 0,
+    0, 0, 0, 0, 0, 0};
 
     double buffer1[51] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0,

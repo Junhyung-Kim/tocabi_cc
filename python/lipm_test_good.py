@@ -1507,7 +1507,7 @@ def talker():
     weight_quad_camy = 2.9
     weight_quad_zmp = np.array([0.01, 0.01])#([weight_quad_zmpx] + [weight_quad_zmpy])
     weight_quad_zmp1 = np.array([3.0, 3.0])#np.array([3.0, 3.0]) ##5, 10
-    weight_quad_zmp2 = np.array([3.0, 10.0])#np.array([3.0, 10.0]) ##11
+    weight_quad_zmp2 = np.array([10.0, 15.0])#np.array([3.0, 10.0]) ##11
     weight_quad_cam = np.array([0.03, 0.03])#([0.008, 0.008])([weight_quad_camy] + [weight_quad_camx])
     weight_quad_upper = np.array([25.0, 25.0])
     weight_quad_pelvis = np.array([130.0, 130.0, 0.005])
@@ -1516,7 +1516,7 @@ def talker():
     weight_quad_lf = np.array([13.0, 3.0, 5.0, 0.2, 0.2, 0.2])#np.array([weight_quad_lfx] + [weight_quad_lfy] + [weight_quad_lfz] + [weight_quad_lfroll] + [weight_quad_lfpitch] + [weight_quad_lfyaw])
     lb_ = np.ones([2, N])
     ub_ = np.ones([2, N])
-    weight_quad_cp = np.array([0.001, 0.001])
+    weight_quad_cp = np.array([80.0, 80.0])
     '''
 
     weight_quad_camx = 2.9
@@ -1524,9 +1524,9 @@ def talker():
     weight_quad_zmp = np.array([0.01, 0.01])#([weight_quad_zmpx] + [weight_quad_zmpy])
     weight_quad_zmp1 = np.array([3.0, 3.0])#np.array([3.0, 3.0]) ##5, 10
     weight_quad_zmp2 = np.array([10.0, 15.0])#np.array([3.0, 10.0]) ##11
-    weight_quad_cam = np.array([0.03, 0.03])#([0.008, 0.008])([weight_quad_camy] + [weight_quad_camx])
-    weight_quad_upper = np.array([25.0, 25.0])
-    weight_quad_pelvis = np.array([130.0, 130.0, 0.005])
+    weight_quad_cam = np.array([0.03, 0.03])#([0.03, 0.03])([weight_quad_camy] + [weight_quad_camx])
+    weight_quad_upper = np.array([5.0, 5.0]) #np.array([25.0, 25.0])
+    weight_quad_pelvis = np.array([80.0, 80.0, 30.0])
     weight_quad_com = np.array([30.0, 30.0, 5.0])#([weight_quad_comx] + [weight_quad_comy] + [weight_quad_comz])
     weight_quad_rf = np.array([13.0, 3.0, 5.0, 0.2, 0.2, 0.2])#np.array([weight_quad_rfx] + [weight_quad_rfy] + [weight_quad_rfz] + [weight_quad_rfroll] + [weight_quad_rfpitch] + [weight_quad_rfyaw])
     weight_quad_lf = np.array([13.0, 3.0, 5.0, 0.2, 0.2, 0.2])#np.array([weight_quad_lfx] + [weight_quad_lfy] + [weight_quad_lfz] + [weight_quad_lfroll] + [weight_quad_lfpitch] + [weight_quad_lfyaw])
