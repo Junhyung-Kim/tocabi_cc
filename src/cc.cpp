@@ -1487,14 +1487,14 @@ void CustomController::computeSlow()
                             if(rfoot_trajectory_support_.translation()(2) > 0 && contactMode != 1)
                             {
                                 rfoot_d2(2) = rfoot_d(2) + 0.00 * (rfoot_trajectory_support_.translation()(2) - rfoot_support_current_.translation()(2)) + F_F_input_dot_d/(2*1.0);     
-                                rfoot_d2(0) = rfoot_d(0) + 0.00 * (rfoot_trajectory_support_.translation()(0) - rfoot_support_current_.translation()(0));
+                                rfoot_d2(0) = rfoot_d(0) + 0.001 * (rfoot_trajectory_support_.translation()(0) - rfoot_support_current_.translation()(0));
                                 rfoot_d2(1) = rfoot_d(1) + 0.004 * (rfoot_trajectory_support_.translation()(1) - rfoot_support_current_.translation()(1));
                                 lfoot_d2(2) = lfoot_d(2) + 0.00 * (lfoot_trajectory_support_.translation()(2) - lfoot_support_current_.translation()(2)) - F_F_input_dot_d/(2*1.0);
                             }
                             else if(lfoot_trajectory_support_.translation()(2) > 0 && contactMode != 1)
                             {
                                 lfoot_d2(2) = lfoot_d(2) + 0.00 * (lfoot_trajectory_support_.translation()(2) - lfoot_support_current_.translation()(2)) - F_F_input_dot_d/(2*1.0);
-                                lfoot_d2(0) = lfoot_d(0) + 0.00 * (lfoot_trajectory_support_.translation()(0) - lfoot_support_current_.translation()(0));
+                                lfoot_d2(0) = lfoot_d(0) + 0.001 * (lfoot_trajectory_support_.translation()(0) - lfoot_support_current_.translation()(0));
                                 lfoot_d2(1) = lfoot_d(1) + 0.004 * (lfoot_trajectory_support_.translation()(1) - lfoot_support_current_.translation()(1));
                                 rfoot_d2(2) = rfoot_d(2) + 0.00 * (rfoot_trajectory_support_.translation()(2) - rfoot_support_current_.translation()(2)) + F_F_input_dot_d/(2*1.0);    
                             }
@@ -1685,7 +1685,7 @@ void CustomController::computeSlow()
                     //rf_fl = DyrosMath::multiplyIsometry3dVector3d(DyrosMath::inverseIsometry3d(supportfoot_float_current_yaw_only), rf_fl);
                     //lf_fl = DyrosMath::multiplyIsometry3dVector3d(DyrosMath::inverseIsometry3d(supportfoot_float_current_yaw_only), rf_fl);
                     
-                    file[1]  << virtual_temp(0) << " "<< virtual_temp(1) << " " << virtual_temp1(0) << " "<< virtual_temp1(1) << " " <<rfoot_float_current_.translation()(0) << " " << lfoot_float_current_.translation()(0)<< " " << rd_.link_[Left_Foot].xpos(0) - rd_.link_[Right_Foot].xpos(0) << " " << lfoot_support_current_.translation()(0) - rfoot_support_current_.translation()(0) << " " << current_step_num_ << " " <<contactMode << " "<<mpc_cycle <<" "<<walking_tick << " " <<current_step_num_ << " " << com_mpcx << " " << com_mpcy << " "<<desired_val_slow[41] << " " << desired_val_slow[45] << " ";
+                    file[1]  << lfoot_sx_float << " " << rfoot_sx_float << " "<< zmp_mpcx << " " <<rfoot_float_current_.translation()(0) << " " << lfoot_float_current_.translation()(0)<< " " << rd_.link_[Left_Foot].xpos(0) - rd_.link_[Right_Foot].xpos(0) << " " << lfoot_support_current_.translation()(0) - rfoot_support_current_.translation()(0) << " " << current_step_num_ << " " <<contactMode << " "<<mpc_cycle <<" "<<walking_tick << " " <<current_step_num_ << " " << com_mpcx << " " << com_mpcy << " "<<desired_val_slow[41] << " " << desired_val_slow[45] << " ";
                     
                     
                     file[1] << "123  ";
@@ -8558,7 +8558,7 @@ void CustomController::getMPCTrajectory()
                     comprev = comd;
                 }
 
-                comd[0] = desired_val_slow[42] + 0.0;
+                comd[0] = desired_val_slow[42]/1.15 + 0.0;
                 comd[1] = desired_val_slow[46] + 0.0;
                 comd[2] = 0.0;
 
@@ -8587,7 +8587,7 @@ void CustomController::getMPCTrajectory()
                     com_mpcx_prev = com_mpc1[0];
                 }
 
-                zmp_mpcx = desired_val_slow[43]-virtual_temp1(0);
+                zmp_mpcx = desired_val_slow[43]-virtual_temp1(0); //0818
                 zmp_mpcy = desired_val_slow[47]-virtual_temp1(1); 
 
                 double lx, ly, mu;

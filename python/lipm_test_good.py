@@ -1539,7 +1539,7 @@ def talker():
     weight_quad_camy = 2.9
     weight_quad_zmp = np.array([0.01, 0.01])#([weight_quad_zmpx] + [weight_quad_zmpy])
     weight_quad_zmp1 = np.array([3.0, 3.0])#np.array([3.0, 3.0]) ##5, 10
-    weight_quad_zmp2 = np.array([5.0, 10.0])#np.array([10.0, 30.0]) ##11
+    weight_quad_zmp2 = np.array([20.0, 20.0])#np.array([10.0, 30.0]) ##11
     weight_quad_cam = np.array([0.03, 0.03])#([0.008, 0.008])([weight_quad_camy] + [weight_quad_camx])
     weight_quad_upper = np.array([25.0, 25.0])
     weight_quad_pelvis = np.array([80.0, 80.0, 50.0])
