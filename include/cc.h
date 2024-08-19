@@ -1220,7 +1220,10 @@ public:
     Eigen::VectorQd Tau_CP;
 
     Eigen::Vector2d q_upper;
-
+    Eigen::Vector2d q_upper_init;
+    Eigen::Vector2d q_upper_d;
+    Eigen::Vector2d q_upper_d_prev;
+    
     Eigen::Vector12d pre_motor_q_leg_;
     Eigen::Vector12d current_motor_q_leg_;
     Eigen::Vector12d d_hat_b;

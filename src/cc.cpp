@@ -939,7 +939,7 @@ void CustomController::computeSlow()
             time_tick = true;      
         }      
 
-        while(std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::system_clock::now() - startTime).count() < 500)
+        while(std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::system_clock::now() - startTime).count() < 500 && walking_tick_mj > 0)
         {
             torque_upper_.setZero();
             torque_lower_.setZero();
@@ -1008,7 +1008,7 @@ void CustomController::computeSlow()
             updateInitialState();
             getRobotState();
 
-            controlwalk_time = 45;//254;f
+            controlwalk_time = 48;//254;f
             if (mpc_cycle < controlwalk_time-1)
             {
                 for (int i = 0; i < 3; i++)
@@ -1155,8 +1155,8 @@ void CustomController::computeSlow()
                                 com_dot_desired_(1) = comd_s[1];
                                 com_desired_(0) = com_mpc[0];
                                 com_desired_(1) = com_mpc[1];
-                                del_zmp(0) = 0.5 * (cp_measured_(0) - cp_desired_(0));//1.6, 1.6
-                                del_zmp(1) = 0.5 * (cp_measured_(1) - cp_desired_(1));
+                                del_zmp(0) = 0.2 * (cp_measured_(0) - cp_desired_(0));//1.6, 1.6
+                                del_zmp(1) = 0.2* (cp_measured_(1) - cp_desired_(1));
                             }
                         }
                     }
@@ -1243,8 +1243,8 @@ void CustomController::computeSlow()
                         rfoot_d = rfootd1;
                         lfoot_d = lfootd1;
 
-                        lfoot_ori = -DyrosMath::getPhi(lfoot_trajectory_float_pre.linear(), lfoot_trajectory_float_.linear()) * 0.5/1.3;
-                        rfoot_ori = -DyrosMath::getPhi(rfoot_trajectory_float_pre.linear(), rfoot_trajectory_float_.linear()) * 0.5/1.3;
+                        lfoot_ori = -DyrosMath::getPhi(lfoot_trajectory_float_pre.linear(), lfoot_trajectory_float_.linear()) * 0.5/1.0;
+                        rfoot_ori = -DyrosMath::getPhi(rfoot_trajectory_float_pre.linear(), rfoot_trajectory_float_.linear()) * 0.5/1.0;
 
                         com_d1 = com_d;
                         rfoot_d1 = rfoot_d;
@@ -1255,8 +1255,8 @@ void CustomController::computeSlow()
                         com_d = com_d1;
                         rfoot_d = rfoot_d1;
                         lfoot_d = lfoot_d1;
-                        lfoot_ori = -DyrosMath::getPhi(lfoot_trajectory_float_pre.linear(), lfoot_trajectory_float_.linear()) * 0.5/1.3;
-                        rfoot_ori = -DyrosMath::getPhi(rfoot_trajectory_float_pre.linear(), rfoot_trajectory_float_.linear()) * 0.5/1.3;
+                        lfoot_ori = -DyrosMath::getPhi(lfoot_trajectory_float_pre.linear(), lfoot_trajectory_float_.linear()) * 0.5/1.0;
+                        rfoot_ori = -DyrosMath::getPhi(rfoot_trajectory_float_pre.linear(), rfoot_trajectory_float_.linear()) * 0.5/1.0;
                     }
 
                     /*lfoot_ori(0) = -F_T_L_x_input_dot/2000;
@@ -1328,13 +1328,22 @@ void CustomController::computeSlow()
                             }
                             Eigen::Vector3d rpy_foot;
                             rpy_foot = DyrosMath::rot2Euler(rfoot_trajectory_float_.linear());
-                            rfoot_ori1(0) = rfoot_ori(0) + 0.00 * (rpy_foot(0) - rfoot_rpy_current_(0));
-                            rfoot_ori1(1) = rfoot_ori(1) + 0.00 * (rpy_foot(1) - rfoot_rpy_current_(1));
+                            rfoot_ori1(0) = 0.9*rfoot_ori(0) + 0.00 * (rpy_foot(0) - rfoot_rpy_current_(0));
+                            rfoot_ori1(1) = 0.9*rfoot_ori(1) + 0.00 * (rpy_foot(1) - rfoot_rpy_current_(1));
                            
                             rpy_foot = DyrosMath::rot2Euler(lfoot_trajectory_float_.linear());
-                            lfoot_ori1(0) = lfoot_ori(0) + 0.00 * (rpy_foot(0) - lfoot_rpy_current_(0));
-                            lfoot_ori1(1) = lfoot_ori(1) + 0.00 * (rpy_foot(1) - lfoot_rpy_current_(1));
-
+                            lfoot_ori1(0) = 0.9*lfoot_ori(0) + 0.00 * (rpy_foot(0) - lfoot_rpy_current_(0));
+                            lfoot_ori1(1) = 0.9*lfoot_ori(1) + 0.00 * (rpy_foot(1) - lfoot_rpy_current_(1));
+                           
+                           
+                            //COM Feedback조심
+                       
+                            //com_d(2) = 0.0 + 0.003 * (com_desired_init(2) - com_support_current_(2));
+                            if(mpc_cycle < 0 || mpc_cycle > 1)
+                            {
+                            //com_d(0) = com_d(0) + 0.003 * (com_desired_(0) - com_support_current_(0));
+                            //com_d(1) = com_d(1)+ 0.003 * (com_desired_(1) - com_support_current_(1));
+                            }
                             com_d(2) = 0.0 + 0.003 * (com_desired_init(2) - com_support_current_(2));
                             momentumControl(rd_, com_d, ang_d_temp, rfoot_d, lfoot_d, upperd, rfoot_ori1, lfoot_ori1);
                            
@@ -1508,7 +1517,7 @@ void CustomController::computeSlow()
                    
                     file[1] <<walking_tick_mj << " "<<mpc_cycle <<" " <<mpc_cycle_1<<" "<<walking_tick << " " <<virtual_temp(0) << " "<<virtual_temp1(0)<< " " <<contactMode << " " << com_mpcx << " " << com_mpcy << " "<<desired_val_slow[41] << " " << desired_val_slow[45] << " ";
                    
-                    file[1] << "12  " << zmpx_ << " " <<  zmp_measured_mj_(0) <<" "<<zmpy_ << " " <<  zmp_measured_mj_(1) << " " << zmp_mpcy << " " << desired_val_slow[47]-virtual_temp1(1) << " "<< zmp_mpcx << " " << desired_val_slow[43]-virtual_temp1(0) << " "<< desired_val_slow[43] << " ";
+                    file[1] << "12  " << zmpx_ << " " <<  zmp_measured_mj_(0) <<" " <<ZMP_X_REF << " "<<zmpy_ << " " <<  zmp_measured_mj_(1) << " "<<ZMP_Y_REF << " " << zmp_mpcy << " " << desired_val_slow[47]-virtual_temp1(1) << " "<< zmp_mpcx << " " << desired_val_slow[43]-virtual_temp1(0) << " "<< desired_val_slow[43] << " ";
                     //<< zmpy_d << " " << zmpx_d << " "  << zmpy_ << " " << zmp_measured_mj_(1)  << " "<<zmpx_ << " " <<  zmp_measured_mj_(0) << " " << desired_val_slow[47]-virtual_temp1(1) << " " << desired_val_slow[47] << " " <<zmp_mpcy<< " ";
                    
 
@@ -1518,11 +1527,14 @@ void CustomController::computeSlow()
                     file[1] <<"125 " << rfoot_ori1(0) <<" "  << rfoot_ori1(1) << " "  << rfoot_ori1(2) <<" " << rfoot_d(0) <<" "  << rfoot_d(1) << " "  << rfoot_d(2) << " " << lfoot_d(0) <<" "  << lfoot_d(1) << " "  << lfoot_d(2) << " ";
                     file[1] << "127 " << ang_d(0) << " " << ang_d(1) << " " << model_data_cen.hg.angular()(0)<< " " << model_data_cen.hg.angular()(1) << " ";
                    
-                    /*file[1] << "128 ";
-                    for(int i = 0; i < 20; i++)
+                   
+                    file[1] << "128 ";
+                    file[1] << ZMP_float(1) <<" " << ZMP_float(1) + virtual_temp(1)<< " " << desired_val_slow[47] <<" " << desired_val_slow[47]-virtual_temp1(1)  << " "<< virtual_temp1(1) <<" "<< rd_.link_[Left_Foot].xpos(1) <<" " << rd_.link_[Right_Foot].xpos(1) << " ";
+                    file[1] << "129 ";
+                    for(int i = 0; i < 6; i++)
                     {
-                        file[1]<< Gravity_MJ_fast_(i) <<" ";
-                    }*/
+                        file[1]<< q_des_(i) <<" ";
+                    }
                    
 
                    
@@ -2936,7 +2948,7 @@ void CustomController::getRobotData()
 
     RFj = /*rot_sup * rot_float */ RFj;
     LFj = /*rot_sup * rot_float */ LFj;
-    RFdj = /*rot_sup * rot_float */ RFdj;
+    RFdj =/* rot_sup * rot_float */ RFdj;
     LFdj = /*rot_sup * rot_float */ LFdj;
 }
 
@@ -5897,7 +5909,6 @@ void CustomController::getFootTrajectory()
                 rfoot_trajectory_support_.linear() = DyrosMath::rotateWithZ(rfoot_trajectory_euler_support_(2)) * DyrosMath::rotateWithY(F_T_R_y_input) * DyrosMath::rotateWithX(-F_T_R_x_input);
                 rfootd1.setZero();
                 target_swing_foot(0) = lfoot_support_init_.translation()(0) + step_length_x_ * 1;
-               
 
                 if (walking_tick_mj < t_start_ + t_rest_init_2 + t_double1_ + (t_total_ - t_rest_init_2 - t_rest_last_2 - t_double1_ - t_double2_) / 2.0)
                 {
@@ -5940,7 +5951,8 @@ void CustomController::getFootTrajectory()
                
                 lfoot_trajectory_euler_support_.setZero();
                 lfoot_trajectory_support_.linear() = DyrosMath::rotateWithZ(lfoot_trajectory_euler_support_(2)) * DyrosMath::rotateWithY(F_T_L_y_input) * DyrosMath::rotateWithX(-F_T_L_x_input);
-
+                target_swing_foot(0) = rfoot_support_init_.translation()(0) + step_length_x_ * 1;
+           
                 for (int i = 0; i < 3; i++)
                 {
                     rfoot_trajectory_support_.translation()(i) = target_swing_foot(i);
@@ -5951,10 +5963,10 @@ void CustomController::getFootTrajectory()
             }
             else if (foot_step_(current_step_num_, 6) == 0)
             {
-               
                 rfoot_trajectory_euler_support_.setZero();
                 rfoot_trajectory_support_.linear() = DyrosMath::rotateWithZ(rfoot_trajectory_euler_support_(2)) * DyrosMath::rotateWithY(F_T_R_y_input) * DyrosMath::rotateWithX(-F_T_R_x_input);
-
+                target_swing_foot(0) = lfoot_support_init_.translation()(0) + step_length_x_ * 1;
+           
                 for (int i = 0; i < 3; i++)
                 {
                     lfoot_trajectory_support_.translation()(i) = target_swing_foot(i);
@@ -7091,7 +7103,7 @@ void CustomController::updateNextStepTime()
                     t_start_real_ = t_start_ + t_rest_init_1;
                 else
                 {
-                    
+                   
                     t_start_real_ = t_start_ + t_rest_init_;
                 }
                 /*else
@@ -7109,7 +7121,7 @@ void CustomController::updateNextStepTime()
         if(mpc_cycle >= 0)
         {
             if(walking_tick_stop == false)// || (walking_tick == 0 && walking_tick_stop == true))
-            {   
+            {  
                 walking_tick_mj = walking_tick_mj + 1;
 
                 if(walking_tick == 40)
@@ -7124,7 +7136,7 @@ void CustomController::updateNextStepTime()
         }
         else
             walking_tick_mj++;
-        
+       
     }
     else
     {
@@ -7771,34 +7783,34 @@ void CustomController::CP_compen_MJ_FT()
 
     if (walking_tick_mj < t_start_ + t_rest_init_ + t_double1_)
     {
-        Kr_roll = 30.0;
-        Kl_roll = 30.0;
-        Kr_pitch = 30.0;
-        Kl_pitch = 30.0;
+        Kr_roll = 20.0;
+        Kl_roll = 20.0;
+        Kr_pitch = 20.0;
+        Kl_pitch = 20.0;
     }
     else if (walking_tick_mj >= t_start_ + t_rest_init_ + t_double1_ && walking_tick_mj < t_start_ + t_total_ - t_double2_ - t_rest_last_)
     {
         if (alpha == 1) // 왼발 지지
         {
-            Kl_roll = 30.0;
-            Kr_roll = 30.0;
-            Kl_pitch = 30.0;
-            Kr_pitch = 30.0;
+            Kl_roll = 20.0;
+            Kr_roll = 20.0;
+            Kl_pitch = 20.0;
+            Kr_pitch = 20.0;
         }
         if (alpha == 0) // 오른발 지지
         {
-            Kl_roll = 30.0;
-            Kr_roll = 30.0;
-            Kl_pitch = 30.0;
-            Kr_pitch = 30.0;
+            Kl_roll = 20.0;
+            Kr_roll = 20.0;
+            Kl_pitch = 20.0;
+            Kr_pitch = 20.0;
         }
     }
     else
     {
-        Kr_roll = 30.0;
-        Kl_roll = 30.0;
-        Kr_pitch = 30.0;
-        Kl_pitch = 30.0;
+        Kr_roll = 20.0;
+        Kl_roll = 20.0;
+        Kr_pitch = 20.0;
+        Kl_pitch = 20.0;
     }
 
     //Roll 방향 -0.3,50 -> High performance , -0.1, 50 평지 보행 적당
@@ -7822,18 +7834,18 @@ void CustomController::CP_compen_MJ_FT()
     {   //0.1
         if(mpc_cycle > 0)
         {
-            F_T_L_x_input_dot = -0.1 * (Tau_L_x - l_ft_LPF(3)) - Kl_roll * F_T_L_x_input;
+            F_T_L_x_input_dot = -0.12 * (Tau_L_x - l_ft_LPF(3)) - Kl_roll * F_T_L_x_input;
             F_T_L_x_input = F_T_L_x_input + F_T_L_x_input_dot * del_t;
             //F_T_L_x_input = 0;
-            F_T_R_x_input_dot = -0.1 * (Tau_R_x - r_ft_LPF(3)) - Kr_roll * F_T_R_x_input;
+            F_T_R_x_input_dot = -0.12 * (Tau_R_x - r_ft_LPF(3)) - Kr_roll * F_T_R_x_input;
             F_T_R_x_input = F_T_R_x_input + F_T_R_x_input_dot * del_t;
             //F_T_R_x_input = 0;
 
             //Pitch 방향
-            F_T_L_y_input_dot = 0.1 * (Tau_L_y - l_ft_LPF(4)) - Kl_pitch * F_T_L_y_input;
+            F_T_L_y_input_dot = 0.12 * (Tau_L_y - l_ft_LPF(4)) - Kl_pitch * F_T_L_y_input;
             F_T_L_y_input = F_T_L_y_input + F_T_L_y_input_dot * del_t;
             //F_T_L_y_input = 0;
-            F_T_R_y_input_dot = 0.1 * (Tau_R_y - r_ft_LPF(4)) - Kr_pitch * F_T_R_y_input;
+            F_T_R_y_input_dot = 0.12 * (Tau_R_y - r_ft_LPF(4)) - Kr_pitch * F_T_R_y_input;
             F_T_R_y_input = F_T_R_y_input + F_T_R_y_input_dot * del_t;
         }
         else
@@ -7970,7 +7982,7 @@ void CustomController::momentumControl(RobotData &Robot, Eigen::Vector3d comd,  
             J2.block(9,0,6,18) = J_LFF.block(0,0,6,18);//J_LFF LFj
             J2.block(15,0,2,18) = Hg_slow_.block(3,0,2,18);//InitRPYM7.inverse() *
            
-            X2.segment<3>(0) = comd;// - COMX;
+            X2.segment<3>(0) = comd - COMX;
             X2.segment<3>(3) = rfootd;
             X2.segment<3>(6) = rfootori;
             X2.segment<3>(9) = lfootd;
@@ -7983,8 +7995,8 @@ void CustomController::momentumControl(RobotData &Robot, Eigen::Vector3d comd,  
             lbA2 = X2;
             ubA2 = X2;
 
-            H2 = H2 + Hg_slow_.block(3,0,2,18).transpose() * Hg_slow_.block(3,0,2,18) * 0.005;
-            g2 = g2 - Hg_slow_.block(3,0,2,18).transpose() * (ang_ - MOMX) * 0.005;
+            H2 = H2 + Hg_slow_.block(3,0,2,18).transpose() * Hg_slow_.block(3,0,2,18) * 0.05;
+            g2 = g2 - Hg_slow_.block(3,0,2,18).transpose() * (ang_ - MOMX) * 0.05;
            
             lbA2(15) = lbA2(15)-0.001;
             ubA2(15) = ubA2(15)+0.001;
@@ -8289,8 +8301,8 @@ void CustomController::getMPCTrajectory()
             virtual_temp(0) = -((rfoot_float_current_.translation()(0) + lfoot_float_current_.translation()(0))/2 - 0.064964);
             virtual_temp(1) = -((rfoot_float_current_.translation()(1) + lfoot_float_current_.translation()(1))/2);
         }
-    }*/
-
+    }
+    */
     if(walking_tick >= 0)
     {  
         //virtual_temp(2) = virtual_temp(2) + 0.015;
@@ -8318,8 +8330,8 @@ void CustomController::getMPCTrajectory()
    
         state_init_[41] = rd_.link_[COM_id].xpos(0) + virtual_temp(0);//com_float_current_(0)+virtual_temp(0);//+virtual_temp_sup(0);
         state_init_[45] = rd_.link_[COM_id].xpos(1) + virtual_temp(1);//com_float_current_(1)+virtual_temp(1);//+virtual_temp_sup(1);
-        state_init_[42] = com_support_current_dot_LPF(0);//rd_.link_[COM_id].v(0);//com_float_current_dot(0);
-        state_init_[46] = com_support_current_dot_LPF(1);//rd_.link_[COM_id].v(1);//com_float_current_dot(1);
+        state_init_[42] = com_float_current_dot_LPF(0);//com_support_current_dot_LPF(0);//rd_.link_[COM_id].v(0);//com_float_current_dot(0);
+        state_init_[46] = com_float_current_dot_LPF(1); //com_support_current_dot_LPF(1);//rd_.link_[COM_id].v(1);//com_float_current_dot(1);
 
         state_init_[43] = ZMP_float(0) + virtual_temp(0);//+virtual_temp(0);//zmp_measured_mj_(0);//+virtual_temp_sup(0);
         state_init_[47] = ZMP_float(1) + virtual_temp(1);//+virtual_temp(1);//zmp_measured_mj_(1);//+virtual_temp_sup(1);
@@ -8403,7 +8415,7 @@ void CustomController::getMPCTrajectory()
                             upperd[0] = desired_val_slow[39];
                             q_upper_d(0) = desired_val_slow(19);
                         }
-                        
+                       
                     }
                     else if(desired_val_slow[19] > 0.4000 || rd_.q_(13) > 0.4000)
                     {  
@@ -8420,7 +8432,7 @@ void CustomController::getMPCTrajectory()
                             upperd[0] = desired_val_slow[39];
                             q_upper_d(0) = desired_val_slow(19);
                         }
-                        
+                       
                     }
                     else
                     {  
@@ -8482,8 +8494,8 @@ void CustomController::getMPCTrajectory()
                     comprev = comd;
                 }
 
-                comd[0] = desired_val_slow[42]/1.15 + 0.0;
-                comd[1] = desired_val_slow[46]/1.15 + 0.0;
+                comd[0] = desired_val_slow[42]/1.0 + 0.0;
+                comd[1] = desired_val_slow[46]/1.0 + 0.0;
                 comd[2] = 0.0;
 
                 //angm[0] = desired_val_slow[48];
@@ -8658,7 +8670,7 @@ void CustomController::getMPCTrajectory()
 
             comd_s[0] = (comd_init[0] *(40-(walking_tick+1)) + comd[0]*(walking_tick+1))/40;
             comd_s[1] = (comd_init[1] *(40-(walking_tick+1)) + comd[1]*(walking_tick+1))/40;
-            com_mpc1[2] = rd_.link_[COM_id].xpos(2);
+            com_mpc1[2] = com_float_current_(2);
 
             com_mpc1[1] = (com_mpcy_prev *(40-(walking_tick+1)) + com_mpcy*(walking_tick+1))/40;
             com_mpc1[0] = (com_mpcx_prev *(40-(walking_tick+1)) + com_mpcx*(walking_tick+1))/40;
@@ -8688,7 +8700,7 @@ void CustomController::getMPCTrajectory()
             //q_upper = q_upper + upperd * 0.02/40;
             q_upper = (q_upper_d * (walking_tick+1) + q_upper_init *(40-walking_tick-1))/40;//q_upper + upperd * 0.02/40;
             upperd = (q_upper - (q_upper_d * (walking_tick) + q_upper_init *(40-walking_tick))/40) * 2000;
-            
+           
         }
 
         ZMP_gl(0) = ZMPx_test;
@@ -8795,7 +8807,7 @@ void CustomController::getMPCTrajectory()
         }
     }
 
-    if(walking_tick == 6)
+    if(walking_tick == 3)
     {
         if(mpc_cycle <= controlwalk_time)
             mpc_start_init_ = 1;
