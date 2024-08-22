@@ -457,13 +457,20 @@ public:
     Eigen::Isometry3d racromion_transform_init_from_global_;
     Eigen::Isometry3d larmbase_transform_init_from_global_; //1st axis of arm joint (견봉)
     Eigen::Isometry3d rarmbase_transform_init_from_global_;
-
+    
+    Eigen::Vector3d rpy_footd_r;
+    Eigen::Vector3d rpy_footd_l;
+                            
     Eigen::Isometry3d upperbody_transform_current_from_global_;
     Eigen::Isometry3d head_transform_current_from_global_;
     Eigen::Isometry3d lfoot_transform_current_from_global_;
     Eigen::Isometry3d rfoot_transform_current_from_global_;
+    Eigen::Isometry3d lfoot_transform_current_from_global_1;
+    Eigen::Isometry3d rfoot_transform_current_from_global_1;
     Eigen::Isometry3d lfootc_transform_current_from_global_;
     Eigen::Isometry3d rfootc_transform_current_from_global_;
+    Eigen::Isometry3d lfootc_transform_current_from_global_1;
+    Eigen::Isometry3d rfootc_transform_current_from_global_1;
     Eigen::Isometry3d lhand_transform_current_from_global_;
     Eigen::Isometry3d rhand_transform_current_from_global_;
     Eigen::Isometry3d lelbow_transform_current_from_global_;
