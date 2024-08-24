@@ -33,6 +33,7 @@ CSharedMemory mpc_start_init, state_init, statemachine, desired_val, desired_cp;
 3. del_zmp
 4. virtual_temp, virtual_temp1 확인
 5. 지지발 기준 확인
+6. yaml gain 확인
 */
 
 CustomController::CustomController(RobotData &rd) : rd_(rd)
@@ -118,299 +119,48 @@ CustomController::CustomController(RobotData &rd) : rd_(rd)
     q_desireddot.setZero(18);
     COMX.setZero(3);
     MOMX.setZero(2);
-    /*
-    std::vector<double> RF_tran, LF_tran, ZMP_bound, com_ref, comd_ref, angm_ref, zmp_ref;
-    std::string string_test;
-    double jointvalue;
+    
+    nh.getParam("/tocabi_controller/Kl_roll_dsp", Kl_roll_dsp);
+    nh.getParam("/tocabi_controller/Kl_pitch_dsp", Kl_pitch_dsp);
+    nh.getParam("/tocabi_controller/Kr_roll_dsp", Kr_roll_dsp);
+    nh.getParam("/tocabi_controller/Kr_pitch_dsp", Kr_pitch_dsp);
 
-    int shm_id_;
-    if ((shm_id_ = shmget(key_t(1), sizeof(sizeof(int) * 3), IPC_CREAT | 0666)) == -1)
-    {
-        std::cout << "shm1 mtx failed " << std::endl;
-    }
+    nh.getParam("/tocabi_controller/Kl_roll_ssp", Kl_roll_ssp);
+    nh.getParam("/tocabi_controller/Kl_pitch_ssp", Kl_pitch_ssp);
+    nh.getParam("/tocabi_controller/Kr_roll_ssp", Kr_roll_ssp);
+    nh.getParam("/tocabi_controller/Kr_pitch_ssp", Kr_pitch_ssp);
 
-    if(shmctl(shm_id_, IPC_RMID, NULL) == -1)
-    {
-        std::cout << "Error Deleting SHAREDMEMORY1"<<std::endl;
-    }
+    nh.getParam("/tocabi_controller/Kpl_roll", Kpl_roll);
+    nh.getParam("/tocabi_controller/Kpl_pitch", Kpl_pitch);
+    nh.getParam("/tocabi_controller/Kpr_roll", Kpr_roll);
+    nh.getParam("/tocabi_controller/Kpr_pitch", Kpr_pitch);
 
-    if ((shm_id_ = shmget(key_t(2), sizeof(sizeof(double) * 49), IPC_CREAT | 0666)) == -1)
-    {
-        std::cout << "shm2 mtx failed " << std::endl;
-    }
+    nh.getParam("/tocabi_controller/del_zmpx_gain", del_zmpx_gain);
+    nh.getParam("/tocabi_controller/del_zmpy_gain", del_zmpy_gain);
+    nh.getParam("/tocabi_controller/F_F_input_Kp", F_F_input_Kp);
+    nh.getParam("/tocabi_controller/F_F_input_Kv", F_F_input_Kv);
 
-    if(shmctl(shm_id_, IPC_RMID, NULL) == -1)
-    {
-        std::cout << "Error Deleting SHAREDMEMORY2"<<std::endl;
-    }
+    nh.getParam("/tocabi_controller/pelvR_kp", pelvR_kp);
+    nh.getParam("/tocabi_controller/pelvR_kv", pelvR_kv);
+    nh.getParam("/tocabi_controller/pelvP_kp", pelvP_kp);
+    nh.getParam("/tocabi_controller/pelvP_kv", pelvP_kv);
 
-    if ((shm_id_ = shmget(key_t(3), sizeof(sizeof(int) * 3), IPC_CREAT | 0666)) == -1)
-    {
-        std::cout << "shm3 mtx failed " << std::endl;
-    }
+    std::cout << "GAIN" << std::endl;
+    std::cout << "Kpl_pitch" << Kpl_pitch <<std::endl;
+    std::cout << "Kpl_roll" << Kpl_roll <<std::endl;
+    std::cout << "Kpr_pitch" << Kpr_pitch <<std::endl;
+    std::cout << "Kpr_roll" << Kpr_roll <<std::endl;
 
-    if(shmctl(shm_id_, IPC_RMID, NULL) == -1)
-    {
-        std::cout << "Error Deleting SHAREDMEMORY3"<<std::endl;
-    }
+    std::cout << "Kl_roll_dsp" << Kl_roll_dsp <<std::endl;
+    std::cout << "Kr_roll_dsp" << Kr_roll_dsp <<std::endl;
+    std::cout << "Kr_pitch_dsp" << Kr_pitch_dsp <<std::endl;
+    std::cout << "Kl_pitch_dsp" << Kl_pitch_dsp <<std::endl;
 
-    if ((shm_id_ = shmget(key_t(4), sizeof(sizeof(double) * 49), IPC_CREAT | 0666)) == -1)
-    {
-        std::cout << "shm3 mtx failed " << std::endl;
-    }
-    if(shmctl(shm_id_, IPC_RMID, NULL) == -1)
-    {
-        std::cout << "Error Deleting SHAREDMEMORY4"<<std::endl;
-    }
+    std::cout << "Kl_roll_ssp" << Kl_roll_ssp <<std::endl;
+    std::cout << "Kr_roll_ssp" << Kr_roll_ssp <<std::endl;
+    std::cout << "Kr_pitch_ssp" << Kr_pitch_ssp <<std::endl;
+    std::cout << "Kl_pitch_ssp" << Kl_pitch_ssp <<std::endl;
 
-    rfoot_ori1.setZero();
-    mpc_start_init.setKey(1);
-    mpc_start_init.setupSharedMemory(sizeof(int) * 3);
-    mpc_start_init.attachSharedMemoryint();
-    std::cout << "SHAREDMEMORY FIRST OK"<< std::endl;
-    state_init.setKey(2);
-    state_init.setupSharedMemory(sizeof(double) * 50);
-    state_init.attachSharedMemory();
-    std::cout << "SHAREDMEMORY Second OK"<< std::endl;
-    statemachine.setKey(3);
-    statemachine.setupSharedMemoryRead(sizeof(int) * 3);
-    statemachine.attachSharedMemoryint();
-    std::cout << "SHAREDMEMORY Third  OK"<< std::endl;
-    desired_val.setKey(4);
-    desired_val.setupSharedMemoryRead(sizeof(double) * 49);
-    desired_val.attachSharedMemory();
-    std::cout << "SHAREDMEMORY Fourth  OK"<< std::endl;
-    desired_cp.setKey(5);
-    desired_cp.setupSharedMemoryRead(sizeof(double) * 49);
-    desired_cp.attachSharedMemory();
-
-    std::fstream read_file("/home/jhk/walkingdata/beforedata/fdyn/lfoot2_final.txt");
-    std::fstream read_file1("/home/jhk/walkingdata/beforedata/fdyn/rfoot2_final.txt");
-    std::fstream read_file2("/home/jhk/walkingdata/beforedata/fdyn/zmp2_ssp1_1.txt");
-    std::fstream read_file3("/home/jhk/walkingdata/beforedata/ssp2/lfoot1.txt");
-    std::fstream read_file4("/home/jhk/walkingdata/beforedata/ssp2/rfoot2.txt");
-    std::fstream read_file5("/home/jhk/walkingdata/beforedata/ssp2/zmp3.txt");
-    std::fstream read_file6("/home/jhk/walkingdata/beforedata/ssp1/lfoot2.txt");
-    std::fstream read_file7("/home/jhk/walkingdata/beforedata/ssp1/rfoot2.txt");
-    std::fstream read_file8("/home/jhk/walkingdata/beforedata/ssp1/zmp3.txt");
-   
-    std::vector<double> RF_tran_ssp2, LF_tran_ssp2, ZMP_bound_ssp2, RF_tran_ssp1, LF_tran_ssp1, ZMP_bound_ssp1;
-
-    virtual_temp1.setZero();
-    lfootd1.setZero();
-    rfootd1.setZero();
-
-    if (read_file.is_open() && read_file3.is_open() && read_file6.is_open())
-    {
-        while (!read_file.eof())
-        {  
-            for (int i = 0; i < 3; i++)
-            {
-                read_file >> string_test;
-
-                jointvalue = atof(string_test.c_str());
-                if (abs(jointvalue) >= 0.0)
-                {  
-                    LF_tran.push_back(jointvalue);
-                }
-            }
-        }
-
-        while (!read_file3.eof())
-        {  
-            for (int i = 0; i < 3; i++)
-            {
-                read_file3 >> string_test;
-
-                jointvalue = atof(string_test.c_str());
-                if (abs(jointvalue) >= 0.0)
-                {  
-                    LF_tran_ssp2.push_back(jointvalue);
-                }
-            }
-        }
-
-        while (!read_file6.eof())
-        {  
-            for (int i = 0; i < 3; i++)
-            {
-                read_file6 >> string_test;
-               
-                jointvalue = atof(string_test.c_str());
-                if (abs(jointvalue) >= 0.0)
-                {  
-                    LF_tran_ssp1.push_back(jointvalue);
-                }
-            }
-        }
-    }
-    else
-    {
-        std::cout << "LF OPEN FAIL" << std::endl;
-    }
-
-    if (read_file1.is_open() && read_file4.is_open() && read_file7.is_open())
-    {
-        while (!read_file1.eof())
-        {  
-            for (int i = 0; i < 3; i++)
-            {
-                read_file1 >> string_test;
-                //string_test.erase(find(string_test.begin(), string_test.end(), ','));
-               
-                jointvalue = atof(string_test.c_str());
-                if (abs(jointvalue) >= 0.0)
-                {  
-                    RF_tran.push_back(jointvalue);
-                }
-            }
-        }
-        while (!read_file4.eof())
-        {  
-            for (int i = 0; i < 3; i++)
-            {
-                read_file4 >> string_test;
-                //string_test.erase(find(string_test.begin(), string_test.end(), ','));
-                jointvalue = atof(string_test.c_str());
-                if (abs(jointvalue) >= 0.0)
-                {  
-                    RF_tran_ssp2.push_back(jointvalue);
-                }
-            }
-        }
-
-        while (!read_file7.eof())
-        {  
-            for (int i = 0; i < 3; i++)
-            {
-                read_file7 >> string_test;
-                //string_test.erase(find(string_test.begin(), string_test.end(), ','));
-                jointvalue = atof(string_test.c_str());
-                if (abs(jointvalue) >= 0.0)
-                {  
-                    RF_tran_ssp1.push_back(jointvalue);
-                }
-            }
-        }
-    }
-    else
-    {
-        std::cout << "RF OPEN FAIL" << std::endl;
-    }
-
-    if (read_file2.is_open() && read_file5.is_open() && read_file8.is_open())
-    {
-        while (!read_file2.eof())
-        {  
-            for (int i = 0; i < 4; i++)
-            {
-                read_file2 >> string_test;
-                //string_test.erase(find(string_test.begin(), string_test.end(), ','));
-                jointvalue = atof(string_test.c_str());
-                if (abs(jointvalue) >= 0.0)
-                {  
-                    ZMP_bound.push_back(jointvalue);
-                }
-            }
-        }
-
-        while (!read_file5.eof())
-        {  
-            for (int i = 0; i < 4; i++)
-            {
-                read_file5 >> string_test;
-                //string_test.erase(find(string_test.begin(), string_test.end(), ','));
-                jointvalue = atof(string_test.c_str());
-                if (abs(jointvalue) >= 0.0)
-                {  
-                    ZMP_bound_ssp2.push_back(jointvalue);
-                }
-            }
-        }
-
-        while (!read_file8.eof())
-        {  
-            for (int i = 0; i < 4; i++)
-            {
-                read_file8 >> string_test;
-                //string_test.erase(find(string_test.begin(), string_test.end(), ','));
-                jointvalue = atof(string_test.c_str());
-                if (abs(jointvalue) >= 0.0)
-                {  
-                    ZMP_bound_ssp1.push_back(jointvalue);
-                }
-            }
-        }
-    }
-    else
-    {
-        std::cout << "ZMP OPEN FAIL" << std::endl;
-    }
-
-    std::cout << "ZMP" << std::endl;
-    std::cout << ZMP_bound_ssp1.size() << std::endl;
-    std::cout << "RF_tran_ssp1" << std::endl;
-    std::cout << RF_tran_ssp1.size() << std::endl;
-    std::cout << "LF_tran_ssp1" << std::endl;
-    std::cout << LF_tran_ssp1.size() << std::endl;
-
-    std::cout << "ZMP" << std::endl;
-    std::cout << ZMP_bound_ssp2.size() << std::endl;
-    std::cout << "RF_tran_ssp2" << std::endl;
-    std::cout << RF_tran_ssp2.size() << std::endl;
-    std::cout << "LF_tran_ssp2" << std::endl;
-    std::cout << LF_tran_ssp2.size() << std::endl;
-
-    std::cout << "ZMP" << std::endl;
-    std::cout << ZMP_bound.size() << std::endl;
-    std::cout << "RF_tran" << std::endl;
-    std::cout << RF_tran.size() << std::endl;
-    std::cout << "LF_tran" << std::endl;
-    std::cout << LF_tran.size() << std::endl;
-   
-    double *RF_tran1 = &RF_tran[0];
-    double *LF_tran1 = &LF_tran[0];
-    double *ZMP_bound1 = &ZMP_bound[0];
-    Eigen::MatrixXd LF_matrix_temp = Eigen::Map<Eigen::MatrixXd>(RF_tran1, 3, 110);
-    Eigen::MatrixXd RF_matrix_temp = Eigen::Map<Eigen::MatrixXd>(LF_tran1, 3, 110);
-    Eigen::MatrixXd ZMP_bound_temp = Eigen::Map<Eigen::MatrixXd>(ZMP_bound1, 4, 110);
-    double *RF_tran1_ssp2 = &RF_tran_ssp2[0];
-    double *LF_tran1_ssp2 = &LF_tran_ssp2[0];
-    double *ZMP_bound1_ssp2 = &ZMP_bound_ssp2[0];
-    Eigen::MatrixXd LF_matrix_temp_ssp2 = Eigen::Map<Eigen::MatrixXd>(RF_tran1_ssp2, 3, 133);
-    Eigen::MatrixXd RF_matrix_temp_ssp2 = Eigen::Map<Eigen::MatrixXd>(LF_tran1_ssp2, 3, 133);
-    Eigen::MatrixXd ZMP_bound_temp_ssp2 = Eigen::Map<Eigen::MatrixXd>(ZMP_bound1_ssp2, 4, 168);
-   
-    double *RF_tran1_ssp1 = &RF_tran_ssp1[0];
-    double *LF_tran1_ssp1 = &LF_tran_ssp1[0];
-    double *ZMP_bound1_ssp1 = &ZMP_bound_ssp1[0];
-    Eigen::MatrixXd LF_matrix_temp_ssp1 = Eigen::Map<Eigen::MatrixXd>(RF_tran1_ssp1, 3, 133);
-    Eigen::MatrixXd RF_matrix_temp_ssp1 = Eigen::Map<Eigen::MatrixXd>(LF_tran1_ssp1, 3, 140);
-    Eigen::MatrixXd ZMP_bound_temp_ssp1 = Eigen::Map<Eigen::MatrixXd>(ZMP_bound1_ssp1, 4, 168);
-   
-    Eigen::MatrixXd RF_matrix1, LF_matrix1;
-    rfoot_ori1.setZero();
-    lfoot_ori1.setZero();
-    RF_matrix1 = RF_matrix_temp.transpose();
-    LF_matrix1 = LF_matrix_temp.transpose();
-
-    RF_matrix.resize(109,3);
-    LF_matrix.resize(109,3);
-
-    RF_matrix_ssp2 = RF_matrix_temp_ssp2.transpose();
-    LF_matrix_ssp2 = LF_matrix_temp_ssp2.transpose();
-
-    RF_matrix_ssp1 = RF_matrix_temp_ssp1.transpose();
-    LF_matrix_ssp1 = LF_matrix_temp_ssp1.transpose();
-   
-    for(int i = 0; i < RF_matrix.rows(); i++)
-    {
-        RF_matrix.row(i) = RF_matrix1.row(i);
-        LF_matrix.row(i) = LF_matrix1.row(i);
-    }
-    ZMP_bound_matrix = ZMP_bound_temp.transpose();
-    ZMP_bound_matrix_ssp2 = ZMP_bound_temp_ssp2.transpose();
-    */
     mpc_cycle = 0;
     walking_tick = 0;
 
@@ -1354,8 +1104,8 @@ void CustomController::computeSlow()
                                 com_dot_desired_(1) = comd_s[1];
                                 com_desired_(0) = com_mpc[0];
                                 com_desired_(1) = com_mpc[1];
-                                del_zmp(0) = 0.0 * (cp_measured_(0) - cp_desired_(0));//1.6, 1.6
-                                del_zmp(1) = 0.0 * (cp_measured_(1) - cp_desired_(1));
+                                del_zmp(0) = del_zmpx_gain * (cp_measured_(0) - cp_desired_(0));//1.6, 1.6
+                                del_zmp(1) = del_zmpy_gain * (cp_measured_(1) - cp_desired_(1));
                             }
                         }
                     }
@@ -1708,15 +1458,17 @@ void CustomController::computeSlow()
                     file[1] << "123  ";
                     file[1] << com_desired_(0) << " " << com_mpc(0) << " "<< com_support_current_(0) << " "<< com_mpc1[0] << " "<< com_desired_(1) << " " << com_mpc(1) << " "<< com_support_current_(1) << " " << com_mpc1[1] << " "<< com_float_current_(1) << " " << com_desired_init(2) << " " << com_support_current_(2) << " ";
                     file[1] << "125 ";
-                    file[1] << zmpx_ << " " <<  zmp_measured_mj_(0) <<" "<<A1.block(22,0,1,variable_size1) * qp_result << " "<<zmpy_ << " " <<  zmp_measured_mj_(1) << " "  << zmp_mpcy << " " <<A1.block(23,0,1,variable_size1) * qp_result << " "<< desired_val_slow[47]-virtual_temp1(1) << " ";
+                    file[1] << zmpx_ << " " <<  zmp_measured_mj_(0) <<" "<<zmpy_ << " " <<  zmp_measured_mj_(1) << " "  << zmp_mpcy << " " << desired_val_slow[47]-virtual_temp1(1) << " ";
                     file[1] << "129 ";
+                    file[1] << Kr_roll << " " << contactMode * 10 << " ";
+                    /*
                     file[1] << contactMode * 0.001<< " " <<rpy_footd_r(0) << " " << rpy_footd_r(1) << " " << rpy_footd_l(0) << " " << rpy_footd_l(1) << " ";
                     file[1] << "124 ";
                     file[1] << ang_d(0) << " " << model_data_cen.hg.angular()(0) << " " << model_data_test.hg.angular()(0) << " " << ang_d(1)<< " " << model_data_cen.hg.angular()(1)<< " "<< model_data_test.hg.angular()(1)<< " "<< desired_val_slow[44] << " " << MOMX(1)* 2000 << " ";
                     file[1] << "135 ";
                     for(int i = 12 + 6; i < 12 + 6 + 12; i ++)
                         file[1] << qp_result(i) << " " << qdd_des_lpf(i-12-6) << " ";
-                    
+                    */
                     file[1] << "100 ";
                     file[1] << pelv_rpy_current_mj_(0) << " "<< pelv_rpy_current_mj_(1)<< " " << com_d(0) << " " << com_d(1)<< " " << com_d(2) << " " << ang_d(0)<<" "  << ang_d(1) << " " << rfoot_d(0)<< " " << rfoot_d(1)<< " " << rfoot_d(2)<< " "<< rfoot_d2(0)<< " " << rfoot_d2(1)<< " " << rfoot_d2(2)<< " " << lfoot_ori1(0)<< " " << lfoot_ori1(1)<< " " << lfoot_ori1(2)  << " "<< 0.1*(rfoot_trajectory_support_.translation()(2) - rfoot_support_current_.translation()(2)) << " "<< 0.1*(rfoot_trajectory_support_.translation()(0) - rfoot_support_current_.translation()(0))<< std::endl;
                     
@@ -6735,8 +6487,8 @@ void CustomController::getPelvTrajectory()
             R_angle_input = 0;
         }
 
-        P_angle_input_dot = 1.5 * (0.0 - P_angle);// - 0.01 * P_angle_input;
-        R_angle_input_dot = 1.5 * (0.0 - R_angle);// - 0.01 * R_angle_input;
+        P_angle_input_dot = pelvP_kp * (0.0 - P_angle);// - pelvP_kv * P_angle_input;
+        R_angle_input_dot = pelvR_kp * (0.0 - R_angle);// - pelvR_kv * R_angle_input;
 
         P_angle_input = P_angle_input + P_angle_input_dot * del_t;
         R_angle_input = R_angle_input + R_angle_input_dot * del_t;
@@ -7910,7 +7662,7 @@ void CustomController::CP_compen_MJ_FT()
     //////////// Force
     if(mpc_cycle >= 0)
     {
-        F_F_input_dot = 0.0004 * ((l_ft_(2) - r_ft_(2)) - (F_L - F_R)) - 3.0 * F_F_input; // F_F_input이 크면 다리를 원래대로 빨리줄인다. 이정도 게인 적당한듯0.001/0.00001 // SSP, DSP 게인값 바꿔야?
+        F_F_input_dot = F_F_input_Kp * ((l_ft_(2) - r_ft_(2)) - (F_L - F_R)) - F_F_input_Kv * F_F_input; // F_F_input이 크면 다리를 원래대로 빨리줄인다. 이정도 게인 적당한듯0.001/0.00001 // SSP, DSP 게인값 바꿔야?
         F_F_input = F_F_input + F_F_input_dot * del_t;
     }
     else
@@ -7967,41 +7719,37 @@ void CustomController::CP_compen_MJ_FT()
 
     Tau_R_y = -(1-alpha) * Tau_all_y;
     Tau_L_y = -alpha * Tau_all_y;
-    
-
-    double Kr_roll = 0.0, Kl_roll = 0.0;
-    double Kr_pitch = 0.0, Kl_pitch = 0.0;
 
     if (walking_tick_mj < t_start_ + t_rest_init_ + t_double1_)
     {
-        Kr_roll = 50.0;
-        Kl_roll = 50.0;
-        Kr_pitch = 50.0;
-        Kl_pitch = 50.0;
+        Kr_roll = Kr_roll_dsp;
+        Kl_roll = Kl_roll_dsp;
+        Kr_pitch = Kr_pitch_dsp;
+        Kl_pitch = Kl_pitch_dsp;
     }
     else if (walking_tick_mj >= t_start_ + t_rest_init_ + t_double1_ && walking_tick_mj < t_start_ + t_total_ - t_double2_ - t_rest_last_)
     {
         if (alpha == 1) // 왼발 지지
         {
-            Kl_roll = 50.0;
-            Kr_roll = 50.0;
-            Kl_pitch = 50.0;
-            Kr_pitch = 50.0;
+            Kr_roll = Kr_roll_ssp;
+            Kl_roll = Kl_roll_ssp;
+            Kr_pitch = Kr_pitch_ssp;
+            Kl_pitch = Kl_pitch_ssp;
         }
         if (alpha == 0) // 오른발 지지
         {
-            Kl_roll = 50.0;
-            Kr_roll = 50.0;
-            Kl_pitch = 50.0;
-            Kr_pitch = 50.0;
+            Kr_roll = Kr_roll_ssp;
+            Kl_roll = Kl_roll_ssp;
+            Kr_pitch = Kr_pitch_ssp;
+            Kl_pitch = Kl_pitch_ssp;
         }
     }
     else
     {
-        Kr_roll = 50.0;
-        Kl_roll = 50.0;
-        Kr_pitch = 50.0;
-        Kl_pitch = 50.0;
+        Kr_roll = Kr_roll_dsp;
+        Kl_roll = Kl_roll_dsp;
+        Kr_pitch = Kr_pitch_dsp;
+        Kl_pitch = Kl_pitch_dsp;
     }
 
     //Roll 방향 -0.3,50 -> High performance , -0.1, 50 평지 보행 적당
@@ -8025,18 +7773,18 @@ void CustomController::CP_compen_MJ_FT()
     {   //0.1
         if(mpc_cycle > 0)
         {
-            F_T_L_x_input_dot = -0.15 * (Tau_L_x - l_ft_LPF(3)) - Kl_roll * F_T_L_x_input;
+            F_T_L_x_input_dot = Kpl_roll * (Tau_L_x - l_ft_LPF(3)) - Kl_roll * F_T_L_x_input;
             F_T_L_x_input = F_T_L_x_input + F_T_L_x_input_dot * del_t;
             //F_T_L_x_input = 0;
-            F_T_R_x_input_dot = -0.15 * (Tau_R_x - r_ft_LPF(3)) - Kr_roll * F_T_R_x_input;
+            F_T_R_x_input_dot = Kpr_roll * (Tau_R_x - r_ft_LPF(3)) - Kr_roll * F_T_R_x_input;
             F_T_R_x_input = F_T_R_x_input + F_T_R_x_input_dot * del_t;
             //F_T_R_x_input = 0;
 
             //Pitch 방향
-            F_T_L_y_input_dot = 0.15 * (Tau_L_y - l_ft_LPF(4)) - Kl_pitch * F_T_L_y_input;
+            F_T_L_y_input_dot = Kpl_pitch * (Tau_L_y - l_ft_LPF(4)) - Kl_pitch * F_T_L_y_input;
             F_T_L_y_input = F_T_L_y_input + F_T_L_y_input_dot * del_t;
             //F_T_L_y_input = 0;
-            F_T_R_y_input_dot = 0.15 * (Tau_R_y - r_ft_LPF(4)) - Kr_pitch * F_T_R_y_input;
+            F_T_R_y_input_dot = Kpr_pitch * (Tau_R_y - r_ft_LPF(4)) - Kr_pitch * F_T_R_y_input;
             F_T_R_y_input = F_T_R_y_input + F_T_R_y_input_dot * del_t;
         }
         else

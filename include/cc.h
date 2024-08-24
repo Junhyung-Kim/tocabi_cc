@@ -1245,6 +1245,24 @@ public:
     Eigen::VectorVQd qdd_des_virtual_;
     Eigen::VectorVQd qdd_des_virtual_1;
     Eigen::VectorVQd qdd_des_virtual_fast;
+
+    double Kr_roll = 0.0, Kl_roll = 0.0;
+    double Kr_pitch = 0.0, Kl_pitch = 0.0;
+
+    double Kr_roll_dsp = 0.0, Kl_roll_dsp = 0.0;
+    double Kr_pitch_dsp = 0.0, Kl_pitch_dsp = 0.0;
+
+    double Kr_roll_ssp = 0.0, Kl_roll_ssp = 0.0;
+    double Kr_pitch_ssp = 0.0, Kl_pitch_ssp = 0.0;
+
+    double Kpl_roll = 0.0, Kpl_pitch = 0.0;
+    double Kpr_roll = 0.0, Kpr_pitch = 0.0;
+
+    double del_zmpx_gain = 0.0, del_zmpy_gain = 0.0;
+    double F_F_input_Kp = 0.0, F_F_input_Kv = 0.0;
+
+    double pelvR_kp = 0.0, pelvR_kv = 0.0;
+    double pelvP_kp = 0.0, pelvP_kv = 0.0;
     
     Eigen::Isometry3d pelv_trajectory_support_, pelv_trajectory_support_1; //local frame
     Eigen::Isometry3d rfoot_trajectory_support_, rfoot_trajectory_support_1;  //local frame
