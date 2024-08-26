@@ -293,6 +293,8 @@ public:
     double wn_;
     double com_mass_;
 
+    double legzP, legyP, legxP;
+
     Eigen::Vector3d com_pos_init_;
     Eigen::Vector3d com_vel_init_;
     Eigen::Vector3d com_acc_init_;
