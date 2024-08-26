@@ -1,101 +1,25 @@
-Qx1 : 0.8
-Qx2 : 0.1
-Qx3 : 4.0
-Qx4 : 0.0
-Qx5 : 0.0
+Kl_roll_dsp : 50.0
+Kl_pitch_dsp : 50.0
+Kr_roll_dsp : 50.0
+Kr_pitch_dsp : 50.0
 
-Rx1 : 0.5
-Rx2 : 0.1
+Kl_roll_ssp : 20.0
+Kl_pitch_ssp : 20.0
+Kr_roll_ssp : 20.0
+Kr_pitch_ssp : 20.0
 
-Zl0x : 0.0
-Zu0x : 0.0
-zl0x : 0.0
-zu0x : 0.0
+Kpl_roll : -0.15
+Kpl_pitch : 0.15
+Kpr_roll : -0.15
+Kpr_pitch : 0.15
 
-Zl1x : 50.0
-Zu1x : 50.0
-zl1x : 0.0
-zu1x : 0.0
+del_zmpx_gain : 0.2
+del_zmpy_gain : 0.2
 
-ZlNx : 0.0
-ZuNx : 0.0
-zlNx : 0
-zuNx : 0
+F_F_input_Kp : 0.0004
+F_F_input_Kv : 3.0
 
-lmom : 0
-
-Qy1 : 1.0
-Qy2 : 0.0
-Qy3 : 30000.0
-Qy4 : 0.0
-Qy5 : 0.0
-
-Ry1 : 2.0
-Ry2 : 0.1
-
-Zl0y : 0.0
-Zu0y : 0.0
-zl0y : 0.0
-zu0y : 0.0
-
-Zl1y : 50.0
-Zu1y : 50.0
-zl1y : 0.0
-zu1y : 0.0
-
-ZlNy : 0.0
-ZuNy : 0.0
-zlNy : 0
-zuNy : 0
-
-kc_r : 20
-tc_r : 10
-
-kc_p : 20
-tc_p : 10
-
-arp_dl : 20
-ark_dl : 0.02
-app_dl : 20
-apk_dl : 0.02
-
-arp_sl : 30
-ark_sl : 0.02
-app_sl : 30
-apk_sl : 0.02
-
-arp_dr : 20
-ark_dr : 0.02
-app_dr : 20
-apk_dr : 0.02
-
-arp_sr : 30
-ark_sr : 0.02
-app_sr : 30
-apk_sr : 0.02
-
-com_gain : 0.5
-
-pelv_xp : -0.8
-pelv_yp : -0.8
-zmp_xp : 0.0
-zmp_yp : 0.0
-
-K_fx : 0.0001
-T_fx : 3.0
-
-K_fy : 0.0001 
-T_fy : 3.0
-
-K_fz : 0.0001
-T_fz : 3.0
-
-mobgain1 : 40
-mobgain2 : 40
-mobgain3 : 40
-mobgain4 : 60
-mobgain5 : 40
-mobgain6 : 40
-
-ft : 0
-dist : 0
+pelvR_kp : 1.5
+pelvR_kv : 0.01
+pelvP_kp : 1.5
+pelvP_kv : 0.01

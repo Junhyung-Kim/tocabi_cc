@@ -111,7 +111,7 @@ public:
     Eigen::VectorVQd q_temp;
     bool torque_control = true; 
     bool torquecontrol_first = true;
-    bool hipcompen = true; 
+    bool hipcompen = false; 
     bool momentumControlMode = true;
     bool pelvroll = false; 
     Eigen::Vector3d ZMP_float;
@@ -471,8 +471,12 @@ public:
     Eigen::Isometry3d head_transform_current_from_global_;
     Eigen::Isometry3d lfoot_transform_current_from_global_;
     Eigen::Isometry3d rfoot_transform_current_from_global_;
+    Eigen::Isometry3d lfoot_transform_current_from_global_1;
+    Eigen::Isometry3d rfoot_transform_current_from_global_1;
     Eigen::Isometry3d lfootc_transform_current_from_global_;
     Eigen::Isometry3d rfootc_transform_current_from_global_;
+    Eigen::Isometry3d lfootc_transform_current_from_global_1;
+    Eigen::Isometry3d rfootc_transform_current_from_global_1;
     Eigen::Isometry3d lhand_transform_current_from_global_;
     Eigen::Isometry3d rhand_transform_current_from_global_;
     Eigen::Isometry3d lelbow_transform_current_from_global_;
@@ -647,6 +651,12 @@ public:
     double F_T_L_y_input_dot = 0;
     double F_T_R_y_input = 0;
     double F_T_R_y_input_dot = 0;
+
+    Eigen::Vector3d rpy_footd_r,rpy_footd_l;
+    double Kr_roll=0;
+    double Kr_pitch=0;
+    double Kl_roll=0;
+    double Kl_pitch=0;
 
     Eigen::Vector2d f_star_xy_;
     Eigen::Vector2d f_star_xy_pre_;
@@ -1378,6 +1388,7 @@ public:
     Eigen::Isometry3d LFc_float_current, RFc_float_current;
     Eigen::Vector6d ang_de;
     Eigen::VectorXd q_desireddot;
+    Eigen::Vector3d rfoot_offset, lfoot_offset;
 
     Eigen::VectorQVQd q_pinocchio, q_pinocchio1, q_pinocchio1_test;
 
@@ -1582,6 +1593,22 @@ public:
     Eigen::VectorXd state_init_slow;
     Eigen::VectorXd state_init_mu;
     Eigen::VectorXd desired_val_mu;
+
+    double Kr_roll_dsp = 0.0, Kl_roll_dsp = 0.0;
+    double Kr_pitch_dsp = 0.0, Kl_pitch_dsp = 0.0;
+
+    double Kr_roll_ssp = 0.0, Kl_roll_ssp = 0.0;
+    double Kr_pitch_ssp = 0.0, Kl_pitch_ssp = 0.0;
+
+    double Kpl_roll = 0.0, Kpl_pitch = 0.0;
+    double Kpr_roll = 0.0, Kpr_pitch = 0.0;
+
+    double del_zmpx_gain = 0.0, del_zmpy_gain = 0.0;
+    double F_F_input_Kp = 0.0, F_F_input_Kv = 0.0;
+
+    double pelvR_kp = 0.0, pelvR_kv = 0.0;
+    double pelvP_kp = 0.0, pelvP_kv = 0.0;
+
 
     double buffer[52+6] = {1.0, 2, 3, 4, 5, 6, 
     0, 0, 0, 0, 0, 0, 
