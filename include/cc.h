@@ -1558,6 +1558,10 @@ public:
     Eigen::VectorQd Initial_ref_upper_q_;
     Eigen::VectorQd Initial_current_q_;
     Eigen::VectorQd Initial_ref_q_walk_;
+
+    Eigen::Vector3d rpy_foot_r;
+    Eigen::Vector3d rpy_foot_l;
+    
     bool walking_enable_ ;
 
     int new_socket;
