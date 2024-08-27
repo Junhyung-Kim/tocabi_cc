@@ -39,8 +39,8 @@ const int FILE_CNT1 = 15;
 const std::string FILE_NAMES1[FILE_CNT1] =
 {
   ///change this directory when you use this code on the other computer///
-    "/home/dyros/data/0_flag_mj.txt",
-    "/home/dyros/data/1_flag_mj.txt",
+    "/home/jhk/data/0_flag_mj.txt",
+    "/home/jhk/data/1_flag_mj.txt",
     "/home/dh-sung/data/dg/1_com_.txt",
     "/home/dh-sung/data/dg/2_zmp_.txt",
     "/home/dh-sung/data/dg/3_foot_.txt",
@@ -232,6 +232,8 @@ public:
     double walking_duration_cmd_;
     double walking_duration_start_delay_;
     double walking_phase_;
+
+    Eigen::Vector3d rpy_foot_r, rpy_foot_l;
 
     std::atomic<double> step_test;
 
@@ -1658,6 +1660,12 @@ public:
 
     Eigen::VectorQd q_mj;
     Eigen::VectorQd q_mj_prev;
+
+    double com_kx = 0.0;
+    double com_ky = 0.0;
+    double com_kz = 0.0;
+    double foot_swr = 0.0;
+    double foot_swp = 0.0;
 
     sockaddr_in serveraddr;
     sockaddr_in serveraddr1;
