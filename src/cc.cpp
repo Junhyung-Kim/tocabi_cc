@@ -54,8 +54,8 @@ CustomController::CustomController(RobotData &rd) : rd_(rd)
    
     pinocchio::JointModelFreeFlyer root_joint;
     pinocchio::Model model1;
-    //pinocchio::urdf::buildModel("/home/dyros/catkin_ws/src/tocabi_cc/urdf/tocabi.urdf", root_joint, model1);/*_0714*/
-    pinocchio::urdf::buildModel("/usr/local/lib/python3.8/dist-packages/robot_properties_tocabi/resources/urdf/tocabi.urdf", root_joint, model1);/*_0714*/model = model1;
+    pinocchio::urdf::buildModel("/home/dyros/catkin_ws/src/tocabi_cc/urdf/tocabi.urdf", root_joint, model1);/*_0714*/
+    //pinocchio::urdf::buildModel("/usr/local/lib/python3.8/dist-packages/robot_properties_tocabi/resources/urdf/tocabi.urdf", root_joint, model1);/*_0714*/model = model1;
     model = model1;
     model_state = model1;
     model = model1;
@@ -292,12 +292,12 @@ CustomController::CustomController(RobotData &rd) : rd_(rd)
     serveraddr1.sin_family=PF_INET;
     serveraddr1.sin_port=htons(7073);
 
-    if(inet_pton(PF_INET, "127.0.0.1", &serveraddr.sin_addr)<=0)//10.112.1.20
+    if(inet_pton(PF_INET, "10.112.1.20", &serveraddr.sin_addr)<=0)//10.112.1.20
     {
         std::cerr << "Invalid address/ Address not supported" << std::endl;
     }
 
-    if(inet_pton(PF_INET, "127.0.0.1", &serveraddr1.sin_addr)<=0)//10.112.1.10
+    if(inet_pton(PF_INET, "10.112.1.10", &serveraddr1.sin_addr)<=0)//10.112.1.10
     {
         std::cerr << "Invalid address/ Address not supported" << std::endl;
     }
