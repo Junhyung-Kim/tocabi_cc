@@ -370,12 +370,12 @@ CustomController::CustomController(RobotData &rd) : rd_(rd)
         printf("threads[1] create failed\n");
     }
    
-    std::cout <<"THREAD SUCCESS4" << std::endl;
+    /*std::cout <<"THREAD SUCCESS4" << std::endl;
     thread proc3(&CustomController::proc_recv, this);
     thread proc4(&CustomController::proc_recv1, this);
 
     proc3.detach();
-    proc4.detach();
+    proc4.detach();*/
    
     std::cout <<"THREAD SUCCESS2" << std::endl;
 
