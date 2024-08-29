@@ -39,8 +39,8 @@ const int FILE_CNT1 = 15;
 const std::string FILE_NAMES1[FILE_CNT1] =
 {
   ///change this directory when you use this code on the other computer///
-    "/home/jhk/data/0_flag_mj.txt",
-    "/home/jhk/data/1_flag_mj.txt",
+    "/home/dyros/data/0_flag_mj.txt",
+    "/home/dyros/data/1_flag_mj.txt",
     "/home/dh-sung/data/dg/1_com_.txt",
     "/home/dh-sung/data/dg/2_zmp_.txt",
     "/home/dh-sung/data/dg/3_foot_.txt",
@@ -115,6 +115,8 @@ public:
     bool momentumControlMode = true;
     bool pelvroll = false; 
     Eigen::Vector3d ZMP_float;
+    Eigen::Vector3d com_current_dot_LPF;
+    Eigen::Vector3d com_current_dot;
     double left_hip_roll_temp , right_hip_roll_temp , left_hip_xpitch_temp , right_hip_pitch_temp , left_ank_pitch_temp , right_ank_pitch_temp;
 
     string rf,rf1,rf2,rf3,rf4,rf5,rf6,rf7;
@@ -175,6 +177,8 @@ public:
     // Eigen::VectorQd zmpAnkleControl();
     // Eigen::VectorQd jointComTrackingTuning();
     void fallDetection();
+
+    Eigen::Vector3d Identity_rot1,Identity_rot2;
     
     //preview related functions
     void getComTrajectory_Preview();
@@ -1664,6 +1668,9 @@ public:
     double com_kx = 0.0;
     double com_ky = 0.0;
     double com_kz = 0.0;
+    double com_kx_init = 0.0;
+    double com_ky_init = 0.0;
+    double com_kz_init = 0.0;
     double foot_swr = 0.0;
     double foot_swp = 0.0;
 

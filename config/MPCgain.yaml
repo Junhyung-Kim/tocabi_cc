@@ -1,48 +1,51 @@
-#Kl_roll_dsp : 30.0
-#Kl_pitch_dsp : 30.0
-#Kr_roll_dsp : 30.0
-#Kr_pitch_dsp : 30.0
+Kl_roll_dsp : 30.0
+Kl_pitch_dsp : 30.0
+Kr_roll_dsp : 30.0
+Kr_pitch_dsp : 30.0
 
-#Kl_roll_ssp : 30.0
-#Kl_pitch_ssp : 30.0
-#Kr_roll_ssp : 30.0
-#Kr_pitch_ssp : 30.0
+Kl_roll_ssp : 30.0
+Kl_pitch_ssp : 30.0
+Kr_roll_ssp : 30.0
+Kr_pitch_ssp : 30.0
 
-Kl_roll_dsp : 50.0
-Kl_pitch_dsp : 50.0
-Kr_roll_dsp : 50.0
-Kr_pitch_dsp : 50.0
+#Kl_roll_dsp : 50.0
+#Kl_pitch_dsp : 50.0
+#Kr_roll_dsp : 50.0
+#Kr_pitch_dsp : 50.0
 
-Kl_roll_ssp : 20.0
-Kl_pitch_ssp : 20.0
-Kr_roll_ssp : 20.0
-Kr_pitch_ssp : 20.0
+#Kl_roll_ssp : 20.0
+#Kl_pitch_ssp : 20.0
+#Kr_roll_ssp : 20.0
+#Kr_pitch_ssp : 20.0
 
 
-Kpl_roll : -0.15
-Kpl_pitch : 0.15
-Kpr_roll : -0.15
-Kpr_pitch : 0.15
+Kpl_roll : -0.12
+Kpl_pitch : 0.12
+Kpr_roll : -0.12
+Kpr_pitch : 0.12
 
-del_zmpx_gain : 0.0 #0.2
-del_zmpy_gain : 0.0 #0.2
+del_zmpx_gain : 0.8 #0.2
+del_zmpy_gain : 0.8 #0.2
 
 F_F_input_Kp : 0.0004 #0.0003
 F_F_input_Kv : 3.0 #4.0
 
-pelvR_kp : 1.5 #1.0
-pelvR_kv : 0.01
-pelvP_kp : 1.5 #1.0
-pelvP_kv : 0.01
+pelvR_kp : 1.0 #1.0
+pelvR_kv : 0.0
+pelvP_kp : 1.0 #1.0
+pelvP_kv : 0.0
 
-legxP : 0.0003
-legyP : 0.0003
-legzP : 0.0003
+legxP : 0.003
+legyP : 0.003
+legzP : 0.003
 
 com_kx : 0.0
 com_ky : 0.0
-com_kz : 0.0
+com_kz : 0.001
 
+com_kx_init : 0.0003
+com_ky_init : 0.0003
+com_kz_init : 0.001
 
-foot_swr : 0.03
-foot_swp : 0.03
+foot_swr : 0.015
+foot_swp : 0.015
