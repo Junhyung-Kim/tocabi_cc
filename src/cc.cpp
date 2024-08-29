@@ -4669,14 +4669,14 @@ void CustomController::getRobotState()
     }
 
     com_float_current_dot_prev = com_float_current_dot;
-    com_float_current_dot_LPF = 1 / (1 + 2 * M_PI * 6.0 * del_t) * com_float_current_dot_LPF + (2 * M_PI * 8.0 * del_t) / (1 + 2 * M_PI * 6.0 * del_t) * com_float_current_dot;
+    com_float_current_dot_LPF = 1 / (1 + 2 * M_PI * 6.0 * del_t) * com_float_current_dot_LPF + (2 * M_PI * 6.0 * del_t) / (1 + 2 * M_PI * 6.0 * del_t) * com_float_current_dot;
 
     if (walking_tick_mj == 0)
     {
         com_float_current_LPF = com_float_current_;
     }
 
-    com_float_current_LPF = 1 / (1 + 2 * M_PI * 8.0 * del_t) * com_float_current_LPF + (2 * M_PI * 8.0 * del_t) / (1 + 2 * M_PI * 8.0 * del_t) * com_float_current_;
+    com_float_current_LPF = 1 / (1 + 2 * M_PI * 6.0 * del_t) * com_float_current_LPF + (2 * M_PI * 6.0 * del_t) / (1 + 2 * M_PI * 6.0 * del_t) * com_float_current_;
 
     double support_foot_flag = foot_step_(current_step_num_, 6);
 
