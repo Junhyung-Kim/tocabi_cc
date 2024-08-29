@@ -1539,9 +1539,9 @@ def talker():
     weight_quad_camy = 2.9
     weight_quad_zmp = np.array([0.01, 0.01])#([weight_quad_zmpx] + [weight_quad_zmpy])
     weight_quad_zmp1 = np.array([3.0, 3.0])#np.array([3.0, 3.0]) ##5, 10
-    weight_quad_zmp2 = np.array([5.0, 10.0])#np.array([10.0, 30.0]) ##11
+    weight_quad_zmp2 = np.array([10.0, 12.0])#np.array([10.0, 30.0]) ##11
     weight_quad_cam = np.array([0.03, 0.03])#([0.008, 0.008])([weight_quad_camy] + [weight_quad_camx])
-    weight_quad_upper = np.array([25.0, 25.0])
+    weight_quad_upper = np.array([15.0, 15.0])
     weight_quad_pelvis = np.array([80.0, 80.0, 50.0])
     weight_quad_com = np.array([20.0, 20.0, 10.0])#([weight_quad_comx] + [weight_quad_comy] + [weight_quad_comz])
     weight_quad_rf = np.array([13.0, 10.0, 15.0, 1.0, 1.0, 1.0])#np.array([weight_quad_rfx] + [weight_quad_rfy] + [weight_quad_rfz] + [weight_quad_rfroll] + [weight_quad_rfpitch] + [weight_quad_rfyaw])
@@ -1667,21 +1667,30 @@ def talker():
     ZMP_y_ref = []
     
     #zmp_offset = [-0.00, -0.00]
-    zmp_offset = [0.02, -0.01]
+    zmp_offset = [0.0, 0.02]
 
     for t in np.arange(0, len(array_boundx)):
         for k in range(0, 20):
-            ZMP_x_ref.append((array_boundx[t + time_step][0] + array_boundx[t + time_step][1])/2 + zmp_offset[0])
             if(t == 19 or t == 18 or t == 17 or t == 16):
+                ZMP_x_ref.append((array_boundx[t + time_step][0] + array_boundx[t + time_step][1])/2 + zmp_offset[0])
                 ZMP_y_ref.append(-0.1025 +zmp_offset[1])
-            else:
+            elif(t <= 8):
+                ZMP_x_ref.append((array_boundx[t + time_step][0] + array_boundx[t + time_step][1])/2 + zmp_offset[0])
+                ZMP_y_ref.append(0.1025 - zmp_offset[1])
+            elif(t >= 20):
+                zmp_offset = [0.0, -0.00]
+                ZMP_x_ref.append((array_boundx[t + time_step][0] + array_boundx[t + time_step][1])/2 + zmp_offset[0])
                 if((array_boundy[t + time_step][0] + array_boundy[t + time_step][1])/2 > 0):
                     ZMP_y_ref.append((array_boundy[t + time_step][0] + array_boundy[t + time_step][1])/2 - zmp_offset[1])
                 else:
                     ZMP_y_ref.append((array_boundy[t + time_step][0] + array_boundy[t + time_step][1])/2 + zmp_offset[1])
-            
-                
-                
+            else:
+                ZMP_x_ref.append((array_boundx[t + time_step][0] + array_boundx[t + time_step][1])/2 + zmp_offset[0])
+                if((array_boundy[t + time_step][0] + array_boundy[t + time_step][1])/2 > 0):
+                    ZMP_y_ref.append((array_boundy[t + time_step][0] + array_boundy[t + time_step][1])/2 - zmp_offset[1])
+                else:
+                    ZMP_y_ref.append((array_boundy[t + time_step][0] + array_boundy[t + time_step][1])/2 + zmp_offset[1])
+            print(t,k, ZMP_x_ref[k+20*t], array_boundx[t + time_step][0], array_boundx[t + time_step][1])
     A = np.mat(([1, dt, dt**2/2],
             [0, 1, dt],
             [0, 0, 1]))
@@ -1690,11 +1699,6 @@ def talker():
     Q = 1.0
     R = 1e-6
 
-    #Q = 10.0
-    #R = 1e-4
-
-    #Q = 10.0
-    #R = 3e-4
     print(np.shape(ZMP_y_ref))
     
     # Calculate Preview control parameters
@@ -1708,10 +1712,21 @@ def talker():
     COM_x_2 = np.asmatrix(np.zeros((3, N_simulation+1)))
     COM_y_2 = np.asmatrix(np.zeros((3, N_simulation+1)))
 
+    '''
     for k in range(0, N_simulation+1):
         COM_x_1[0, k] = data.com[0][0] - 0.02
         COM_y_1[0, k] = data.com[0][1] + 0.008
-        
+    '''
+
+    for k in range(0, N_simulation+1):
+        COM_x_1[0, k] = 0.0644# data.com[0][0] - 0.02
+        COM_x_1[1, k] = 0.00243
+        COM_x_1[2, k] = 0.0085
+        COM_y_1[0, k] = 0.032#data.com[0][1] + 0.008 #0.03588
+        COM_y_1[1, k] = -0.12
+        COM_y_1[2, k] = -0.62
+
+
     # record data for plot
     COM_x_record_1 = []
     COM_y_record_1 = []
@@ -1740,17 +1755,27 @@ def talker():
             '''
             if(s <= 51):
                 print(s)
+                print([capturePoint_ref_for[s][1], capturePoint_ref_for[s][0]])
+                print("xref")
+                print(ZMP_x_ref[k])
+                print(ZMP_x)
+                print(array_boundx[s + time_step][0], array_boundx[s + time_step][1])
+            '''
+            #print(0.032 + -0.07/np.sqrt(g/z_c), ZMP_y)
+            '''
+            if(s <= 51):
+                print(s)
                 print([ZMP_y_ref[k], COM_y_1[0,k]])
                 print([array_boundy[s + time_step][0], array_boundy[s + time_step][1]])
                 
                 print([ZMP_x, COM_x_1[0,k]])
                 print([array_boundx[s + time_step][0], array_boundx[s + time_step][1]])
             '''
-        
         if k == 20 * 49:
             COM_x_2  = copy(COM_x_1) 
             COM_y_2  = copy(COM_y_1)
-
+            
+    #k = asdfs
     COM_x_1 = np.asmatrix(np.zeros((3, N_simulation+1)))
     COM_y_1 = np.asmatrix(np.zeros((3, N_simulation+1)))
     
@@ -1766,7 +1791,7 @@ def talker():
     #second
     #Q = 10.0
     #R = 1e-4
-    #zmp_offset = [0.02, -0.01]
+    zmp_offset = [0.0, 0.0]
 
     for t in np.arange(0, len(array_boundx)):
         for k in range(0, 20):
@@ -1803,9 +1828,17 @@ def talker():
 
             capturePoint_ref_ssp2[s][1] = ZMP_x
             capturePoint_ref_ssp2[s][2] = ZMP_y
- 
-            #print([capturePoint_ref_ssp2[s][1], capturePoint_ref_ssp2[s][2]])
-            #print("Dyn")
+            '''
+            if(s <= 51):
+                print(COM_x_1[:,0])
+                print([capturePoint_ref_ssp2[s][1], capturePoint_ref_ssp2[s][2]])
+                print("Dyn")
+                print([ZMP_y_ref[k], COM_y_1[0,k]])
+                print([array_boundy[s + time_step][0], array_boundy[s + time_step][1]])
+                
+                print([ZMP_x,ZMP_x_ref[k],COM_x_1[0,k]])
+                print([array_boundxssp2[s + time_step][0], array_boundxssp2[s + time_step][1]])
+            '''
             #print([COM_x_1[2,k] - g/z_c*(COM_x_1[0,k]-ZMP_x)])
             #print([COM_y_1[2,k] - g/z_c*(COM_y_1[0,k]-ZMP_y)])
         
@@ -1863,14 +1896,16 @@ def talker():
 
             capturePoint_ref_ssp1[s][1] = ZMP_x
             capturePoint_ref_ssp1[s][2] = ZMP_y
-            if(s <= 30):
+            '''
+            if(s <= 1):
                 print(s)
                 print([ZMP_y_ref[k], ZMP_y,COM_y_1[0,k]])
                 print([array_boundxssp1[s + time_step][0], array_boundxssp1[s + time_step][1]])
                 
                 print([ZMP_x_ref[k], ZMP_x, COM_x_1[0,k]])
                 print([array_boundxssp1[s + time_step][0], array_boundxssp1[s + time_step][1]])
-            
+            k = asdcfas
+            '''
 
         if k == 20*50:
             COM_x_2  = COM_x_1 
@@ -2040,22 +2075,25 @@ def talker():
         X = np.ndarray(shape=(56,), dtype=np.float64, buffer=x_initv)
             
         if(time_step < 49):
+            plus1[0] = 0.0#plus[0]#plus[0] #- plus1[0]
+            plus[0] = -(X[50] - array_boundRF[time_step][0])
+                
             for i in range(1, N-1):
                 traj_[43] = capturePoint_ref_for[i+time_step][1] + plus[0]#(array_boundx[i + time_step][0] + array_boundx[i + time_step][1])/2 #zmp_refx_[i][0]
                 traj_[47] = capturePoint_ref_for[i+time_step][2]#(array_boundy[i + time_step][0] + array_boundy[i + time_step][1])/2#zmp_refy_[i][0]
                 #capturePoint_ref_for[i+time_step][1]#
                 #capturePoint_ref_for[i+time_step][1]
-                runningCostModel_vector[i].costs["stateReg1"].cost.residual.reference = copy(traj_)  
+                runningCostModel_vector[i].costs["stateReg1"].cost.residual.reference = copy(traj_)
                 
-                if i == 1:
-                    if(time_step == 0):
-                        rf_foot_pos_vector[i].translation[0] = copy(array_boundRF[i + time_step][0])
-                        rf_foot_pos_vector[i].translation[1] = copy(array_boundRF[i + time_step][1])
-                        rf_foot_pos_vector[i].translation[2] = copy(array_boundRF[i + time_step][2])
-                        lf_foot_pos_vector[i].translation[0] = copy(array_boundLF[i + time_step][0])
-                        lf_foot_pos_vector[i].translation[1] = copy(array_boundLF[i + time_step][1])
-                        lf_foot_pos_vector[i].translation[2] = copy(array_boundLF[i + time_step][2])
-                    else:
+                if time_step == 0:
+                    rf_foot_pos_vector[i].translation[0] = copy(array_boundRF[i + time_step][0])
+                    rf_foot_pos_vector[i].translation[1] = copy(array_boundRF[i + time_step][1])
+                    rf_foot_pos_vector[i].translation[2] = copy(array_boundRF[i + time_step][2])
+                    lf_foot_pos_vector[i].translation[0] = copy(array_boundLF[i + time_step][0])
+                    lf_foot_pos_vector[i].translation[1] = copy(array_boundLF[i + time_step][1])
+                    lf_foot_pos_vector[i].translation[2] = copy(array_boundLF[i + time_step][2])
+                else:
+                    if i == 1:
                         rf_foot_pos_vector[i].translation[0] = X[50] + copy(array_boundRF[i + time_step][0]-array_boundRF[i + time_step-1][0])
                         rf_foot_pos_vector[i].translation[1] = X[51] + copy(array_boundRF[i + time_step][1]-array_boundRF[i + time_step-1][1])
                         rf_foot_pos_vector[i].translation[2] = X[52] + copy(array_boundRF[i + time_step][2]-array_boundRF[i + time_step-1][2])
@@ -2064,20 +2102,20 @@ def talker():
                         lf_foot_pos_vector[i].translation[2] = X[55] + copy(array_boundLF[i + time_step][2]-array_boundLF[i + time_step-1][2])
                         #rf_foot_pos_vector[i].translation[2] = copy(array_boundRF[i + time_step][2])
                         #lf_foot_pos_vector[i].translation[2] = copy(array_boundLF[i + time_step][2])
-                
-                else:
-                    #rf_foot_pos_vector[i].translation[0] = rf_foot_pos_vector[i-1].translation[0]+ copy(array_boundRF[i + time_step][0]-array_boundRF[i + time_step-1][0])
-                    rf_foot_pos_vector[i].translation[0] = rf_foot_pos_vector[i-1].translation[0]+ copy(array_boundRF[i + time_step-0][0]-array_boundRF[i + time_step-1][0])
-                    rf_foot_pos_vector[i].translation[1] = rf_foot_pos_vector[i-1].translation[1]+ copy(array_boundRF[i + time_step-0][1]-array_boundRF[i + time_step-1][1])
-                    rf_foot_pos_vector[i].translation[2] = rf_foot_pos_vector[i-1].translation[2]+ copy(array_boundRF[i + time_step-0][2]-array_boundRF[i + time_step-1][2])
-                    #rf_foot_pos_vector[i].translation[2] = rf_foot_pos_vector[i-1].translation[2]+ copy(array_boundRF[i + time_step][2]-array_boundRF[i + time_step-1][2])
-                    #lf_foot_pos_vector[i].translation[0] = lf_foot_pos_vector[i-1].translation[0]+ copy(array_boundLF[i + time_step][0]-array_boundLF[i + time_step-1][0])
-                    lf_foot_pos_vector[i].translation[0] = lf_foot_pos_vector[i-1].translation[0]+ copy(array_boundLF[i + time_step-0][0]-array_boundLF[i + time_step-1][0])
-                    lf_foot_pos_vector[i].translation[1] = lf_foot_pos_vector[i-1].translation[1]+ copy(array_boundLF[i + time_step-0][1]-array_boundLF[i + time_step-1][1])
-                    lf_foot_pos_vector[i].translation[2] = lf_foot_pos_vector[i-1].translation[2]+ copy(array_boundLF[i + time_step-0][2]-array_boundLF[i + time_step-1][2])
-                    #lf_foot_pos_vector[i].translation[2] = lf_foot_pos_vector[i-1].translation[2]+ copy(array_boundLF[i + time_step][2]-array_boundLF[i + time_step-1][2])
-                    #rf_foot_pos_vector[i].translation[2] = copy(array_boundRF[i + time_step][2])
-                    #lf_foot_pos_vector[i].translation[2] = copy(array_boundLF[i + time_step][2])
+                    
+                    else:
+                        #rf_foot_pos_vector[i].translation[0] = rf_foot_pos_vector[i-1].translation[0]+ copy(array_boundRF[i + time_step][0]-array_boundRF[i + time_step-1][0])
+                        rf_foot_pos_vector[i].translation[0] = rf_foot_pos_vector[i-1].translation[0]+ copy(array_boundRF[i + time_step-0][0]-array_boundRF[i + time_step-1][0])
+                        rf_foot_pos_vector[i].translation[1] = rf_foot_pos_vector[i-1].translation[1]+ copy(array_boundRF[i + time_step-0][1]-array_boundRF[i + time_step-1][1])
+                        rf_foot_pos_vector[i].translation[2] = rf_foot_pos_vector[i-1].translation[2]+ copy(array_boundRF[i + time_step-0][2]-array_boundRF[i + time_step-1][2])
+                        #rf_foot_pos_vector[i].translation[2] = rf_foot_pos_vector[i-1].translation[2]+ copy(array_boundRF[i + time_step][2]-array_boundRF[i + time_step-1][2])
+                        #lf_foot_pos_vector[i].translation[0] = lf_foot_pos_vector[i-1].translation[0]+ copy(array_boundLF[i + time_step][0]-array_boundLF[i + time_step-1][0])
+                        lf_foot_pos_vector[i].translation[0] = lf_foot_pos_vector[i-1].translation[0]+ copy(array_boundLF[i + time_step-0][0]-array_boundLF[i + time_step-1][0])
+                        lf_foot_pos_vector[i].translation[1] = lf_foot_pos_vector[i-1].translation[1]+ copy(array_boundLF[i + time_step-0][1]-array_boundLF[i + time_step-1][1])
+                        lf_foot_pos_vector[i].translation[2] = lf_foot_pos_vector[i-1].translation[2]+ copy(array_boundLF[i + time_step-0][2]-array_boundLF[i + time_step-1][2])
+                        #lf_foot_pos_vector[i].translation[2] = lf_foot_pos_vector[i-1].translation[2]+ copy(array_boundLF[i + time_step][2]-array_boundLF[i + time_step-1][2])
+                        #rf_foot_pos_vector[i].translation[2] = copy(array_boundRF[i + time_step][2])
+                        #lf_foot_pos_vector[i].translation[2] = copy(array_boundLF[i + time_step][2])
                 
                 
                 
@@ -2085,22 +2123,25 @@ def talker():
                 runningCostModel_vector[i].costs["footReg2"].cost.residual.reference = copy(lf_foot_pos_vector[i])
 
                 runningCostModel_vector[i].costs["stateReg3"].cost.residual.reference = copy(capturePoint_ref_for[i + time_step] + plus)
-            '''
-            rf_foot_pos_vector[N-1].translation[0] = copy(array_boundRF[N-1 + time_step][0])
-            rf_foot_pos_vector[N-1].translation[1] = copy(array_boundRF[N-1 + time_step][1])
-            rf_foot_pos_vector[N-1].translation[2] = copy(array_boundRF[N-1 + time_step][2])
-            lf_foot_pos_vector[N-1].translation[0] = copy(array_boundLF[N-1 + time_step][0])
-            lf_foot_pos_vector[N-1].translation[1] = copy(array_boundLF[N-1 + time_step][1])
-            lf_foot_pos_vector[N-1].translation[2] = copy(array_boundLF[N-1 + time_step][2])
-            '''
-            rf_foot_pos_vector[N-1].translation[0] = rf_foot_pos_vector[N-1-1].translation[0]+ copy(array_boundRF[N-1 + time_step-0][0]-array_boundRF[N-1 + time_step-1][0])
-            rf_foot_pos_vector[N-1].translation[1] = rf_foot_pos_vector[N-1-1].translation[1]+ copy(array_boundRF[N-1 + time_step-0][1]-array_boundRF[N-1 + time_step-1][1])
-            rf_foot_pos_vector[N-1].translation[2] = rf_foot_pos_vector[N-1-1].translation[2]+ copy(array_boundRF[N-1 + time_step-0][2]-array_boundRF[N-1 + time_step-1][2])
-            lf_foot_pos_vector[N-1].translation[0] = lf_foot_pos_vector[N-1-1].translation[0]+ copy(array_boundLF[N-1 + time_step-0][0]-array_boundLF[N-1 + time_step-1][0])
-            lf_foot_pos_vector[N-1].translation[1] = lf_foot_pos_vector[N-1-1].translation[1]+ copy(array_boundLF[N-1 + time_step-0][1]-array_boundLF[N-1 + time_step-1][1])
-            lf_foot_pos_vector[N-1].translation[2] = lf_foot_pos_vector[N-1-1].translation[2]+ copy(array_boundLF[N-1 + time_step-0][2]-array_boundLF[N-1 + time_step-1][2])
-            #rf_foot_pos_vector[N-1].translation[2] = copy(array_boundRF[N-1 + time_step][2])
-            #lf_foot_pos_vector[N-1].translation[2] = copy(array_boundLF[N-1 + time_step][2])
+                
+            if time_step == 0:
+                rf_foot_pos_vector[N-1].translation[0] = copy(array_boundRF[N-1 + time_step][0])
+                rf_foot_pos_vector[N-1].translation[1] = copy(array_boundRF[N-1 + time_step][1])
+                rf_foot_pos_vector[N-1].translation[2] = copy(array_boundRF[N-1 + time_step][2])
+                lf_foot_pos_vector[N-1].translation[0] = copy(array_boundLF[N-1 + time_step][0])
+                lf_foot_pos_vector[N-1].translation[1] = copy(array_boundLF[N-1 + time_step][1])
+                lf_foot_pos_vector[N-1].translation[2] = copy(array_boundLF[N-1 + time_step][2])
+            else:
+                rf_foot_pos_vector[N-1].translation[0] = rf_foot_pos_vector[N-1-1].translation[0]+ copy(array_boundRF[N-1 + time_step-0][0]-array_boundRF[N-1 + time_step-1][0])
+                rf_foot_pos_vector[N-1].translation[1] = rf_foot_pos_vector[N-1-1].translation[1]+ copy(array_boundRF[N-1 + time_step-0][1]-array_boundRF[N-1 + time_step-1][1])
+                rf_foot_pos_vector[N-1].translation[2] = rf_foot_pos_vector[N-1-1].translation[2]+ copy(array_boundRF[N-1 + time_step-0][2]-array_boundRF[N-1 + time_step-1][2])
+                lf_foot_pos_vector[N-1].translation[0] = lf_foot_pos_vector[N-1-1].translation[0]+ copy(array_boundLF[N-1 + time_step-0][0]-array_boundLF[N-1 + time_step-1][0])
+                lf_foot_pos_vector[N-1].translation[1] = lf_foot_pos_vector[N-1-1].translation[1]+ copy(array_boundLF[N-1 + time_step-0][1]-array_boundLF[N-1 + time_step-1][1])
+                lf_foot_pos_vector[N-1].translation[2] = lf_foot_pos_vector[N-1-1].translation[2]+ copy(array_boundLF[N-1 + time_step-0][2]-array_boundLF[N-1 + time_step-1][2])
+                #rf_foot_pos_vector[N-1].translation[2] = copy(array_boundRF[N-1 + time_step][2])
+                #lf_foot_pos_vector[N-1].translation[2] = copy(array_boundLF[N-1 + time_step][2])
+            
+            print(["aa",runningCostModel_vector[1].costs["stateReg1"].cost.residual.reference[43], runningCostModel_vector[1].costs["stateReg1"].cost.residual.reference[47]])
             
         elif (time_step < 99):
             time_step_ssp2 = time_step - 49
@@ -2421,10 +2462,10 @@ def talker():
                         
                 xs_pca[0] = x0
                 c_start = time.time()
-                css = ddp.solve(xs_pca, us_pca, 15, False, 0.0000005) #0.0000003)
+                css = ddp.solve(xs_pca, us_pca, 15, False, 0.0000001) #0.0000003)
                 c_end = time.time()
                
-                if(ddp.cost < 0.06):
+                if(ddp.cost < 0.09):
                     desired_value.write(ddp.xs[1])
                 
                 desired_time.write(np.array([time_step + 1], dtype=np.int32)) 
@@ -2450,7 +2491,8 @@ def talker():
                 print([x0[41],x0[45]])
                 '''
                 
-                if(time_step < 0):
+                if(time_step >= 0):
+                    '''
                     for i in range(0, len(q)):
                         q[i] = x0[i]    
                     for i in range(0, len(qdot)):
@@ -2472,12 +2514,12 @@ def talker():
                     
                     print(data.vcom[0])
                     print([x0[42],x0[46], 0.0])
-
+                    '''
                     print("ZMP")
                     print(x0[43], x0[47])
                     print(ddp.xs[1][43], ddp.xs[1][47])
                     print(runningCostModel_vector[1].costs["stateReg1"].cost.residual.reference[43], runningCostModel_vector[1].costs["stateReg1"].cost.residual.reference[47])
-                    
+                    '''
                     for i in range(0, len(q)):
                         q[i] = ddp.xs[1][i]    
                     for i in range(0, len(qdot)):
@@ -2512,11 +2554,11 @@ def talker():
                     #print([lf_foot_pos_vector[1].translation[0],lf_foot_pos_vector[1].translation[1],lf_foot_pos_vector[1].translation[2]])
                     #print(data.oMf[RFframe_id].translation)
                     #print([rf_foot_pos_vector[1].translation[0],rf_foot_pos_vector[1].translation[1],rf_foot_pos_vector[1].translation[2]])
-                    
-                #cp_err.append([time_step, runningCostModel_vector[1].costs["stateReg3"].cost.residual.reference[0], (ddp.xs[1][41]+ddp.xs[1][42]/3.51462), (x0[41]+x0[42]/3.51462), runningCostModel_vector[1].costs["stateReg1"].cost.residual.reference[43], rf_foot_pos_vector[1].translation[0], lf_foot_pos_vector[1].translation[0], X[50], X[53]])
-                cp_err.append([time_step, runningCostModel_vector[1].costs["stateReg3"].cost.residual.reference[0], runningCostModel_vector[1].costs["stateReg3"].cost.residual.reference[1], ddp.xs[1][41]+ddp.xs[1][42]/3.51462, (x0[41]+x0[42]/3.51462), runningCostModel_vector[1].costs["stateReg3"].cost.residual.reference[state.nx + 7],(ddp.xs[1][45]+ddp.xs[1][46]/3.51462), rf_foot_pos_vector[1].translation[0], lf_foot_pos_vector[1].translation[0], x0[41], ddp.xs[1][41], x0[43], ddp.xs[1][43]])
+                    '''
+                #cp_err.append([time_step, runningCostModel_vector[1].costs["stateReg3"].cost.residual.reference[0], runningCostModel_vector[1].costs["stateReg3"].cost.residual.reference[1], ddp.xs[1][41]+ddp.xs[1][42]/3.51462, (x0[41]+x0[42]/3.51462), runningCostModel_vector[1].costs["stateReg3"].cost.residual.reference[state.nx + 7],(x0[45]+x0[46]/3.51462),(ddp.xs[1][45]+ddp.xs[1][46]/3.51462), rf_foot_pos_vector[1].translation[0], lf_foot_pos_vector[1].translation[0], x0[41], ddp.xs[1][41], x0[43], ddp.xs[1][43]])
+                cp_err.append([time_step,  runningCostModel_vector[1].costs["stateReg3"].cost.residual.reference[state.nx + 7], (x0[45]+x0[46]/3.51462),(ddp.xs[1][45]+ddp.xs[1][46]/3.51462), runningCostModel_vector[1].costs["stateReg3"].cost.residual.reference[2],ddp.xs[1][47], x0[47]])
                 
-                if time_step == 299:#total_time - 1:
+                if time_step == total_time - 1:
                     time.sleep(0.002)
                     print(total_time_)
                     #print(cp_err)
