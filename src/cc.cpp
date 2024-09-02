@@ -54,8 +54,8 @@ CustomController::CustomController(RobotData &rd) : rd_(rd)
    
     pinocchio::JointModelFreeFlyer root_joint;
     pinocchio::Model model1;
-    pinocchio::urdf::buildModel("/home/dyros/catkin_ws/src/tocabi_cc/urdf/tocabi.urdf", root_joint, model1);/*_0714*/
-    //pinocchio::urdf::buildModel("/usr/local/lib/python3.8/dist-packages/robot_properties_tocabi/resources/urdf/tocabi.urdf", root_joint, model1);/*_0714*/model = model1;
+    //pinocchio::urdf::buildModel("/home/dyros/catkin_ws/src/tocabi_cc/urdf/tocabi.urdf", root_joint, model1);/*_0714*/
+    pinocchio::urdf::buildModel("/usr/local/lib/python3.8/dist-packages/robot_properties_tocabi/resources/urdf/tocabi.urdf", root_joint, model1);/*_0714*/model = model1;
     model = model1;
     model_state = model1;
     model = model1;
@@ -71,6 +71,7 @@ CustomController::CustomController(RobotData &rd) : rd_(rd)
     RFcframe_id = model.getFrameId("RF_contact");
     RFframe_id = model.getFrameId("R_Foot_Link");
     LFframe_id = model.getFrameId("L_Foot_Link");
+    baseframe_id = model.getFrameId("base_link");
 
     RFjoint_id = model_state.getJointId("R_AnkleRoll_Joint");
     LFjoint_id = model_state.getJointId("L_AnkleRoll_Joint");
@@ -377,12 +378,12 @@ CustomController::CustomController(RobotData &rd) : rd_(rd)
         printf("threads[1] create failed\n");
     }
    
-    /*std::cout <<"THREAD SUCCESS4" << std::endl;
+    std::cout <<"THREAD SUCCESS4" << std::endl;
     thread proc3(&CustomController::proc_recv, this);
     thread proc4(&CustomController::proc_recv1, this);
 
     proc3.detach();
-    proc4.detach();*/
+    proc4.detach();
    
     std::cout <<"THREAD SUCCESS2" << std::endl;
 
@@ -1310,8 +1311,8 @@ void CustomController::computeSlow()
                         rfoot_d = rfootd1;
                         lfoot_d = lfootd1;
 
-                        lfoot_ori = -DyrosMath::getPhi(lfoot_trajectory_float_pre.linear(), lfoot_trajectory_float_.linear()) * 0.5/1.0;
-                        rfoot_ori = -DyrosMath::getPhi(rfoot_trajectory_float_pre.linear(), rfoot_trajectory_float_.linear()) * 0.5/1.0;
+                        lfoot_ori = -DyrosMath::getPhi(lfoot_trajectory_float_pre.linear(), lfoot_trajectory_float_.linear());// * 0.5/1.0;
+                        rfoot_ori = -DyrosMath::getPhi(rfoot_trajectory_float_pre.linear(), rfoot_trajectory_float_.linear());// * 0.5/1.0;
 
                         com_d1 = com_d;
                         rfoot_d1 = rfoot_d;
@@ -1322,8 +1323,8 @@ void CustomController::computeSlow()
                         com_d = com_d1;
                         rfoot_d = rfoot_d1;
                         lfoot_d = lfoot_d1;
-                        lfoot_ori = -DyrosMath::getPhi(lfoot_trajectory_float_pre.linear(), lfoot_trajectory_float_.linear()) * 0.5/1.0;
-                        rfoot_ori = -DyrosMath::getPhi(rfoot_trajectory_float_pre.linear(), rfoot_trajectory_float_.linear()) * 0.5/1.0;
+                        lfoot_ori = -DyrosMath::getPhi(lfoot_trajectory_float_pre.linear(), lfoot_trajectory_float_.linear());// * 0.5/1.0;
+                        rfoot_ori = -DyrosMath::getPhi(rfoot_trajectory_float_pre.linear(), rfoot_trajectory_float_.linear());// * 0.5/1.0;
                     }
 
                     pelv_vtran = (pelv_trajectory_float_.translation() - pelv_trajectory_float_pre.translation()) * 2000;
@@ -1360,20 +1361,45 @@ void CustomController::computeSlow()
                             //rfoot_d2 = rfoot_d;
                             //lfoot_d2 = lfoot_d;
 
+                            pelv_trajectory_support_.translation()(0) = com_desired_(0);
+                            pelv_trajectory_support_.translation()(1) = com_desired_(1);
+                            pelv_trajectory_support_.translation()(2) = com_desired_(2);
+                            
+                            pelv_trajectory_float_c = supportfoot_float_current_yaw_only * pelv_trajectory_support_;
+                            lfoot_trajectory_float_c = supportfoot_float_current_yaw_only * lfoot_trajectory_support_;
+                            rfoot_trajectory_float_c = supportfoot_float_current_yaw_only * rfoot_trajectory_support_;
+
+
                             if(walking_tick_mj == t_start_)
                             {
-                                rfoot_offset = rfoot_trajectory_support_.translation() - rfoot_support_current_.translation();
-                                lfoot_offset = lfoot_trajectory_support_.translation() - lfoot_support_current_.translation();
+                                if(floating_Control == true)
+                                {
+                                    rfoot_offset = rfoot_trajectory_float_c.translation() - rfoot_float_current_.translation();
+                                    lfoot_offset = lfoot_trajectory_float_c.translation() - lfoot_float_current_.translation();
+                                }
+                                else
+                                {
+                                    rfoot_offset = rfoot_trajectory_support_.translation() - rfoot_support_current_.translation();
+                                    lfoot_offset = lfoot_trajectory_support_.translation() - lfoot_support_current_.translation();
+                                }
                             }
                            
 
                             if(rfoot_trajectory_support_.translation()(2) > 0 && contactMode != 1)
                             {
                                 lfoot_d2(2) = lfoot_d(2) + 0.00 * (lfoot_trajectory_support_.translation()(2) - lfoot_support_current_.translation()(2)) - F_F_input_dot_d/z_gain;
-                                rfoot_d2(2) = rfoot_d(2) + legzP * (rfoot_trajectory_support_.translation()(2) - rfoot_support_current_.translation()(2) - rfoot_offset(2)) + F_F_input_dot_d/z_gain;    
-                                rfoot_d2(0) = rfoot_d(0) + legxP * (rfoot_trajectory_support_.translation()(0) - rfoot_support_current_.translation()(0));
-                                rfoot_d2(1) = rfoot_d(1) + legyP * (rfoot_trajectory_support_.translation()(1) - rfoot_support_current_.translation()(1));    
-
+                                if(floating_Control == true)
+                                {
+                                    rfoot_d2(2) = rfoot_d(2) + legzP * (rfoot_trajectory_float_c.translation()(2) - rfoot_float_current_.translation()(2)/*rfoot_trajectory_support_.translation()(2) - rfoot_support_current_.translation()(2)*/ - rfoot_offset(2)) + F_F_input_dot_d/z_gain;    
+                                    rfoot_d2(0) = rfoot_d(0) + legxP * (rfoot_trajectory_float_c.translation()(0) - rfoot_float_current_.translation()(0)/*rfoot_trajectory_support_.translation()(0) - rfoot_support_current_.translation()(0)*/);
+                                    rfoot_d2(1) = rfoot_d(1) + legyP * (rfoot_trajectory_float_c.translation()(1) - rfoot_float_current_.translation()(1)/*rfoot_trajectory_support_.translation()(1) - rfoot_support_current_.translation()(1)*/);    
+                                }
+                                else
+                                {
+                                    rfoot_d2(2) = rfoot_d(2) + legzP * (rfoot_trajectory_support_.translation()(2) - rfoot_support_current_.translation()(2) - rfoot_offset(2)) + F_F_input_dot_d/z_gain;    
+                                    rfoot_d2(0) = rfoot_d(0) + legxP * (rfoot_trajectory_support_.translation()(0) - rfoot_support_current_.translation()(0));
+                                    rfoot_d2(1) = rfoot_d(1) + legyP * (rfoot_trajectory_support_.translation()(1) - rfoot_support_current_.translation()(1));    
+                                }
                                 rpy_foot_r = DyrosMath::rot2Euler(rfoot_trajectory_float_.linear());
                                 rpy_foot_l = DyrosMath::rot2Euler(lfoot_trajectory_float_.linear());
                                
@@ -1394,10 +1420,18 @@ void CustomController::computeSlow()
                             else if(lfoot_trajectory_support_.translation()(2) > 0 && contactMode != 1)
                             {
                                 rfoot_d2(2) = rfoot_d(2) + 0.00 * (rfoot_trajectory_support_.translation()(2) - rfoot_support_current_.translation()(2)) + F_F_input_dot_d/z_gain;    
-                                lfoot_d2(2) = lfoot_d(2) + legzP * (lfoot_trajectory_support_.translation()(2) - lfoot_support_current_.translation()(2) - lfoot_offset(2)) - F_F_input_dot_d/z_gain;
-                                lfoot_d2(0) = lfoot_d(0) + legxP * (lfoot_trajectory_support_.translation()(0) - lfoot_support_current_.translation()(0));
-                                lfoot_d2(1) = lfoot_d(1) + legyP * (lfoot_trajectory_support_.translation()(1) - lfoot_support_current_.translation()(1));
-
+                                if(floating_Control == true)
+                                {
+                                    lfoot_d2(2) = lfoot_d(2) + legzP * (lfoot_trajectory_float_c.translation()(2) - lfoot_float_current_.translation()(2)/*lfoot_trajectory_support_.translation()(2) - lfoot_support_current_.translation()(2)*/ - lfoot_offset(2)) - F_F_input_dot_d/z_gain;
+                                    lfoot_d2(0) = lfoot_d(0) + legxP * (lfoot_trajectory_float_c.translation()(0) - lfoot_float_current_.translation()(0)/*lfoot_trajectory_support_.translation()(0) - lfoot_support_current_.translation()(0)*/);
+                                    lfoot_d2(1) = lfoot_d(1) + legyP * (lfoot_trajectory_float_c.translation()(1) - lfoot_float_current_.translation()(1)/*lfoot_trajectory_support_.translation()(1) - lfoot_support_current_.translation()(1)*/);
+                                }
+                                else
+                                {
+                                    lfoot_d2(2) = lfoot_d(2) + legzP * (lfoot_trajectory_support_.translation()(2) - lfoot_support_current_.translation()(2) - lfoot_offset(2)) - F_F_input_dot_d/z_gain;
+                                    lfoot_d2(0) = lfoot_d(0) + legxP * (lfoot_trajectory_support_.translation()(0) - lfoot_support_current_.translation()(0));
+                                    lfoot_d2(1) = lfoot_d(1) + legyP * (lfoot_trajectory_support_.translation()(1) - lfoot_support_current_.translation()(1));
+                                }
                                 rpy_foot_r = DyrosMath::rot2Euler(rfoot_trajectory_float_.linear());
                                 rpy_foot_l = DyrosMath::rot2Euler(lfoot_trajectory_float_.linear());
                                
@@ -1431,30 +1465,48 @@ void CustomController::computeSlow()
                                 lfoot_ori1(0) = 1.0*lfoot_ori(0);// + 0.00 * (rpy_foot(0) - lfoot_rpy_current_(0));
                                 lfoot_ori1(1) = 1.0*lfoot_ori(1);// + 0.00 * (rpy_foot(1) - lfoot_rpy_current_(1));
                             }
-                           
-                            /*rfoot_ori1(0) = 1.0*rfoot_ori(0);// + 0.00 * (rpy_foot(0) - rfoot_rpy_current_(0));
-                            rfoot_ori1(1) = 1.0*rfoot_ori(1);// + 0.00 * (rpy_foot(1) - rfoot_rpy_current_(1));
-                            lfoot_ori1(0) = 1.0*lfoot_ori(0);// + 0.00 * (rpy_foot(0) - lfoot_rpy_current_(0));
-                            lfoot_ori1(1) = 1.0*lfoot_ori(1);// + 0.00 * (rpy_foot(1) - lfoot_rpy_current_(1));
-                            */
 
-                            if(mpc_cycle >= 2)
+                            if(floating_Control == true)
                             {
-                                com_d2(0) = com_d(0) + com_kx * (com_desired_(0) - com_support_current_(0));
-                                com_d2(1) = com_d(1) + com_ky * (com_desired_(1) - com_support_current_(1));
-                                com_d2(2) = 0.0 + com_kz * (com_desired_init(2) - com_support_current_(2));
-                            }
-                            else if(mpc_cycle < 0)
-                            {
-                                com_d2(0) = com_d(0) + com_kx_init * (com_desired_(0) - com_support_current_(0));
-                                com_d2(1) = com_d(1) + com_ky_init * (com_desired_(1) - com_support_current_(1));
-                                com_d2(2) = 0.0 + com_kz_init * (com_desired_init(2) - com_support_current_(2));
+                                if(mpc_cycle >= 2)
+                                {
+                                    com_d2(0) = com_d(0) + com_kx * (pelv_trajectory_float_c.translation()(0) - com_float_current_(0));//(com_desired_(0) - com_support_current_(0));
+                                    com_d2(1) = com_d(1) + com_ky * (pelv_trajectory_float_c.translation()(1) - com_float_current_(1));//(com_desired_(1) - com_support_current_(1));
+                                    com_d2(2) = 0.0 + com_kz * (pelv_trajectory_float_c.translation()(2) - com_float_current_(2));//(com_desired_init(2) - com_support_current_(2));
+                                }
+                                else if(mpc_cycle < 0)
+                                {
+                                    com_d2(0) = com_d(0) + com_kx_init * (pelv_trajectory_float_c.translation()(0) - com_float_current_(0));//(com_desired_(0) - com_support_current_(0));
+                                    com_d2(1) = com_d(1) + com_ky_init * (pelv_trajectory_float_c.translation()(1) - com_float_current_(1));//(com_desired_(1) - com_support_current_(1));
+                                    com_d2(2) = 0.0 + com_kz_init * (pelv_trajectory_float_c.translation()(2) - com_float_current_(2));//(com_desired_init(2) - com_support_current_(2));
+                                }
+                                else
+                                {
+                                    com_d2(0) = com_d(0) + 0.0 * (pelv_trajectory_float_c.translation()(0) - com_float_current_(0));//(com_desired_(0) - com_support_current_(0));
+                                    com_d2(1) = com_d(1) + 0.0 * (pelv_trajectory_float_c.translation()(1) - com_float_current_(1));//(com_desired_(1) - com_support_current_(1));
+                                    com_d2(2) = 0.0 + 0.0 * (pelv_trajectory_float_c.translation()(2) - com_float_current_(2));//(com_desired_init(2) - com_support_current_(2));
+                                }
                             }
                             else
                             {
-                                com_d2(0) = com_d(0) + 0.0 * (com_desired_(0) - com_support_current_(0));
-                                com_d2(1) = com_d(1) + 0.0 * (com_desired_(1) - com_support_current_(1));
-                                com_d2(2) = 0.0 + 0.0 * (com_desired_init(2) - com_support_current_(2));
+                                if(mpc_cycle >= 2)
+                                {
+                                    com_d2(0) = com_d(0) + com_kx * (pelv_trajectory_float_c.translation()(0) - com_float_current_(0));//(com_desired_(0) - com_support_current_(0));
+                                    com_d2(1) = com_d(1) + com_ky * (pelv_trajectory_float_c.translation()(1) - com_float_current_(1));//(com_desired_(1) - com_support_current_(1));
+                                    com_d2(2) = 0.0 + com_kz * (pelv_trajectory_float_c.translation()(2) - com_float_current_(2));//(com_desired_init(2) - com_support_current_(2));
+                                }
+                                else if(mpc_cycle < 0)
+                                {
+                                    com_d2(0) = com_d(0) + com_kx_init * (pelv_trajectory_float_c.translation()(0) - com_float_current_(0));//(com_desired_(0) - com_support_current_(0));
+                                    com_d2(1) = com_d(1) + com_ky_init * (pelv_trajectory_float_c.translation()(1) - com_float_current_(1));//(com_desired_(1) - com_support_current_(1));
+                                    com_d2(2) = 0.0 + com_kz_init * (pelv_trajectory_float_c.translation()(2) - com_float_current_(2));//(com_desired_init(2) - com_support_current_(2));
+                                }
+                                else
+                                {
+                                    com_d2(0) = com_d(0) + 0.0 * (pelv_trajectory_float_c.translation()(0) - com_float_current_(0));//(com_desired_(0) - com_support_current_(0));
+                                    com_d2(1) = com_d(1) + 0.0 * (pelv_trajectory_float_c.translation()(1) - com_float_current_(1));//(com_desired_(1) - com_support_current_(1));
+                                    com_d2(2) = 0.0 + 0.0 * (pelv_trajectory_float_c.translation()(2) - com_float_current_(2));//(com_desired_init(2) - com_support_current_(2));
+                                }
                             }
                             momentumControl(rd_, com_d2, ang_d_temp, rfoot_d2, lfoot_d2, upperd, rfoot_ori1, lfoot_ori1);
                            
@@ -1465,7 +1517,15 @@ void CustomController::computeSlow()
                            
                             pinocchio::computeCentroidalMomentum(model, model_data_test, q_pinocchio1, q_dm_test);
                             pinocchio::centerOfMass(model, model_data_test, q_pinocchio1);
-                            pinocchio::updateFramePlacements(model,model_data_test);
+
+                            /*Eigen::VectorQVQd q_temp1;
+                            q_temp1.setZero();
+                            q_temp1(6) = 1.0;
+                            for(int i = 0; i < 12; i++)
+                                q_temp1(i+7) = q_des_(i);
+                            pinocchio::forwardKinematics(model, model_data_test, q_temp1);
+                            pinocchio::updateFramePlacements(model,model_data_test);*/
+                            
                            
                             Eigen::Vector3d rfoot_ori2, lfoot_ori2;
                             rfoot_ori2.setZero();
@@ -1626,7 +1686,7 @@ void CustomController::computeSlow()
                 {
                     file[1] <<walking_tick_mj << " "<<mpc_cycle <<" " <<pelv_yaw_rot_current_from_global_mj_.translation()(1) <<" "<<supportfoot_float_current_yaw_only.translation()(1) << " "<<current_step_num_<<" "<<walking_tick << " " <<virtual_temp(0) << " "<<virtual_temp1(0)<< " " <<contactMode << " " << com_mpcx << " " << com_mpcy << " "<<desired_val_slow[41] << " " << desired_val_slow[45] << " ";
                    
-                    file[1] << "12  " << zmpx_ << " " <<  zmp_measured_mj_(0) <<" " <<A1.block(22,0,1,variable_size1) * qp_result << " "<<zmpy_ << " " <<  zmp_measured_mj_(1)<<" " <<A1.block(23,0,1,variable_size1) * qp_result  << " "<<ZMP_Y_REF << " " << zmp_mpcy << " " << desired_val_slow[47]-virtual_temp1(1) << " "<< zmp_mpcx << " " << desired_val_slow[43]-virtual_temp1(0) << " "<< desired_val_slow[43] << " ";
+                    file[1] << "12  " << zmpx_ << " " <<  zmp_measured_mj_(0) <<" " <<zmpy_ << " " <<  zmp_measured_mj_(1)<<" " <<ZMP_Y_REF << " " << zmp_mpcy << " " << desired_val_slow[47]-virtual_temp1(1) << " "<< zmp_mpcx << " " << desired_val_slow[43]-virtual_temp1(0) << " "<< desired_val_slow[43] << " ";
                     //<< zmpy_d << " " << zmpx_d << " "  << zmpy_ << " " << zmp_measured_mj_(1)  << " "<<zmpx_ << " " <<  zmp_measured_mj_(0) << " " << desired_val_slow[47]-virtual_temp1(1) << " " << desired_val_slow[47] << " " <<zmp_mpcy<< " ";
                    
                     file[1] <<((l_ft_(2) - r_ft_(2))) << " " <<(F_L - F_R) << " " << l_ft_(3)<< " " << l_ft_(4)<< " " << r_ft_(3)<< " " << r_ft_(4)<< " " ;
@@ -1640,36 +1700,50 @@ void CustomController::computeSlow()
                    
                     file[1] << "125 ";
                     file[1] << ang_d(0) << " " << model_data_cen.hg.angular()(0) << " " << model_data_test.hg.angular()(0) << " " << ang_d(1)<< " " << model_data_cen.hg.angular()(1)<< " "<< model_data_test.hg.angular()(1)<< " "<< desired_val_slow[44] << " " << MOMX(1)* 2000 << " ";
-                   
-                    //file[1] << "127 " << Tau_R_x << " " << Tau_L_x << " " << Tau_R_y << " " << Tau_L_y << " ";;
-                   
-                    //file[1] << "128 " << rpy_foot_r(0) << " " << rpy_foot_l(0)  << " " << rpy_foot_r(1)  << " " << rpy_foot_l(1)  << " ";;
-                    //<< model_data_cen.hg.angular()(0)<< " " << model_data_cen.hg.angular()(1) << " ";
-                   
-                   
-                    /*file[1] << "128 ";
-                    file[1] << ZMP_float(1) <<" " << ZMP_float(1) + virtual_temp(1)<< " " <<zmp_mpcy << " ";
-                    */
-                    /*file[1] << "129 ";
-                    for(int i = 0; i < 50; i++)
+
+
+                    file[1] << pelv_trajectory_support_.translation()(2) << " ";
+                    file[1] << "345 ";
+
+                    /*for(int i = 0; i < 3; i++)
+                        file[1] <<pelv_trajectory_float_.translation()(i) << " " << pelv_trajectory_float_c.translation()(i) << " ";
+                    for(int i = 0; i < 3; i++)
                     {
-                        file[1]<< state_init_(i) <<" ";
+                        if(i == 2)
+                        {
+                            file[1] <<lfoot_trajectory_float_.translation()(i) << " "<< lfoot_trajectory_float_c.translation()(i) << " "<< lfoot_float_current_.translation()(i) + lfoot_offset(2) << " "<< lfoot_float_current_.translation()(i)  << " ";
+                        }
+                        else
+                        {
+                            file[1] <<lfoot_trajectory_float_.translation()(i) << " "<< lfoot_trajectory_float_c.translation()(i) << " "<< lfoot_float_current_.translation()(i) << " ";
+                        }
+                    }
+                    for(int i = 0; i < 3; i++)
+                    {
+                        if(i == 2)
+                        {
+                            file[1] <<rfoot_trajectory_float_.translation()(i) << " "<< rfoot_trajectory_float_c.translation()(i) << " "<< rfoot_float_current_.translation()(i) + rfoot_offset(2) << " "<< rfoot_float_current_.translation()(i) << " ";
+                        }
+                        else
+                        {
+                            file[1] <<rfoot_trajectory_float_.translation()(i) << " "<< rfoot_trajectory_float_c.translation()(i) << " "<< rfoot_float_current_.translation()(i) << " ";
+                        }
                     }
 
-                    file[1] << "131 ";
-                    for(int i = 0; i < 50; i++)
-                    {
-                        file[1]<< desired_val_slow(i) <<" ";
-                    }*/
-                    /*
-                    file[1] << "100 ";
-                    for(int i = 0; i <12;i++)
-                    {
-                        file[1] << q_des_(i) << " ";
-                    }*/
-                   
-
-
+                    Eigen::Vector3d a_temp123, a_temp124;
+                    a_temp123 = DyrosMath::rot2Euler(model_data_test.oMf[RFcframe_id].rotation());
+                    a_temp124 = DyrosMath::rot2Euler(model_data_test.oMf[RFframe_id].rotation());
+                    
+                    for(int i = 0; i < 3; i++)
+                        file[1] << rpy_foot_r(i) << " " << a_temp123(i) << " " << a_temp124(i) << " ";
+                    
+                    a_temp124 = DyrosMath::rot2Euler(pelv_trajectory_float_.linear());
+                    a_temp123 = DyrosMath::rot2Euler(model_data_test.oMf[baseframe_id].rotation());
+                    
+                    for(int i = 0; i < 3; i++)
+                        file[1] <<  a_temp123(i)<< " " << a_temp124(i) << " ";
+                    */
+                    
                     file[1] << "139 " << a_temp  << " " << lfoot_rpy_current_(0) << " " << lfoot_rpy_current_(1) << " " << rfoot_rpy_current_(0) << " " << rfoot_rpy_current_(1)<< " ";
                     file[1] << rfoot_d(0) <<" "  << rfoot_d(1) << " "  << rfoot_d(2) << " " << lfoot_d(0) <<" "  << lfoot_d(1) << " "  << lfoot_d(2) << " ";
                     file[1] << "138 ";
@@ -6771,8 +6845,8 @@ void CustomController::supportToFloatPattern()
     lfoot_trajectory_float_ = DyrosMath::inverseIsometry3d(pelv_trajectory_support_) * lfoot_trajectory_support_;
     rfoot_trajectory_float_ = DyrosMath::inverseIsometry3d(pelv_trajectory_support_) * rfoot_trajectory_support_;
    
-    rfoot_trajectory_float_.translation()(2) = rfoot_trajectory_float_.translation()(2) + F_F_input * 0.5;
-    lfoot_trajectory_float_.translation()(2) = lfoot_trajectory_float_.translation()(2) - F_F_input * 0.5;
+    //rfoot_trajectory_float_.translation()(2) = rfoot_trajectory_float_.translation()(2) + F_F_input * 0.5;
+    //lfoot_trajectory_float_.translation()(2) = lfoot_trajectory_float_.translation()(2) - F_F_input * 0.5;
 }
 
 void CustomController::getComTrajectory()

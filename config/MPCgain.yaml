@@ -35,17 +35,25 @@ pelvR_kv : 0.0
 pelvP_kp : 1.0 #1.0
 pelvP_kv : 0.0
 
-legxP : 0.003
-legyP : 0.003
-legzP : 0.003
+#legxP : 0.003
+#legyP : 0.003
+#legzP : 0.003
+
+legxP : 0.0003
+legyP : 0.0003
+legzP : 0.0003
+
+#com_kx : 0.0
+#com_ky : 0.0
+#com_kz : 0.001
 
 com_kx : 0.0
 com_ky : 0.0
-com_kz : 0.001
+com_kz : 0.0
 
 com_kx_init : 0.0003
 com_ky_init : 0.0003
 com_kz_init : 0.001
 
-foot_swr : 0.015
-foot_swp : 0.015
+foot_swr : 0.0 #0.015
+foot_swp : 0.0 #0.015

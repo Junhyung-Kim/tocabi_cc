@@ -39,8 +39,8 @@ const int FILE_CNT1 = 15;
 const std::string FILE_NAMES1[FILE_CNT1] =
 {
   ///change this directory when you use this code on the other computer///
-    "/home/dyros/data/0_flag_mj.txt",
-    "/home/dyros/data/1_flag_mj.txt",
+    "/home/jhk/data/0_flag_mj.txt",
+    "/home/jhk/data/1_flag_mj.txt",
     "/home/dh-sung/data/dg/1_com_.txt",
     "/home/dh-sung/data/dg/2_zmp_.txt",
     "/home/dh-sung/data/dg/3_foot_.txt",
@@ -1293,6 +1293,10 @@ public:
     Eigen::Isometry3d rfoot_trajectory_float_;
     Eigen::Isometry3d lfoot_trajectory_float_;
 
+    Eigen::Isometry3d pelv_trajectory_float_c; //pelvis frame
+    Eigen::Isometry3d rfoot_trajectory_float_c;
+    Eigen::Isometry3d lfoot_trajectory_float_c;
+
     Eigen::Isometry3d pelv_trajectory_float_1; //pelvis frame
     Eigen::Isometry3d rfoot_trajectory_float_1;
     Eigen::Isometry3d lfoot_trajectory_float_1;
@@ -1391,6 +1395,8 @@ public:
     int contactMode;
     int contactMode_; 
     int contactMode_fast = 1; 
+    bool floating_Control = false;
+
     double supportFoot,supportFoot_,supportFoot_fast;
     Eigen::Vector2d zmp_bx;
     Eigen::Isometry3d LFc_float_current, RFc_float_current;
@@ -1411,7 +1417,7 @@ public:
     Eigen::Vector12d sc_joint_err;
 
     
-    int LFcframe_id, RFcframe_id, RFframe_id, LFframe_id, RFjoint_id, LFjoint_id;
+    int LFcframe_id, RFcframe_id, RFframe_id, LFframe_id, RFjoint_id, LFjoint_id, baseframe_id;
     
     double walking_end_flag = 0;
     double foot_legnth;
