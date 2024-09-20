@@ -1,59 +1,54 @@
-Kl_roll_dsp : 30.0
-Kl_pitch_dsp : 30.0
-Kr_roll_dsp : 30.0
-Kr_pitch_dsp : 30.0
+Kl_roll_dsp : 40.0
+Kl_pitch_dsp : 40.0
+Kr_roll_dsp : 40.0
+Kr_pitch_dsp : 40.0
 
-Kl_roll_ssp : 30.0
-Kl_pitch_ssp : 30.0
-Kr_roll_ssp : 30.0
-Kr_pitch_ssp : 30.0
-
-#Kl_roll_dsp : 50.0
-#Kl_pitch_dsp : 50.0
-#Kr_roll_dsp : 50.0
-#Kr_pitch_dsp : 50.0
-
-#Kl_roll_ssp : 20.0
-#Kl_pitch_ssp : 20.0
-#Kr_roll_ssp : 20.0
-#Kr_pitch_ssp : 20.0
+Kl_roll_ssp : 40.0
+Kl_pitch_ssp : 40.0
+Kr_roll_ssp : 40.0
+Kr_pitch_ssp : 40.0
 
 
-Kpl_roll : -0.12
-Kpl_pitch : 0.12
-Kpr_roll : -0.12
-Kpr_pitch : 0.12
+Kpl_roll : -0.055
+Kpl_pitch : 0.05
+Kpr_roll : -0.055
+Kpr_pitch : 0.05
 
-del_zmpx_gain : 0.8 #0.2
-del_zmpy_gain : 0.8 #0.2
+del_zmpx_gain : 1.8
+del_zmpy_gain : 1.8
 
-F_F_input_Kp : 0.0004 #0.0003
-F_F_input_Kv : 3.0 #4.0
+F_F_input_Kp : 0.0003 #0.0003
+F_F_input_Kv : 4.0 #4.0
 
-pelvR_kp : 1.0 #1.0
-pelvR_kv : 0.0
-pelvP_kp : 1.0 #1.0
-pelvP_kv : 0.0
+pelvR_kp : 0.0 #1.0
+pelvR_kv : 0.0 #0.01
+pelvP_kp : 0.0 #1.0
+pelvP_kv : 0.0 #0.01
 
-#legxP : 0.003
-#legyP : 0.003
-#legzP : 0.003
+legxP : 0.001
+legyP : 0.001
+legzP : 0.001
 
-legxP : 0.0003
-legyP : 0.0003
-legzP : 0.0003
+com_kx : 0.00
+com_ky : 0.00
+com_kz : 0.001
 
-#com_kx : 0.0
-#com_ky : 0.0
-#com_kz : 0.001
-
-com_kx : 0.0
-com_ky : 0.0
-com_kz : 0.0
-
-com_kx_init : 0.0003
-com_ky_init : 0.0003
+com_kx_init : 0.003
+com_ky_init : 0.001
 com_kz_init : 0.001
 
-foot_swr : 0.0 #0.015
-foot_swp : 0.0 #0.015
+foot_swr : 0.0
+foot_swp : 0.0
+
+momPelvR_init : 0.1
+momPelvP_init : 0.1
+
+momPelvR : 0.01
+momPelvP : 0.01
+
+swingR_init : 0.005
+swingP_init : 0.005
+swingR : 0.005
+swingP : 0.005
+
+controlwalk_time : 110

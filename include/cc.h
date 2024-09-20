@@ -111,7 +111,7 @@ public:
     Eigen::VectorVQd q_temp;
     bool torque_control = true; 
     bool torquecontrol_first = true;
-    bool hipcompen = false; 
+    bool hipcompen = true; 
     bool momentumControlMode = true;
     bool pelvroll = false; 
     Eigen::Vector3d ZMP_float;
@@ -1210,7 +1210,7 @@ public:
     bool step_change = false;
     Eigen::VectorVQd qd_pinocchio_, q_dm_mom;
     Eigen::VectorVQd qd_pinocchio;
-    Eigen::VectorQVQd q_pinocchio_desired, q_pinocchio1_test2;
+    Eigen::VectorQVQd q_pinocchio_desired, q_pinocchio1_test2, q_pinocchio1_test3;
     Eigen::VectorQVQd q_pinocchio_desired1, qd_pinocchio1;
 
     Eigen::Vector3d rfootd, lfootd, rfootd1, lfootd1, comd, comd1, comd_init, com_mpc, com_mpc1, com_mpc2, comprev, rfoot_mpc, lfoot_mpc;
@@ -1679,6 +1679,20 @@ public:
     double com_kz_init = 0.0;
     double foot_swr = 0.0;
     double foot_swp = 0.0;
+    double momPelvP = 0.0;
+    double momPelvR = 0.0;
+
+    double momPelvP_init = 0.0;
+    double momPelvR_init = 0.0;
+
+    double swingP_init = 0.0;
+    double swingR_init = 0.0;
+
+    double swingP = 0.0;
+    double swingR = 0.0;
+
+    double R_angle_input_init = 0.0;
+    double P_angle_input_init = 0.0;
 
     sockaddr_in serveraddr;
     sockaddr_in serveraddr1;
