@@ -3,9 +3,9 @@ Kl_pitch_dsp : 30.0
 Kr_roll_dsp : 30.0
 Kr_pitch_dsp : 30.0
 
-Kl_roll_ssp : 30.0
+Kl_roll_ssp : 35.0
 Kl_pitch_ssp : 30.0
-Kr_roll_ssp : 30.0
+Kr_roll_ssp : 35.0
 Kr_pitch_ssp : 30.0
 
 Kpl_roll : -0.055
@@ -13,13 +13,13 @@ Kpl_pitch : 0.05
 Kpr_roll : -0.055
 Kpr_pitch : 0.05
 
-del_zmpx_gain : 1.8
-del_zmpy_gain : 1.8
+del_zmpx_gain : 2.2
+del_zmpy_gain : 2.2
 
-del_zmpx_gain_init : 1.5
-del_zmpy_gain_init : 1.5
+del_zmpx_gain_init : 2.2
+del_zmpy_gain_init : 2.2
 
-F_F_input_Kp : 0.0003 #0.0003
+F_F_input_Kp : 0.0005 #0.0003
 F_F_input_Kv : 4.0 #4.0
 
 pelvR_kp : 0.0 #1.0
@@ -29,10 +29,10 @@ pelvP_kv : 0.0 #0.01
 
 legxP : 0.003
 legyP : 0.003
-legzP : 0.00
+legzP : 0.003
 
-com_kx : 0.00
-com_ky : 0.00
+com_kx : 0.0003
+com_ky : 0.0003
 com_kz : 0.001
 
 com_kx_init : 0.003
@@ -42,15 +42,14 @@ com_kz_init : 0.001
 foot_swr : 0.0
 foot_swp : 0.0
 
-momPelvR_init : 0.05
-momPelvP_init : 0.05
+momPelvR_init : 0.01
+momPelvP_init : 0.01
+momPelvR : 0.05
+momPelvP : 0.05
 
-momPelvR : 0.03
-momPelvP : 0.03
+swingR_init : 0.03
+swingP_init : 0.03
+swingR : 0.05
+swingP : 0.05
 
-swingR_init : 0.02
-swingP_init : 0.02
-swingR : 0.02
-swingP : 0.02
-
-controlwalk_time : 170
+controlwalk_time : 260
