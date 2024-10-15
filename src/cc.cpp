@@ -284,6 +284,29 @@ CustomController::CustomController(RobotData &rd) : rd_(rd)
 
     proc1.detach();
     proc2.detach();
+
+    mujoco_ext_force_apply_pub = nh_avatar_.advertise<std_msgs::Float32MultiArray>("/tocabi_avatar/applied_ext_force", 10);
+    mujoco_applied_ext_force_.data.resize(7);
+
+    /*if((is_impact_ == true) &&
+        (walking_tick_mj >= t_start_impact_ + impact_timing * hz_)  && 
+        (walking_tick_mj <  t_start_impact_ + impact_timing * hz_ + impact_duration * hz_))
+    {
+        
+    }
+    else
+    {
+        mujoco_applied_ext_force_.data[0] = 0; //x-axis linear force
+        mujoco_applied_ext_force_.data[1] = 0; //y-axis linear force
+        mujoco_applied_ext_force_.data[2] = 0; //z-axis linear force
+        mujoco_applied_ext_force_.data[3] = 0; //x-axis angular moment
+        mujoco_applied_ext_force_.data[4] = 0; //y-axis angular moment
+        mujoco_applied_ext_force_.data[5] = 0; //z-axis angular moment
+
+        mujoco_applied_ext_force_.data[6] = impact_target; //link idx; 1:pelvis
+
+        mujoco_ext_force_apply_pub.publish(mujoco_applied_ext_force_);
+    }*/
 }
 
 void CustomController::setGains()
@@ -1135,10 +1158,40 @@ std::cout << " bb " << xd_mj_(0) << " "
 
 
                 //Disturbance                
-                /*if(mpc_cycle >= 152  && mpc_cycle <= 156)//&& (walking_tick >= 1  && walking_tick <= 20))
-                    mj_shm_->dis_check = true;
-                else if(mpc_cycle == 157)
-                    mj_shm_->dis_check = false;*/  
+                if(mpc_cycle >= 152  && mpc_cycle <= 156)//&& (walking_tick >= 1  && walking_tick <= 20))
+                {
+                    double impact_force, impact_theta;
+                    impact_theta = 90.0;
+                    impact_force = 1000.0;
+                    mujoco_applied_ext_force_.data[0] = impact_force*sin(impact_theta*DEG2RAD); //x-axis linear force
+                    mujoco_applied_ext_force_.data[1] =-impact_force*cos(impact_theta*DEG2RAD); //y-axis linear force
+                    mujoco_applied_ext_force_.data[2] = 0.0; //z-axis linear force
+                    mujoco_applied_ext_force_.data[3] = 0.0; //x-axis angular moment
+                    mujoco_applied_ext_force_.data[4] = 0.0; //y-axis angular moment
+                    mujoco_applied_ext_force_.data[5] = 0.0; //z-axis angular moment
+
+                    mujoco_applied_ext_force_.data[6] = 1; //link idx; 1:pelvis
+
+                    mujoco_ext_force_apply_pub.publish(mujoco_applied_ext_force_);
+                }
+                else
+                {
+                    mujoco_applied_ext_force_.data[0] = 0.0; //x-axis linear force
+                    mujoco_applied_ext_force_.data[1] = 0.0; //y-axis linear force
+                    mujoco_applied_ext_force_.data[2] = 0.0; //z-axis linear force
+                    mujoco_applied_ext_force_.data[3] = 0.0; //x-axis angular moment
+                    mujoco_applied_ext_force_.data[4] = 0.0; //y-axis angular moment
+                    mujoco_applied_ext_force_.data[5] = 0.0; //z-axis angular moment
+
+                    mujoco_applied_ext_force_.data[6] = 1; //link idx; 1:pelvis
+
+                    mujoco_ext_force_apply_pub.publish(mujoco_applied_ext_force_);
+                }
+
+                if(mpc_cycle >= 152 && mpc_cycle <= 156)
+                {
+
+                }
                 
                 /*
                 if(mpc_cycle >= 374  && mpc_cycle <= 378)//&& (walking_tick >= 1  && walking_tick <= 20))
@@ -1649,11 +1702,10 @@ void CustomController::computeFast()
         if (initial_flag == 1)
         {
             WBC::SetContact(rd_, 1, 1);
+            VectorQd Gravity_MJ_local = WBC::ContactForceRedistributionTorqueWalking(rd_, WBC::GravityCompensationTorque(rd_), 0.9, 1, 0);
 
             if (atb_grav_update_ == false)
-            {
-                VectorQd Gravity_MJ_local = WBC::ContactForceRedistributionTorqueWalking(rd_, WBC::GravityCompensationTorque(rd_), 0.9, 1, 0);
-
+            {                
                 atb_grav_update_ = true;
                 Gravity_MJ_ = Gravity_MJ_local;
                 atb_grav_update_ = false;

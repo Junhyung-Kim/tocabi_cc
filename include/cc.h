@@ -724,6 +724,9 @@ public:
     Eigen::Vector3d com_vel_desired_preview_pre_;
     Eigen::Vector3d com_acc_desired_preview_pre_;
 
+    ros::Publisher mujoco_ext_force_apply_pub;
+    std_msgs::Float32MultiArray mujoco_applied_ext_force_; // 6 ext wrench + 1 link idx
+
     //siwngFootControlCompute
     Vector3d swingfoot_f_star_l_;
     Vector3d swingfoot_f_star_r_;
