@@ -28,7 +28,6 @@ lb_temp.setConstant(6, -2.0);
                                 ub_temp.setConstant(6, 2.0);
                                
 */
-
 pinocchio::Model model;
 pinocchio::Model model_state;
 pinocchio::Data model_data;
