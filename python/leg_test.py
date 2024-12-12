@@ -1537,18 +1537,19 @@ def talker():
 
     weight_quad_camx = 2.9
     weight_quad_camy = 2.9
-    weight_quad_zmp = np.array([0.01, 0.0, 0.0, 0.01])#([weight_quad_zmpx] + [weight_quad_zmpy])
-    weight_quad_zmp1 = np.array([3.0, 0.0, 0.0, 3.0])#np.array([3.0, 3.0]) ##5, 10
-    weight_quad_zmp2 = np.array([10.0, 0.03, 0.005, 12.0])#np.array([10.0, 30.0]) ##11
-    weight_quad_cam = np.array([0.03, 0.03])#([0.008, 0.008])([weight_quad_camy] + [weight_quad_camx])
-    weight_quad_upper = np.array([15.0, 15.0])
-    weight_quad_pelvis = np.array([80.0, 80.0, 50.0])
+    weight_quad_zmp = np.array([0.01, 0.01])#([weight_quad_zmpx] + [weight_quad_zmpy])
+    weight_quad_zmp1 = np.array([3.0, 0, 0, 3.0])#np.array([3.0, 3.0]) ##5, 10
+    weight_quad_zmp2 = np.array([12.0, 0.01, 0.005, 8.0])#y zmp 12.0#np.array([12.0, 0.01, 0.00, 12.0]) ##11
+    weight_quad_cam = np.array([0.03, 0.05])#([0.008, 0.008])([weight_quad_camy] + [weight_quad_camx])
+    weight_quad_upper = np.array([10.0, 10.0])
+    weight_quad_pelvis = np.array([80.0, 100.0, 50.0])
     weight_quad_com = np.array([20.0, 20.0, 10.0])#([weight_quad_comx] + [weight_quad_comy] + [weight_quad_comz])
     weight_quad_rf = np.array([13.0, 10.0, 15.0, 1.0, 1.0, 1.0])#np.array([weight_quad_rfx] + [weight_quad_rfy] + [weight_quad_rfz] + [weight_quad_rfroll] + [weight_quad_rfpitch] + [weight_quad_rfyaw])
     weight_quad_lf = np.array([13.0, 10.0, 15.0, 1.0, 1.0, 1.0])#np.array([weight_quad_lfx] + [weight_quad_lfy] + [weight_quad_lfz] + [weight_quad_lfroll] + [weight_quad_lfpitch] + [weight_quad_lfyaw])
     lb_ = np.ones([2, N])
     ub_ = np.ones([2, N])
     weight_quad_cp = np.array([100.0, 100.0])
+   
    
     actuation_vector = [None] * (N)
     state_vector = [None] * (N)
@@ -1666,11 +1667,11 @@ def talker():
     ZMP_x_ref = []
     ZMP_y_ref = []
    
+    com_y_ref = []
     #zmp_offset = [-0.00, -0.00]
     zmp_offset = [0.0, 0.02]
 
-    for t in np.arange(0, len(array_boundx)):\
-   
+    for t in np.arange(0, len(array_boundx)):
         for k in range(0, 20):
             if(t == 19 or t == 18 or t == 17 or t == 16):
                 ZMP_x_ref.append((array_boundx[t + time_step][0] + array_boundx[t + time_step][1])/2 + zmp_offset[0])
@@ -1679,20 +1680,33 @@ def talker():
                 ZMP_x_ref.append((array_boundx[t + time_step][0] + array_boundx[t + time_step][1])/2 + zmp_offset[0])
                 ZMP_y_ref.append(0.1025 - zmp_offset[1])
             elif(t >= 20):
-                zmp_offset = [0.0, 0.01]
+                #zmp_offset = [0.0, 0.02]
+                zmp_offset = [0.0, 0.02]
                 ZMP_x_ref.append((array_boundx[t + time_step][0] + array_boundx[t + time_step][1])/2 + zmp_offset[0])
                 if((array_boundy[t + time_step][0] + array_boundy[t + time_step][1])/2 > 0):
                     ZMP_y_ref.append((array_boundy[t + time_step][0] + array_boundy[t + time_step][1])/2 - zmp_offset[1])
+                elif((array_boundy[t + time_step][0] + array_boundy[t + time_step][1])/2 == 0):
+                    ZMP_y_ref.append((array_boundy[t + time_step][0] + array_boundy[t + time_step][1])/2)
                 else:
                     ZMP_y_ref.append((array_boundy[t + time_step][0] + array_boundy[t + time_step][1])/2 + zmp_offset[1])
             else:
                 ZMP_x_ref.append((array_boundx[t + time_step][0] + array_boundx[t + time_step][1])/2 + zmp_offset[0])
                 if((array_boundy[t + time_step][0] + array_boundy[t + time_step][1])/2 > 0):
                     ZMP_y_ref.append((array_boundy[t + time_step][0] + array_boundy[t + time_step][1])/2 - zmp_offset[1])
+                elif((array_boundy[t + time_step][0] + array_boundy[t + time_step][1])/2 == 0):
+                    ZMP_y_ref.append((array_boundy[t + time_step][0] + array_boundy[t + time_step][1])/2)
                 else:
                     ZMP_y_ref.append((array_boundy[t + time_step][0] + array_boundy[t + time_step][1])/2 + zmp_offset[1])
-            print(t,k, ZMP_x_ref[k+20*t], array_boundx[t + time_step][0], array_boundx[t + time_step][1])
-           
+            '''
+            ZMP_x_ref.append((array_boundx[t + time_step][0] + array_boundx[t + time_step][1])/2 + zmp_offset[0])
+            if((array_boundy[t + time_step][0] + array_boundy[t + time_step][1])/2 > 0):
+                ZMP_y_ref.append((array_boundy[t + time_step][0] + array_boundy[t + time_step][1])/2 - zmp_offset[1])
+            elif((array_boundy[t + time_step][0] + array_boundy[t + time_step][1])/2 == 0):
+                ZMP_y_ref.append((array_boundy[t + time_step][0] + array_boundy[t + time_step][1])/2)
+            else:
+                ZMP_y_ref.append((array_boundy[t + time_step][0] + array_boundy[t + time_step][1])/2 + zmp_offset[1])
+            '''
+       
     A = np.mat(([1, dt, dt**2/2],
             [0, 1, dt],
             [0, 0, 1]))
@@ -1701,7 +1715,6 @@ def talker():
     Q = 1.0
     R = 1e-6
 
-    print(np.shape(ZMP_y_ref))
    
     # Calculate Preview control parameters
     K, f = calculatePreviewControlParams(A, B, C, Q, R, N_preview)
@@ -1721,12 +1734,12 @@ def talker():
     '''
 
     for k in range(0, N_simulation+1):
-        COM_x_1[0, k] = 0.0803# data.com[0][0] - 0.02
+        COM_x_1[0, k] = 0.06347#0.0695# data.com[0][0] - 0.02
         COM_x_1[1, k] = 0.00243
-        COM_x_1[2, k] = 0.0090
-        COM_y_1[0, k] = 0.034#data.com[0][1] + 0.008 #0.03588
-        COM_y_1[1, k] = -0.14
-        COM_y_1[2, k] = -0.615
+        COM_x_1[2, k] = 0.0085
+        COM_y_1[0, k] = 0.035#data.com[0][1] + 0.008 #0.03588
+        COM_y_1[1, k] = -0.12
+        COM_y_1[2, k] = -0.62
 
 
     # record data for plot
@@ -1734,6 +1747,7 @@ def talker():
     COM_y_record_1 = []
     ZMP_x_record_1 = []
     ZMP_y_record_1 = []
+   
    
     for k in range(N_simulation):
         ZMP_x_preview = np.asmatrix(ZMP_x_ref[k:k+N_preview]).T
@@ -1773,11 +1787,13 @@ def talker():
                 print([ZMP_x, COM_x_1[0,k]])
                 print([array_boundx[s + time_step][0], array_boundx[s + time_step][1]])
             '''
+            print(["cp", s, capturePoint_ref_for[s][2], ZMP_y_ref[k], capturePoint_ref_for[s][state.nx + 7], COM_y_1[0,k]])
+            if(k < 20*50):
+                com_y_ref.append([s,COM_x_1[0,k], ZMP_x_ref[k],COM_x_1[0,k] + COM_x_1[1,k]/np.sqrt(g/z_c)])
         if k == 20 * 49:
             COM_x_2  = copy(COM_x_1)
             COM_y_2  = copy(COM_y_1)
-           
-    #k = asdfs
+    #K = DSCSFD
     COM_x_1 = np.asmatrix(np.zeros((3, N_simulation+1)))
     COM_y_1 = np.asmatrix(np.zeros((3, N_simulation+1)))
    
@@ -1793,8 +1809,7 @@ def talker():
     #second
     #Q = 10.0
     #R = 1e-4
-    zmp_offset = [0.0, 0.01]
-
+    zmp_offset = [0.03, 0.01]
     for t in np.arange(0, len(array_boundx)):
         for k in range(0, 20):
             ZMP_x_ref.append((array_boundxssp2[t + time_step][0] + array_boundxssp2[t + time_step][1])/2 + zmp_offset[0])
@@ -1803,9 +1818,11 @@ def talker():
             else:
                 if((array_boundyssp2[t + time_step][0] + array_boundyssp2[t + time_step][1])/2 > 0):
                     ZMP_y_ref.append((array_boundyssp2[t + time_step][0] + array_boundyssp2[t + time_step][1])/2 - zmp_offset[1])
+                elif((array_boundyssp2[t + time_step][0] + array_boundyssp2[t + time_step][1])/2 == 0):
+                    ZMP_y_ref.append((array_boundyssp2[t + time_step][0] + array_boundyssp2[t + time_step][1])/2)
                 else:
                     ZMP_y_ref.append((array_boundyssp2[t + time_step][0] + array_boundyssp2[t + time_step][1])/2 + zmp_offset[1])
-   
+        print(t,k, ZMP_y_ref[t*20], array_boundyssp2[t + time_step][0], array_boundyssp2[t + time_step][1])
 
     K, f = calculatePreviewControlParams(A, B, C, Q, R, N_preview)
 
@@ -1843,10 +1860,14 @@ def talker():
             '''
             #print([COM_x_1[2,k] - g/z_c*(COM_x_1[0,k]-ZMP_x)])
             #print([COM_y_1[2,k] - g/z_c*(COM_y_1[0,k]-ZMP_y)])
-       
+            print(["cp1 ", s, capturePoint_ref_ssp2[s][2], ZMP_y_ref[k], capturePoint_ref_ssp2[s][state.nx + 7], COM_y_1[0,k]])
+            if(k < 20*50):
+                com_y_ref.append([s,COM_x_1[0,k], ZMP_x_ref[k],COM_x_1[0,k] + COM_x_1[1,k]/np.sqrt(g/z_c)])
         if k == 20 * 50:
             COM_x_2  = COM_x_1
             COM_y_2  = COM_y_1
+
+           
         #if k <= 50:  
         #    COM_x_record_1.append([capturePoint_ref_ssp2[k][0] + 0.04957, COM_y_1[0,k],COM_x_1[1,k], COM_y_1[1,k], COM_x_1[2,k], COM_y_1[2,k],ZMP_x[0,0] + 0.04957, ZMP_y[0,0]])
        
@@ -1866,6 +1887,9 @@ def talker():
     ZMP_x_ref = []
     ZMP_y_ref = []
 
+
+    zmp_offset = [0.03, 0.02]
+
     for t in np.arange(0, len(array_boundx)):
         for k in range(0, 20):
             ZMP_x_ref.append((array_boundxssp1[t + time_step][0] + array_boundxssp1[t + time_step][1])/2 + zmp_offset[0])
@@ -1874,6 +1898,8 @@ def talker():
             else:
                 if((array_boundyssp1[t + time_step][0] + array_boundyssp1[t + time_step][1])/2 > 0):
                     ZMP_y_ref.append((array_boundyssp1[t + time_step][0] + array_boundyssp1[t + time_step][1])/2 - zmp_offset[1])
+                elif((array_boundyssp1[t + time_step][0] + array_boundyssp1[t + time_step][1])/2 == 0):
+                    ZMP_y_ref.append((array_boundyssp1[t + time_step][0] + array_boundyssp1[t + time_step][1])/2)
                 else:
                     ZMP_y_ref.append((array_boundyssp1[t + time_step][0] + array_boundyssp1[t + time_step][1])/2 + zmp_offset[1])
        
@@ -1908,6 +1934,8 @@ def talker():
                 print([array_boundxssp1[s + time_step][0], array_boundxssp1[s + time_step][1]])
             k = asdcfas
             '''
+            if(k < 20*50):
+                com_y_ref.append([s,COM_x_1[0,k], ZMP_x_ref[k],COM_x_1[0,k] + COM_x_1[1,k]/np.sqrt(g/z_c)])
 
         if k == 20*50:
             COM_x_2  = COM_x_1
@@ -1933,6 +1961,8 @@ def talker():
             else:
                 if((array_boundyssp2[t + time_step][0] + array_boundyssp2[t + time_step][1])/2 > 0):
                     ZMP_y_ref.append((array_boundyssp2[t + time_step][0] + array_boundyssp2[t + time_step][1])/2 - zmp_offset[1])
+                elif((array_boundyssp2[t + time_step][0] + array_boundyssp2[t + time_step][1])/2 == 0):
+                    ZMP_y_ref.append((array_boundyssp2[t + time_step][0] + array_boundyssp2[t + time_step][1])/2)
                 else:
                     ZMP_y_ref.append((array_boundyssp2[t + time_step][0] + array_boundyssp2[t + time_step][1])/2 + zmp_offset[1])
 
@@ -1970,6 +2000,9 @@ def talker():
                 print(array_boundRFssp2[s][0],array_boundRFssp2[s][1],array_boundRFssp2[s][2])
                 print(array_boundLFssp2[s][0],array_boundLFssp2[s][1],array_boundLFssp2[s][2])
             '''
+            if(k < 20*50):
+                com_y_ref.append([s,COM_x_1[0,k], ZMP_x,COM_x_1[0,k] + COM_x_1[1,k]/np.sqrt(g/z_c)])
+        np.savetxt('/home/jhk/data/walking/comy.txt', com_y_ref)
         if k == 20 * 50:
             COM_x_2  = COM_x_1
             COM_y_2  = COM_y_1
@@ -2058,7 +2091,7 @@ def talker():
     terminalDAM = crocoddyl.DifferentialActionModelKinoDynamics(state_vector[N-1], actuation_vector[N-1], terminalCostModel)
     terminalModel = crocoddyl.IntegratedActionModelEuler(terminalDAM, dt_)
     problemWithRK4 = crocoddyl.ShootingProblem(x0, runningModelWithRK4_vector, terminalModel)
-    problemWithRK4.nthreads = 10
+    problemWithRK4.nthreads = 13
 
     ddp = crocoddyl.SolverFDDP(problemWithRK4)
     first_time = True
@@ -2077,11 +2110,10 @@ def talker():
         X = np.ndarray(shape=(56,), dtype=np.float64, buffer=x_initv)
         traj_[44] = X[44]
         traj_[48] = X[48]
-       
         if(time_step < 49):
             plus1[0] = 0.0#plus[0]#plus[0] #- plus1[0]
             plus[0] = -(X[50] - array_boundRF[time_step][0])
-               
+       
             for i in range(1, N-1):
                 traj_[43] = capturePoint_ref_for[i+time_step][1] + plus[0]#(array_boundx[i + time_step][0] + array_boundx[i + time_step][1])/2 #zmp_refx_[i][0]
                 traj_[47] = capturePoint_ref_for[i+time_step][2]#(array_boundy[i + time_step][0] + array_boundy[i + time_step][1])/2#zmp_refy_[i][0]
@@ -2144,6 +2176,8 @@ def talker():
                 lf_foot_pos_vector[N-1].translation[2] = lf_foot_pos_vector[N-1-1].translation[2]+ copy(array_boundLF[N-1 + time_step-0][2]-array_boundLF[N-1 + time_step-1][2])
                 #rf_foot_pos_vector[N-1].translation[2] = copy(array_boundRF[N-1 + time_step][2])
                 #lf_foot_pos_vector[N-1].translation[2] = copy(array_boundLF[N-1 + time_step][2])
+           
+            #print(["aa",runningCostModel_vector[1].costs["stateReg1"].cost.residual.reference[43], runningCostModel_vector[1].costs["stateReg1"].cost.residual.reference[47]])
            
         elif (time_step < 99):
             time_step_ssp2 = time_step - 49
@@ -2475,7 +2509,7 @@ def talker():
                 duration = (1e3 * (c_end - c_start))
 
                 print('ddp.iter {0},{1},{2},{3},{4}'.format(time_step, ddp.iter, duration, css, ddp.cost))
-                #total_time_.append([time_step, ddp.cost, duration, ddp.iter, divmod(time_step - 149, 50)[0]/10])
+                total_time_.append([time_step, ddp.cost, duration, ddp.iter, divmod(time_step - 149, 50)[0]/10])
                 ok_ = True
                
                 #print(["time_step", time_step])
@@ -2494,16 +2528,26 @@ def talker():
                 '''
                
                 if(time_step >= 0):
+
                     '''
+                    print("Ang")
+                    print(x0[44], x0[48])
+                    print(ddp.xs[1][44], ddp.xs[1][48])
+                   
+                    print("ZMP")
+                    print(x0[43], x0[47])
+                    print(ddp.xs[1][43], ddp.xs[1][47])
+                   
                     for i in range(0, len(q)):
                         q[i] = x0[i]    
                     for i in range(0, len(qdot)):
-                        qdot[i] = x0[i+len(q)]                    
-
+                        qdot[i] = x0[i+len(q)]
+                   
                     pinocchio.forwardKinematics(model.model, data, q, qdot)
                     pinocchio.updateFramePlacements(model.model,data)
-                    pinocchio.centerOfMass(model.model, data, q, qdot, False)
+                 
                     pinocchio.computeCentroidalMomentum(model.model,data,q,qdot)
+                   
                     print("aaa")
                     print(data.oMf[LFframe_id].translation)
                     print([lf_foot_pos_vector[1].translation[0],lf_foot_pos_vector[1].translation[1],lf_foot_pos_vector[1].translation[2]])
@@ -2517,12 +2561,9 @@ def talker():
                     print(data.vcom[0])
                     print([x0[42],x0[46], 0.0])
                    
-                    print("ZMP")
-                    print(x0[43], x0[47])
-                    print(ddp.xs[1][43], ddp.xs[1][47])
-                    print(runningCostModel_vector[1].costs["stateReg1"].cost.residual.reference[43], runningCostModel_vector[1].costs["stateReg1"].cost.residual.reference[47])
-                    print(rf_foot_pos_vector[1].translation)
-                    print(lf_foot_pos_vector[1].translation)
+                    print("cccs")
+                    print(x0[44], x0[48])
+                    print([data.hg.angular[1],data.hg.angular[0]])
                     '''
                     '''
                     for i in range(0, len(q)):
@@ -2532,36 +2573,24 @@ def talker():
                    
                     pinocchio.forwardKinematics(model.model, data, q, qdot)
                     pinocchio.updateFramePlacements(model.model,data)
-                    pinocchio.centerOfMass(model.model, data, q, qdot, False)
+                    #pinocchio.centerOfMass(model.model, data, q, qdot, False)
+                   
                     pinocchio.computeCentroidalMomentum(model.model,data,q,qdot)
                    
-                    print("bbb")
-                    print(x0[44], x0[48])
-                    print([ddp.xs[1][44], data.hg.angular[1]])
-                    print([ddp.xs[1][48], data.hg.angular[0]])
+                    print(ddp.xs[1][0:7])
+                    print("ang2")
+                    print(ddp.xs[1][44], ddp.xs[1][48])
+                    print([data.hg.angular[1],data.hg.angular[0]])
+
+                    print("RFLF2")
                     print(data.oMf[LFframe_id].translation)
                     print([lf_foot_pos_vector[1].translation[0],lf_foot_pos_vector[1].translation[1],lf_foot_pos_vector[1].translation[2]])
                     print(data.oMf[RFframe_id].translation)
                     print([rf_foot_pos_vector[1].translation[0],rf_foot_pos_vector[1].translation[1],rf_foot_pos_vector[1].translation[2]])
-                    print("com")
-                    print(data.com[0])
-                    print([ddp.xs[1][41],ddp.xs[1][45], runningCostModel_vector[1].costs["comReg"].cost.residual.reference[2]])
-                    print(data.vcom[0])
-                    print([ddp.xs[1][42],ddp.xs[1][46]])
-                    print("ZMP")
-                    print(x0[43], x0[47])
-                    print(ddp.xs[1][43], ddp.xs[1][47])
-                    print(ddp.xs[1])
-                    print(x0)
-                   
-                    #print("time_step", time_step + 1)
-                    #print(data.oMf[LFframe_id].translation)
-                    #print([lf_foot_pos_vector[1].translation[0],lf_foot_pos_vector[1].translation[1],lf_foot_pos_vector[1].translation[2]])
-                    #print(data.oMf[RFframe_id].translation)
-                    #print([rf_foot_pos_vector[1].translation[0],rf_foot_pos_vector[1].translation[1],rf_foot_pos_vector[1].translation[2]])
                     '''
-                #cp_err.append([time_step, runningCostModel_vector[1].costs["stateReg3"].cost.residual.reference[0], runningCostModel_vector[1].costs["stateReg3"].cost.residual.reference[1], ddp.xs[1][41]+ddp.xs[1][42]/3.51462, (x0[41]+x0[42]/3.51462), runningCostModel_vector[1].costs["stateReg3"].cost.residual.reference[state.nx + 7],(x0[45]+x0[46]/3.51462),(ddp.xs[1][45]+ddp.xs[1][46]/3.51462), rf_foot_pos_vector[1].translation[0], lf_foot_pos_vector[1].translation[0], x0[41], ddp.xs[1][41], x0[43], ddp.xs[1][43]])
-                cp_err.append([time_step,  runningCostModel_vector[1].costs["stateReg3"].cost.residual.reference[state.nx + 7], (x0[45]+x0[46]/3.51462),(ddp.xs[1][45]+ddp.xs[1][46]/3.51462), runningCostModel_vector[1].costs["stateReg3"].cost.residual.reference[2],ddp.xs[1][47], x0[47],  plus[1], plus1[1], X[51]+ plus1[1], X[54]+ plus1[1]])
+
+                cp_err.append([time_step, ddp.xs[1][45], x0[45], runningCostModel_vector[1].costs["stateReg3"].cost.residual.reference[state.nx + 7],(x0[45]+x0[46]/3.51462),(ddp.xs[1][45]+ddp.xs[1][46]/3.51462), plus[state.nx + 7]])
+                #cp_err.append([time_step, x0[47], capturePoint_ref_for[time_step+1][2], ddp.xs[1][47]])
                
                 if time_step == total_time - 1:
                     time.sleep(0.002)
@@ -2596,3 +2625,4 @@ if __name__=='__main__':
     #talk.publish(roslibpy.Message({'data': 'Hello World!'}))
     #PCAlearning()
     talker()
+
