@@ -52,4 +52,12 @@ swingP_init : 0.03
 swingR : 0.05
 swingP : 0.05
 
+
+impact_theta : 0.0
+impact_force : 550.0
+
+dis_mpc_init : 1000 #174, 153
+dis_mpc_final : 180
+
+
 controlwalk_time : 260

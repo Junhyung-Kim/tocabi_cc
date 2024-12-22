@@ -7,6 +7,7 @@
 #include <std_msgs/Int8.h>
 #include <std_msgs/Bool.h>
 #include "tocabi_msgs/matrix_3_4.h"
+#include "tocabi_msgs/FTsensor.h"
 #include <geometry_msgs/PoseArray.h>
 #include <visualization_msgs/MarkerArray.h>
 #include <std_msgs/String.h>
@@ -39,8 +40,8 @@ const int FILE_CNT1 = 15;
 const std::string FILE_NAMES1[FILE_CNT1] =
 {
   ///change this directory when you use this code on the other computer///
-    "/home/dyros/data/0_flag_mj.txt",
-    "/home/dyros/data/1_flag_mj.txt",
+    "/home/jhk/data/0_flag_mj.txt",
+    "/home/jhk/data/1_flag_mj.txt",
     "/home/dh-sung/data/dg/1_com_.txt",
     "/home/dh-sung/data/dg/2_zmp_.txt",
     "/home/dh-sung/data/dg/3_foot_.txt",
@@ -118,7 +119,9 @@ public:
     bool pelvroll = false;
     Eigen::Vector3d ZMP_float;
     Eigen::Vector3d com_current_dot_LPF;
+    Eigen::Vector3d com_current_dot_LPF1;
     Eigen::Vector3d com_current_dot;
+    Eigen::Vector3d com_current_dot1;
     double left_hip_roll_temp , right_hip_roll_temp , left_hip_xpitch_temp , right_hip_pitch_temp , left_ank_pitch_temp , right_ank_pitch_temp;
 
     string rf,rf1,rf2,rf3,rf4,rf5,rf6,rf7;
@@ -330,12 +333,17 @@ public:
     Eigen::Vector3d pelv_pos_current_;
     Eigen::Vector6d pelv_vel_current_;
     Eigen::Vector3d pelv_angvel_current_;
-    Eigen::Matrix3d pelv_rot_current_;
+    Eigen::Matrix3d pelv_rot_current_, pelv_rot, pelv_rot_prev;
+    Eigen::Vector3d pelv_rotv, pelv_rotv_lpf;
     Eigen::Vector3d pelv_rpy_current_;
     Eigen::Matrix3d pelv_rot_current_yaw_aline_;
     Eigen::Matrix3d pelv_yaw_rot_current_from_global_;
     Eigen::Isometry3d pelv_transform_current_from_global_;
     double pelv_height_offset_;
+
+    std::atomic<int> thread_3_count;
+    std::atomic<bool> thread_3_slow;
+    std::atomic<bool> thread_3_fast;
      
     Eigen::Vector3d pelv_pos_init_;
     Eigen::Vector6d pelv_vel_init_;
@@ -1225,6 +1233,7 @@ public:
     Eigen::Vector3d ZMP_gl;
 
     Eigen::Vector3d zmp_temp1;
+    int zmp_temp3;
     double ZMPx_prev, ZMPy_prev, zmp_mpcx, zmp_mpcy, com_mpcx, com_mpcy, com_mpcy_prev, com_mpcx_prev, ZMPx_test, ZMPy_test;
     int controlwalk_time;
 
@@ -1337,7 +1346,8 @@ public:
     Eigen::Vector2d cp_measured_LPF;
     Eigen::Vector3d com_support_init_;
     Eigen::Vector3d com_float_init_;
-    Eigen::Vector3d com_float_current_;
+    Eigen::Vector3d com_float_current_, com_float_current_1;
+    Eigen::Vector3d com_float_current_prev;
     Eigen::Vector3d com_support_current_;
     Eigen::Vector3d com_support_current_dot_;
     Eigen::Vector3d com_support_current_LPF;
@@ -1433,6 +1443,15 @@ public:
    
     double walking_end_flag = 0;
     double foot_legnth;
+
+    std::atomic<int> time_fast;
+    std::atomic<int> filetime_fast;
+    std::atomic<int> filetime_slow;
+    std::atomic<int> time_slow;
+
+    Eigen::Vector3d pelv_v_lpf, pelv_v, pelv_prev, pelv_pos;
+
+    Eigen::Vector6d opto_ft_raw_;
    
     Eigen::Isometry3d supportfoot_float_current_;
 
@@ -1555,6 +1574,16 @@ public:
     bool time_tick_next = true;
     std::chrono::system_clock::time_point startTime;
     std::chrono::system_clock::time_point startTime1;
+    std::chrono::system_clock::time_point startTime2;
+    std::chrono::system_clock::time_point startTime3;
+    std::chrono::system_clock::time_point startTime4;
+    std::chrono::system_clock::time_point startTime5;
+
+    std::chrono::system_clock::time_point endTime1;
+    std::chrono::system_clock::time_point endTime2;
+    std::chrono::system_clock::time_point endTime3;
+    std::chrono::system_clock::time_point endTime4;
+    std::chrono::system_clock::time_point endTime5;
     std::chrono::system_clock::time_point endTime;
 
     double zmp_start_time_mj_;
@@ -1638,7 +1667,7 @@ public:
     double pelvP_kp = 0.0, pelvP_kv = 0.0;
 
 
-    double buffer[52+6] = {1.0, 2, 3, 4, 5, 6,
+    double buffer[52+6+2] = {1.0, 2, 3, 4, 5, 6,
     0, 0, 0, 0, 0, 0,
     0, 0, 0, 0, 0, 0,
     0, 0, 0, 0, 0, 0,
@@ -1647,21 +1676,27 @@ public:
     0, 0, 0, 0, 1.0, 2,
     3, 4, 5, 6, 0, 0,
     0, 99, 100, 0,
-   
-    0, 0, 0, 0, 0, 0};
+    0, 0, 0, 0, 0, 0, 0, 0};
 
-    double buffer1[51] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    double buffer1[51 + 3] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 
     Eigen::Vector3d pelv_vtran, rf_vtran, lf_vtran;
     int delay_time = 0;
 
     //pedal_
     ros::NodeHandle nh;
-    ros::Subscriber pedal_command;
+    ros::Subscriber pedal_command, opto_ftsensor_sub;
+    ros::Publisher mujoco_ext_force_apply_pub;
+
+    std_msgs::Float32MultiArray mujoco_applied_ext_force_;
+
+    double impact_theta_, impact_force_;
+    int dis_mpc_init, dis_mpc_final;
+    
     void PedalCommandCallback(const tocabi_msgs::WalkingCommandConstPtr &msg);
     Eigen::Vector4d joystick_input;
     Eigen::Vector4d joystick_input_;
@@ -1672,6 +1707,21 @@ public:
     void calculateFootStepTotal_MJoy_End();
     void updateNextStepTimeJoy();
     void comGainTrajectory();
+    void OptoforceFTCallback(const tocabi_msgs::FTsensor &msg);
+    void computeThread3();
+    Eigen::Matrix3d Euler2Rot(const Eigen::Vector3d &euler_vec);
+
+    std::atomic<bool> walking_finish_flag;
+
+    Eigen::MatrixXd data_stor_fast1;
+    Eigen::MatrixXd data_stor_slow1;
+
+    Eigen::MatrixXd data_stor_fast2;
+    Eigen::MatrixXd data_stor_slow2;
+
+    Eigen::MatrixXd data_stor_fast;
+    Eigen::MatrixXd data_stor_slow;
+
 
     double alpha_temp1 = 0;
     double alpha;
