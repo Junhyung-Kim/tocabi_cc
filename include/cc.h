@@ -1199,6 +1199,8 @@ public:
     bool qp_solved;
     Eigen::VectorXd qp_result1, q_dm;
     Eigen::VectorVQd q_dm_test;
+
+    Eigen::Vector2d upperd1;
     double a_temp1 = 0.0;
     double a_temp31 = 0.0;
     Eigen::MatrixXd J2, H2, A2;
@@ -1249,10 +1251,12 @@ public:
 
     Eigen::VectorQd Tau_CP;
 
-    Eigen::Vector2d q_upper;
-    Eigen::Vector2d q_upper_init;
+    Eigen::Vector2d q_upper,q_upper1;
+    Eigen::Vector2d q_upper_init,q_upper_init1;
     Eigen::Vector2d q_upper_d;
+    Eigen::Vector2d q_upper_d1;
     Eigen::Vector2d q_upper_d_prev;
+    Eigen::Vector2d q_upper_d1_prev;
     
     Eigen::Vector12d pre_motor_q_leg_;
     Eigen::Vector12d current_motor_q_leg_;
@@ -1671,7 +1675,7 @@ public:
     double pelvP_kp = 0.0, pelvP_kv = 0.0;
 
 
-    double buffer[52+6] = {1.0, 2, 3, 4, 5, 6, 
+/*    double buffer[52+6] = {1.0, 2, 3, 4, 5, 6, 
     0, 0, 0, 0, 0, 0, 
     0, 0, 0, 0, 0, 0,
     0, 0, 0, 0, 0, 0, 
@@ -1687,7 +1691,25 @@ public:
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};*/
+
+    double buffer[52+6 + 4] = {1.0, 2, 3, 4, 5, 6, 
+    0, 0, 0, 0, 0, 0, 
+    0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 
+    0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 
+    0, 0, 0, 0, 1.0, 2, 
+    3, 4, 5, 6, 0, 0,
+    0, 99, 100, 0,
+    
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+
+    double buffer1[51 + 4] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,  0, 0, 0, 0};
 
     Eigen::Vector3d pelv_vtran, rf_vtran, lf_vtran;
     int delay_time = 0;
