@@ -354,7 +354,7 @@ CustomController::CustomController(RobotData &rd) : rd_(rd)
         std::cerr << "Invalid address/ Address not supported" << std::endl;
     }
 
-    if(inet_pton(PF_INET, "10.112.1.20", &serveraddr1.sin_addr)<=0)//10.112.1.10
+    if(inet_pton(PF_INET, "10.112.1.10", &serveraddr1.sin_addr)<=0)//10.112.1.10
     {
         std::cerr << "Invalid address/ Address not supported" << std::endl;
     }
