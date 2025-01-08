@@ -9165,7 +9165,7 @@ void CustomController::getMPCTrajectory()
                     if(desired_val_slow[19+2] > 0.7000 || rd_.q_(13+2+1) > 0.7000)
                     {  
                         std::cout << "Pitch over" << std::endl;
-                        if(desired_val_slow[39+2+2] < 0.0)
+                        if(desired_val_slow[39+2+2] > 0.0)
                         {
                             qd_pinocchio(22) = 0.0;
                             upperd1[0] = 0.0;
@@ -9182,7 +9182,7 @@ void CustomController::getMPCTrajectory()
                     else if(desired_val_slow[19+2] < 0.5000 || rd_.q_(13+2+1) < 0.5000)
                     {  
                         std::cout << "Pitch over" << std::endl;
-                        if(desired_val_slow[39+2+2] > 0.0)
+                        if(desired_val_slow[39+2+2] < 0.0)
                         {
                             qd_pinocchio(22) = 0.0;
                             upperd1[0] = 0.0;
