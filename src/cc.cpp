@@ -40,7 +40,7 @@ pinocchio::Data model_data_state;
 SHMmsgs *mj_shm_;
 int shm_msg_id;
 
-double buffer[52+6 + 4] = {1.0, 2, 3, 4, 5, 6, 
+double buffer[52+6 + 4 + 4] = {1.0, 2, 3, 4, 5, 6, 
 0, 0, 0, 0, 0, 0, 
 0, 0, 0, 0, 0, 0,
 0, 0, 0, 0, 0, 0, 
@@ -49,14 +49,15 @@ double buffer[52+6 + 4] = {1.0, 2, 3, 4, 5, 6,
 0, 0, 0, 0, 1.0, 2, 
 3, 4, 5, 6, 0, 0,
 0, 99, 100, 0,
-
+0, 0, 0, 0, 
 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 
-double buffer1[51 + 4] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+double buffer1[51 + 4 + 4] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,  0, 0, 0, 0};
+0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,  0, 0, 0, 0,
+0, 0, 0, 0};
 
 CSharedMemory mpc_start_init, state_init, statemachine, desired_val, desired_cp;
 
@@ -75,8 +76,8 @@ CustomController::CustomController(RobotData &rd) : rd_(rd)
    
     pinocchio::JointModelFreeFlyer root_joint;
     pinocchio::Model model1;
-    pinocchio::urdf::buildModel("/home/dyros/catkin_ws/src/tocabi_cc/urdf/tocabi.urdf", root_joint, model1);/*_0714*/
-    //pinocchio::urdf::buildModel("/usr/local/lib/python3.8/dist-packages/robot_properties_tocabi/resources/urdf/tocabi.urdf", root_joint, model1);/*_0714*/model = model1;
+    //pinocchio::urdf::buildModel("/home/dyros/catkin_ws/src/tocabi_cc/urdf/tocabi.urdf", root_joint, model1);/*_0714*/
+    pinocchio::urdf::buildModel("/usr/local/lib/python3.8/dist-packages/robot_properties_tocabi/resources/urdf/tocabi.urdf", root_joint, model1);/*_0714*/model = model1;
     model = model1;
     model_state = model1;
     model = model1;
@@ -319,15 +320,15 @@ CustomController::CustomController(RobotData &rd) : rd_(rd)
     com_prev.resize(50);
     a_temp = 50;
     q_upper.setZero();
-    q_upper1(0) = 0.6;
-    q_upper1(1) = -0.6;
+    q_upper1(0) = 1.5;
+    q_upper1(1) = -1.5;
 
-    state_init_.setZero(56+4);
-    state_init_slow.setZero(56+4);
-    state_init_mu.setZero(56+4);
-    desired_val_.setZero(49+4);
-    desired_val_slow.setZero(49+4);
-    desired_val_mu.setZero(49+4);
+    state_init_.setZero(56+4+4);
+    state_init_slow.setZero(56+4+4);
+    state_init_mu.setZero(56+4+4);
+    desired_val_.setZero(49+4+4);
+    desired_val_slow.setZero(49+4+4);
+    desired_val_mu.setZero(49+4+4);
 
     mpc_start_init_ = 4;
 
@@ -349,12 +350,12 @@ CustomController::CustomController(RobotData &rd) : rd_(rd)
     serveraddr1.sin_family=PF_INET;
     serveraddr1.sin_port=htons(7073);
 
-    if(inet_pton(PF_INET, "10.112.1.20", &serveraddr.sin_addr)<=0)//10.112.1.20
+    if(inet_pton(PF_INET, "127.0.0.1", &serveraddr.sin_addr)<=0)//10.112.1.20
     {
         std::cerr << "Invalid address/ Address not supported" << std::endl;
     }
 
-    if(inet_pton(PF_INET, "10.112.1.10", &serveraddr1.sin_addr)<=0)//10.112.1.10
+    if(inet_pton(PF_INET, "127.0.0.1", &serveraddr1.sin_addr)<=0)//10.112.1.10
     {
         std::cerr << "Invalid address/ Address not supported" << std::endl;
     }
@@ -416,7 +417,7 @@ CustomController::CustomController(RobotData &rd) : rd_(rd)
     upper_on = true;
 
     pthread_t proc1, proc2;
-    if (pthread_create(&proc1, &attrs, &CustomController::Proc_recvStarter, this))
+    /*if (pthread_create(&proc1, &attrs, &CustomController::Proc_recvStarter, this))
     {
         printf("threads[0] create failed\n");
     }
@@ -425,14 +426,14 @@ CustomController::CustomController(RobotData &rd) : rd_(rd)
     if (pthread_create(&proc2, &attrs1, &CustomController::Proc_recvStarter1, this))
     {
         printf("threads[1] create failed\n");
-    }
+    }*/
    
     //std::cout <<"THREAD SUCCESS4" << std::endl;
-    /*thread proc3(&CustomController::proc_recv, this);
+    thread proc3(&CustomController::proc_recv, this);
     thread proc4(&CustomController::proc_recv1, this);
 
     proc3.detach();
-    proc4.detach();*/
+    proc4.detach();
     
     std::cout <<"THREAD SUCCESS2" << std::endl;
 
@@ -448,11 +449,11 @@ CustomController::CustomController(RobotData &rd) : rd_(rd)
 
 
     data_stor_fast.setZero(14000, 10);
-    data_stor_slow.setZero(14000, 53);
+    data_stor_slow.setZero(14000, 53+3);
     data_stor_fast1.setZero(14000, 10);
-    data_stor_slow1.setZero(14000, 53);
+    data_stor_slow1.setZero(14000, 53+3);
     data_stor_fast2.setZero(14000, 10);
-    data_stor_slow2.setZero(14000, 53);
+    data_stor_slow2.setZero(14000, 53+3);
 
     walking_finish_flag = false;
 
@@ -1227,6 +1228,57 @@ void CustomController::computeSlow()
             time_tick = true;      
         }      
 
+        if(mpc_cycle >= dis_mpc_init  && mpc_cycle <= dis_mpc_final && dist_finish == false)//&& (walking_tick >= 1  && walking_tick <= 20))
+        {
+            if(dist_init == false)
+            {
+                dist_init = true;
+                distTime = std::chrono::system_clock::now();
+            }
+
+            if(std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::system_clock::now() - distTime).count() >= 100000)
+            {
+                dist_finish = true;
+                std::cout << "DIST FINISH" << std::endl;
+                double impact_force, impact_theta;
+                impact_theta = impact_theta_;
+                impact_force = 0.0;
+                mujoco_applied_ext_force_.data[0] = impact_force*sin(impact_theta*DEG2RAD); //x-axis linear force
+                mujoco_applied_ext_force_.data[1] =-impact_force*cos(impact_theta*DEG2RAD); //y-axis linear force
+                mujoco_applied_ext_force_.data[2] = 0.0; //z-axis linear force
+                mujoco_applied_ext_force_.data[3] = 0.0; //x-axis angular moment
+                mujoco_applied_ext_force_.data[4] = 0.0; //y-axis angular moment
+                mujoco_applied_ext_force_.data[5] = 0.0; //z-axis angular moment
+                mujoco_applied_ext_force_.data[6] = 1; //link idx; 1:pelvis
+                mujoco_ext_force_apply_pub.publish(mujoco_applied_ext_force_);
+            }
+            else
+            {
+                double impact_force, impact_theta;
+                impact_theta = impact_theta_;
+                impact_force = impact_force_;
+                mujoco_applied_ext_force_.data[0] = impact_force*sin(impact_theta*DEG2RAD); //x-axis linear force
+                mujoco_applied_ext_force_.data[1] =-impact_force*cos(impact_theta*DEG2RAD); //y-axis linear force
+                mujoco_applied_ext_force_.data[2] = 0.0; //z-axis linear force
+                mujoco_applied_ext_force_.data[3] = 0.0; //x-axis angular moment
+                mujoco_applied_ext_force_.data[4] = 0.0; //y-axis angular moment
+                mujoco_applied_ext_force_.data[5] = 0.0; //z-axis angular moment
+                mujoco_applied_ext_force_.data[6] = 1; //link idx; 1:pelvis
+                mujoco_ext_force_apply_pub.publish(mujoco_applied_ext_force_);
+            }
+        }
+        else
+        {
+            mujoco_applied_ext_force_.data[0] = 0.0; //x-axis linear force
+            mujoco_applied_ext_force_.data[1] = 0.0; //y-axis linear force
+            mujoco_applied_ext_force_.data[2] = 0.0; //z-axis linear force
+            mujoco_applied_ext_force_.data[3] = 0.0; //x-axis angular moment
+            mujoco_applied_ext_force_.data[4] = 0.0; //y-axis angular moment
+            mujoco_applied_ext_force_.data[5] = 0.0; //z-axis angular moment
+            mujoco_applied_ext_force_.data[6] = 1; //link idx; 1:pelvis
+            mujoco_ext_force_apply_pub.publish(mujoco_applied_ext_force_);
+        }
+        
         while(std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::system_clock::now() - startTime).count() < 500 && walking_tick_mj > 0)
         {
             if(walking_finish_flag == false)
@@ -1943,24 +1995,24 @@ std::cout << " bb " << xd_mj_(0) << " "
                         data_stor_slow.row(filetime_slow) <<walking_tick_mj, mpc_cycle, walking_tick, 127, lfoot_rpy_current_(0), lfoot_rpy_current_(1), rfoot_rpy_current_(0), rfoot_rpy_current_(1), contactMode * 0.1, ((l_ft_(2) - r_ft_(2))), (F_L - F_R), l_ft_(2), r_ft_(2),
                         128, lfoot_support_current_.translation()(0), lfoot_trajectory_support_.translation()(0), lfoot_support_current_.translation()(1), lfoot_trajectory_support_.translation()(1), lfoot_support_current_.translation()(2), lfoot_trajectory_support_.translation()(2),
                         rfoot_support_current_.translation()(0), rfoot_trajectory_support_.translation()(0),rfoot_support_current_.translation()(1), rfoot_trajectory_support_.translation()(1),rfoot_support_current_.translation()(2), rfoot_trajectory_support_.translation()(2),
-                        345, R_angle, P_angle, pelv_rpy_current_mj_(2), 139, state_init_[41], desired_val_slow[41] , state_init_[42], desired_val_slow[42] , state_init_[43], desired_val_slow[43] , state_init_[44], desired_val_slow[44] , state_init_[45], desired_val_slow[45] 
-                        , state_init_[46], desired_val_slow[46], state_init_[47], desired_val_slow[47], state_init_[48], desired_val_slow[48], 131, pelv_rotv_lpf(0), pelv_rotv_lpf(1), rd_.q_dot_virtual_(3), rd_.q_dot_virtual_(4), zmp_temp3;
+                        345, R_angle, P_angle, pelv_rpy_current_mj_(2), 139, state_init_[41+4], desired_val_slow[41+4] , state_init_[42+4], desired_val_slow[42+4] , state_init_[43+4], desired_val_slow[43+4] , state_init_[44+4], desired_val_slow[44+4] , state_init_[45+4], desired_val_slow[45+4] 
+                        , state_init_[46+4], desired_val_slow[46+4], state_init_[47+4], desired_val_slow[47+4], state_init_[48+4], desired_val_slow[48+4], 131, desired_q_fast_(17), desired_q_fast_(27), rd_.q_(17), rd_.q_(27), desired_val_slow[19], desired_val_slow[20], rd_.q_(13), rd_.q_(14);
                     }
                     else if(time_slow == 1)
                     {
                         data_stor_slow1.row(filetime_slow) <<walking_tick_mj, mpc_cycle, walking_tick, 127, lfoot_rpy_current_(0), lfoot_rpy_current_(1), rfoot_rpy_current_(0), rfoot_rpy_current_(1), contactMode * 0.1, ((l_ft_(2) - r_ft_(2))), (F_L - F_R), l_ft_(2), r_ft_(2),
                         128, lfoot_support_current_.translation()(0), lfoot_trajectory_support_.translation()(0), lfoot_support_current_.translation()(1), lfoot_trajectory_support_.translation()(1), lfoot_support_current_.translation()(2), lfoot_trajectory_support_.translation()(2),
                         rfoot_support_current_.translation()(0), rfoot_trajectory_support_.translation()(0),rfoot_support_current_.translation()(1), rfoot_trajectory_support_.translation()(1),rfoot_support_current_.translation()(2), rfoot_trajectory_support_.translation()(2),
-                        345, R_angle, P_angle, pelv_rpy_current_mj_(2), 139, state_init_[41], desired_val_slow[41] , state_init_[42], desired_val_slow[42] , state_init_[43], desired_val_slow[43] , state_init_[44], desired_val_slow[44] , state_init_[45], desired_val_slow[45] 
-                        , state_init_[46], desired_val_slow[46], state_init_[47], desired_val_slow[47], state_init_[48], desired_val_slow[48], 131, pelv_rotv_lpf(0), pelv_rotv_lpf(1), rd_.q_dot_virtual_(3), rd_.q_dot_virtual_(4), zmp_temp3;
+                        345, R_angle, P_angle, pelv_rpy_current_mj_(2), 139, state_init_[41+4], desired_val_slow[41+4] , state_init_[42+4], desired_val_slow[42+4] , state_init_[43+4], desired_val_slow[43+4] , state_init_[44+4], desired_val_slow[44+4] , state_init_[45+4], desired_val_slow[45+4] 
+                        , state_init_[46+4], desired_val_slow[46+4], state_init_[47+4], desired_val_slow[47+4], state_init_[48+4], desired_val_slow[48+4], 131, desired_q_fast_(17), desired_q_fast_(27), rd_.q_(17), rd_.q_(27), desired_val_slow[19], desired_val_slow[20], rd_.q_(13), rd_.q_(14);
                     }
                     else if(time_slow == 2)
                     {
                         data_stor_slow2.row(filetime_slow) <<walking_tick_mj, mpc_cycle, walking_tick, 127, lfoot_rpy_current_(0), lfoot_rpy_current_(1), rfoot_rpy_current_(0), rfoot_rpy_current_(1), contactMode * 0.1, ((l_ft_(2) - r_ft_(2))), (F_L - F_R), l_ft_(2), r_ft_(2),
                         128, lfoot_support_current_.translation()(0), lfoot_trajectory_support_.translation()(0), lfoot_support_current_.translation()(1), lfoot_trajectory_support_.translation()(1), lfoot_support_current_.translation()(2), lfoot_trajectory_support_.translation()(2),
                         rfoot_support_current_.translation()(0), rfoot_trajectory_support_.translation()(0),rfoot_support_current_.translation()(1), rfoot_trajectory_support_.translation()(1),rfoot_support_current_.translation()(2), rfoot_trajectory_support_.translation()(2),
-                        345, R_angle, P_angle, pelv_rpy_current_mj_(2), 139, state_init_[41], desired_val_slow[41] , state_init_[42], desired_val_slow[42] , state_init_[43], desired_val_slow[43] , state_init_[44], desired_val_slow[44] , state_init_[45], desired_val_slow[45] 
-                        , state_init_[46], desired_val_slow[46], state_init_[47], desired_val_slow[47], state_init_[48], desired_val_slow[48], 131, pelv_rotv_lpf(0), pelv_rotv_lpf(1), rd_.q_dot_virtual_(3), rd_.q_dot_virtual_(4), zmp_temp3;
+                        345, R_angle, P_angle, pelv_rpy_current_mj_(2), 139, state_init_[41+4], desired_val_slow[41+4] , state_init_[42+4], desired_val_slow[42+4] , state_init_[43+4], desired_val_slow[43+4] , state_init_[44+4], desired_val_slow[44+4] , state_init_[45+4], desired_val_slow[45+4] 
+                        , state_init_[46+4], desired_val_slow[46+4], state_init_[47+4], desired_val_slow[47+4], state_init_[48+4], desired_val_slow[48+4], 131, desired_q_fast_(17), desired_q_fast_(27), rd_.q_(17), rd_.q_(27), desired_val_slow[19], desired_val_slow[20], rd_.q_(13), rd_.q_(14);
                     }
                     if(filetime_slow == 13999)
                     {
@@ -2071,12 +2123,12 @@ std::cout << " bb " << xd_mj_(0) << " "
         {
             desired_q_fast_(13) = q_upper(0);
             desired_q_fast_(14) = q_upper(1);
-            desired_q_fast_(16) = q_upper1(0);
-            desired_q_fast_(26) = q_upper1(1);
+            desired_q_fast_(17) = q_upper1(0);
+            desired_q_fast_(27) = q_upper1(1);
             desired_q_dot_fast_(13) = 0.0;//upperd(0);
             desired_q_dot_fast_(14) = 0.0;//upperd(1);
-            desired_q_dot_fast_(16) = 0.0;//upperd(0);
-            desired_q_dot_fast_(26) = 0.0;//upperd(1);
+            desired_q_dot_fast_(17) = 0.0;//upperd(0);
+            desired_q_dot_fast_(27) = 0.0;//upperd(1);
         }
 
         torque_upper_.setZero();
@@ -3140,17 +3192,17 @@ void CustomController::computeFast()
 
             if(time_fast == 0)
             {
-                data_stor_fast.row(filetime_fast) << time_fast, filetime_fast, std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::system_clock::now() - startTime2).count(), std::chrono::duration_cast<std::chrono::microseconds>(endTime2 - startTime4).count(), std::chrono::duration_cast<std::chrono::microseconds>(endTime3 - startTime5).count(),
+                data_stor_fast.row(filetime_fast) << mpc_cycle, walking_tick, std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::system_clock::now() - startTime2).count(), std::chrono::duration_cast<std::chrono::microseconds>(endTime2 - startTime4).count(), std::chrono::duration_cast<std::chrono::microseconds>(endTime3 - startTime5).count(),
                 opto_ft_raw_[1], opto_ft_raw_[2], opto_ft_raw_[3], opto_ft_raw_[4], opto_ft_raw_[5];
             }
             else if(time_fast == 1)
             {
-                data_stor_fast1.row(filetime_fast) << time_fast, filetime_fast, std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::system_clock::now() - startTime2).count(),std::chrono::duration_cast<std::chrono::microseconds>(endTime2 - startTime4).count(), std::chrono::duration_cast<std::chrono::microseconds>(endTime3 - startTime5).count(),
+                data_stor_fast1.row(filetime_fast) << mpc_cycle, walking_tick, std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::system_clock::now() - startTime2).count(),std::chrono::duration_cast<std::chrono::microseconds>(endTime2 - startTime4).count(), std::chrono::duration_cast<std::chrono::microseconds>(endTime3 - startTime5).count(),
                 opto_ft_raw_[1], opto_ft_raw_[2], opto_ft_raw_[3], opto_ft_raw_[4], opto_ft_raw_[5];
             }
             else if(time_fast == 2)
             {
-                data_stor_fast2.row(filetime_fast) << time_fast, filetime_fast, std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::system_clock::now() - startTime2).count(), std::chrono::duration_cast<std::chrono::microseconds>(endTime2 - startTime4).count(),std::chrono::duration_cast<std::chrono::microseconds>(endTime3 - startTime5).count(),
+                data_stor_fast2.row(filetime_fast) << mpc_cycle, walking_tick, std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::system_clock::now() - startTime2).count(), std::chrono::duration_cast<std::chrono::microseconds>(endTime2 - startTime4).count(),std::chrono::duration_cast<std::chrono::microseconds>(endTime3 - startTime5).count(),
                 opto_ft_raw_[1], opto_ft_raw_[2], opto_ft_raw_[3], opto_ft_raw_[4], opto_ft_raw_[5];
             }
             if(filetime_fast == 13999)
@@ -8573,10 +8625,10 @@ void CustomController::momentumControl(RobotData &Robot, Eigen::Vector3d comd,  
             H2(5,5) = 10000.0;
             MOMX = Hg_slow_.block(3,19,2,2) * upperd/2000;
             COMX = comj.block(0,19,3,2) * upperd/2000;
-            MOMX += Hg_slow_.block(3,22,2,1) * upperd1(0)/2000;
-            COMX += comj.block(0,22,3,1) * upperd1(0)/2000;
-            MOMX += Hg_slow_.block(3,32,2,1) * upperd1(1)/2000;
-            COMX += comj.block(0,32,3,1) * upperd1(1)/2000;
+            MOMX += Hg_slow_.block(3,23,2,1) * upperd1(0)/2000;
+            COMX += comj.block(0,23,3,1) * upperd1(0)/2000;
+            MOMX += Hg_slow_.block(3,33,2,1) * upperd1(1)/2000;
+            COMX += comj.block(0,33,3,1) * upperd1(1)/2000;
 
             J2.block(0,0,3,18) = comj.block(0,0,3,18);//InitRPYM7.inverse() *
             J2.block(3,0,6,18) = J_RFF.block(0,0,6,18);//J_RFF RFj comj
@@ -9006,8 +9058,8 @@ void CustomController::getMPCTrajectory()
         state_init_[19] = rd_.q_virtual_[19];
         state_init_[20] = rd_.q_virtual_[20];
 
-        state_init_[21] = rd_.q_virtual_[22];//upper
-        state_init_[22] = rd_.q_virtual_[32];
+        state_init_[21] = rd_.q_virtual_[22+1];//upper
+        state_init_[22] = rd_.q_virtual_[32+1];
 
         for (int i = 0; i < 18; i ++)
             state_init_[i+23] = rd_.q_dot_virtual_[i];
@@ -9015,8 +9067,8 @@ void CustomController::getMPCTrajectory()
         state_init_[39+2] =  rd_.q_dot_virtual_[19];
         state_init_[40+2] =  rd_.q_dot_virtual_[20];
 
-        state_init_[39+2+2] =  rd_.q_dot_virtual_[22];//upper
-        state_init_[40+2+2] =  rd_.q_dot_virtual_[32];
+        state_init_[39+2+2] =  rd_.q_dot_virtual_[22+1];//upper
+        state_init_[40+2+2] =  rd_.q_dot_virtual_[32+1];
    
         state_init_[41 + 4] = rd_.link_[COM_id].xpos(0) + virtual_temp(0);
         state_init_[45 + 4] = rd_.link_[COM_id].xpos(1) + virtual_temp(1);
@@ -9173,35 +9225,35 @@ void CustomController::getMPCTrajectory()
                     }
                 }
 
-                if(desired_val_slow[19+2] > 0.7000 || rd_.q_(13+2+1) > 0.7000)
-                {  
-                    std::cout << "Pitch over" << std::endl;
-                    if(desired_val_slow[39+2+2] < 0.0)
-                    {
-                        qd_pinocchio(22) = 0.0;
-                        upperd1[0] = 0.0;
-                        q_upper_d1(0) = 0.7;
-                    }
-                    else
-                    {
-                        qd_pinocchio(22) = desired_val_slow[39+2+2];
-                        upperd1[0] = desired_val_slow[39+2+2];
-                        q_upper_d1(0) = desired_val_slow(19+2);
-                    }
-                    
-                }
-                else if(desired_val_slow[19+2] < 0.5000 || rd_.q_(13+2+1) < 0.5000)
+                if(desired_val_slow[19+2] > 1.6000 || rd_.q_(13+2+1+1) > 1.6000)
                 {  
                     std::cout << "Pitch over" << std::endl;
                     if(desired_val_slow[39+2+2] > 0.0)
                     {
-                        qd_pinocchio(22) = 0.0;
+                        qd_pinocchio(23) = 0.0;
                         upperd1[0] = 0.0;
-                        q_upper_d1(0) = 0.5;
+                        q_upper_d1(0) = 1.6;
                     }
                     else
                     {
-                        qd_pinocchio(22) = desired_val_slow[39+2+2];
+                        qd_pinocchio(23) = desired_val_slow[39+2+2];
+                        upperd1[0] = desired_val_slow[39+2+2];
+                        q_upper_d1(0) = desired_val_slow(19+2);
+                    }
+                    
+                }
+                else if(desired_val_slow[19+2] < 1.2000 || rd_.q_(13+2+1+1) < 1.2000)
+                {  
+                    std::cout << "Pitch over" << std::endl;
+                    if(desired_val_slow[39+2+2] < 0.0)
+                    {
+                        qd_pinocchio(23) = 0.0;
+                        upperd1[0] = 0.0;
+                        q_upper_d1(0) = 1.2;
+                    }
+                    else
+                    {
+                        qd_pinocchio(23) = desired_val_slow[39+2+2];
                         upperd1[0] = desired_val_slow[39+2+2];
                         q_upper_d1(0) = desired_val_slow(19+2);
                     }
@@ -9209,40 +9261,40 @@ void CustomController::getMPCTrajectory()
                 }
                 else
                 {  
-                    qd_pinocchio(22) = desired_val_slow[39+2+2];
+                    qd_pinocchio(23) = desired_val_slow[39+2+2];
                     upperd1[0] = desired_val_slow[39+2+2];
                     q_upper_d1(0) = desired_val_slow(19+2);
                 }
 
-                if(desired_val_slow[20+2] < -0.7000 || rd_.q_(13+2 + 10+1) < -0.7000)
+                if(desired_val_slow[20+2] < -1.6000 || rd_.q_(13+2 + 10+1 + 1) < -1.6000)
                 {  
                     std::cout << "Pitch over" << std::endl;
                     if(desired_val_slow[40+2+2] < 0.0)
                     {
-                        qd_pinocchio(32) = 0.0;
+                        qd_pinocchio(33) = 0.0;
                         upperd1[1] = 0.0;
-                        q_upper_d1(1) = -0.7;
+                        q_upper_d1(1) = -1.6;
                     }
                     else
                     {
-                        qd_pinocchio(32) = desired_val_slow[39+2+2+1];
+                        qd_pinocchio(33) = desired_val_slow[39+2+2+1];
                         upperd1[1] = desired_val_slow[39+2+2+1];
                         q_upper_d1(1) = desired_val_slow(19+2+1);
                     }
                     
                 }
-                else if(desired_val_slow[20+2] > -0.5000 || rd_.q_(13+2+10+1) > -0.5000)
+                else if(desired_val_slow[20+2] > -1.2000 || rd_.q_(13+2+10+1+1) > -1.2000)
                 {  
                     std::cout << "Pitch over" << std::endl;
                     if(desired_val_slow[40+2+2] > 0.0)
                     {
-                        qd_pinocchio(32) = 0.0;
+                        qd_pinocchio(33) = 0.0;
                         upperd1[1] = 0.0;
-                        q_upper_d1(1) = -0.5;
+                        q_upper_d1(1) = -1.2;
                     }
                     else
                     {
-                        qd_pinocchio(32) = desired_val_slow[39+2+2+1];
+                        qd_pinocchio(33) = desired_val_slow[39+2+2+1];
                         upperd1[1] = desired_val_slow[39+2+2+1];
                         q_upper_d1(1) = desired_val_slow(19+2+1);
                     }
@@ -9250,7 +9302,7 @@ void CustomController::getMPCTrajectory()
                 }
                 else
                 {  
-                    qd_pinocchio(32) = desired_val_slow[39+2+2+1];
+                    qd_pinocchio(33) = desired_val_slow[39+2+2+1];
                     upperd1[1] = desired_val_slow[39+2+2+1];
                     q_upper_d1(1) = desired_val_slow(19+2+1);
                 }
@@ -9676,6 +9728,15 @@ void CustomController::getMPCTrajectoryInit()
         state_init_[1] = rd_.q_virtual_[1]+virtual_temp(1);
         state_init_[2] = rd_.q_virtual_[2]+virtual_temp(2);
 
+        //dq -> 25, 24   -> 49 
+    //waist 19,20 //19,20
+    //21,22 LF    //21   -> 
+    //23,24 RF    //22
+    //Waist 43, 44 // 40
+    //45,46 LF     //41
+    //47,48 RF     // 42
+    //comdx 50
+
         for (int i = 3; i < 6; i ++)
             state_init_[i] = rd_.q_virtual_[i];
    
@@ -9688,29 +9749,35 @@ void CustomController::getMPCTrajectoryInit()
         state_init_[20] = rd_.q_virtual_[20];
 
         state_init_[21] = rd_.q_virtual_[22];//upper
-        state_init_[22] = rd_.q_virtual_[32];
+        state_init_[23] = rd_.q_virtual_[32];
+
+        state_init_[22] = rd_.q_virtual_[22+1];//upper
+        state_init_[24] = rd_.q_virtual_[32+1];
 
         for (int i = 0; i < 18; i ++)
-            state_init_[i+23] = rd_.q_dot_virtual_[i];
+            state_init_[i+25] = rd_.q_dot_virtual_[i];
    
-        state_init_[39+2] =  rd_.q_dot_virtual_[19];
-        state_init_[40+2] =  rd_.q_dot_virtual_[20];
+        state_init_[39+2+2] =  rd_.q_dot_virtual_[19];
+        state_init_[40+2+2] =  rd_.q_dot_virtual_[20];
 
-        state_init_[39+2+2] =  rd_.q_dot_virtual_[22];//upper
-        state_init_[40+2+2] =  rd_.q_dot_virtual_[32];
+        state_init_[39+2+2+2] =  rd_.q_dot_virtual_[22];//upper
+        state_init_[47] =  rd_.q_dot_virtual_[32];
+
+        state_init_[39+2+2+2+1] =  rd_.q_dot_virtual_[22+1];//upper
+        state_init_[48] =  rd_.q_dot_virtual_[32+1];
+
+        state_init_[41 + 4 + 4] = rd_.link_[COM_id].xpos(0) + virtual_temp(0);
+        state_init_[45 + 4 + 4] = rd_.link_[COM_id].xpos(1) + virtual_temp(1);
+        state_init_[42 + 4 + 4] = rd_.link_[COM_id].v(0);
+        state_init_[46 + 4 + 4] = rd_.link_[COM_id].v(1);
    
-        state_init_[41 + 4] = rd_.link_[COM_id].xpos(0) + virtual_temp(0);
-        state_init_[45 + 4] = rd_.link_[COM_id].xpos(1) + virtual_temp(1);
-        state_init_[42 + 4] = rd_.link_[COM_id].v(0);
-        state_init_[46 + 4] = rd_.link_[COM_id].v(1);
-   
-        state_init_[43 + 4] = ZMP_float(0)+virtual_temp(0);//zmp_measured_mj_(0);
-        state_init_[47 + 4] = ZMP_float(1)+virtual_temp(1);//zmp_measured_mj_(1);
+        state_init_[43 + 4 + 4] = ZMP_float(0)+virtual_temp(0);//zmp_measured_mj_(0);
+        state_init_[47 + 4 + 4] = ZMP_float(1)+virtual_temp(1);//zmp_measured_mj_(1);
        
-        state_init_[44 + 4] = model_data_cen.hg.angular()(1);
-        state_init_[48 + 4] = model_data_cen.hg.angular()(0);//model_data1.hg.angular()[0];
+        state_init_[44 + 4 + 4] = model_data_cen.hg.angular()(1);
+        state_init_[48 + 4 + 4] = model_data_cen.hg.angular()(0);//model_data1.hg.angular()[0];
 
-        state_init_[49 + 4] = rd_.link_[COM_id].xpos(2) + virtual_temp(2);//com_support_current_(2);//model_data1.hg.angular()[0];
+        state_init_[49 + 4 + 4] = rd_.link_[COM_id].xpos(2) + virtual_temp(2);//com_support_current_(2);//model_data1.hg.angular()[0];
        
         for (int i = 0; i < 18; i ++)
             q_pinocchio1_test2[i] = state_init_[i];
@@ -9720,8 +9787,8 @@ void CustomController::getMPCTrajectoryInit()
        
         for(int i = 0; i < 3; i ++)
         {
-            state_init_[i+50+4] = model_data_est.oMf[RFframe_id].translation()(i);
-            state_init_[i+53+4] = model_data_est.oMf[LFframe_id].translation()(i);
+            state_init_[i+50+4 + 4] = model_data_est.oMf[RFframe_id].translation()(i);
+            state_init_[i+53+4 + 4] = model_data_est.oMf[LFframe_id].translation()(i);
         }
 
         if(atb_state_update_ == false)
@@ -9763,9 +9830,9 @@ void* CustomController::proc_recv(){
         int valread = recv(new_socket, buffer1, sizeof(buffer1), MSG_WAITALL);
         if(valread == sizeof(buffer1))
         {
-            std::copy(&buffer1[1], &buffer1[1] + 49 + 4, &desired_val_[0]);
+            std::copy(&buffer1[1], &buffer1[1] + 49 + 4 + 4, &desired_val_[0]);
             statemachine_ = buffer1[0];
-            mpc_cycle_1 = buffer1[50 + 4];
+            mpc_cycle_1 = buffer1[50 + 4 + 4];
            
             thread2_lock.lock();
             desired_val_mu = desired_val_;
@@ -9786,7 +9853,7 @@ void* CustomController::proc_recv(){
             mpc_start_init_ = 2;
             walking_tick_stop = false;
         }*/
-        std::this_thread::sleep_for(std::chrono::microseconds(3));
+        std::this_thread::sleep_for(std::chrono::microseconds(100));
     }
 }
 
@@ -9806,13 +9873,13 @@ void* CustomController::proc_recv1(){
             atb_state_update_ = false;
         }
 
-        std::copy(&state_init_mu[0], &state_init_mu[0] + 56 + 4, &buffer[1]);
+        std::copy(&state_init_mu[0], &state_init_mu[0] + 56 + 4 + 4, &buffer[1]);
        
         if (mpc_start_init_ == 1 && mpc_start_init_bool == false)
         {  
         //    std::cout << "wa" <<walking_tick_mj << std::endl;
             buffer[0] = 1;
-            buffer[57 + 4] = mpc_cycle_temp;
+            buffer[57 + 4 + 4] = mpc_cycle_temp;
             send(socket_send,buffer,sizeof(buffer),0);
             mpc_start_init_bool = true;
             mpc_start_init_bool1 = false;
@@ -9824,7 +9891,7 @@ void* CustomController::proc_recv1(){
         {
         //    std::cout << "bb" << std::endl;
             buffer[0] = 2;
-            buffer[57 + 4] = mpc_cycle_temp;
+            buffer[57 + 4 + 4] = mpc_cycle_temp;
             send(socket_send,buffer,sizeof(buffer),0);
             mpc_start_init_bool1 = true;
             mpc_start_init_bool = false;
@@ -9835,7 +9902,7 @@ void* CustomController::proc_recv1(){
         {
          //   std::cout << "cc" << std::endl;
             buffer[0] = 3;
-            buffer[57 + 4] = mpc_cycle_temp;
+            buffer[57 + 4 + 4] = mpc_cycle_temp;
             send(socket_send,buffer,sizeof(buffer),0);
             mpc_start_init_bool2 = true;
             mpc_start_init_bool = false;
@@ -9845,12 +9912,12 @@ void* CustomController::proc_recv1(){
         {
           //  std::cout << "dd" << std::endl;
             buffer[0] = 4;
-            buffer[57 + 4] = mpc_cycle_temp;
+            buffer[57 + 4 + 4] = mpc_cycle_temp;
             mpc_start_init_bool3 = true;
             send(socket_send,buffer,sizeof(buffer),0);
            // std::cout << "waaa" <<walking_tick_mj << std::endl;
         }
-        std::this_thread::sleep_for(std::chrono::microseconds(3));
+        std::this_thread::sleep_for(std::chrono::microseconds(100));
     }
 }
 
@@ -10174,19 +10241,19 @@ void CustomController::computeThread3()
         }
         else if(thread_3_count == 1)
         {
-            if(data_stor_fast1(0,0) != 0 || data_stor_fast1(0,1) != 0 || data_stor_fast1(0,2) != 0 || data_stor_fast1(0,3) != 0)
+            //if(data_stor_fast1(0,0) != 0 || data_stor_fast1(0,1) != 0 || data_stor_fast1(0,2) != 0 || data_stor_fast1(0,3) != 0)
                 file[2] << data_stor_fast1<< std::endl;
 
-            if(data_stor_slow1(0,0) != 0 || data_stor_slow1(0,1) != 0 || data_stor_slow1(0,2) != 0 || data_stor_slow1(0,3) != 0)
+            //if(data_stor_slow1(0,0) != 0 || data_stor_slow1(0,1) != 0 || data_stor_slow1(0,2) != 0 || data_stor_slow1(0,3) != 0)
                 file[1] << data_stor_slow1<< std::endl;
             data_stor_fast1.resize(1,1);
             data_stor_slow1.resize(1,1);
         }
         else if(thread_3_count == 2)
         {
-            if(data_stor_fast2(0,0) != 0 || data_stor_fast2(0,1) != 0 || data_stor_fast2(0,2) != 0 || data_stor_fast2(0,3) != 0)
+            //if(data_stor_fast2(0,0) != 0 || data_stor_fast2(0,1) != 0 || data_stor_fast2(0,2) != 0 || data_stor_fast2(0,3) != 0)
                 file[2] << data_stor_fast2<< std::endl;
-            if(data_stor_slow2(0,0) != 0 || data_stor_slow2(0,1) != 0 || data_stor_slow2(0,2) != 0 || data_stor_slow2(0,3) != 0)
+            //if(data_stor_slow2(0,0) != 0 || data_stor_slow2(0,1) != 0 || data_stor_slow2(0,2) != 0 || data_stor_slow2(0,3) != 0)
                 file[1] << data_stor_slow2<< std::endl;
             
             data_stor_fast2.resize(1,1);

@@ -40,8 +40,8 @@ const int FILE_CNT1 = 15;
 const std::string FILE_NAMES1[FILE_CNT1] =
 {
   ///change this directory when you use this code on the other computer///
-    "/home/dyros/data/0_flag_mj.txt",
-    "/home/dyros/data/1_flag_mj.txt",
+    "/home/jhk/data/0_flag_mj.txt",
+    "/home/jhk/data/1_flag_mj.txt",
     "/home/dh-sung/data/dg/1_com_.txt",
     "/home/dh-sung/data/dg/2_zmp_.txt",
     "/home/dh-sung/data/dg/3_foot_.txt",
@@ -1234,7 +1234,7 @@ public:
     Eigen::VectorQVQd q_pinocchio_desired1, qd_pinocchio1;
 
     Eigen::Vector3d rfootd, lfootd, rfootd1, lfootd1, comd, comd1, comd_init, com_mpc, com_mpc1, com_mpc2, comprev, rfoot_mpc, lfoot_mpc;
-    Eigen::Vector2d angm, angm_prev, upperd, upperd1, q_upper1, q_upper_d1, comdt_, comd_s, q_upper_init1;
+    Eigen::Vector2d angm, angm_prev, upperd, upperd1, q_upper1, q_upper_d1, comdt_, comd_s, q_upper_init1, q_upper2, q_upper_d2, q_upper_init2;
     Eigen::Vector3d ZMP_gl;
 
     Eigen::Vector3d zmp_temp1;
@@ -1382,6 +1382,17 @@ public:
     Eigen::Vector3d LFc_vector_prev;
 
     double F_R = 0, F_L = 0;
+
+    bool dist_init = false;
+    bool dist_finish = false;
+
+    double impact_theta_;
+    double impact_force_;
+
+    int dis_mpc_init;
+    int dis_mpc_final;
+
+    std::chrono::system_clock::time_point distTime;
 
     Eigen::Isometry3d pelv_float_current_;
     Eigen::Isometry3d lfoot_float_current_;
@@ -1592,7 +1603,6 @@ public:
     std::chrono::system_clock::time_point endTime2;
     std::chrono::system_clock::time_point endTime3;
     
-    int impact_theta_, impact_force_, dis_mpc_init, dis_mpc_final;
     double zmp_start_time_mj_;
     double UX_mj_, UY_mj_;
     Eigen::Vector3d com_desired_;
@@ -1673,8 +1683,13 @@ public:
     double pelvR_kp = 0.0, pelvR_kv = 0.0;
     double pelvP_kp = 0.0, pelvP_kv = 0.0;
 
+    Vector3d error_w_pelvis;
+    bool same_imu = false;
+    int same_imu_count = 0;
+    Eigen::Vector3d imu_prev;
 
-    /*double buffer[52+6] = {1.0, 2, 3, 4, 5, 6,
+    /*
+    double buffer[52+6] = {1.0, 2, 3, 4, 5, 6,
     0, 0, 0, 0, 0, 0,
     0, 0, 0, 0, 0, 0,
     0, 0, 0, 0, 0, 0,
@@ -1683,7 +1698,6 @@ public:
     0, 0, 0, 0, 1.0, 2,
     3, 4, 5, 6, 0, 0,
     0, 99, 100, 0,
-   
     0, 0, 0, 0, 0, 0};
 
     double buffer1[51] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -1692,7 +1706,7 @@ public:
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};*/
 
-    double buffer[52+6 + 4] = {1.0, 2, 3, 4, 5, 6, 
+    /*double buffer[52+6 + 4] = {1.0, 2, 3, 4, 5, 6, 
     0, 0, 0, 0, 0, 0, 
     0, 0, 0, 0, 0, 0,
     0, 0, 0, 0, 0, 0, 
@@ -1708,7 +1722,7 @@ public:
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,  0, 0, 0, 0};
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,  0, 0, 0, 0};*/
 
     Eigen::Vector3d pelv_vtran, rf_vtran, lf_vtran;
     int delay_time = 0;
