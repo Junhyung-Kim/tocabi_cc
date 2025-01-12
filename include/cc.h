@@ -1234,7 +1234,7 @@ public:
     Eigen::VectorQVQd q_pinocchio_desired1, qd_pinocchio1;
 
     Eigen::Vector3d rfootd, lfootd, rfootd1, lfootd1, comd, comd1, comd_init, com_mpc, com_mpc1, com_mpc2, comprev, rfoot_mpc, lfoot_mpc;
-    Eigen::Vector2d angm, angm_prev, upperd, upperd1, q_upper1, q_upper_d1, comdt_, comd_s, q_upper_init1, q_upper2, q_upper_d2, q_upper_init2;
+    Eigen::Vector2d angm, angm_prev, upperd, upperd1, upperd2, q_upper1, q_upper_d1, comdt_, comd_s, q_upper_init1, q_upper2, q_upper_d2, q_upper_init2;
     Eigen::Vector3d ZMP_gl;
 
     Eigen::Vector3d zmp_temp1;

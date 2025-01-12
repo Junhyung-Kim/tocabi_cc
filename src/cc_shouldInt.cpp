@@ -14,20 +14,8 @@
 #include <fstream>
 using namespace TOCABI;
 
-/*
-H1(0,0) = 10000.0;
-                                H1(1,1) = 10000.0;
-                                H1(5.5) = 10000.0;
-
-                                H1(6,6) = 10000.0;
-                                H1(7,7) = 10000.0;
-                                H1(11,11) = 10000.0;
-
-                                또는
-lb_temp.setConstant(6, -2.0);
-                                ub_temp.setConstant(6, 2.0);
-                               
-*/
+//ParamSetting()
+//
 
 pinocchio::Model model;
 pinocchio::Model model_state;
@@ -40,7 +28,7 @@ pinocchio::Data model_data_state;
 SHMmsgs *mj_shm_;
 int shm_msg_id;
 
-double buffer[52+6 + 4] = {1.0, 2, 3, 4, 5, 6, 
+double buffer[52+6 + 4 + 4] = {1.0, 2, 3, 4, 5, 6, 
 0, 0, 0, 0, 0, 0, 
 0, 0, 0, 0, 0, 0,
 0, 0, 0, 0, 0, 0, 
@@ -49,14 +37,14 @@ double buffer[52+6 + 4] = {1.0, 2, 3, 4, 5, 6,
 0, 0, 0, 0, 1.0, 2, 
 3, 4, 5, 6, 0, 0,
 0, 99, 100, 0,
-
+0, 0, 0, 0,
 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 
-double buffer1[51 + 4] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+double buffer1[51 + 4 + 4] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,  0, 0, 0, 0};
+0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,  0, 0, 0, 0,0, 0, 0, 0};
 
 CSharedMemory mpc_start_init, state_init, statemachine, desired_val, desired_cp;
 
@@ -1996,24 +1984,24 @@ std::cout << " bb " << xd_mj_(0) << " "
                         data_stor_slow.row(filetime_slow) <<walking_tick_mj, mpc_cycle, walking_tick, 127, lfoot_rpy_current_(0), lfoot_rpy_current_(1), rfoot_rpy_current_(0), rfoot_rpy_current_(1), contactMode * 0.1, ((l_ft_(2) - r_ft_(2))), (F_L - F_R), l_ft_(2), r_ft_(2),
                         128, lfoot_support_current_.translation()(0), lfoot_trajectory_support_.translation()(0), lfoot_support_current_.translation()(1), lfoot_trajectory_support_.translation()(1), lfoot_support_current_.translation()(2), lfoot_trajectory_support_.translation()(2),
                         rfoot_support_current_.translation()(0), rfoot_trajectory_support_.translation()(0),rfoot_support_current_.translation()(1), rfoot_trajectory_support_.translation()(1),rfoot_support_current_.translation()(2), rfoot_trajectory_support_.translation()(2),
-                        345, R_angle, P_angle, pelv_rpy_current_mj_(2), 139, state_init_[41+4], desired_val_slow[41+4] , state_init_[42+4], desired_val_slow[42+4] , state_init_[43+4], desired_val_slow[43+4] , state_init_[44+4], desired_val_slow[44+4] , state_init_[45+4], desired_val_slow[45+4] 
-                        , state_init_[46+4], desired_val_slow[46+4], state_init_[47+4], desired_val_slow[47+4], state_init_[48+4], desired_val_slow[48+4], 131, desired_q_fast_(16), desired_q_fast_(26), rd_.q_(16), rd_.q_(26), zmp_temp3;
+                        345, R_angle, P_angle, pelv_rpy_current_mj_(2), 139, state_init_[41+4+4], desired_val_slow[41+4+4] , state_init_[42+4+4], desired_val_slow[42+4+4] , state_init_[43+4+4], desired_val_slow[43+4+4] , state_init_[44+4+4], desired_val_slow[44+4+4] , state_init_[45+4+4], desired_val_slow[45+4+4] 
+                        , state_init_[46+4+4], desired_val_slow[46+4+4], state_init_[47+4+4], desired_val_slow[47+4+4], state_init_[48+4+4], desired_val_slow[48+4+4], 131, desired_q_fast_(16), desired_q_fast_(26), rd_.q_(16), rd_.q_(26), zmp_temp3;
                     }
                     else if(time_slow == 1)
                     {
                         data_stor_slow1.row(filetime_slow) <<walking_tick_mj, mpc_cycle, walking_tick, 127, lfoot_rpy_current_(0), lfoot_rpy_current_(1), rfoot_rpy_current_(0), rfoot_rpy_current_(1), contactMode * 0.1, ((l_ft_(2) - r_ft_(2))), (F_L - F_R), l_ft_(2), r_ft_(2),
                         128, lfoot_support_current_.translation()(0), lfoot_trajectory_support_.translation()(0), lfoot_support_current_.translation()(1), lfoot_trajectory_support_.translation()(1), lfoot_support_current_.translation()(2), lfoot_trajectory_support_.translation()(2),
                         rfoot_support_current_.translation()(0), rfoot_trajectory_support_.translation()(0),rfoot_support_current_.translation()(1), rfoot_trajectory_support_.translation()(1),rfoot_support_current_.translation()(2), rfoot_trajectory_support_.translation()(2),
-                        345, R_angle, P_angle, pelv_rpy_current_mj_(2), 139, state_init_[41+4], desired_val_slow[41+4] , state_init_[42+4], desired_val_slow[42+4] , state_init_[43+4], desired_val_slow[43+4] , state_init_[44+4], desired_val_slow[44+4] , state_init_[45+4], desired_val_slow[45+4] 
-                        , state_init_[46+4], desired_val_slow[46+4], state_init_[47+4], desired_val_slow[47+4], state_init_[48+4], desired_val_slow[48+4], 131, desired_q_fast_(16), desired_q_fast_(26), rd_.q_(16), rd_.q_(26), zmp_temp3;
+                        345, R_angle, P_angle, pelv_rpy_current_mj_(2), 139, state_init_[41+4+4], desired_val_slow[41+4+4] , state_init_[42+4+4], desired_val_slow[42+4+4] , state_init_[43+4+4], desired_val_slow[43+4+4] , state_init_[44+4+4], desired_val_slow[44+4+4] , state_init_[45+4+4], desired_val_slow[45+4+4] 
+                        , state_init_[46+4+4], desired_val_slow[46+4+4], state_init_[47+4+4], desired_val_slow[47+4+4], state_init_[48+4+4], desired_val_slow[48+4+4], 131, desired_q_fast_(16), desired_q_fast_(26), rd_.q_(16), rd_.q_(26), zmp_temp3;
                     }
                     else if(time_slow == 2)
                     {
                         data_stor_slow2.row(filetime_slow) <<walking_tick_mj, mpc_cycle, walking_tick, 127, lfoot_rpy_current_(0), lfoot_rpy_current_(1), rfoot_rpy_current_(0), rfoot_rpy_current_(1), contactMode * 0.1, ((l_ft_(2) - r_ft_(2))), (F_L - F_R), l_ft_(2), r_ft_(2),
                         128, lfoot_support_current_.translation()(0), lfoot_trajectory_support_.translation()(0), lfoot_support_current_.translation()(1), lfoot_trajectory_support_.translation()(1), lfoot_support_current_.translation()(2), lfoot_trajectory_support_.translation()(2),
                         rfoot_support_current_.translation()(0), rfoot_trajectory_support_.translation()(0),rfoot_support_current_.translation()(1), rfoot_trajectory_support_.translation()(1),rfoot_support_current_.translation()(2), rfoot_trajectory_support_.translation()(2),
-                        345, R_angle, P_angle, pelv_rpy_current_mj_(2), 139, state_init_[41+4], desired_val_slow[41+4] , state_init_[42+4], desired_val_slow[42+4] , state_init_[43+4], desired_val_slow[43+4] , state_init_[44+4], desired_val_slow[44+4] , state_init_[45+4], desired_val_slow[45+4] 
-                        , state_init_[46+4], desired_val_slow[46+4], state_init_[47+4], desired_val_slow[47+4], state_init_[48+4], desired_val_slow[48+4], 131, desired_q_fast_(16), desired_q_fast_(26), rd_.q_(16), rd_.q_(26), zmp_temp3;
+                        345, R_angle, P_angle, pelv_rpy_current_mj_(2), 139, state_init_[41+4+4], desired_val_slow[41+4+4] , state_init_[42+4+4], desired_val_slow[42+4+4] , state_init_[43+4+4], desired_val_slow[43+4+4] , state_init_[44+4+4], desired_val_slow[44+4+4] , state_init_[45+4+4], desired_val_slow[45+4+4] 
+                        , state_init_[46+4+4], desired_val_slow[46+4+4], state_init_[47+4+4], desired_val_slow[47+4+4], state_init_[48+4+4], desired_val_slow[48+4+4], 131, desired_q_fast_(16), desired_q_fast_(26), rd_.q_(16), rd_.q_(26), zmp_temp3;
                     }
                     if(filetime_slow == 13999)
                     {
@@ -2047,10 +2035,10 @@ std::cout << " bb " << xd_mj_(0) << " "
                 //IMPORTANT
                 if(abs(ref_q_(0)) > 0.15 || state_init_[41+4+4] > 0.23 || state_init_[41+4+4] < -0.02 || abs(ref_q_(6)) > 0.15 || abs(com_support_current_(1)) > 0.16 || abs(P_angle) > 3.0|| abs(R_angle) > 3.0)
                 {
-                    ref_q_(0) = rd_.q_(0);
-                    ref_q_(6) = rd_.q_(6);
                     std::cout <<"WARNING JOINT YAW ANGLE" << std::endl;
                     std::cout << ref_q_(0) << " "<< ref_q_(6) << " " << state_init_[41+4+4]<< " "<< com_support_current_(1) << " " << P_angle << " " << R_angle << std::endl;
+                    ref_q_(0) = rd_.q_(0);
+                    ref_q_(6) = rd_.q_(6);
                     walking_enable_ = false;
                     walking_finish_flag = true;
                 }
@@ -7648,7 +7636,7 @@ void CustomController::parameterSetting()
     target_z_ = 0.0;
     com_height_ = 0.71;
     target_theta_ = 0.0;
-    step_length_x_ = 0.1;
+    step_length_x_ = 0.13;
     step_length_y_ = 0.0;
 
     is_right_foot_swing_ = 0;
@@ -9718,7 +9706,7 @@ void CustomController::getMPCTrajectory()
             q_upper1 = (q_upper_d1 * (walking_tick+1) + q_upper_init1 *(40-walking_tick-1))/40;//q_upper + upperd * 0.02/40;
             upperd1 = (q_upper1 - (q_upper_d1 * (walking_tick) + q_upper_init1 *(40-walking_tick))/40) * 2000;
             q_upper2 = (q_upper_d2 * (walking_tick+1) + q_upper_init2 *(40-walking_tick-1))/40;//q_upper + upperd * 0.02/40;
-            upperd2 = (q_upper2 - (q_upper_d1 * (walking_tick) + q_upper_init2 *(40-walking_tick))/40) * 2000;
+            upperd2 = (q_upper2 - (q_upper_d2 * (walking_tick) + q_upper_init2 *(40-walking_tick))/40) * 2000;
         
         }
 
