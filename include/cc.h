@@ -1229,12 +1229,13 @@ public:
     Eigen::VectorQVQd q_pinocchio_desired1, qd_pinocchio1;
 
     Eigen::Vector3d rfootd, lfootd, rfootd1, lfootd1, comd, comd1, comd_init, com_mpc, com_mpc1, com_mpc2, comprev, rfoot_mpc, lfoot_mpc;
-    Eigen::Vector2d angm, angm_prev, upperd, comdt_, comd_s;
-    Eigen::Vector3d ZMP_gl;
+    Eigen::Vector3d comd_s, ZMP_gl;
+    Eigen::Vector2d upperd;
+    Eigen::Vector2d angm, angm_prev, comdt_;
 
     Eigen::Vector3d zmp_temp1;
     int zmp_temp3;
-    double ZMPx_prev, ZMPy_prev, zmp_mpcx, zmp_mpcy, com_mpcx, com_mpcy, com_mpcy_prev, com_mpcx_prev, ZMPx_test, ZMPy_test;
+    double ZMPx_prev, ZMPy_prev, zmp_mpcx, zmp_mpcy, com_mpcx, com_mpcy, com_mpcz, com_mpcy_prev, com_mpcx_prev, com_mpcz_prev, ZMPx_test, ZMPy_test;
     int controlwalk_time;
 
     Eigen::Vector3d virtual_temp, virtual_temp_sup, virtual_temp1, virtual_temp2, foot_temp;
