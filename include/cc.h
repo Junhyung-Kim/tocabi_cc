@@ -522,6 +522,8 @@ public:
     Eigen::Vector3d lacromion_rpy_current_from_global_;
     Eigen::Vector3d racromion_rpy_current_from_global_;
 
+    Eigen::Vector3d com_id_prev;
+
     Eigen::Isometry3d upperbody_transform_pre_desired_from_;
     Eigen::Isometry3d head_transform_pre_desired_from_;
     Eigen::Isometry3d lfoot_transform_pre_desired_from_;
