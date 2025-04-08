@@ -2003,7 +2003,7 @@ std::cout << " bb " << xd_mj_(0) << " "
                         128, lfoot_support_current_.translation()(0), lfoot_trajectory_support_.translation()(0), lfoot_support_current_.translation()(1), lfoot_trajectory_support_.translation()(1), lfoot_support_current_.translation()(2), lfoot_trajectory_support_.translation()(2),
                         rfoot_support_current_.translation()(0), rfoot_trajectory_support_.translation()(0),rfoot_support_current_.translation()(1), rfoot_trajectory_support_.translation()(1),rfoot_support_current_.translation()(2), rfoot_trajectory_support_.translation()(2),
                         345, R_angle, P_angle, pelv_rpy_current_mj_(2), 139, state_init_[41+4], desired_val_slow[41+4] , state_init_[42+4], desired_val_slow[42+4] , state_init_[43+4], desired_val_slow[43+4] , state_init_[44+4], desired_val_slow[44+4] , state_init_[45+4], desired_val_slow[45+4] 
-                        , state_init_[46+4], desired_val_slow[46+4], state_init_[47+4], desired_val_slow[47+4], state_init_[48+4], desired_val_slow[48+4], 131, desired_q_fast_(16), desired_q_fast_(26), desired_q_fast_(13), desired_q_fast_(14), zmp_temp3;
+                        , state_init_[46+4], desired_val_slow[46+4], state_init_[47+4], desired_val_slow[47+4], state_init_[48+4], desired_val_slow[48+4], 131, desired_q_fast_(16), desired_q_fast_(26), rd_.q_(16), rd_.q_(26), zmp_temp3;
                     }
                     else if(time_slow == 2)
                     {
@@ -9247,7 +9247,7 @@ void CustomController::getMPCTrajectory()
                     }
                 }
 
-                if(desired_val_slow[19+2] > 0.7000 || rd_.q_(13+2+1) > 0.7000)
+                if(desired_val_slow[19+2] > 0.9000 || rd_.q_(13+2+1) > 0.9000)
                 {  
                     std::cout << "Pitch over" << std::endl;
                     if(desired_val_slow[39+2+2] > 0.0)

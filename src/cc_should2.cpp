@@ -8728,7 +8728,30 @@ void CustomController::momentumControl(RobotData &Robot, Eigen::Vector3d comd,  
             hg_gain.setIdentity();
             hg_gain(0,0) = 0.01;
             hg_gain(1,1) = 0.01;
-
+            /*
+            if(mpc_cycle >= dis_mpc_init && mpc_cycle <= dis_mpc_final)
+            {
+                hg_gain(0,0) = 0.3;
+                hg_gain(1,1) = 0.3;
+                momPelvR = 0.0001;
+                //momPelvP = 0.0001;
+            }
+            else if( mpc_cycle >= dis_mpc_init && mpc_cycle <= dis_mpc_final + 20)
+            {
+                if(mpc_cycle <= dis_mpc_final + 10)
+                {
+                    hg_gain(0,0) = 0.3;
+                    hg_gain(1,1) = 0.3;
+                }
+                momPelvR = 0.00005;
+                //momPelvP = 0.00005;
+            }
+            else
+            {
+                momPelvR = 0.03;
+                //momPelvP = 0.03;
+            }
+            */
             H2 = H2 + Hg_slow_.block(3,0,2,18).transpose() * hg_gain * Hg_slow_.block(3,0,2,18);// * 0.01;
             g2 = g2 - Hg_slow_.block(3,0,2,18).transpose() * hg_gain *(ang_ - MOMX);// * 0.01;
          
