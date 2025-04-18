@@ -1816,7 +1816,7 @@ std::cout << " bb " << xd_mj_(0) << " "
                             qd_des_prev(i) = qd_des_lpf(i);
                     }
                 }
-                if(time_slow < 3 && mpc_cycle >= 0)
+                if(time_slow < 3)
                 {
                     //std::cout << "GGGG" << std::endl;
                     
@@ -2039,41 +2039,83 @@ void CustomController::computeFast()
                             lx = 0.11;
                             mu = 0.8;
                             if(contactMode_fast == 1)
-                            {    
-                                if(lfoot_sx >  rfoot_sx)
+                            {
+                                if(current_step_num_ == 2 && walking_tick_mj >= 18060) 
                                 {
-                                    if(zmpx_fast > lfoot_sx + lx)
-                                        zmpx_d  = lfoot_sx + lx;
-                                    else if(zmpx_fast < rfoot_sx - lx)
-                                        zmpx_d  = rfoot_sx - lx;
-                                    else
-                                        zmpx_d = zmpx_fast;
+                                    if(lfoot_sx >  rfoot_sx)
+                                    {
+                                        if(zmpx_fast > lfoot_sx)
+                                            zmpx_d  = lfoot_sx;
+                                        else if(zmpx_fast < rfoot_sx - lx)
+                                            zmpx_d  = rfoot_sx - lx;
+                                        else
+                                            zmpx_d = zmpx_fast;
 
-                                    zmp_bx(0) =  lfoot_sy + ly;
-                                    zmp_bx(1) =  rfoot_sy - ly;
-                                }
-                                else if(lfoot_sx <  rfoot_sx)
-                                {
-                                    if(zmpx_fast > rfoot_sx + lx)
-                                        zmpx_d  = rfoot_sx + lx;
-                                    else if(zmpx_fast < lfoot_sx - lx)
-                                        zmpx_d  = lfoot_sx - lx;
+                                        zmp_bx(0) =  lfoot_sy + ly;
+                                        zmp_bx(1) =  rfoot_sy - ly;
+                                    }
+                                    else if(lfoot_sx <  rfoot_sx)
+                                    {
+                                        if(zmpx_fast > rfoot_sx)
+                                            zmpx_d  = rfoot_sx;
+                                        else if(zmpx_fast < lfoot_sx - lx)
+                                            zmpx_d  = lfoot_sx - lx;
+                                        else
+                                            zmpx_d = zmpx_fast;
+                                        zmp_bx(0) =  lfoot_sy + ly;
+                                        zmp_bx(1) =  rfoot_sy - ly;
+                                    }
                                     else
-                                        zmpx_d = zmpx_fast;
-                                    zmp_bx(0) =  lfoot_sy + ly;
-                                    zmp_bx(1) =  rfoot_sy - ly;
+                                    {
+                                        if(zmpx_fast > rfoot_sx + lx)
+                                            zmpx_d  = rfoot_sx + lx;
+                                        else if(zmpx_fast < lfoot_sx - lx)
+                                            zmpx_d  = lfoot_sx - lx;
+                                        else
+                                            zmpx_d = zmpx_fast;
+                                        zmp_bx(0) =  lfoot_sy + ly;
+                                        zmp_bx(1) =  rfoot_sy - ly;
+                                    } 
                                 }
                                 else
                                 {
-                                    if(zmpx_fast > rfoot_sx + lx)
-                                        zmpx_d  = rfoot_sx + lx;
-                                    else if(zmpx_fast < lfoot_sx - lx)
-                                        zmpx_d  = lfoot_sx - lx;
+                                     if(lfoot_sx >  rfoot_sx)
+                                    {
+                                        if(zmpx_fast > lfoot_sx + lx)
+                                            zmpx_d  = lfoot_sx + lx;
+                                        else if(zmpx_fast < rfoot_sx - lx)
+                                            zmpx_d  = rfoot_sx - lx;
+                                        else
+                                            zmpx_d = zmpx_fast;
+
+                                        zmp_bx(0) =  lfoot_sy + ly;
+                                        zmp_bx(1) =  rfoot_sy - ly;
+                                    }
+                                    else if(lfoot_sx <  rfoot_sx)
+                                    {
+                                        if(zmpx_fast > rfoot_sx + lx)
+                                            zmpx_d  = rfoot_sx + lx;
+                                        else if(zmpx_fast < lfoot_sx - lx)
+                                            zmpx_d  = lfoot_sx - lx;
+                                        else
+                                            zmpx_d = zmpx_fast;
+                                        zmp_bx(0) =  lfoot_sy + ly;
+                                        zmp_bx(1) =  rfoot_sy - ly;
+                                    }
                                     else
-                                        zmpx_d = zmpx_fast;
-                                    zmp_bx(0) =  lfoot_sy + ly;
-                                    zmp_bx(1) =  rfoot_sy - ly;
+                                    {
+                                        if(zmpx_fast > rfoot_sx + lx)
+                                            zmpx_d  = rfoot_sx + lx;
+                                        else if(zmpx_fast < lfoot_sx - lx)
+                                            zmpx_d  = lfoot_sx - lx;
+                                        else
+                                            zmpx_d = zmpx_fast;
+                                        zmp_bx(0) =  lfoot_sy + ly;
+                                        zmp_bx(1) =  rfoot_sy - ly;
+                                    } 
                                 }
+                                
+                              
 
                                 if(zmpy_fast > lfoot_sy + ly)
                                     zmpy_d = lfoot_sy + ly;
@@ -2228,14 +2270,40 @@ void CustomController::computeFast()
                                 A1.block(11,6,1,6)(0,3) = 1;
                                 lbA1(11) = 0.0;
                                 ubA1(11) = 100000.0;
-                                A1.block(12,6,1,6)(0,2) = lx;
-                                A1.block(12,6,1,6)(0,4) = -1;
-                                lbA1(12) = 0.0;
-                                ubA1(12) = 100000.0;
-                                A1.block(13,6,1,6)(0,2) = lx;
-                                A1.block(13,6,1,6)(0,4) = 1;
-                                lbA1(13) = 0.0;
-                                ubA1(13) = 100000.0;
+                                if(current_step_num_ == 2 && walking_tick_mj >= 18060) 
+                                {
+                                    A1.block(12,6,1,6)(0,2) = lx;
+                                    A1.block(12,6,1,6)(0,4) = -1;
+                                    lbA1(12) = 0.0;
+                                    ubA1(12) = 100000.0;
+                                    A1.block(13,6,1,6)(0,2) = 0.0;//lx;
+                                    A1.block(13,6,1,6)(0,4) = 1;
+                                    lbA1(13) = 0.0;
+                                    ubA1(13) = 100000.0;
+                                }
+                                else if(current_step_num_ == 3 || (current_step_num_ == 4 && walking_tick_mj <= 22400)) 
+                                {
+                                    A1.block(12,6,1,6)(0,2) = lx;
+                                    A1.block(12,6,1,6)(0,4) = -1;
+                                    lbA1(12) = 0.0;
+                                    ubA1(12) = 100000.0;
+                                    A1.block(13,6,1,6)(0,2) = 0.0;//lx;
+                                    A1.block(13,6,1,6)(0,4) = 1;
+                                    lbA1(13) = 0.0;
+                                    ubA1(13) = 100000.0;
+                                }
+                                else
+                                {
+                                    A1.block(12,6,1,6)(0,2) = lx;
+                                    A1.block(12,6,1,6)(0,4) = -1;
+                                    lbA1(12) = 0.0;
+                                    ubA1(12) = 100000.0;
+                                    A1.block(13,6,1,6)(0,2) = lx;
+                                    A1.block(13,6,1,6)(0,4) = 1;
+                                    lbA1(13) = 0.0;
+                                    ubA1(13) = 100000.0;
+                                }
+                                
 
                                 A1.block(14,0,1,6)(0,2) = mu;
                                 A1.block(24,0,1,6)(0,0) = -1;
@@ -2423,20 +2491,38 @@ void CustomController::computeFast()
                             }
                             else if(contactMode_fast == 2)
                             {
-                                if(zmpx_fast > lfoot_sx + lx)
-                                    zmpx_d  = lfoot_sx + lx;
-                                else if(zmpx_fast < lfoot_sx - lx)
-                                    zmpx_d  = lfoot_sx - lx;
-                                else
-                                    zmpx_d = zmpx_fast;
+                                if(current_step_num_ == 3)
+                                {
+                                    if(zmpx_fast > lfoot_sx)
+                                        zmpx_d  = lfoot_sx;
+                                    else if(zmpx_fast < lfoot_sx - lx)
+                                        zmpx_d  = lfoot_sx - lx;
+                                    else
+                                        zmpx_d = zmpx_fast;
 
-                                if(zmpy_fast > lfoot_sy + ly)
-                                    zmpy_d = lfoot_sy + ly;
-                                else if(zmpy_fast < lfoot_sy - ly)
-                                    zmpy_d = lfoot_sy - ly;
+                                    if(zmpy_fast > lfoot_sy + ly)
+                                        zmpy_d = lfoot_sy + ly;
+                                    else if(zmpy_fast < lfoot_sy - ly)
+                                        zmpy_d = lfoot_sy - ly;
+                                    else
+                                        zmpy_d = zmpy_fast;
+                                }
                                 else
-                                    zmpy_d = zmpy_fast;
+                                {
+                                    if(zmpx_fast > lfoot_sx + lx)
+                                        zmpx_d  = lfoot_sx + lx;
+                                    else if(zmpx_fast < lfoot_sx - lx)
+                                        zmpx_d  = lfoot_sx - lx;
+                                    else
+                                        zmpx_d = zmpx_fast;
 
+                                    if(zmpy_fast > lfoot_sy + ly)
+                                        zmpy_d = lfoot_sy + ly;
+                                    else if(zmpy_fast < lfoot_sy - ly)
+                                        zmpy_d = lfoot_sy - ly;
+                                    else
+                                        zmpy_d = zmpy_fast;
+                                }
                                 zmp_bx(0) =  lfoot_sy + ly;
                                 zmp_bx(1) =  lfoot_sy - ly;
                                
@@ -2517,14 +2603,28 @@ void CustomController::computeFast()
                                 A1.block(7,6,1,6)(0,3) = 1;
                                 lbA1(7) = 0.0;
                                 ubA1(7) = 100000.0;
-                                A1.block(8,6,1,6)(0,2) = lx;
-                                A1.block(8,6,1,6)(0,4) = -1;
-                                lbA1(8) = 0.0;
-                                ubA1(8) = 100000.0;
-                                A1.block(9,6,1,6)(0,2) = lx;
-                                A1.block(9,6,1,6)(0,4) = 1;
-                                lbA1(9) = 0.0;
-                                ubA1(9) = 100000.0;
+                                if(current_step_num_ == 3)
+                                {
+                                    A1.block(8,6,1,6)(0,2) = lx;
+                                    A1.block(8,6,1,6)(0,4) = -1;
+                                    lbA1(8) = 0.0;
+                                    ubA1(8) = 100000.0;
+                                    A1.block(9,6,1,6)(0,2) = 0.0;//lx;
+                                    A1.block(9,6,1,6)(0,4) = 1;
+                                    lbA1(9) = 0.0;
+                                    ubA1(9) = 100000.0;
+                                }
+                                else
+                                {
+                                    A1.block(8,6,1,6)(0,2) = lx;
+                                    A1.block(8,6,1,6)(0,4) = -1;
+                                    lbA1(8) = 0.0;
+                                    ubA1(8) = 100000.0;
+                                    A1.block(9,6,1,6)(0,2) = lx;
+                                    A1.block(9,6,1,6)(0,4) = 1;
+                                    lbA1(9) = 0.0;
+                                    ubA1(9) = 100000.0;
+                                }
 
                                 A1.block(14,6,1,6)(0,2) = mu;
                                 A1.block(24,6,1,6)(0,0) = -1;
@@ -3000,11 +3100,11 @@ void CustomController::computeFast()
         if(mpc_cycle < controlwalk_time-1 && time_fast < 3 && walking_finish_flag == false)
         {
             if(contactMode_fast == 1)
-                file[0] << mpc_cycle << " 1 "<< walking_tick_mj << " "<<rfoot_sx << " "<<lfoot_sx << " "<<rfoot_sy << " "<<lfoot_sy << " " << zmpx_d << " "<< zmpx_fast << " " << zmpy_d << " "<< zmpy_fast << " " <<-((qp_result(13+MODEL_DOF_VIRTUAL)+qp_result(4)+qp_result(10))-rfoot_sx*qp_result(2) -lfoot_sx*qp_result(8))/(qp_result(8)+qp_result(2))  << " " << zmpy_d << " " << zmpy_fast << " "<< -((qp_result(12+MODEL_DOF_VIRTUAL)-qp_result(3)-qp_result(9))-rfoot_sy*qp_result(2) -lfoot_sy*qp_result(8))/(qp_result(8)+qp_result(2))<< " "<< qp_result(12+MODEL_DOF_VIRTUAL)<< " "<< qp_result(13+MODEL_DOF_VIRTUAL) << " ";
+                file[0] << mpc_cycle << " 1 "<< walking_tick_mj << " "<< solved << " "<<rfoot_sx << " "<<lfoot_sx << " "<<rfoot_sy << " "<<lfoot_sy << " " << zmpx_d << " "<< zmpx_fast << " " << zmpy_d << " "<< zmpy_fast << " " <<-((qp_result(13+MODEL_DOF_VIRTUAL)+qp_result(4)+qp_result(10))-rfoot_sx*qp_result(2) -lfoot_sx*qp_result(8))/(qp_result(8)+qp_result(2))  << " " << zmpy_d << " " << zmpy_fast << " "<< -((qp_result(12+MODEL_DOF_VIRTUAL)-qp_result(3)-qp_result(9))-rfoot_sy*qp_result(2) -lfoot_sy*qp_result(8))/(qp_result(8)+qp_result(2))<< " "<< qp_result(12+MODEL_DOF_VIRTUAL)<< " "<< qp_result(13+MODEL_DOF_VIRTUAL) << " ";
             else if(contactMode_fast == 2)
-                file[0] << mpc_cycle << " 2 "<< walking_tick_mj << " "<<rfoot_sx << " "<<lfoot_sx << " "<<rfoot_sy << " "<<lfoot_sy << " " << zmpx_d << " "<< zmpx_fast << " " << zmpy_d << " "<< zmpy_fast << " "<< -((qp_result(13+MODEL_DOF_VIRTUAL)+qp_result(10)) -lfoot_sx*qp_result(8))/(qp_result(8))   << " " << zmpy_d << " " << zmpy_fast << " "<< -((qp_result(12+MODEL_DOF_VIRTUAL)-qp_result(9)) -lfoot_sy*qp_result(8))/(qp_result(8))<< " "<< qp_result(12+MODEL_DOF_VIRTUAL)<< " "<< qp_result(13+MODEL_DOF_VIRTUAL) << " ";
+                file[0] << mpc_cycle << " 2 "<< walking_tick_mj << " "<< solved << " "<<rfoot_sx << " "<<lfoot_sx << " "<<rfoot_sy << " "<<lfoot_sy << " " << zmpx_d << " "<< zmpx_fast << " " << zmpy_d << " "<< zmpy_fast << " "<< -((qp_result(13+MODEL_DOF_VIRTUAL)+qp_result(10)) -lfoot_sx*qp_result(8))/(qp_result(8))   << " " << zmpy_d << " " << zmpy_fast << " "<< -((qp_result(12+MODEL_DOF_VIRTUAL)-qp_result(9)) -lfoot_sy*qp_result(8))/(qp_result(8))<< " "<< qp_result(12+MODEL_DOF_VIRTUAL)<< " "<< qp_result(13+MODEL_DOF_VIRTUAL) << " ";
             else
-                file[0] << mpc_cycle << " 3 "<< walking_tick_mj << " "<<rfoot_sx << " "<<lfoot_sx << " "<<rfoot_sy << " "<<lfoot_sy << " " << zmpx_d << " "<< zmpx_fast << " " << zmpy_d << " "<< zmpy_fast << " "<< -((qp_result(13+MODEL_DOF_VIRTUAL)+qp_result(4))-rfoot_sx*qp_result(2))/(qp_result(2))  << " " << zmpy_d << " " << zmpy_fast << " "<< -((qp_result(12+MODEL_DOF_VIRTUAL)-qp_result(3))-rfoot_sy*qp_result(2))/(qp_result(2))<< " "<< qp_result(12+MODEL_DOF_VIRTUAL)<< " "<< qp_result(13+MODEL_DOF_VIRTUAL) << " ";
+                file[0] << mpc_cycle << " 3 "<< walking_tick_mj << " "<< solved << " "<<rfoot_sx << " "<<lfoot_sx << " "<<rfoot_sy << " "<<lfoot_sy << " " << zmpx_d << " "<< zmpx_fast << " " << zmpy_d << " "<< zmpy_fast << " "<< -((qp_result(13+MODEL_DOF_VIRTUAL)+qp_result(4))-rfoot_sx*qp_result(2))/(qp_result(2))  << " " << zmpy_d << " " << zmpy_fast << " "<< -((qp_result(12+MODEL_DOF_VIRTUAL)-qp_result(3))-rfoot_sy*qp_result(2))/(qp_result(2))<< " "<< qp_result(12+MODEL_DOF_VIRTUAL)<< " "<< qp_result(13+MODEL_DOF_VIRTUAL) << " ";
             file[0] << std::endl;
             /*
             file[0] << "145 " << contactMode_fast << " " << com_alpha_fast << " "<<com_alpha_fast_prev << " " << com_alpha_vel << " ";
@@ -9435,45 +9535,93 @@ void CustomController::getMPCTrajectory()
 
                 if(contactMode == 1)
                 {
-                    if(lfoot_sx_float >  rfoot_sx_float)
+                    if(current_step_num_ == 2 && walking_tick_mj >= 18060) 
                     {
-                        if(zmp_mpcx /* + virtual_temp1(0)*/ > lfoot_sx_float + lx)
-                            zmp_mpcx  = lfoot_sx_float + lx /* - virtual_temp1(0)*/;
-                        else if(zmp_mpcx /* + virtual_temp1(0)*/ < rfoot_sx_float - lx)
-                            zmp_mpcx  = rfoot_sx_float - lx/* - virtual_temp1(0)*/;
-                    }
-                    else if(lfoot_sx_float <  rfoot_sx_float)
-                    {
-                        if(zmp_mpcx /* + virtual_temp1(0)*/  > rfoot_sx_float + lx)
-                            zmp_mpcx  = rfoot_sx_float + lx/* - virtual_temp1(0)*/;
-                        else if(zmp_mpcx /* + virtual_temp1(0)*/  < lfoot_sx_float - lx)
-                            zmp_mpcx  = lfoot_sx_float - lx/* - virtual_temp1(0)*/;
+                        if(lfoot_sx_float >  rfoot_sx_float)
+                        {
+                            if(zmp_mpcx /* + virtual_temp1(0)*/ > lfoot_sx_float)
+                                zmp_mpcx  = lfoot_sx_float/* - virtual_temp1(0)*/;
+                            else if(zmp_mpcx /* + virtual_temp1(0)*/ < rfoot_sx_float - lx)
+                                zmp_mpcx  = rfoot_sx_float - lx/* - virtual_temp1(0)*/;
+                        }
+                        else if(lfoot_sx_float <  rfoot_sx_float)
+                        {
+                            if(zmp_mpcx /* + virtual_temp1(0)*/  > rfoot_sx_float)
+                                zmp_mpcx  = rfoot_sx_float/* - virtual_temp1(0)*/;
+                            else if(zmp_mpcx /* + virtual_temp1(0)*/  < lfoot_sx_float - lx)
+                                zmp_mpcx  = lfoot_sx_float - lx/* - virtual_temp1(0)*/;
+                        }
+                        else
+                        {
+                            if(zmp_mpcx /* + virtual_temp1(0)*/  > rfoot_sx_float)
+                                zmp_mpcx  = rfoot_sx_float/* - virtual_temp1(0)*/;
+                            else if(zmp_mpcx /* + virtual_temp1(0)*/  < lfoot_sx_float - lx)
+                                zmp_mpcx  = lfoot_sx_float - lx /* - virtual_temp1(0)*/;
+                        }
+
+                        if(zmp_mpcy /* + virtual_temp1(1)*/ > lfoot_sy_float + ly)
+                            zmp_mpcy = lfoot_sy_float + ly  /*- virtual_temp1(1)*/;
+                    
+                        if(zmp_mpcy /* + virtual_temp1(1)*/ < rfoot_sy_float - ly)
+                            zmp_mpcy = rfoot_sy_float - ly /*- virtual_temp1(1)*/;
                     }
                     else
                     {
-                        if(zmp_mpcx /* + virtual_temp1(0)*/  > rfoot_sx_float + lx)
-                            zmp_mpcx  = rfoot_sx_float + lx /* - virtual_temp1(0)*/;
-                        else if(zmp_mpcx /* + virtual_temp1(0)*/  < lfoot_sx_float - lx)
-                            zmp_mpcx  = lfoot_sx_float - lx /* - virtual_temp1(0)*/;
-                    }
+                        if(lfoot_sx_float >  rfoot_sx_float)
+                        {
+                            if(zmp_mpcx /* + virtual_temp1(0)*/ > lfoot_sx_float + lx)
+                                zmp_mpcx  = lfoot_sx_float + lx /* - virtual_temp1(0)*/;
+                            else if(zmp_mpcx /* + virtual_temp1(0)*/ < rfoot_sx_float - lx)
+                                zmp_mpcx  = rfoot_sx_float - lx/* - virtual_temp1(0)*/;
+                        }
+                        else if(lfoot_sx_float <  rfoot_sx_float)
+                        {
+                            if(zmp_mpcx /* + virtual_temp1(0)*/  > rfoot_sx_float + lx)
+                                zmp_mpcx  = rfoot_sx_float + lx/* - virtual_temp1(0)*/;
+                            else if(zmp_mpcx /* + virtual_temp1(0)*/  < lfoot_sx_float - lx)
+                                zmp_mpcx  = lfoot_sx_float - lx/* - virtual_temp1(0)*/;
+                        }
+                        else
+                        {
+                            if(zmp_mpcx /* + virtual_temp1(0)*/  > rfoot_sx_float + lx)
+                                zmp_mpcx  = rfoot_sx_float + lx /* - virtual_temp1(0)*/;
+                            else if(zmp_mpcx /* + virtual_temp1(0)*/  < lfoot_sx_float - lx)
+                                zmp_mpcx  = lfoot_sx_float - lx /* - virtual_temp1(0)*/;
+                        }
 
-                    if(zmp_mpcy /* + virtual_temp1(1)*/ > lfoot_sy_float + ly)
-                        zmp_mpcy = lfoot_sy_float + ly  /*- virtual_temp1(1)*/;
-                   
-                    if(zmp_mpcy /* + virtual_temp1(1)*/ < rfoot_sy_float - ly)
-                        zmp_mpcy = rfoot_sy_float - ly /*- virtual_temp1(1)*/;
+                        if(zmp_mpcy /* + virtual_temp1(1)*/ > lfoot_sy_float + ly)
+                            zmp_mpcy = lfoot_sy_float + ly  /*- virtual_temp1(1)*/;
+                    
+                        if(zmp_mpcy /* + virtual_temp1(1)*/ < rfoot_sy_float - ly)
+                            zmp_mpcy = rfoot_sy_float - ly /*- virtual_temp1(1)*/;
+                    }
                 }
                 else if(contactMode == 2)
                 {
-                    if(zmp_mpcx /* + virtual_temp1(0)*/  > lfoot_sx_float + lx)
-                        zmp_mpcx  = lfoot_sx_float + lx  /* - virtual_temp1(0)*/ ;
-                    else if(zmp_mpcx /* + virtual_temp1(0)*/  < lfoot_sx_float - lx)
-                        zmp_mpcx  = lfoot_sx_float - lx  /* - virtual_temp1(0)*/ ;
-                   
-                    if(zmp_mpcy /* + virtual_temp1(1)*/ > lfoot_sy_float + ly )
-                        zmp_mpcy = lfoot_sy_float + ly  /*- virtual_temp1(1)*/;
-                    else if(zmp_mpcy /* + virtual_temp1(1)*/ < lfoot_sy_float - ly )
-                        zmp_mpcy = lfoot_sy_float - ly /*- virtual_temp1(1)*/;
+                    if(current_step_num_ == 3)
+                    {
+                        if(zmp_mpcx /* + virtual_temp1(0)*/  > lfoot_sx_float)
+                            zmp_mpcx  = lfoot_sx_float  /* - virtual_temp1(0)*/ ;
+                        else if(zmp_mpcx /* + virtual_temp1(0)*/  < lfoot_sx_float - lx)
+                            zmp_mpcx  = lfoot_sx_float - lx  /* - virtual_temp1(0)*/ ;
+                    
+                        if(zmp_mpcy /* + virtual_temp1(1)*/ > lfoot_sy_float + ly )
+                            zmp_mpcy = lfoot_sy_float + ly  /*- virtual_temp1(1)*/;
+                        else if(zmp_mpcy /* + virtual_temp1(1)*/ < lfoot_sy_float - ly )
+                            zmp_mpcy = lfoot_sy_float - ly /*- virtual_temp1(1)*/;
+                    }
+                    else
+                    {
+                        if(zmp_mpcx /* + virtual_temp1(0)*/  > lfoot_sx_float + lx)
+                            zmp_mpcx  = lfoot_sx_float + lx  /* - virtual_temp1(0)*/ ;
+                        else if(zmp_mpcx /* + virtual_temp1(0)*/  < lfoot_sx_float - lx)
+                            zmp_mpcx  = lfoot_sx_float - lx  /* - virtual_temp1(0)*/ ;
+                    
+                        if(zmp_mpcy /* + virtual_temp1(1)*/ > lfoot_sy_float + ly )
+                            zmp_mpcy = lfoot_sy_float + ly  /*- virtual_temp1(1)*/;
+                        else if(zmp_mpcy /* + virtual_temp1(1)*/ < lfoot_sy_float - ly )
+                            zmp_mpcy = lfoot_sy_float - ly /*- virtual_temp1(1)*/;
+                    }
                 }
                 else
                 {
