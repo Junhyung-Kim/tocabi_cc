@@ -59,4 +59,4 @@ impact_force : 550.0
 dis_mpc_init : 1000 #174, 153
 dis_mpc_final : 180
 
-controlwalk_time : 66
+controlwalk_time : 180 #180 #92

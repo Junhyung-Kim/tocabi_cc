@@ -381,6 +381,8 @@ public:
     Eigen::VectorQd desired_q_slow_;
     Eigen::VectorQd desired_q_dot_slow_;
 
+    Eigen::Vector3d q_prev;
+
     Eigen::VectorQd motion_q_;
     Eigen::VectorQd motion_q_dot_;
     Eigen::VectorQd motion_q_pre_;
