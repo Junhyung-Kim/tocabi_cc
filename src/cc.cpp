@@ -1827,14 +1827,14 @@ std::cout << " bb " << xd_mj_(0) << " "
                         rfoot_support_current_.translation()(0)<< " " << rfoot_trajectory_support_.translation()(0)<< " " <<rfoot_support_current_.translation()(1)<< " " << rfoot_trajectory_support_.translation()(1)<< " " <<rfoot_support_current_.translation()(2)<< " " << rfoot_trajectory_support_.translation()(2) << " "  << rfoot_d2(2)<< " "  << rfoot_d(2) << " "<< state_init_[49] << " " << desired_val_slow[49]<< " " << rd_.link_[COM_id].xpos(2)  << " " << com_desired_(2) << " " << com_support_current_(2)  << " "  << model_data_cen.vcom[0][2] << " " << comd_s[2]
                         << " 5 "<< com_desired_(0) << " " << com_support_current_(0)<< " "<< com_desired_(1) << " " << com_support_current_(1) << " "<< com_desired_(2) << " " << com_support_current_(2) 
                         << " 6 " << DyrosMath::rot2Euler(rd_.link_[Pelvis].rotm)(0) << " "<< DyrosMath::rot2Euler(rd_.link_[Pelvis].rotm)(1) 
-                        <<  " 71 "  <<  state_init_[43]<< " " <<desired_val_slow[43]<< " " <<  state_init_[47]<< " " <<desired_val_slow[47]<< " " << zmp_mpcx << " " << zmp_mpcy << " "
-                        << " 7 " << virtual_temp(0)<< " " << virtual_temp(1)<< " " << virtual_temp(2)<< " " << ZMP_X_REF << " " << ZMP_Y_REF << " " <<zmp_mpcx << " " << zmp_mpcy<< " " << alpha;
+                        <<  " 71 "  <<  ang_d(0)<< " " <<ang_d(1)<< " " << model_data_cen.hg.angular()(0)<< " " <<model_data_cen.hg.angular()(1)<< " " 
+                        << " 7 " << ZMP_float(0) << " " << ZMP_float(1) << " " <<ZMPx_test << " " << ZMPy_test<< " " << zmp_mpcy << " " <<rfoot_ori1(1) << " " <<lfoot_ori1(1) << " "<< F_T_R_y_input << " " << F_T_L_y_input << " "<< alpha;
                         
-                        for(int i = 0; i < 12; i++)
+                        /*for(int i = 0; i < 12; i++)
                             file[1] << " " << ref_q_(i);
                         file[1] << " 8 ";
                         for(int i = 0; i < 17; i++)
-                            file[1] << " " << state_init_[41+i];
+                            file[1] << " " << state_init_[41+i];*/
 
                         file[1] << " 9 " << rd_.link_[Left_Foot].xipos(2) << " " << rd_.link_[Right_Foot].xipos(2) << " "<<rd_.q_virtual_[2] + virtual_temp(2) << " " << rd_.link_[COM_id].xpos(2) + virtual_temp(2) << " " << com_desired_(2) << " " << com_support_current_(2) << " ";//<< q_dot_virtual_lpf_(2) << " " << (rd_.q_virtual_[2] + virtual_temp(2) - q_prev(0))*2000<< " " << (rd_.q_virtual_[2] - q_prev(1))*2000 ;
                         file[1]<<std::endl;
@@ -3099,13 +3099,21 @@ void CustomController::computeFast()
        
         if(mpc_cycle < controlwalk_time-1 && time_fast < 3 && walking_finish_flag == false)
         {
-            if(contactMode_fast == 1)
+            /*if(contactMode_fast == 1)
                 file[0] << mpc_cycle << " 1 "<< walking_tick_mj << " "<< solved << " "<<rfoot_sx << " "<<lfoot_sx << " "<<rfoot_sy << " "<<lfoot_sy << " " << zmpx_d << " "<< zmpx_fast << " " << zmpy_d << " "<< zmpy_fast << " " <<-((qp_result(13+MODEL_DOF_VIRTUAL)+qp_result(4)+qp_result(10))-rfoot_sx*qp_result(2) -lfoot_sx*qp_result(8))/(qp_result(8)+qp_result(2))  << " " << zmpy_d << " " << zmpy_fast << " "<< -((qp_result(12+MODEL_DOF_VIRTUAL)-qp_result(3)-qp_result(9))-rfoot_sy*qp_result(2) -lfoot_sy*qp_result(8))/(qp_result(8)+qp_result(2))<< " "<< qp_result(12+MODEL_DOF_VIRTUAL)<< " "<< qp_result(13+MODEL_DOF_VIRTUAL) << " ";
             else if(contactMode_fast == 2)
                 file[0] << mpc_cycle << " 2 "<< walking_tick_mj << " "<< solved << " "<<rfoot_sx << " "<<lfoot_sx << " "<<rfoot_sy << " "<<lfoot_sy << " " << zmpx_d << " "<< zmpx_fast << " " << zmpy_d << " "<< zmpy_fast << " "<< -((qp_result(13+MODEL_DOF_VIRTUAL)+qp_result(10)) -lfoot_sx*qp_result(8))/(qp_result(8))   << " " << zmpy_d << " " << zmpy_fast << " "<< -((qp_result(12+MODEL_DOF_VIRTUAL)-qp_result(9)) -lfoot_sy*qp_result(8))/(qp_result(8))<< " "<< qp_result(12+MODEL_DOF_VIRTUAL)<< " "<< qp_result(13+MODEL_DOF_VIRTUAL) << " ";
             else
                 file[0] << mpc_cycle << " 3 "<< walking_tick_mj << " "<< solved << " "<<rfoot_sx << " "<<lfoot_sx << " "<<rfoot_sy << " "<<lfoot_sy << " " << zmpx_d << " "<< zmpx_fast << " " << zmpy_d << " "<< zmpy_fast << " "<< -((qp_result(13+MODEL_DOF_VIRTUAL)+qp_result(4))-rfoot_sx*qp_result(2))/(qp_result(2))  << " " << zmpy_d << " " << zmpy_fast << " "<< -((qp_result(12+MODEL_DOF_VIRTUAL)-qp_result(3))-rfoot_sy*qp_result(2))/(qp_result(2))<< " "<< qp_result(12+MODEL_DOF_VIRTUAL)<< " "<< qp_result(13+MODEL_DOF_VIRTUAL) << " ";
-            file[0] << std::endl;
+            file[0] << std::endl;*/
+            file[0] << mpc_cycle << " ";
+            for (int i=0; i < 18; i++)
+                file[0] << qdd_pinocchio_desired1_(i) << " ";
+
+            file[0] << "5 ";
+            for (int i=0; i < 12; i++)
+                file[0] << tau_(i+6) << " ";
+            file[0]<< std::endl;
             /*
             file[0] << "145 " << contactMode_fast << " " << com_alpha_fast << " "<<com_alpha_fast_prev << " " << com_alpha_vel << " ";
             for(int i = 0; i < 12; i ++)
@@ -8947,7 +8955,11 @@ void CustomController::momentumControl(RobotData &Robot, Eigen::Vector3d comd,  
                 Identity_rot2 = DyrosMath::rot2Euler(model_data_test.oMf[RFcframe_id].rotation());//rfoot_rpy_current_;
             }*/
            
-            if(rfoot_trajectory_support_.translation()(2) > 0.00 && contactMode != 1)
+            double currnet_refz1 = 0.0;
+            if(current_step_num_ == 3)
+                currnet_refz1 = -0.08;
+
+            if(rfoot_trajectory_support_.translation()(2) > currnet_refz1 && contactMode != 1)
             {
                 a_temp31 = 0.3;
                 rfoot_ori_temp = DyrosMath::rot2Euler(model_data_test.oMf[RFcframe_id].rotation());
@@ -8973,7 +8985,10 @@ void CustomController::momentumControl(RobotData &Robot, Eigen::Vector3d comd,  
                 }
             }
 
-            if(lfoot_trajectory_support_.translation()(2) > 0.00 && contactMode != 1)
+            if(current_step_num_ == 3)
+                currnet_refz1 = 0.0;
+
+            if(lfoot_trajectory_support_.translation()(2) > currnet_refz1 && contactMode != 1)
             {
                 a_temp31 = 0.2;
                
@@ -8999,10 +9014,7 @@ void CustomController::momentumControl(RobotData &Robot, Eigen::Vector3d comd,  
             A2 = J2;
             lbA2 = X2;
             ubA2 = X2;
-            /*
-            H2 = H2 + Hg_slow_.block(3,0,2,18).transpose() * Hg_slow_.block(3,0,2,18) * 0.005;
-            g2 = g2 - Hg_slow_.block(3,0,2,18).transpose() * (ang_ - MOMX) * 0.005;
-            */
+            
 
             Eigen::Matrix2d hg_gain;
             hg_gain.setIdentity();
@@ -9013,15 +9025,6 @@ void CustomController::momentumControl(RobotData &Robot, Eigen::Vector3d comd,  
             g2 = g2 - Hg_slow_.block(3,0,2,18).transpose() * hg_gain *(ang_ - MOMX);// * 0.01;
          
 
-            /*
-            Eigen::Matrix2d hg_gain;
-            hg_gain.setIdentity();
-            hg_gain(0,0) = 0.003;
-            hg_gain(1,1) = 0.005;
-
-            H2 = H2 + Hg_slow_.block(3,0,2,18).transpose() * hg_gain* Hg_slow_.block(3,0,2,18);// * 0.01;
-            g2 = g2 - Hg_slow_.block(3,0,2,18).transpose() * hg_gain *(ang_ - MOMX);// * 0.01;
-            */
             if(mpc_cycle < 0)
             {lbA2(15) = lbA2(15)-0.1;
             ubA2(15) = ubA2(15)+0.1;
@@ -9037,12 +9040,6 @@ void CustomController::momentumControl(RobotData &Robot, Eigen::Vector3d comd,  
 
            
 
-            /*H2(3,3) = H2(3,3) + momPelvR * 1.0;//(1/2000.0) * (1/2000.0);
-            g2(3) = g2(3) + momPelvR * R_angle;///2000.0;
-
-            H2(4,4) = H2(4,4) + momPelvP * 1.0;//(1/2000.0) * (1/2000.0);
-            g2(4) = g2(4) + momPelvP * P_angle;///2000.0;
-            */
             Vector3d error_w_pelvis;  error_w_pelvis.setZero();
             Eigen::Vector3d pelv_rp_current;   pelv_rp_current = DyrosMath::rot2Euler(rd_.link_[Pelvis].rotm);     pelv_rp_current(2)  = 0.0;
             error_w_pelvis = DyrosMath::getPhi(Eigen::Matrix3d::Identity(), Euler2Rot(pelv_rp_current));
@@ -9055,7 +9052,6 @@ void CustomController::momentumControl(RobotData &Robot, Eigen::Vector3d comd,  
             g2(4) = g2(4) - momPelvP * error_w_pelvis(1);//* P_angle;///2000.0;
 
             
-            //g2(3) = g2(3) + momPelvP * P_angle;
 
             qp_momentum_control.UpdateMinProblem(H2, g2);
             qp_momentum_control.UpdateSubjectToAx(A2, lbA2, ubA2);
