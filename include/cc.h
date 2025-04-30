@@ -257,6 +257,10 @@ public:
     double dsp_duration_;
     double dsp_ratio_;
 
+    bool same_imu = false;
+    int same_imu_count = 0;
+    Eigen::Vector3d imu_prev;
+
     double current_time_;
     double pre_time_;
     double start_time_;
