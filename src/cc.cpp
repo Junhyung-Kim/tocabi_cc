@@ -1834,7 +1834,7 @@ std::cout << " bb " << xd_mj_(0) << " "
                         data_stor_slow.row(filetime_slow) <<walking_tick_mj, mpc_cycle, walking_tick, same_imu, lfoot_rpy_current_(0), lfoot_rpy_current_(1), rfoot_rpy_current_(0), rfoot_rpy_current_(1), contactMode * 0.1, ((l_ft_(2) - r_ft_(2))), (F_L - F_R), l_ft_(2), r_ft_(2),
                         128, rd_.q_virtual_[3],rd_.q_virtual_[4], rd_.q_virtual_[5], rd_.q_virtual_[MODEL_DOF_VIRTUAL], lfoot_support_current_.translation()(2), lfoot_trajectory_support_.translation()(2),
                         rfoot_support_current_.translation()(0), rfoot_trajectory_support_.translation()(0),rfoot_support_current_.translation()(1), rfoot_trajectory_support_.translation()(1),rfoot_support_current_.translation()(2), rfoot_trajectory_support_.translation()(2),
-                        345, R_angle, P_angle, pelv_rpy_current_mj_(2), 139, state_init_[41], desired_val_slow[41] , state_init_[42], desired_val_slow[42] , state_init_[43], desired_val_slow[43] , state_init_[44], desired_val_slow[44] , state_init_[45], desired_val_slow[45]
+                        345, com_alpha, P_angle, pelv_rpy_current_mj_(2), 139, state_init_[41], desired_val_slow[41] , state_init_[42], desired_val_slow[42] , state_init_[43], desired_val_slow[43] , state_init_[44], desired_val_slow[44] , state_init_[45], desired_val_slow[45]
                         , state_init_[46], desired_val_slow[46], state_init_[47], desired_val_slow[47], state_init_[48], desired_val_slow[48], 131, pelv_rotv_lpf(0), pelv_rotv_lpf(1), rd_.q_dot_virtual_(3), rd_.q_dot_virtual_(4), zmp_temp3;
                        
                     }
@@ -1849,7 +1849,7 @@ std::cout << " bb " << xd_mj_(0) << " "
                          data_stor_slow1.row(filetime_slow) <<walking_tick_mj, mpc_cycle, walking_tick, same_imu, lfoot_rpy_current_(0), lfoot_rpy_current_(1), rfoot_rpy_current_(0), rfoot_rpy_current_(1), contactMode * 0.1, ((l_ft_(2) - r_ft_(2))), (F_L - F_R), l_ft_(2), r_ft_(2),
                         128, rd_.q_virtual_[3],rd_.q_virtual_[4], rd_.q_virtual_[5], rd_.q_virtual_[MODEL_DOF_VIRTUAL], lfoot_support_current_.translation()(2), lfoot_trajectory_support_.translation()(2),
                         rfoot_support_current_.translation()(0), rfoot_trajectory_support_.translation()(0),rfoot_support_current_.translation()(1), rfoot_trajectory_support_.translation()(1),rfoot_support_current_.translation()(2), rfoot_trajectory_support_.translation()(2),
-                        345, R_angle, P_angle, pelv_rpy_current_mj_(2), 139, state_init_[41], desired_val_slow[41] , state_init_[42], desired_val_slow[42] , state_init_[43], desired_val_slow[43] , state_init_[44], desired_val_slow[44] , state_init_[45], desired_val_slow[45]
+                        345, com_alpha, P_angle, pelv_rpy_current_mj_(2), 139, state_init_[41], desired_val_slow[41] , state_init_[42], desired_val_slow[42] , state_init_[43], desired_val_slow[43] , state_init_[44], desired_val_slow[44] , state_init_[45], desired_val_slow[45]
                         , state_init_[46], desired_val_slow[46], state_init_[47], desired_val_slow[47], state_init_[48], desired_val_slow[48], 131, pelv_rotv_lpf(0), pelv_rotv_lpf(1), rd_.q_dot_virtual_(3), rd_.q_dot_virtual_(4), zmp_temp3;
                        
                    
@@ -1865,7 +1865,7 @@ std::cout << " bb " << xd_mj_(0) << " "
                          data_stor_slow2.row(filetime_slow) <<walking_tick_mj, mpc_cycle, walking_tick, same_imu, lfoot_rpy_current_(0), lfoot_rpy_current_(1), rfoot_rpy_current_(0), rfoot_rpy_current_(1), contactMode * 0.1, ((l_ft_(2) - r_ft_(2))), (F_L - F_R), l_ft_(2), r_ft_(2),
                         128, rd_.q_virtual_[3],rd_.q_virtual_[4], rd_.q_virtual_[5], rd_.q_virtual_[MODEL_DOF_VIRTUAL], lfoot_support_current_.translation()(2), lfoot_trajectory_support_.translation()(2),
                         rfoot_support_current_.translation()(0), rfoot_trajectory_support_.translation()(0),rfoot_support_current_.translation()(1), rfoot_trajectory_support_.translation()(1),rfoot_support_current_.translation()(2), rfoot_trajectory_support_.translation()(2),
-                        345, R_angle, P_angle, pelv_rpy_current_mj_(2), 139, state_init_[41], desired_val_slow[41] , state_init_[42], desired_val_slow[42] , state_init_[43], desired_val_slow[43] , state_init_[44], desired_val_slow[44] , state_init_[45], desired_val_slow[45]
+                        345, com_alpha, P_angle, pelv_rpy_current_mj_(2), 139, state_init_[41], desired_val_slow[41] , state_init_[42], desired_val_slow[42] , state_init_[43], desired_val_slow[43] , state_init_[44], desired_val_slow[44] , state_init_[45], desired_val_slow[45]
                         , state_init_[46], desired_val_slow[46], state_init_[47], desired_val_slow[47], state_init_[48], desired_val_slow[48], 131, pelv_rotv_lpf(0), pelv_rotv_lpf(1), rd_.q_dot_virtual_(3), rd_.q_dot_virtual_(4), zmp_temp3;
                        
                     }
@@ -8669,6 +8669,9 @@ void CustomController::CP_compen_MJ_FT()
     {
         comGainTrajectory();
     }
+
+    if(walking_tick_mj >= 18061 && walking_tick_mj <= 18095)
+        alpha = 0.0;
    
     F_R = (1 - alpha) * rd_.link_[COM_id].mass * GRAVITY;
     F_L = alpha * rd_.link_[COM_id].mass * GRAVITY;
@@ -10211,14 +10214,16 @@ void CustomController::comGainTrajectory()
         {
             if(foot_step_(current_step_num_,6) == 1)
             {
-                //SSS
-                a_temp = 0.2;
-                alpha = double((double(walking_tick_mj) - (18801.0))/(1410)) + 0.5;
+                //std::cout << "gg " << walking_tick_mj << std::endl;
+                a_temp = 0.4;
+                alpha = double((double(walking_tick_mj) - (18095.0))/(1339)) + 0.0;
             }
             else
-            {  
-                a_temp = 0.3;
-                alpha = -double((double(walking_tick_mj) - (18801.0))/(1410)) + 0.5;
+            {   //SSS
+
+                //std::cout << "gg2 " << walking_tick_mj << std::endl;
+                a_temp = 0.6;
+                alpha = -double((double(walking_tick_mj) - (18095.0))/(1339)) + 1.0;
             }
         }
         else if (walking_tick_mj >= t_start_ + t_rest_init_temp + t_double1_ && walking_tick_mj < t_start_ + t_total_ - t_double2_ - t_rest_last_temp)
@@ -10237,21 +10242,119 @@ void CustomController::comGainTrajectory()
             if(foot_step_(current_step_num_,6) == 1)
             {
                 a_temp = 0.4;
-                alpha = -(walking_tick_mj - (t_start_ + t_total_ - t_double2_ - t_rest_last_temp)+1)/(t_rest_last_temp+t_rest_init_temp) + 1.0;
+                alpha = -(double(walking_tick_mj) - 21588)/(1446) + 1.0;
             }
             else
             {  
                 a_temp = 0.6;
-                alpha = (walking_tick_mj - (t_start_ + t_total_ - t_double2_ - t_rest_last_temp)+1)/(t_rest_last_temp+t_rest_init_temp) + 0.0;
+                alpha = (double(walking_tick_mj) - 21588)/(1446) + 0.0;
             }
         }
     }
+    else if(current_step_num_ == 4)
+    {
+        double t_rest_last_temp = 0.226 * hz_ * 1.8;
+        double t_rest_init_temp = 0.176 * hz_ * 1.8;
+        double t_rest_init_temp1 = 0.196 * hz_ * 1.8;
+        double t_rest_last_temp1 = 0.206 * hz_ * 1.8;
+
+        if (walking_tick_mj < t_start_ + t_rest_init_temp + t_double1_)
+        {
+            if(foot_step_(current_step_num_,6) == 1)
+            {
+                //SSS
+                a_temp = 0.2;
+                alpha = double((double(walking_tick_mj) - (1.0))/(1446)) + 0.0;
+            }
+            else
+            {  
+                a_temp = 0.3;
+                alpha = -double((double(walking_tick_mj) - (21588.0))/(1446)) + 1.0;
+            }
+        }
+        else if (walking_tick_mj >= t_start_ + t_rest_init_temp + t_double1_ && walking_tick_mj < t_start_ + t_total_ - t_double2_ - t_rest_last_temp)
+        {
+            if(foot_step_(current_step_num_,6) == 1)
+            {
+
+                //std::cout << walking_tick_mj << " cc " << std::endl;
+                alpha = 1.0;
+            }
+            else
+            {
+
+                //std::cout << walking_tick_mj << " dd " << std::endl;
+                alpha = 0.0;
+            }
+        }
+        else
+        {
+            if(foot_step_(current_step_num_,6) == 1)
+            {
+                a_temp = 0.4;
+                alpha = -(double(walking_tick_mj) - (25188.0)+1)/(1446.0) + 1.0;
+            }
+            else
+            {  
+                a_temp = 0.6;
+                alpha = (double(walking_tick_mj) - (25188.0)+1)/(1446.0) + 0.0;
+            }
+        }
+    }
+    else if(current_step_num_ == 5)
+    {
+        double t_rest_last_temp = 0.226 * hz_ * 1.8;
+        double t_rest_init_temp = 0.176 * hz_ * 1.8;
+        double t_rest_init_temp1 = 0.196 * hz_ * 1.8;
+        double t_rest_last_temp1 = 0.206 * hz_ * 1.8;
+
+        if (walking_tick_mj < t_start_ + t_rest_init_temp + t_double1_)
+        {
+            if(foot_step_(current_step_num_,6) == 1)
+            {
+                a_temp = 0.4;
+                alpha = -(double(walking_tick_mj) - (25188.0)+1)/(1446.0) + 1.0;
+            }
+            else
+            {  
+                a_temp = 0.6;
+                alpha = (double(walking_tick_mj) - (25188.0)+1)/(1446.0) + 0.0;
+            }
+        }
+        else if (walking_tick_mj >= t_start_ + t_rest_init_temp + t_double1_ && walking_tick_mj < t_start_ + t_total_ - t_double2_ - t_rest_last_temp)
+        {
+            if(foot_step_(current_step_num_,6) == 1)
+            {
+
+                //std::cout << walking_tick_mj << " cc " << std::endl;
+                alpha = 1.0;
+            }
+            else
+            {
+
+                //std::cout << walking_tick_mj << " dd " << std::endl;
+                alpha = 0.0;
+            }
+        }
+        else
+        {
+            if(foot_step_(current_step_num_,6) == 1)
+            {
+                a_temp = 0.4;
+                alpha = -(double(walking_tick_mj) - (25188.0)+1)/(1446.0) + 1.0;
+            }
+            else
+            {  
+                a_temp = 0.6;
+                alpha = (double(walking_tick_mj) - (25188.0)+1)/(1446.0) + 0.0;
+            }
+        }
+    }
+
     else if(current_step_num_ == 2)
     {
         if (walking_tick_mj < t_start_ + t_rest_init_ + t_double1_)
         {
-            std::cout << "walking_tick2 " << walking_tick_mj << std::endl;
-            
             if(foot_step_(current_step_num_,6) == 1)
             {
                 a_temp = 0.2;
@@ -10266,7 +10369,7 @@ void CustomController::comGainTrajectory()
         else if (walking_tick_mj >= t_start_ + t_rest_init_ + t_double1_ && walking_tick_mj < t_start_ + t_total_ - t_double2_ - t_rest_last_)
         {
             if(foot_step_(current_step_num_,6) == 1)
-            {
+            {    
                 alpha = 1.0;
             }
             else
@@ -10283,13 +10386,16 @@ void CustomController::comGainTrajectory()
             double t_rest_last_temp1 = 0.206 * hz_ * 1.8;
             if(foot_step_(current_step_num_,6) == 1)
             {
+                //std::cout << "gg5 " << walking_tick_mj << std::endl;
                 a_temp = 0.4;
-                alpha = double(-(double(walking_tick_mj) - (18095.0))/(1410)) + 1.0;
+                alpha = double(-(double(walking_tick_mj) - (18095.0))/(1339)) + 1.0;
             }
             else
-            {   //SSS
+            {   //SSS    
+
+                //std::cout << "gg5 " << walking_tick_mj << std::endl;
                 a_temp = 0.6;
-                alpha = double((double(walking_tick_mj) - (18095.0))/(1410)) + 0.0;
+                alpha = double((double(walking_tick_mj) - (18095.0))/(1339)) + 0.0;
             }
         }
     }
@@ -10321,15 +10427,31 @@ void CustomController::comGainTrajectory()
         }
         else
         {
-            if(foot_step_(current_step_num_,6) == 1)
+            if(current_step_num_ == 0)
             {
-                a_temp = 0.4;
-                alpha = -(walking_tick_mj - (t_start_ + t_total_ - t_double2_ - t_rest_last_))/(t_rest_last_+t_rest_init_) + 1.0;
+                if(foot_step_(current_step_num_,6) == 1)
+                {
+                    a_temp = 0.4;
+                    alpha = -(walking_tick_mj - (t_start_ + t_total_ - t_double2_ - t_rest_last_))/(t_rest_last_+t_rest_init_) + 1.0;
+                }
+                else
+                {  
+                    a_temp = 0.6;
+                    alpha = (walking_tick_mj - (t_start_ + t_total_ - t_double2_ - t_rest_last_)+1)/(t_rest_last_+t_rest_init_) + 0.0;
+                }
             }
             else
-            {  
-                a_temp = 0.6;
-                alpha = (walking_tick_mj - (t_start_ + t_total_ - t_double2_ - t_rest_last_)+1)/(t_rest_last_+t_rest_init_) + 0.0;
+            {
+                if(foot_step_(current_step_num_,6) == 1)
+                {
+                    a_temp = 0.4;
+                    alpha = 1.0;
+                }
+                else
+                {  
+                    a_temp = 0.6;
+                    alpha = 0.0;
+                }
             }
         }
     }
